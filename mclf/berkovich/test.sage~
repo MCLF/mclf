@@ -1,0 +1,11 @@
+
+K = QQ
+vK = pAdicValuation(K, 2)
+F.<x> = FunctionField(K)
+X = BerkovichLine(F, vK)
+xi0 = X.gauss_point()
+T = BerkovichTree(X, xi0)
+
+T = T.adapt((x^2+2)/(x+1))
+
+ 

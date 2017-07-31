@@ -1,0 +1,109 @@
+
+
+
+#-----------------------------------------------------------------------------
+
+
+# Obsolete code
+
+
+def find_boundary_point_on_path(gamma, h_list):
+    r""" Find the next boundary point of a given affinoid on the given path.
+
+    INPUT:
+
+    - ``gamma`` -- a directed path on the Berkovich line `X`
+    - ``h_list`` -- a list of  valuative functions on `X`; it is assumed that
+                    all functions in ``h_list`` are affine on ``gamma``.
+
+    OUTPUT:
+
+    A rational number `s\geq 0` such that `\gamma(s)` is the first boundary
+    point on ``gamma`` of the affinoid `U` defined by ``h_list``, or the
+    endpoint of ``gamma``.
+    """
+
+    xi0 = gamma.point(0)
+    eta0 = gamma.direction(0)
+    r = gamma.length()
+    n = len(h_list)
+
+    a = [h_list[i].eval(xi0) for i in range(n)]
+    b = [h_list[i].derivative(eta0) for i in range(n)]
+    # now h_i(s) = a_i + b_i*s
+    if all([a[i] < 0 for i in range(n)]):
+        # xi0 is not in U
+        # we are looking for the smallest s in (0,r] such that
+        # h_i(s) = a_i+b_i*s >= 0 for some i
+        s_list = [-a[i]/b[i] for i in range(n) if b[i] > 0]
+        return min(s_list.append(r))
+    else:
+        # xi0 is in U; we are looking for the smallest s in [0,r] such that
+        # a_i+b_i*t < 0 for all t>s and for all i
+        s_list = [-a[i]/b[i] for i in range(n) if b[i] < 0]
+        return min([r, max(s_list.append(Infinity))])
+
+
+
+def create_affinoid_tree(h_list):
+    r""" Return a marked tree underlying the affinoid defined by inequalities.
+
+    INPUT:
+
+    - ``h_list`` -- a list of valuative functions on `X`
+
+    OUTPUT:
+
+    An affinoid_tree on `X`. It represents the affinoid U defined by ``h_list``.
+
+    """
+
+    X = h_list[0].X()
+    xi0 = X.gauss_point()
+    # create a tree with root xi0 and compatible with h_list
+    T0 = AffinoidTree(X, xi0)
+    for h in h_list():
+        T0 = h.make_compatible(T0)
+    # invoke recursive function to add boundayr points and set flags right
+    return adapt_affinoid_tree_recursively(h_list, T0)
+
+
+def adapt_affinoid_tree_recursively(h_list, T):
+    r""" Adapt T recursively to h_list.
+
+    INPUT:
+
+    - ``h_list`` -- a list of valuative functions on `X`
+    - ``T`` -- an affinoid tree on `X`, compatible with h_list
+
+    OUTPUT:
+
+    A refinement of ``T`` as follow: the root
+    is the same, all boundary points of U which
+    are successors of the root are now vertices of the new tree, and
+    every vertex has the is_in-flag set correctly.
+    """
+
+    xi0 = T.root()
+    # set the is_in-flag for xi0:
+    if all([h.eval(xi0) < 0 for h in h_list]):
+        # the point xi0 does not lie in U
+        T._is_in = False
+    else:
+        # the point xi0 does lie in U
+        T._is_in = True
+    # we make sure that T contains all boundary points of U
+    # which a direct successors of xi0:
+    new_vertices = []
+    for T1 in T.subtrees():
+        xi1 = T1.root()
+        gamma = BerkovichPath(xi0, xi1)
+        s = find_boundary_point_on_path(gamma, h_list)
+        if s> 0 and s < gamma.length():
+            new_vertices.append(gamma(s))
+    for xi in new_vertices:
+        T = T.add_point(xi)
+    # apply the function recursively to subtrees
+    for T1 in T.subtrees():
+        adapt_affinoid_tree_recursively(h_list, T1)
+    return T
