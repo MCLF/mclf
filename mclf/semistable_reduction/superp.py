@@ -56,9 +56,8 @@ from sage.misc.cachefunc import cached_method
 from sage.rings.infinity import Infinity
 from sage.functions.other import floor
 from mac_lane import *
-from mclf.berkovich.berkovich_line import BerkovichLine
-from mclf.berkovich.affinoid_domain import AffinoidDomainOnBerkovichLine,\
-           RationalDomainOnBerkovichLine
+from mclf.berkovich.berkovich_line import *
+from mclf.berkovich.affinoid_domain import *
 
 
 
@@ -116,20 +115,21 @@ class Superp(SageObject):
     ::
 
         sage: K = QQ
-        sage: vK = pAdicValuation(K, 2)
+        sage: vK = pAdicValuation(K, 3)
         sage: R.<x> = K[]
-        sage: f = x^3 + x^2 + 1
-        sage: Y = Superp(f, vK, 2)
+        sage: f = x^4 + x^2 + 1
+        sage: Y = Superp(f, vK, 3)
         sage: Y
-        The superelliptic curve Y: y^2 = x^3 + x^2 + 1 over Rational Field with 2-adic valuation
+        The superelliptic curve Y: y^3 = x^4 + x^2 + 1 over Rational Field with 3-adic valuation
         sage: U_et = Y.compute_etale_locus()
         sage: U_et
-        Affinoid with 2 components:
+        Affinoid with 3 components:
         Elementary affinoid defined by
-        v(x^4 + 4/3*x^3 + 4*x + 4/3) >= 8/3
+        v(x) >= 3/4
         Elementary affinoid defined by
-        v(1/x) >= 2
-
+        v(x + 7) >= 5/4
+        Elementary affinoid defined by
+        v(x + 2) >= 5/4
 
     .. NOTES::
 
@@ -215,11 +215,10 @@ class Superp(SageObject):
             sage: Y
             The superelliptic curve Y: y^2 = x^3 + x^2 + 1 over Rational Field with 2-adic valuation
             sage: Y.compute_etale_locus()
-            Affinoid with 2 components:
+            Affinoid with 1 components:
             Elementary affinoid defined by
             v(x^4 + 4/3*x^3 + 4*x + 4/3) >= 8/3
-            Elementary affinoid defined by
-            v(1/x) >= 2
+
 
         We check Example 4.14 from [BouWe16]. The original equation is
         `y^2 = f(x) = 2*x^3 + x^2 + 32`, and `f` is not monic, as required.
@@ -229,14 +228,19 @@ class Superp(SageObject):
             sage: f = x^3 + x^2 + 128
             sage: Y = Superp(f, vK, 2)
             sage: Y.compute_etale_locus()
-            Affinoid with 2 components:
+            Affinoid with 1 components:
             Elementary affinoid defined by
             v(1/x) >= -5/2
             v(x) >= 2
-            Elementary affinoid defined by
-            v(1/x) >= 2
 
-        """
+    .. NOTES::
+
+    At the moment, the construction of the superelliptic curve `Y` requires that
+    the polynomial `f` defining `Y` is monic, integral with respect to `v_K`
+    and of degree prime to `p`. The motivation for this restriction, and its
+    result is that the etale locus is contained in the closed unit disk.
+
+    """
 
         X = self._X
         FX = self._FX
@@ -265,11 +269,10 @@ class Superp(SageObject):
                    for k in range(m+1, n+1) if k != pl ]
 
         X_et = RationalDomainOnBerkovichLine(X, delta[0])
-        X_et.simplify()
-        for i in range(1,len(delta)):
+        for i in range(1, len(delta)):
             X_et = X_et.union(RationalDomainOnBerkovichLine(X, delta[i]))
             X_et.simplify()
-        return X_et
+        return X_et.intersection(ClosedUnitDisk(X))
 
 
 
