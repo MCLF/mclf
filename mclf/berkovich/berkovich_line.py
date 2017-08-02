@@ -1070,6 +1070,39 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
             return TypeIIPointOnBerkovichLine(self._X, v3)
         return self._X.gauss_point()
 
+    def point_in_between(self, xi1):
+        r"""
+        Return a point in between ``self`` and ``xi1``.
+
+        INPUT:
+
+        - ``xi1`` -- a point which is strictly smaller than ``self``
+
+        OUTPUT: a point which lies strictly between ``self`` and ``xi1``
+
+        """
+
+        xi0 = self
+        assert xi0.is_leq(xi1) and not xi0.is_equal(xi1), "xi1 must be strictly smaller than self"
+        in_unit_disk = xi1.is_in_unit_disk()
+        v0 = self.pseudovaluation_on_polynomial_ring()
+        v1 = xi1.pseudovaluation_on_polynomial_ring()
+        if hasattr(v1, "_approximation"):
+            v1 = v1._approximation
+        phi = v1.phi()
+        s0 = v0(phi)
+        s1 = v1(phi)
+        assert s0 < s1, "strange: s0>=s1, but xi0 < xi1"
+        if s1 == Infinity:
+            s2 = s0 + 1
+        else:
+            s2 = (s0+s1)/2
+        xi2 = X.point_from_discoid(phi, s2, in_unit_disk)
+        assert xi0.is_leq(xi2) and not xi0.is_equal(xi2), "xi0 is not less than xi2!"
+        assert xi2.is_leq(xi1) and not xi2.is_equal(xi1), "xi2 is not less than xi1!"
+        return xi2
+
+
 
 #-------------------------------------------------------------------------
 
