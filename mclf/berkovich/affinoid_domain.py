@@ -2,8 +2,8 @@ r""" Affinoid domains on the Berkovich projective line.
 
 Let `K` be a field and `v_K` a discrete valuation on `K`. Let `X=\mathbb{P}^1_K`
 be the projective line over `K`. Let `X^{an}` denote the
-`(K,v_K)`-analytic space associated to `X`. We call `X^{an}` the *Berkovich
-line* over `K`.
+`(K,v_K)`-analytic space associated to `X`. We call `X^{an}` the **Berkovich
+line** over `K`.
 
 In this file we realize a Sage class which allows us to create and work with
 strictly affinoid subdomains of `X^{an}`.
@@ -58,7 +58,6 @@ TO DO:
 
 
 from sage.structure.sage_object import SageObject
-# from mclf import *
 from mac_lane import *
 from mclf.berkovich.berkovich_line import BerkovichLine, TypeIPointOnBerkovichLine,\
                                           TypeIIPointOnBerkovichLine
@@ -70,7 +69,7 @@ class AffinoidTree(BerkovichTree):
     r""" A marked Berkovich tree representing an affinoid subdomain.
 
     An AffinoidTree is a Berkovich tree `T` in which every vertex has an additional
-    flag `is_in_affinoid` with value ``True`` or ``False``. It represents an 
+    flag `is_in_affinoid` with value ``True`` or ``False``. It represents an
     affinoid subdomain `U` in the way explained above.
 
     INPUT:
@@ -83,8 +82,8 @@ class AffinoidTree(BerkovichTree):
 
     OUTPUT:
 
-    An affinoid tree on ``X``. It either empty (if only ``X`` is given) or
-    it has root, parent, children and the flag ``_is_in_affinoid`` as given
+    An affinoid tree on ``X``. It is either empty (if only ``X`` is given) or
+    it has root, parent, children and the flag ``is_in_affinoid`` as given
     by the extra parameters.
 
     EXAMPLES:
@@ -139,10 +138,10 @@ class AffinoidTree(BerkovichTree):
         for T1 in T0.children():
             assert T1.parent() is T0
             T1._check_for_parents()
-        
 
-    def copy(self, parent=None):  
-        """ 
+
+    def copy(self, parent=None):
+        """
         Return a copy of self, force ``parent`` as parent.
 
         WARNING! something is wrong with this function!!
@@ -150,7 +149,7 @@ class AffinoidTree(BerkovichTree):
         """
 
         T = self
-        T_new = AffinoidTree(T._X, T.root(), [], parent, 
+        T_new = AffinoidTree(T._X, T.root(), [], parent,
                               T._is_in_affinoid)
         children = [T1.copy(T_new) for T1 in T.children()]
         T_new._children = children
@@ -170,12 +169,12 @@ class AffinoidTree(BerkovichTree):
 
         (`T_1`, `T_2`), where
 
-        - `T_1` is the tree obtained from `T_0=` ``self`` after inserting ``xi`` 
+        - `T_1` is the tree obtained from `T_0=` ``self`` after inserting ``xi``
           as a vertex.
         - `T_2` is the subtree of `T_1` with root ``xi``
 
-        It is assumed that if `T_0` has a parent, then the root of `T_0` is less 
-        than `\xi`. As a result, the parent of `T_1` will be the original parent 
+        It is assumed that if `T_0` has a parent, then the root of `T_0` is less
+        than `\xi`. As a result, the parent of `T_1` will be the original parent
         of `T_0`.
 
         Note that this command may change the tree `T_0`!  For instance, `\xi` may
@@ -210,7 +209,7 @@ class AffinoidTree(BerkovichTree):
                 if xi1.is_leq(xi):
                     # now xi0 < xi1 <= xi and xi can be added to T1
                     T_new, T_xi = T1.add_point(xi, is_in_affinoid)
-                    # note that this does not change the parent of T1, which is 
+                    # note that this does not change the parent of T1, which is
                     # still T0
                     # IS THIS TRUE ?? Let's check:
                     assert T_new.parent() == T0
@@ -228,9 +227,9 @@ class AffinoidTree(BerkovichTree):
                     if not xi0.is_equal(xi2):
                         # now xi0 < xi2; we have to replace T1 (as a subtree of T0)
                         # by a new tree T_new with children T1 and a leaf T_xi
-                        T_xi = AffinoidTree(T0._X, xi, [], None, is_in_affinoid) 
+                        T_xi = AffinoidTree(T0._X, xi, [], None, is_in_affinoid)
                                # the new leaf
-                        T_new = AffinoidTree(T0._X, xi2, [T1, T_xi], T0, 
+                        T_new = AffinoidTree(T0._X, xi2, [T1, T_xi], T0,
                                              T0._is_in_affinoid)
                         # the new subtree has parent T0
                         # and its root lies in U iff the root of T0 does
@@ -255,7 +254,7 @@ class AffinoidTree(BerkovichTree):
             assert T0.parent() == None, "T0 must not have a parent"
             new_root = xi0.infimum(xi)
             T_xi = AffinoidTree(T0._X, xi, [], None, is_in_affinoid)
-            T_new = AffinoidTree(T0._X, new_root, [T0, T_xi], None, 
+            T_new = AffinoidTree(T0._X, new_root, [T0, T_xi], None,
                                  is_in_affinoid and T0._is_in_affinoid)
             T0.make_parent(T_new)
             T_xi.make_parent(T_new)
@@ -311,7 +310,7 @@ class AffinoidTree(BerkovichTree):
 
 
     def union(self, T1):
-        r""" 
+        r"""
         Construct the tree representing the union of two affinoids.
 
 
@@ -334,9 +333,38 @@ class AffinoidTree(BerkovichTree):
             T, T2 = T.add_point(xi, False)
         for subtree in T.subtrees():
             xi = subtree.root()
-            subtree._is_in_affinoid = (T0.is_in_affinoid(xi) or 
+            subtree._is_in_affinoid = (T0.is_in_affinoid(xi) or
                                        T1.is_in_affinoid(xi))
         return T
+
+    def intersection(self, T1):
+        r"""
+        Construct the tree representing the intersection of two affinoids.
+
+
+        INPUT:
+
+        - ``T1`` -- an affinoid tree
+
+        OUTPUT:
+
+        An affinoid tree which represents the intersection of the affinoids
+        represented by T0 = ``self`` and T1.
+        """
+
+        T0 = self
+        # T = T0.copy()  strangely, this did not work
+        T = AffinoidTree(self._X)
+        for xi in T0.vertices():
+            T, T2 = T.add_point(xi, False)
+        for xi in T1.vertices():
+            T, T2 = T.add_point(xi, False)
+        for subtree in T.subtrees():
+            xi = subtree.root()
+            subtree._is_in_affinoid = (T0.is_in_affinoid(xi) and
+                                       T1.is_in_affinoid(xi))
+        return T
+
 
     def show(self):
         r""" Display a graphical representation of self.
@@ -441,7 +469,7 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         sage: U = U1.union(U2)
         sage: U
         Affinoid with 1 components:
-        Elementary affinoid defined by 
+        Elementary affinoid defined by
         v(1/(x + 1)) >= -1
 
 
@@ -510,21 +538,21 @@ class AffinoidDomainOnBerkovichLine(SageObject):
             self.compute_components()
 
         return self._components
-        
+
 
     def number_of_components(self):
 
         return len(self.components())
 
     def boundary(self):
-        r""" 
+        r"""
         Return the Shilov boundary of the affinoid.
 
-        The Shilov boundary is a finite set of type-II-points contained in the 
-        affinoid with the property that the valuative function of every rational 
-        function which is regular on the affinoid takes a minimum on this set. 
+        The Shilov boundary is a finite set of type-II-points contained in the
+        affinoid with the property that the valuative function of every rational
+        function which is regular on the affinoid takes a minimum on this set.
 
-        The Shilov boundary is automatically computed when we construct the 
+        The Shilov boundary is automatically computed when we construct the
         connected components.
 
         """
@@ -543,35 +571,74 @@ class AffinoidDomainOnBerkovichLine(SageObject):
 
 
     def union(self, V):
-        r""" 
+        r"""
         Return the affinoid which is the union of ``self`` with ``V``.
         """
-        
+
         T = self._T.union(V._T)
         return AffinoidDomainOnBerkovichLine(T)
 
 
     def intersection(self, V):
-        r""" 
+        r"""
         Return the affinoid which is the intersection of ``self`` with ``V``.
         """
-        pass
+        T = self._T.intersection(V._T)
+        return AffinoidDomainOnBerkovichLine(T)
+
+
+class ClosedUnitDisk(AffinoidDomainOnBerkovichLine):
+    r"""
+    Return the closed unit disk.
+
+    The **closed unit disk** is the affinoid on the Berkovich line with
+    function field `F=K(x)` defined by the inequality
+
+    .. MATH::
+
+          v(x) >= 0.
+
+    INPUT:
+
+    - ``X`` -- a Berkovich line
+
+    OUTPUT: the closed unit disk inside ``X``
+
+    EXAMPLES:
+
+        sage: K = QQ
+        sage: vK = pAdicValuation(K, 3)
+        sage: F.<x> = FunctionField(K)
+        sage: X = BerkovichLine(F, vK)
+        sage: ClosedUnitDisk(X)
+        Affinoid with 1 components:
+        Elementary affinoid defined by
+        v(x) >= 0
+
+    """
+
+    def __init__(self, X):
+
+        self._X = X
+        T = AffinoidTree(X)
+        T = T.add_points([X.gauss_point()], [X.infty()])
+        self._T = T
 
 
 class ElementaryAffinoidOnBerkovichLine(AffinoidDomainOnBerkovichLine):
     r"""
     Return the elementary affinoid corresponding to a boundary list.
 
-    An "elementary affinoid" is a a connected affinoid subdomain of a Berkovich 
-    line `X` which is the complement of a finite set of disjoint residue classes 
-    in `X`. It can be represented by a "boundary list" as follows. 
-    
-    A "boundary list" is a list of lists, whose entries at the lowest level are 
-    type-V-points on `X`. Each sublist contains the type-V-points with a common 
+    An "elementary affinoid" is a a connected affinoid subdomain of a Berkovich
+    line `X` which is the complement of a finite set of disjoint residue classes
+    in `X`. It can be represented by a "boundary list" as follows.
+
+    A "boundary list" is a list of lists, whose entries at the lowest level are
+    type-V-points on `X`. Each sublist contains the type-V-points with a common
     boundary point. The elementary affinoid corresponding to a "boundary list" is
-    the complement of the residue classes corresponding to the type-V-points 
-    contained in the sublists. The set of boundary points of the type-V-points is 
-    exactly the Shilov boundary of the affinoid. 
+    the complement of the residue classes corresponding to the type-V-points
+    contained in the sublists. The set of boundary points of the type-V-points is
+    exactly the Shilov boundary of the affinoid.
 
     INPUT:
 
@@ -584,15 +651,15 @@ class ElementaryAffinoidOnBerkovichLine(AffinoidDomainOnBerkovichLine):
 
     TO DO:
 
-    - we need a function which produces an (algebraic) type-I-point inside the 
-      affinoid. 
+    - we need a function which produces an (algebraic) type-I-point inside the
+      affinoid.
 
     """
 
     def __init__(self, boundary_list):
 
         assert boundary_list != [], "the boundary list must not be empty!"
-        # boundary = [ xi_list[0].boundary_point() for xi_list in boundary_list]  
+        # boundary = [ xi_list[0].boundary_point() for xi_list in boundary_list]
         X = boundary_list[0][0].X()
         self._X = X
         boundary = []
@@ -604,7 +671,7 @@ class ElementaryAffinoidOnBerkovichLine(AffinoidDomainOnBerkovichLine):
             boundary.append(xi)
             for eta in boundary_comp:
                 T, T1 = T.add_point(eta.point_inside_residue_class(), False)
-                complement.append(eta)                
+                complement.append(eta)
         self._T = T
         self._comp_list = [boundary_list]
         self._boundary = boundary
@@ -613,12 +680,12 @@ class ElementaryAffinoidOnBerkovichLine(AffinoidDomainOnBerkovichLine):
     def __repr__(self):
 
         return "Elementary affinoid defined by %s"%self.inequalities()
-        
+
     def inequalities(self):
         r"""
         Return the inequalities defining the elementary affinoid, as a string.
         """
-        
+
         inequalities = "\n"
         for eta in self._complement:
             phi, s = eta.open_discoid()
@@ -657,9 +724,9 @@ class RationalDomainOnBerkovichLine(AffinoidDomainOnBerkovichLine):
             sage: U = RationalDomainOnBerkovichLine(X, (x^2+2)/x*(x+1)/2)
 
             Affinoid with 2 components:
-            Elementary affinoid defined by 
+            Elementary affinoid defined by
             v(x^2 + 2) >= 3/2
-            Elementary affinoid defined by 
+            Elementary affinoid defined by
             v(x + 1) >= 1
 
         TO DO:
@@ -668,15 +735,15 @@ class RationalDomainOnBerkovichLine(AffinoidDomainOnBerkovichLine):
 
         - it should not be necessary to first build a tree with all zeroes and poles
           of `f` as leaves. At any stage of bulding the tree one looks at a discoid
-          `D`. If `f` has nonnegative valuation on the boundary of `D` and 
-          no poles inside `D` (or nonpositive valuation on the boundary and no 
-          zero inside) then we can stop at `D`.  
+          `D`. If `f` has nonnegative valuation on the boundary of `D` and
+          no poles inside `D` (or nonpositive valuation on the boundary and no
+          zero inside) then we can stop at `D`.
         - Instead of working with a (possible huge) rational function `f` we should
           work with a "factorization", i.e. a list of pairs `(f_i, e_i)` where
-          `f_i` is an irreducible polynomial or a constant and `e_i` an integer 
-          (rationals are also fine). 
+          `f_i` is an irreducible polynomial or a constant and `e_i` an integer
+          (rationals are also fine).
           At any stage of building the tree, we only retain the sublist
-          of pairs `(f_i,e_i)` which are "active"; for the "inactive" pairs we 
+          of pairs `(f_i,e_i)` which are "active"; for the "inactive" pairs we
           only need to know their valuations - which is constant on the subtree!
 
 
@@ -719,5 +786,3 @@ class RationalDomainOnBerkovichLine(AffinoidDomainOnBerkovichLine):
         for xi in U.vertices():
             assert (xi.v(f) >= 0) == U.is_in_affinoid(xi)
         self._T = U
-
-        
