@@ -3,19 +3,19 @@ Semistable reduction of superelliptic curves of degree `p`
 
 
 Let `K` be a field of characteritic zero and `v_K` a discrete valuation on `K`
-whose residue field is finite of characteristic `p>0`. In practise, `K` will 
-either be a number field or a `p`-adic number field. 
+whose residue field is finite of characteristic `p>0`. For the time being, we
+assume that `K` is a number field.
 
-Let `f\in K[x]` be a polynomial over `K` which is not a `p`th power and whose 
-radical has degree at least three. We consider the smooth projective  curve 
+Let `f\in K[x]` be a polynomial over `K` which is not a `p`th power and whose
+radical has degree at least three. We consider the smooth projective  curve
 `Y` over `K` defined generically by the equation
 
 .. MATH::
 
-           Y: y^p = f(x). 
+           Y: y^p = f(x).
 
-Our goal is to compute the semistable reduction of `Y` and to extract 
-nontrivial arithmetic information on `Y` from this. 
+Our goal is to compute the semistable reduction of `Y` and to extract
+nontrivial arithmetic information on `Y` from this.
 
 More precisely, ...
 
@@ -64,13 +64,93 @@ from mclf.berkovich.affinoid_domain import AffinoidDomainOnBerkovichLine,\
 
 
 class Superp(SageObject):
+    r"""
+    Return the superelliptic curve of degree ``p`` defined by ``f``,
+    relative to the `p`-adic valuation ``vK``.
+
+    A "superelliptic curve" `Y` over a field `K` is a smooth projective curve
+    over `K` defined generically by an equation of the form
+
+    .. MATH::
+              y^n = f(x),
+
+    where `f` is a nonconstant polynomial over `K` in `x`.
+
+    - the gcd of `n` and the multiplicities of the irreducible factors of `f`  is one,
+    - the exponent `n` is invertible in `K`.
+
+    We call `n` the "degree" of the superelliptic curve `Y`. Formulated more
+    geometrically, a superelliptic curve of degree `n` is a smooth projective
+    curve together with a cyclic cover `Y\to X:=\mathbb{P}_K^1` of degree `n`.
+
+    Here we assume that the degree is a prime `p`. Moreover, we fix a `p`-adic
+    valuation `v_K` on `K` (i.e. a discrete valuation with residue
+    characteristic `p`). Note that this implies that `K` has characteristic zero.
+
+    The goal is to compute the semistable reduction of `Y` relative to `v_K`,
+    and some arithmetic invariants associated to it (for instance the "exponent
+    of conductor" of `Y` with respect to `v_K`). The method to compute the
+    semistable reduction in this particular case is explained in detail in
+
+    - [We17] S. Wewers, Semistable reduction of superelliptic curves of degree p, \
+      preprint, 2017.
+
+    INPUT:
+
+    - ``f`` -- a nonconstant poylnomial over a field `K`
+    - ``vK`` -- a discrete valuation on `K`
+    - ``p`` -- a prime number
+
+    Here the residue characteristic of ``vK`` must be equal to the prime ``p``.
+    Moreover, ``f`` must be monic, integral with respect to ``vK`` and
+    of degree prime to ``p``.
+
+    OUTPUT: the object representing the superelliptic curve
+
+    .. MATH::
+
+           Y: y^p = f(x).
+
+    EXAMPLES:
+
+    ::
+
+        sage: K = QQ
+        sage: vK = pAdicValuation(K, 2)
+        sage: R.<x> = K[]
+        sage: f = x^3 + x^2 + 1
+        sage: Y = Superp(f, vK, 2)
+        sage: Y
+        The superelliptic curve Y: y^2 = x^3 + x^2 + 1 over Rational Field with 2-adic valuation
+        sage: U_et = Y.compute_etale_locus()
+        sage: U_et
+        Affinoid with 2 components:
+        Elementary affinoid defined by
+        v(x^4 + 4/3*x^3 + 4*x + 4/3) >= 8/3
+        Elementary affinoid defined by
+        v(1/x) >= 2
+
+
+    .. NOTES::
+
+    For the time being, we need to make the following additional assumptions
+    on `f`:
+
+    - `f` must be monic, integral with respect to `v_K` and of degree \
+      prime to `p`
+
+    This restriction is preliminary and will be removed in a future version.
+    Note that a superelliptic curve of degree `p` can be written in the required
+    form if and only if the map `Y\to X` has a `K`-rational branch point.
+
+    """
 
     def __init__(self, f, vK, p):
 
         R = f.parent()
-        assert R.base_ring() is vK.domain()
-        assert p == vK.residue_field().characteristic()
-        self._base_ring = R
+        assert R.base_ring() is vK.domain(), "the domain of vK must be the base field of f"
+        assert p == vK.residue_field().characteristic(), "the exponent p must be the residue characteristic of vK"
+        assert f.is_monic(), "f must be monic"
         self._f = f
         self._vK = vK
         self._p = p
@@ -85,7 +165,7 @@ class Superp(SageObject):
 
     def __repr__(self):
 
-        return "The superelliptic curve Y: y^%s = %s over %s with %s"%(self._p, 
+        return "The superelliptic curve Y: y^%s = %s over %s with %s"%(self._p,
                         self._f, self._vK.domain(), self._vK)
 
     def compute_etale_locus(self):
@@ -103,7 +183,7 @@ class Superp(SageObject):
         pl = 1
         while pl <= m:
             pl = pl*p
- 
+
         a = [f]
         for i in range(1, n+1):
             a.append(a[i-1].derivative()/i)
@@ -111,9 +191,9 @@ class Superp(SageObject):
 
         pi = self._vK.uniformizer()
         delta = [ c[pl]**(p-1) * pi**(-p) ]
-        delta += [ c[pl]**(i*(p-1)) * a[i]**(-pl*(p-1)) * pi**(-i*p) 
+        delta += [ c[pl]**(i*(p-1)) * a[i]**(-pl*(p-1)) * pi**(-i*p)
                    for i in range(1, n+1) ]
-        delta += [ c[pl]**(k*(p-1)) * c[k]**(-pl*(p-1)) * pi**(-p*(k-pl)) 
+        delta += [ c[pl]**(k*(p-1)) * c[k]**(-pl*(p-1)) * pi**(-p*(k-pl))
                    for k in range(m+1, n+1) if k != pl ]
 
         # print delta
@@ -138,19 +218,19 @@ def p_approximation(f,p):
 
     INPUT:
 
-    - ``f`` -- a polynomial of degree `n` over a field `K`, with nonvanishing 
+    - ``f`` -- a polynomial of degree `n` over a field `K`, with nonvanishing
                constant coefficient
     - ``p`` -- a prime number
 
-    OUTPUT: 
+    OUTPUT:
 
     Two polynomials `h`,`g` in `K[x]`, such that
-    
+
     - `f=a_0(h^p+g)`, where `a_0` is the constant coefficient of `f`
     - `r:=deg(h)<=n/p`, and
     - `x^(r+1)` divides `g`
 
-    Note that `h,g` are uniquely determined by these conditions. 
+    Note that `h,g` are uniquely determined by these conditions.
 
     """
 
@@ -180,10 +260,10 @@ def p_approximation_generic(f,p):
     - ``f`` -- a polynomial of degree `n` over a field `K`, with nonvanishing constant coefficient
     - ``p`` -- a prime number
 
-    OUTPUT: 
+    OUTPUT:
 
-    Two polynomials `H`,`K` in `K(x)[t]` which are the `p`-approximation 
-    of the polynomial `F:=f(x+t)`, considered as polynomial in `t`. 
+    Two polynomials `H`,`K` in `K(x)[t]` which are the `p`-approximation
+    of the polynomial `F:=f(x+t)`, considered as polynomial in `t`.
 
     """
 
@@ -196,8 +276,3 @@ def p_approximation_generic(f,p):
     H,G = p_approximation(F,p)
     # d =[R(G[k]*f^k) for k in [0..f.degree()]]
     return H,G
-
-
-
-
-

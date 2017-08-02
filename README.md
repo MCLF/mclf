@@ -3,7 +3,7 @@
 ### A Sage toolbox for computing with **M**odels of **C**urves over **L**ocal **F**ields
 
 
-This is a very preliminary version; the only part so far which is both usable and of general interest is the first step in the computation of the semistable reduction of superelliptic curves of degree $p$: the computation of the *etale locus*. See an example below.
+This is a very preliminary version; the only part so far which is both usable and of general interest is the first step in the computation of the semistable reduction of superelliptic curves of degree p: the computation of the *etale locus*. See an example below.
 
 
 Everything is based on Julian Rüth's Sage package `mac_lane`, which allows us to work with quite general valuations. See
@@ -30,7 +30,7 @@ for a polynomial f over a number field K and a prime p. We also have to specify 
 residue characteristic p. The class should then provide access to  a variety of functions which allows you to compute
 the semistable reduction of the curve and analyze it. The mathematical background will soon appear in
 
- >S. Wewers, Semistable reduction of superelliptic curves of degree $p$, preprint, 2017
+ >S. Wewers, Semistable reduction of superelliptic curves of degree p, preprint, 2017
 
 A rough sketch and some examples can already be found in
 
@@ -38,7 +38,7 @@ A rough sketch and some examples can already be found in
  > S. Wewers and I.I. Bouw, lecture notes for a minicourse at ICERM
 
 For the time being, the only function that is available is a certain (crucial) precomputation, namely the computation
-of the *etale locus*. This is an affinoid subdomain of the projective line over K, considered as an analytic space 
+of the *etale locus*. This is an affinoid subdomain of the projective line over K, considered as an analytic space
 in the sense of Berkovich.  See § 4.2 of the ICERM notes cited above for more details.
 
 In the explicit example from above, we get:
@@ -51,7 +51,7 @@ v(x) >= 3/8
 Elementary affinoid defined by
 v(1/x) >= 3/2
 ```
-Actually, the result obtained is not quite correct: the etale locus only consists of the first component 
+Actually, the result obtained is not quite correct: the etale locus only consists of the first component
 (defined by ``v(x)\geq 3/8``); the (fake) second component shows up because the code does not yet deal properly
 with the region 'outside the closed unit disk'.
 
