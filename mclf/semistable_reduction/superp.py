@@ -169,6 +169,74 @@ class Superp(SageObject):
                         self._f, self._vK.domain(), self._vK)
 
     def compute_etale_locus(self):
+        r"""
+        Return the etale locus of the cover `Y\to X`.
+
+        The superelliptic curve `Y` is, by definition, a cyclic cover
+
+        .. MATH::
+
+                   \phi: Y \to X
+
+        of degree `p` of the projective line `X` over the base field `K`.
+        We consider `X` and `Y` as analytic spaces over the completion of `K`
+        at the base valuation `v_K`. Let
+
+        .. MATH::
+
+              \bar{\phi}: \bar{Y} \to \bar{X}
+
+        denote the *semistable reduction* of the cover `Y\to X`.
+        The **etale locus** is an affinoid subdomain `X^{et}` of `X`
+        consisting of those points which specialize to a point on `\bar{X}`
+        above which the map `\bar{\phi}` is etale.
+
+        While the affinoid `X^{et}` is determined by the semistable reduction
+        of the cover `\phi`, conversely `X^{et}` contains a lot of information
+        on the semistable reduction. The main result of
+
+        - [We17]: Semistable reduction of superelliptic curves of degree p, \
+          preprint, 2017
+
+        gives an explicit description of the affinoid `X^{et}` as a union
+        of rational domains defined by rational functions which can be
+        easily computed in terms of the polynomial `f` defining `Y`.
+
+        EXAMPLES:
+
+        ::
+
+            sage: from mclf import *
+            sage: K = QQ
+            sage: vK = pAdicValuation(K, 2)
+            sage: R.<x> = K[]
+            sage: f = x^3 + x^2 + 1
+            sage: Y = Superp(f, vK, 2)
+            sage: Y
+            The superelliptic curve Y: y^2 = x^3 + x^2 + 1 over Rational Field with 2-adic valuation
+            sage: Y.compute_etale_locus()
+            Affinoid with 2 components:
+            Elementary affinoid defined by
+            v(x^4 + 4/3*x^3 + 4*x + 4/3) >= 8/3
+            Elementary affinoid defined by
+            v(1/x) >= 2
+
+        We check Example 4.14 from [BouWe16]. The original equation is
+        `y^2 = f(x) = 2*x^3 + x^2 + 32`, and `f` is not monic, as required.
+        To fix this, we substitute `x/2` and multiply with `4`. Then the
+        new equation is `y^2 = x^3 + x^2 + 128`: ::
+
+            sage: f = x^3 + x^2 + 128
+            sage: Y = Superp(f, vK, 2)
+            sage: Y.compute_etale_locus()
+            Affinoid with 2 components:
+            Elementary affinoid defined by
+            v(1/x) >= -5/2
+            v(x) >= 2
+            Elementary affinoid defined by
+            v(1/x) >= 2
+
+        """
 
         X = self._X
         FX = self._FX
@@ -195,8 +263,6 @@ class Superp(SageObject):
                    for i in range(1, n+1) ]
         delta += [ c[pl]**(k*(p-1)) * c[k]**(-pl*(p-1)) * pi**(-p*(k-pl))
                    for k in range(m+1, n+1) if k != pl ]
-
-        # print delta
 
         X_et = RationalDomainOnBerkovichLine(X, delta[0])
         X_et.simplify()
