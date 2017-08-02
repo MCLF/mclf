@@ -1083,6 +1083,10 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         """
 
         xi0 = self
+        # print "calling ``point_in_between`` with "
+        # print "xi0 = ", xi0
+        # print "xi1 = ", xi1
+        # print
         assert xi0.is_leq(xi1) and not xi0.is_equal(xi1), "xi1 must be strictly smaller than self"
         in_unit_disk = xi1.is_in_unit_disk()
         v0 = self.pseudovaluation_on_polynomial_ring()

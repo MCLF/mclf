@@ -326,16 +326,38 @@ class AffinoidTree(BerkovichTree):
 
         T0 = self
         # T = T0.copy()  strangely, this did not work
-        T = AffinoidTree(self._X)
-        for xi in T0.vertices():
-            T, T2 = T.add_point(xi, False)
-        for xi in T1.vertices():
-            T, T2 = T.add_point(xi, False)
-        for subtree in T.subtrees():
+        T_new = AffinoidTree(self._X)
+        for xi0 in T0.vertices():
+            T_new, dump = T_new.add_point(xi0, None)
+        for xi1 in T1.vertices():
+            T_new, dump = T_new.add_point(xi1, None)
+        # print "First step of T_new:", T_new.vertices()
+        new_out = []
+        for subtree in T_new.subtrees():
             xi = subtree.root()
-            subtree._is_in_affinoid = (T0.is_in_affinoid(xi) or
-                                       T1.is_in_affinoid(xi))
-        return T
+            # print "adding xi =", xi
+            xi_in_T0 = T0.is_in_affinoid(xi)
+            xi_in_T1 = T1.is_in_affinoid(xi)
+            # print xi_in_T0, xi_in_T1
+            if xi_in_T0 == xi_in_T1:
+                subtree._is_in_affinoid = xi_in_T0
+                # print "xi is in union: ", xi_in_T0
+                # print
+            else:
+                subtree._is_in_affinoid = True
+                # print "xi is in union!"
+                # print
+                if subtree.has_parent():
+                    parent = subtree.parent()
+                    xi0 = parent.root()
+                    xi0_in_T0 = T0.is_in_affinoid(xi0)
+                    xi0_in_T1 = T1.is_in_affinoid(xi0)
+                    if (xi_in_T0 != xi0_in_T0) and (xi0_in_T0 != xi0_in_T1):
+                        new_out.append(xi0.point_in_between(xi))
+                        # print "we have to exclude ", xi0
+        T_new = T_new.add_points([], new_out)
+        return T_new
+
 
     def intersection(self, T1):
         r"""
