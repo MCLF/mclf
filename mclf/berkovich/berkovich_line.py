@@ -77,11 +77,11 @@ TO DO:
 
 - use more cached functions; this may improve speed
 
-- more systematic (and explicitly defined) relation between points and their 
+- more systematic (and explicitly defined) relation between points and their
   discoid representation
 
 - more doctests!
- 
+
 
 """
 
@@ -100,6 +100,7 @@ from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.misc.cachefunc import cached_method
 from sage.rings.infinity import Infinity
 from sage.functions.generalized import sgn
+from sage.geometry.newton_polygon import NewtonPolygon
 from mac_lane import *
 
 
@@ -166,7 +167,7 @@ class BerkovichLine(SageObject):
         R = self.polynomial_ring()
         if f.parent() is R:
             return f
-        F = self.function_field()    
+        F = self.function_field()
         x = F.gen()
         if in_unit_disk:
             # return R(f)
@@ -288,17 +289,17 @@ class BerkovichLine(SageObject):
 
         INPUT:
 
-        - ``xi1``, ``xi2`` -- points on the Berkovich line such that  
+        - ``xi1``, ``xi2`` -- points on the Berkovich line such that
                               ``\xi_1``<``xi2``
-        - ``f`` -- a nonconstant rational function; it is assumed that the signs 
+        - ``f`` -- a nonconstant rational function; it is assumed that the signs
                    of the valuations of f at ``xi1`` and ``xi2`` are different
 
         OUTPUT:
 
         The smallest point between ``xi1`` and ``xi2`` where the valuation of ``f``
-        is zero. 
+        is zero.
 
-        We are assuming for the moment that the function 
+        We are assuming for the moment that the function
 
         .. MATH::
 
@@ -307,8 +308,8 @@ class BerkovichLine(SageObject):
         is affine (i.e. has no kinks) on the interval `[\xi_1,\xi_2]`.
 
         """
-        
-        from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine 
+
+        from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
 
         assert xi1.is_leq(xi2) and not xi2.is_leq(xi1), \
             "xi1 must be strictly smaller than xi2"
@@ -334,7 +335,7 @@ class BerkovichLine(SageObject):
             count += 1
         assert count < 20, "could not find sufficient approximation!"
 
-        phi, s2 = xi2.discoid() 
+        phi, s2 = xi2.discoid()
         s1 = xi1.v(phi)
         # we are looking for t, s1 < t < s2, such that f has zero valuation
         # at the point xi_t: v(phi) >= t.
@@ -352,7 +353,7 @@ class BerkovichLine(SageObject):
             phi1 = phit.numerator()
             assert phit.denominator().is_one()
             xi3 = xi1._X.point_from_discoid(phi1, t, in_unit_disk=False)
-        
+
         if xi3.v(f) != 0:
             print "Error in ``find_zero``:"
             print "f = ", f
@@ -390,52 +391,68 @@ class BerkovichLine(SageObject):
         r"""
         Return the divisor of zeroes of a squarefree polynomial.
 
+
         INPUT:
 
-         - ``f`` -- a squarefree polynomial in the generator of the function 
+         - ``f`` -- a squarefree polynomial in the generator of the function
                     field of self
          - ``m`` -- an integer
 
         OUTPUT:
 
         The divisor of `f`, multiplied with `m`.
+
+        NOTE:
+
+        At the moment, we must require that the Newton polygon of `f` has
+        either only nonpositive or only positive slopes. So the zeroes of
+        `f` lie all inside the closed unit disk, or all outside.
+
         """
 
         F = self._F
         x = F.gen()
-        R = F._ring
+        assert f.parent() is F, "f must lie in the function field of X"
+        assert f.denominator().is_one(), "f must be a polynomial"
+        f = f.numerator()
+        assert f.is_squarefree(), "f is not squarefree"
+        R = f.parent()
         vK = self._vK
         v0 = GaussValuation(R, vK)
-        f = R(f).monic()
-        assert f.is_squarefree(), "f is not squarefree"
-        # print "f =", f
+
+        # we check that the additional conditon on f holds, and
+        # decide whether the roots lie inside or outside the unit disk
+        NP = NewtonPolygon([(i, vK(f[i])) for i in range(f.degree() + 1)])
+        slopes = NP.slopes()
+        assert slopes == [] or max(slopes) <= 0 or min(slopes) >0,\
+            "all roots of f must either lie inside or outside the unit disk"
+        is_in_unit_disk = (slopes == [] or max(slopes) <= 0)
+
 
         # this is the part inside the unit disk
-        if not v0.is_equivalence_unit(f):
-            # print "f is not an equivalence unit"
-            V = vK.mac_lane_approximants(f, require_incomparability=True, required_precision=1)
-            # print "V =", V
-            V = [LimitValuation(v, f) for v in V if not v.is_gauss_valuation()]
-            V = [FunctionFieldValuation(F, v) for v in V]
-            D = [(TypeIPointOnBerkovichLine(self, v), m) for v in V]
+        if is_in_unit_disk:
+            f = f.monic()
+            if not v0.is_equivalence_unit(f):
+                V = vK.mac_lane_approximants(f, require_incomparability=True, required_precision=1)
+                V = [LimitValuation(v, f) for v in V if not v.is_gauss_valuation()]
+                V = [FunctionFieldValuation(F, v) for v in V]
+                D = [(TypeIPointOnBerkovichLine(self, v), m) for v in V]
+            else:
+                D = []
         else:
-            D = []
+            # the part outside the unit disk
+            f = f.reverse().monic()
+            if not v0.is_equivalence_unit(f):
+                V = vK.mac_lane_approximants(f, require_incomparability=True, required_precision=1)
+                V = [LimitValuation(v, f) for v in V]
+                V = [v for v in V if v(x) > 0]
+                V = [FunctionFieldValuation(F, v) for v in V]
+                V = [FunctionFieldValuation(F, (v, F.hom([1/x]), F.hom([1/x]))) for v in V]
+                D = [(TypeIPointOnBerkovichLine(self, v), m) for v in V]
+            else:
+                D = []
 
-        # the part outside the unit disk
-        f = f.reverse().monic()
-        # print " f reversed  ", f
-        if not v0.is_equivalence_unit(f):
-            # print "f reversed is not equivalence unit"
-            V = vK.mac_lane_approximants(f, require_incomparability=True, required_precision=1)
-            # print "V = ", V
-            # print "----"
-            V = [LimitValuation(v, f) for v in V]
-            V = [v for v in V if v(x) > 0]
-            V = [FunctionFieldValuation(F, v) for v in V]
-            V = [FunctionFieldValuation(F, (v, F.hom([1/x]), F.hom([1/x]))) for v in V]
-            D = D + [(TypeIPointOnBerkovichLine(self, v), m) for v in V]
-        
-        # some points may only be approximations; we want to make sure that 
+        # some points may only be approximations; we want to make sure that
         # these are sufficiently precise to distinguish all points of D
         for i in range(len(D)):
             xi = D[i][0]
@@ -668,7 +685,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         return X.point_from_polynomial_pseudovaluation(wa, self.is_in_unit_disk())
 
     def improved_approximation(self):
-        r""" 
+        r"""
         Return an improved approximation of ``self``.
         """
 
