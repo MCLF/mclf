@@ -841,6 +841,13 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             x = F.gen()
             v3 = FunctionFieldValuation(F, w3)
             v3 = FunctionFieldValuation(F, (v3, F.hom([1/x]), F.hom([1/x])))
+            if not v3.is_discrete_valuation():
+                print "self = ", self
+                print "xi2 = ", xi2
+                print "v3 = ", v3
+                print "self == xi2:",self.is_equal(xi2)
+                print " <= :", self.is_leq(xi2)
+                print " >= :", xi2.is_leq(self)
             assert v3.is_discrete_valuation()
             return TypeIIPointOnBerkovichLine(self._X, v3)
 
@@ -1289,13 +1296,9 @@ def equality_of_pseudo_valuations(v1, v2):
             wa1 = w1._approximation
             return w1(wa2.phi()) >= wa2(wa2.phi()) and w2(wa1.phi()) >= wa1(wa1.phi())
         else:
-            return False
+            return w2(w1._G) == Infinity
     else:
         if hasattr(w2, "_approximation"):
-            return False
-        # now w1, w2 are both inductive and infinite
-        # w1 = w1._base_valuation
-        # w2 = w2._base_valuation
-        # print "w1 =", w1
-        # print "w2 =", w2
-        return w1(w2.phi()) == Infinity
+            return w1(w2._G) == Infinity
+        else:
+            return w1(w2.phi()) == Infinity
