@@ -45,14 +45,10 @@ In the explicit example from above, we get:
 ```
 sage: U_et = Y.compute_etale_locus()
 sage: U_et
-Affinoid with 2 components:
+Affinoid with 1 components:
 Elementary affinoid defined by
 v(x) >= 3/8
-Elementary affinoid defined by
-v(1/x) >= 3/2
 ```
-Actually, the result obtained is not quite correct: the etale locus only consists of the first component
-(defined by ``v(x)\geq 3/8``); the (fake) second component shows up because the code does not yet deal properly
-with the region 'outside the closed unit disk'.
+This result implies that the the curve `Y` has potentially good reduction over a tame extension of the `3`-adic numbers of ramification index `8`. To see this, one can perform the substitutions `x=3^(3/2)*x_1` and `y=1+3^(1/2)*y_1`.
 
 An update with more functionality should appear soon.
