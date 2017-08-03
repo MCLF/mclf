@@ -58,6 +58,7 @@ TO DO:
 
 
 from sage.structure.sage_object import SageObject
+from sage.rings.infinity import Infinity
 from mac_lane import *
 from mclf.berkovich.berkovich_line import BerkovichLine, TypeIPointOnBerkovichLine,\
                                           TypeIIPointOnBerkovichLine
@@ -525,6 +526,11 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         return "Affinoid with %s components:\n%s"%(self.number_of_components(),
                                                  comp_str)
 
+    def berkovich_line(self):
+
+        return self._X
+
+
     def is_contained_in(self, xi):
         r"""
         Check whether ``x`` lies on the affinoid.
@@ -579,6 +585,12 @@ class AffinoidDomainOnBerkovichLine(SageObject):
 
         """
 
+        if not hasattr(self, "_comp_list"):
+            self.compute_components()
+        boundary = []
+        for comp in self._comp_list:
+            boundary += [b_list[0].boundary_point() for b_list in comp]
+        return boundary
 
 
     def simplify(self):
@@ -607,6 +619,61 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         """
         T = self._T.intersection(V._T)
         return AffinoidDomainOnBerkovichLine(T)
+
+    def point_close_to_boundary(self, xi0):
+        r"""
+        Return a type-I-point inside the affinoid, close to ``xi0``.
+
+        INPUT:
+
+        - ``xi0`` -- a boundary point of the affinoid ``self``
+
+        OUTPUT: a type-I-point ``xi1`` on the affinoid `U:=` ``self`` which
+        is "close" to the boundary point ``xi0``.
+
+        The latter means that ``xi1`` maps onto the irreducible components
+        of the canonical reduction of `U` corresponding to ``xi0``.
+
+        EXAMPLES:
+
+        ::
+        
+            sage: K = QQ
+            sage: vK = pAdicValuation(K, 2)
+            sage: F.<x> = FunctionField(K)
+            sage: X = BerkovichLine(F, vK)
+            sage: U = RationalDomainOnBerkovichLine(X, 2/x/(x+1))
+            sage: U
+            Affinoid with 1 components:
+            Elementary affinoid defined by
+            v(1/x) >= -1
+            v(1/(x + 1)) >= -1
+            sage: xi0 = U.boundary()[0]
+            sage: U.point_close_to_boundary(xi0)
+            Point of type I on Berkovich line given by x + 2 = 0
+
+        """
+
+        U = self
+        T = U._T
+        X = U.berkovich_line()
+        T0 = T.find_point(xi0)
+        assert T0 != None and T0._is_in_affinoid, "xi0 is not a boundary point"
+        v0 = xi0.pseudovaluation_on_polynomial_ring()
+        Rb = v0.residue_ring()
+        psi = Rb.one()
+        for T1 in T0.children():
+            if not T1._is_in_affinoid:
+                eta1 = TypeVPointOnBerkovichLine(xi0, T1.root())
+                psi1 = eta1.minor_valuation().uniformizer()
+                assert psi1.denominator().is_one(), "psi1 is not a polynomial"
+                psi = psi * Rb(psi1.numerator())
+        phib = irreducible_polynomial_prime_to(psi)
+        phi = v0.lift_to_key(phib)
+        xi1 = X.point_from_discoid(phi, Infinity, xi0.is_in_unit_disk())
+        assert U.is_contained_in(xi1), "error: xi1 is not contained in U"
+        return xi1
+
 
 
 class ClosedUnitDisk(AffinoidDomainOnBerkovichLine):
@@ -808,3 +875,49 @@ class RationalDomainOnBerkovichLine(AffinoidDomainOnBerkovichLine):
         for xi in U.vertices():
             assert (xi.v(f) >= 0) == U.is_in_affinoid(xi)
         self._T = U
+
+#-------------------------------------------------------------------------
+
+def irreducible_polynomial_prime_to(f, min_deg=1):
+    """ Return an irreducibel polynomial prime to f.
+
+    INPUT:
+
+    - f: an univariat polynomial over a finite field
+    - min_deg: a positive integer (default = 1)
+
+    OUTPUT:
+
+    an irreducible polynomial prime to f, of degree >=min_deg
+
+    """
+
+    R = f.parent()
+    x = R.gen()
+    F = R.base_ring()
+    assert F.is_finite(), "base field of f must be finite."
+    for d in range(min_deg, 10):
+        for g in all_polynomials(F, x, d):
+            if g.is_irreducible() and g.gcd(f).is_one():
+                return g
+
+def all_polynomials(F, x, d):
+    """ List all polynomials in x over F of degree d.
+
+    INPUT:
+
+    - F: a finite field F
+    - x: generator of a polynomial ring over F
+
+    OUTPUT:
+
+    an iterator which list all elements of F[x] of degree d.
+    """
+
+    if d == 0:
+        for a in F.list():
+            yield a*x**0
+    else:
+        for e in range(0,d):
+            for f in all_polynomials(F, x, e):
+                yield x**d+f
