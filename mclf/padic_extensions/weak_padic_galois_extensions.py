@@ -106,7 +106,7 @@ TO DO:
 from sage.structure.sage_object import SageObject
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.rings.polynomial.polynomial_element import Polynomial
-from sage.rings.integer_ring import IntegerRing
+from sage.rings.integer import Integer
 from sage.misc.cachefunc import cached_method
 from sage.rings.infinity import Infinity
 from sage.functions.generalized import sgn
