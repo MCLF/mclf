@@ -106,6 +106,7 @@ TO DO:
 from sage.structure.sage_object import SageObject
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.rings.polynomial.polynomial_element import Polynomial
+from sage.rings.integer_ring import IntegerRing
 from sage.misc.cachefunc import cached_method
 from sage.rings.infinity import Infinity
 from sage.functions.generalized import sgn
@@ -590,7 +591,7 @@ def compute_approximate_minpoly(K, f, g, p, N):
     # print "F = ", F
     # print
     #print [c.valuation(p) for c in F.padded_list()]
-    return F.map_coefficients(lambda c:ZZ(mod(c,p**N))) # F mod p**N , i.e. over the ring Z/p**N
+    return F.map_coefficients(lambda c:Integer(mod(c,p**N))) # F mod p**N , i.e. over the ring Z/p**N
 
 
 def improve_maclane_valuation(v):
@@ -640,9 +641,9 @@ def simplify_coeff(c,p,N):
     if K == QQ:
         k = c.valuation(p)
         if k >= 0:
-            return ZZ(mod(c,p**N))
+            return Integer(mod(c,p**N))
         else:
-            return ZZ(mod(c*p**(-k),p**N))*p**k
+            return Integer(mod(c*p**(-k),p**N))*p**k
     else:
         l = c.list()
         l = [simplify_coeff(l[i],p,N) for i in range(0,len(l))]
@@ -651,5 +652,5 @@ def simplify_coeff(c,p,N):
         # Ka.<alpha>=K.absolute_field()
         # to_K,from_K=Ka.structure()
         # f=from_K(c).polynomial()
-        # f=f.map_coefficients(lambda x:ZZ(mod(x,p**N)))
+        # f=f.map_coefficients(lambda x:Integer(mod(x,p**N)))
         # return to_K(Ka(f))
