@@ -104,12 +104,13 @@ TO DO:
 
 
 from sage.structure.sage_object import SageObject
-from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-from sage.rings.polynomial.polynomial_element import Polynomial
-from sage.rings.integer import Integer
-from sage.rings.finite_rings.integer_mod import mod
+from sage.rings import *
+# from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
+# from sage.rings.polynomial.polynomial_element import Polynomial
+# from sage.rings.integer import Integer
+# from sage.rings.finite_rings.integer_mod import mod
 from sage.misc.cachefunc import cached_method
-from sage.rings.infinity import Infinity
+# from sage.rings.infinity import Infinity
 from sage.functions.generalized import sgn
 from sage.geometry.newton_polygon import NewtonPolygon
 from mac_lane import *
