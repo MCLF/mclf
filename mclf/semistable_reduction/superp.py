@@ -1,12 +1,12 @@
 r"""
 Semistable reduction of superelliptic curves of degree `p`
-
+==========================================================
 
 Let `K` be a field of characteritic zero and `v_K` a discrete valuation on `K`
 whose residue field is finite of characteristic `p>0`. For the time being, we
 assume that `K` is a number field.
 
-Let `f\in K[x]` be a polynomial over `K` which is not a `p`th power and whose
+Let `f\in K[x]` be a polynomial over `K` which is not a `p`-th power and whose
 radical has degree at least three. We consider the smooth projective  curve
 `Y` over `K` defined generically by the equation
 
@@ -71,6 +71,7 @@ class Superp(SageObject):
     over `K` defined generically by an equation of the form
 
     .. MATH::
+
               y^n = f(x),
 
     where `f` is a nonconstant polynomial over `K` in `x`.
@@ -91,7 +92,7 @@ class Superp(SageObject):
     of conductor" of `Y` with respect to `v_K`). The method to compute the
     semistable reduction in this particular case is explained in detail in
 
-    - [We17] S. Wewers, Semistable reduction of superelliptic curves of degree p, \
+    - [We17] S. Wewers, *Semistable reduction of superelliptic curves of degree p*, \
       preprint, 2017.
 
     INPUT:
@@ -131,17 +132,18 @@ class Superp(SageObject):
         Elementary affinoid defined by
         v(x + 2) >= 5/4
 
-    .. NOTES::
+    .. NOTE::
 
-    For the time being, we need to make the following additional assumptions
-    on `f`:
+        For the time being, we need to make the following additional assumptions
+        on `f`:
 
-    - `f` must be monic, integral with respect to `v_K` and of degree \
-      prime to `p`
+        - `f` must be monic,
+        - integral with respect to `v_K` and
+        - of degree prime to `p`.
 
-    This restriction is preliminary and will be removed in a future version.
-    Note that a superelliptic curve of degree `p` can be written in the required
-    form if and only if the map `Y\to X` has a `K`-rational branch point.
+        These restrictions are preliminary and will be removed in a future version.
+        Note that a superelliptic curve of degree `p` can be written in the required
+        form if and only if the map `Y\to X` has a `K`-rational branch point.
 
     """
 
@@ -154,7 +156,7 @@ class Superp(SageObject):
         self._f = f
         self._vK = vK
         self._p = p
-        FX = FunctionField(vK.domain(), names=R.variable_names())
+        FX = FunctionField(vK.domain(), names=R.variable_names())  # this does not work in Sage 8.0
         S = PolynomialRing(FX, 'T')
         T = S.gen()
         FY = FX.extension(T**p-FX(f), 'y')
@@ -195,7 +197,7 @@ class Superp(SageObject):
         of the cover `\phi`, conversely `X^{et}` contains a lot of information
         on the semistable reduction. The main result of
 
-        - [We17]: Semistable reduction of superelliptic curves of degree p, \
+        - [We17]: *Semistable reduction of superelliptic curves of degree p*, \
           preprint, 2017
 
         gives an explicit description of the affinoid `X^{et}` as a union
@@ -221,7 +223,7 @@ class Superp(SageObject):
 
 
         We check Example 4.14 from [BouWe16]. The original equation is
-        `y^2 = f(x) = 2*x^3 + x^2 + 32`, and `f` is not monic, as required.
+        `y^2 = f(x) = 2x^3 + x^2 + 32`, and `f` is not monic, as required.
         To fix this, we substitute `x/2` and multiply with `4`. Then the
         new equation is `y^2 = x^3 + x^2 + 128`: ::
 
@@ -233,12 +235,12 @@ class Superp(SageObject):
             v(1/x) >= -5/2
             v(x) >= 2
 
-    .. NOTES::
+    .. NOTE::
 
-    At the moment, the construction of the superelliptic curve `Y` requires that
-    the polynomial `f` defining `Y` is monic, integral with respect to `v_K`
-    and of degree prime to `p`. The motivation for this restriction, and its
-    result is that the etale locus is contained in the closed unit disk.
+        At the moment, the construction of the superelliptic curve `Y` requires that
+        the polynomial `f` defining `Y` is monic, integral with respect to `v_K`
+        and of degree prime to `p`. The motivation for this restriction, and its
+        result is that the etale locus is contained in the closed unit disk.
 
     """
 
@@ -293,13 +295,13 @@ def p_approximation(f,p):
 
     OUTPUT:
 
-    Two polynomials `h`,`g` in `K[x]`, such that
+    Two polynomials `h` and `g` in `K[x]`, such that
 
     - `f=a_0(h^p+g)`, where `a_0` is the constant coefficient of `f`
-    - `r:=deg(h)<=n/p`, and
-    - `x^(r+1)` divides `g`
+    - `r:=deg(h)\leq n/p`, and
+    - `x^{(r+1)}` divides `g`
 
-    Note that `h,g` are uniquely determined by these conditions.
+    Note that `h, g` are uniquely determined by these conditions.
 
     """
 
@@ -331,7 +333,7 @@ def p_approximation_generic(f,p):
 
     OUTPUT:
 
-    Two polynomials `H`,`K` in `K(x)[t]` which are the `p`-approximation
+    Two polynomials `H` and `K` in `K(x)[t]` which are the `p`-approximation
     of the polynomial `F:=f(x+t)`, considered as polynomial in `t`.
 
     """
