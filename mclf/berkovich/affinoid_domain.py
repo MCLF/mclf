@@ -1,4 +1,5 @@
-r""" Affinoid domains on the Berkovich projective line.
+r""" Affinoid subdomains of the Berkovich line.
+===============================================
 
 Let `K` be a field and `v_K` a discrete valuation on `K`. Let `X=\mathbb{P}^1_K`
 be the projective line over `K`. Let `X^{an}` denote the
@@ -70,7 +71,7 @@ class AffinoidTree(BerkovichTree):
     r""" A marked Berkovich tree representing an affinoid subdomain.
 
     An AffinoidTree is a Berkovich tree `T` in which every vertex has an additional
-    flag `is_in_affinoid` with value ``True`` or ``False``. It represents an
+    flag "is_in_affinoid" with value ``True`` or ``False``. It represents an
     affinoid subdomain `U` in the way explained above.
 
     INPUT:
@@ -90,24 +91,24 @@ class AffinoidTree(BerkovichTree):
     EXAMPLES:
     ::
 
-    sage: K = QQ
-    sage: vK = pAdicValuation(K, 2)
-    sage: F.<x> = FunctionField(K)
-    sage: X = BerkovichLine(F, vK)
-    sage: xi0 = X.gauss_point()
-    sage: xi1 = X.point_from_discoid(x^2+2, 3/2)
-    sage: xi2 = X.point_from_discoid(x^4+2, 3/2)
-    sage: xi3 = X.point_from_discoid(x^2+x+1, 1)
-    sage: xi4 = X.point_from_discoid(x^2+2, 2, False)
+        sage: K = QQ
+        sage: vK = pAdicValuation(K, 2)
+        sage: F.<x> = FunctionField(K)
+        sage: X = BerkovichLine(F, vK)
+        sage: xi0 = X.gauss_point()
+        sage: xi1 = X.point_from_discoid(x^2+2, 3/2)
+        sage: xi2 = X.point_from_discoid(x^4+2, 3/2)
+        sage: xi3 = X.point_from_discoid(x^2+x+1, 1)
+        sage: xi4 = X.point_from_discoid(x^2+2, 2, False)
 
-    sage: U1 = AffinoidTree(X)
-    sage: U1 = U1.add_points([xi0], [xi1, xi3])
-    sage: U2 = AffinoidTree(X)
-    sage: U2 = U2.add_points([xi2], [xi4])
+        sage: U1 = AffinoidTree(X)
+        sage: U1 = U1.add_points([xi0], [xi1, xi3])
+        sage: U2 = AffinoidTree(X)
+        sage: U2 = U2.add_points([xi2], [xi4])
 
-    sage: U = U1.union(U2)
-    sage: U
-    Affinoid tree with 6 vertices
+        sage: U = U1.union(U2)
+        sage: U
+        Affinoid tree with 6 vertices
     """
 
     def __init__(self, X, root=None, children=None, parent=None, is_in_affinoid=False):
@@ -428,26 +429,26 @@ class AffinoidTree(BerkovichTree):
         EXAMPLES:
         ::
 
-        sage: K = QQ
-        sage: vK = pAdicValuation(K, 2)
-        sage: F.<x> = FunctionField(K)
-        sage: X = BerkovichLine(F, vK)
-        sage: xi0 = X.gauss_point()
-        sage: xi1 = X.point_from_discoid(x+1, 1)
-        sage: xi2 = X.point_from_discoid(x+1, 2)
-        sage: xi3 = X.point_from_discoid(2+x, 1, in_unit_disk=False)
+            sage: K = QQ
+            sage: vK = pAdicValuation(K, 2)
+            sage: F.<x> = FunctionField(K)
+            sage: X = BerkovichLine(F, vK)
+            sage: xi0 = X.gauss_point()
+            sage: xi1 = X.point_from_discoid(x+1, 1)
+            sage: xi2 = X.point_from_discoid(x+1, 2)
+            sage: xi3 = X.point_from_discoid(2+x, 1, in_unit_disk=False)
 
-        sage: U = AffinoidTree(X)
-        sage: U = U.add_points([xi0, xi2], [xi1, xi3])
-        sage: U
-        Affinoid tree with 4 vertices
+            sage: U = AffinoidTree(X)
+            sage: U = U.add_points([xi0, xi2], [xi1, xi3])
+            sage: U
+            Affinoid tree with 4 vertices
 
-        sage: component_list = []
-        sage: U.compute_connected_components(component_list, [])
-        sage: component_list
-        [[[Point of type V given by residue class v(1/(x + 1)) > -2]],
-        [[Point of type V given by residue class v(x + 1) > 0,
-        Point of type V given by residue class v(1/x) > 0]]]
+            sage: component_list = []
+            sage: U.compute_connected_components(component_list, [])
+            sage: component_list
+            [[[Point of type V given by residue class v(1/(x + 1)) > -2]],
+            [[Point of type V given by residue class v(x + 1) > 0,
+            Point of type V given by residue class v(1/x) > 0]]]
         """
 
         T = self
@@ -637,7 +638,7 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         EXAMPLES:
 
         ::
-        
+
             sage: K = QQ
             sage: vK = pAdicValuation(K, 2)
             sage: F.<x> = FunctionField(K)
@@ -694,6 +695,7 @@ class ClosedUnitDisk(AffinoidDomainOnBerkovichLine):
     OUTPUT: the closed unit disk inside ``X``
 
     EXAMPLES:
+    ::
 
         sage: K = QQ
         sage: vK = pAdicValuation(K, 3)
@@ -783,61 +785,57 @@ class ElementaryAffinoidOnBerkovichLine(AffinoidDomainOnBerkovichLine):
 
 
 class RationalDomainOnBerkovichLine(AffinoidDomainOnBerkovichLine):
+    r"""
+    Return the rational domain on ``X`` defined by ``f``.
+
+    INPUT:
+
+    - ``X`` -- a Berkovich line
+    - ``f`` -- a nonconstant rational function on `X`
+
+    OUTPUT:
+
+    the affinoid domain on `X` defined by the inequality
+
+    .. MATH::
+
+    v(f) >= 0.
+
+
+    EXAMPLES:
+    ::
+
+        sage: K = QQ
+        sage: vK = pAdicValuation(K, 2)
+        sage: F.<x> = FunctionField(K)
+        sage: X = BerkovichLine(F, vK)
+        sage: U = RationalDomainOnBerkovichLine(X, (x^2+2)/x*(x+1)/2)
+        Affinoid with 2 components:
+        Elementary affinoid defined by
+        v(x^2 + 2) >= 3/2
+        Elementary affinoid defined by
+        v(x + 1) >= 1
+
+    TO DO:
+
+    I think this can be drastically improved, by using the following ideas:
+
+    - it should not be necessary to first build a tree with all zeroes and poles
+      of `f` as leaves. At any stage of bulding the tree one looks at a discoid
+      `D`. If `f` has nonnegative valuation on the boundary of `D` and
+      no poles inside `D` (or nonpositive valuation on the boundary and no
+      zero inside) then we can stop at `D`.
+    - Instead of working with a (possible huge) rational function `f` we should
+      work with a "factorization", i.e. a list of pairs `(f_i, e_i)` where
+      `f_i` is an irreducible polynomial or a constant and `e_i` an integer
+      (rationals are also fine).
+      At any stage of building the tree, we only retain the sublist
+      of pairs `(f_i,e_i)` which are "active"; for the "inactive" pairs we
+      only need to know their valuations - which is constant on the subtree!
+
+    """
 
     def __init__(self, X, f):
-        r"""
-        Return the rational domain on ``X`` defined by ``f``.
-
-        INPUT:
-
-        - ``X`` -- a Berkovich line
-        - ``f`` -- a nonconstant rational function on `X`
-
-        OUTPUT:
-
-        the affinoid domain on `X` defined by the inequality
-
-        .. MATH::
-
-               v(f) >= 0.
-
-
-        EXAMPLES:
-
-        ::
-
-            sage: K = QQ
-            sage: vK = pAdicValuation(K, 2)
-            sage: F.<x> = FunctionField(K)
-            sage: X = BerkovichLine(F, vK)
-            sage: U = RationalDomainOnBerkovichLine(X, (x^2+2)/x*(x+1)/2)
-
-            Affinoid with 2 components:
-            Elementary affinoid defined by
-            v(x^2 + 2) >= 3/2
-            Elementary affinoid defined by
-            v(x + 1) >= 1
-
-        TO DO:
-
-        I think this can be drastically improved, by using the following ideas:
-
-        - it should not be necessary to first build a tree with all zeroes and poles
-          of `f` as leaves. At any stage of bulding the tree one looks at a discoid
-          `D`. If `f` has nonnegative valuation on the boundary of `D` and
-          no poles inside `D` (or nonpositive valuation on the boundary and no
-          zero inside) then we can stop at `D`.
-        - Instead of working with a (possible huge) rational function `f` we should
-          work with a "factorization", i.e. a list of pairs `(f_i, e_i)` where
-          `f_i` is an irreducible polynomial or a constant and `e_i` an integer
-          (rationals are also fine).
-          At any stage of building the tree, we only retain the sublist
-          of pairs `(f_i,e_i)` which are "active"; for the "inactive" pairs we
-          only need to know their valuations - which is constant on the subtree!
-
-
-        """
-
         self._X = X
         U = AffinoidTree(X)
         xi0 = X.gauss_point()
@@ -877,6 +875,10 @@ class RationalDomainOnBerkovichLine(AffinoidDomainOnBerkovichLine):
         self._T = U
 
 #-------------------------------------------------------------------------
+"""
+Some auxiliary functions:
+
+"""
 
 def irreducible_polynomial_prime_to(f, min_deg=1):
     """ Return an irreducibel polynomial prime to f.

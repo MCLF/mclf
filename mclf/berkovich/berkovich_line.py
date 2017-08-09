@@ -1,23 +1,24 @@
 r"""
 The Berkovich projective line over a discretely valued field.
+=============================================================
 
 Let `K` be a field and `v_K` a discrete valuation on `K`. Let `F=K(x)`
 be a rational function field over `K`. We consider `F` as the function
-field of the projective line `X` over `K`. Let `X^{an}` denote the
-`(K,v_K)`-analytic space associated to `X`. Then a point `\xi` on `X^{an}`
-may be identified with a (real valued) pseudo-valuation `v_\xi` on `F`
-extending `v_K`.
+field of the projective line `X:=\mathbb{P}_K^1` over `K`. Let `X^{an}` denote the
+`(K,v_K)`-analytic space associated to `X`. Then a point `\xi` on
+`X^{an}` may be identified with a (real valued) pseudo-valuation
+`v_\xi` on `F` extending `v_K`.
 
 Note that we do not assume `K` to be complete with respect to `v_K`. Hence we
 can work with 'exact' fields, e.g. number fields.
 
 There are only two kind of 'points' which are relevant for us and can be handled
- using the mac_lane infrastructure:
+using the mac_lane infrastructure:
     - Type I, algebraic: these are the points that come from a closed point
-        on the (algebraic) projective line over the completed base field.
+      on the (algebraic) projective line over the completed base field.
     - Type II: these are the points which correspond to discrete valuations
-        on the function field whose residue field is a function field over the
-        residue base field
+      on the function field whose residue field is a function field over the
+      residue base field
 For both these kind of points, the corresponding pseudovaluation on `F` are
 directly realizable inside the ``mac_lane`` infrastructure.
 
@@ -33,14 +34,15 @@ By a result of Berkovich, the topological space `X^{an}` is a *simply connected
 quasi-polyhedron*. Among other things this means that for any two points
 `\xi_1,\xi2\in X^{an}` there exists a unique closed subset
 
-.. MATH::      `[\xi_1,\xi_2]\subset X^{an}`
+.. MATH::      [\xi_1,\xi_2]\subset X^{an}
 
-which is homeomorphic to the unit interval `[0,1]\subset\RR` in such a way that
+which is homeomorphic to the unit interval `[0,1]\subset\mathbb{R}` in such a way that
 `\xi_1,\xi_2` are mapped to the endpoints `0,1`.
 
-Let `\xi^g\in X^{an\}` denote the *Gauss point*, corresponding to the Gauss
+Let `\xi^g\in X^{an}` denote the *Gauss point*, corresponding to the Gauss
 valuation on `F=K(x)` with respect to the parameter `x`. Then `X^{an}` has a
 unique partial ordering determined by the following two conditions:
+
 - `\xi^g` is the smallest element
 - we have `\xi_1<\xi_2` if and only if `\xi_2` lies in a connected component
   of `X^{an}-\{\xi_1\}` which does not contain `\xi^g`.
@@ -50,13 +52,13 @@ A point `\xi` of type II has a *discoid representation* as follows. If
 `D_\xi` is defined of the set of all points `\xi_1\in X^{an}` such that
 `\xi\leq\xi_1`. Then `D_\xi` is of the form
 
-.. MATH::    `D_\xi = \{ \xi_1 \mid v_{\xi_1}(f) \geq s\}`,
+.. MATH::    D_\xi = \{ \xi_1 \mid v_{\xi_1}(f) \geq s\},
 
 where `f` is a polynomial in `x` or in `x^{-1}`, irreducible over
 `\hat{\bar{K}}` and `s` is a nonnegativ rational number.
 The pair `(f,s)` determines `\xi`, but this representation is not unique.
 
-Note that we can't simply extend the discoid representation to points of type I
+Note that we can simply extend the discoid representation to points of type I
 by allowing `s` to take the value `\infty`.
 
 AUTHORS:
@@ -161,7 +163,7 @@ class BerkovichLine(SageObject):
         OUTPUT:
 
         Either `f` of `f(1/x)`, considered as a polynomial in `K[x]`,
-        and depending on whether ``in_uni_disk`` is true or false.
+        and depending on whether ``in_unit_disk`` is true or false.
         """
 
         R = self.polynomial_ring()
@@ -289,15 +291,16 @@ class BerkovichLine(SageObject):
 
         INPUT:
 
-        - ``xi1``, ``xi2`` -- points on the Berkovich line such that
-                              ``\xi_1``<``xi2``
+        - ``xi1``, ``xi2`` -- points on the Berkovich line such that `\xi_1<\xi2`
         - ``f`` -- a nonconstant rational function; it is assumed that the signs
-                   of the valuations of f at ``xi1`` and ``xi2`` are different
+                   of the valuations of f at `\xi1` and `\xi2` are different
 
         OUTPUT:
 
-        The smallest point between ``xi1`` and ``xi2`` where the valuation of ``f``
+        The smallest point between `\xi1` and `\xi2` where the valuation of `f`
         is zero.
+
+        NOTE::
 
         We are assuming for the moment that the function
 
@@ -856,6 +859,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
 
 class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
     r""" A point of type II on a Berkovich line.
+
     INPUT:
 
     - ``X`` -- a Berkovich line over a valued field K
@@ -1008,7 +1012,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
 
     def is_equal(self, xi):
         r"""
-        Return True if self is equal to ``xi``.
+        Return ``True`` if self is equal to ``xi``.
         """
 
         if xi.type() != "II":
@@ -1018,7 +1022,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
 
     def is_leq(self, xi):
         r"""
-        Return True if self is less or equal to xi.
+        Return ``True`` if self is less or equal to ``xi``.
 
         INPUT:
 
@@ -1041,7 +1045,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
 
     def infimum(self, xi2):
         r"""
-        Return the infimum of self and xi2.
+        Return the infimum of self and ``xi2``.
 
         INPUT:
 

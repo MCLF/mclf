@@ -1,5 +1,6 @@
 r"""
-Finite children of the Berkovich projective line
+Finite subtrees of the Berkovich line
+=====================================
 
 Let `K` be a field and `v_K` a discrete valuation on `K`. Let `X=\mathbb{P^1_K}`
 be the projective line over `K`. Let `X^{an}` denote the
@@ -72,7 +73,7 @@ class BerkovichTree(SageObject):
 
     def __init__(self, X, root=None, children=None, parent=None):
 
-        # print "calling BerkovichTree with root %s, children %s and 
+        # print "calling BerkovichTree with root %s, children %s and
         # parent %s"%(root, children, parent)
         self._root = root
         if children == None:
@@ -169,7 +170,7 @@ class BerkovichTree(SageObject):
 
         OUTPUT:
 
-        the list of all directed paths of the tree, as a list of pairs 
+        the list of all directed paths of the tree, as a list of pairs
         `(\xi_1,\xi_2)`, where `\xi_2` is a child of `\xi_1`.
 
         """
@@ -384,12 +385,12 @@ class BerkovichTree(SageObject):
         Add all zeroes and poles of `f` as leaves of the tree.
 
         INPUT:
-        
+
         - ``f`` -- a rational function on `X`
 
         OUTPUT:
 
-        the new tree obtained by adding all zeroes and poles of `f` as 
+        the new tree obtained by adding all zeroes and poles of `f` as
         vertices to the old tree.
         """
 

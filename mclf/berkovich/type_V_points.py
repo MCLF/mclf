@@ -1,4 +1,6 @@
-r""" Points of type V on the Berkovich projective line.
+r""" Points of type V on the Berkovich line.
+============================================
+
 
 """
 
@@ -46,7 +48,7 @@ class TypeVPointOnBerkovichLine(SageObject):
 
       .. MATH::
 
-          \partial: K(x)^* \to \ZZ
+          \partial: K(x)^* \to \mathbb{Z}
 
     with the following properties: let `(\phi,s)` be the discoid representation
     of `\eta`. We define, for `t\geq s`, the valuation `v_t` as the valuation
@@ -69,7 +71,7 @@ class TypeVPointOnBerkovichLine(SageObject):
     OUTPUT:
 
     The type-V-point corresponding to the connected component
-    of X^{an}-{xi0} which contains xi1.
+    of `X^{an}-{\xi0}`` which contains `\xi1`.
 
 
     EXAMPLES:
@@ -197,7 +199,7 @@ class TypeVPointOnBerkovichLine(SageObject):
 
 
     def point_inside_residue_class(self):
-        """ 
+        """
         Return some point inside the residue class corresponding to the point.
         """
 
@@ -282,19 +284,19 @@ class TypeVPointOnBerkovichLine(SageObject):
         r"""
         Return the point inside the residue class at the value `t`.
 
-        The type-V-point corresponds to an open discoid defined by 
+        The type-V-point corresponds to an open discoid defined by
 
         .. MATH::
-       
+
                   v(\phi) > s.
 
-        For for a rational number `t>s' we can define the type-II-point
-        `\xi_t` corresponding to the closed discoid defined by 
+        For for a rational number `t>s` we can define the type-II-point
+        `\xi_t` corresponding to the closed discoid defined by
 
         .. MATH::
 
                  v(\phi) >= t.
-        
+
         If `t=\infty` we obtain the type-I-point corresponding to `\phi=0`.
 
         INPUT:
@@ -304,10 +306,10 @@ class TypeVPointOnBerkovichLine(SageObject):
         OUTPUT:
 
         The point `\xi_t` inside the residue class corresponding to the closed
-        discoid defined by `v(\phi) >= t`. 
+        discoid defined by `v(\phi) >= t`.
 
-        If `t <= s` then an error is raised. 
-        
+        If `t <= s` then an error is raised.
+
         """
 
         eta = self
@@ -322,8 +324,8 @@ class TypeVPointOnBerkovichLine(SageObject):
         else:
             raise NotImplementedError
 
-            
-           
+
+
 
 
     def derivative(self, f):
@@ -335,7 +337,7 @@ class TypeVPointOnBerkovichLine(SageObject):
 
         .. MATH::
 
-                    \partial: K(x)^* \to \ZZ
+                    \partial: K(x)^* \to \mathbb{Z}
 
         with the following property. Assume that `\eta=` ``self`` is represented
         by the open discoid `D_\eta = \{ v \mid v(\phi)> s \}`. Set
