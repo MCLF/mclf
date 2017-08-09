@@ -1,40 +1,44 @@
 
 r"""
 Smooth projective curves over a field.
+======================================
 
-Let `k` be a field and `F/k` a finitely generated field extension of transcendence 
-degree one (i.e. a 'function field over `k`'). Then there exists a smooth projective 
-curve `Y` over `Spec(k)` with function field `F`, unique up to unique isomorphism.
-The set of closed points on `Y` are in natural bijection with the set of discrete
-valuations on `F` which are trivial on `k`. See 
-- R. Hartshorne, Algebraic Geometry, Theorem I.6.9.
+Let `k` be a field and `F/k` a finitely generated field extension of transcendence
+degree one (i.e. a 'function field over `k`'). Then there exists a smooth projective
+curve `X` over `Spec(k)` with function field `F`, unique up to unique isomorphism.
+The set of closed points on `X` are in natural bijection with the set of discrete
+valuations on `F` which are trivial on `k`. See
 
-The classes in this module provide the definition and some basic functionality for 
+- R. Hartshorne, *Algebraic Geometry*, Theorem I.6.9.
+
+The classes in this module provide the definition and some basic functionality for
 such curves.
 
-A curve `Y` is defined via its function field `F_Y`. Points are represented by 
-the corresponding valuations on `F_Y`, and no smooth projective model of `Y` is actually
-computed. However, we do compute a list of 'coordinate functions' `x_1,..,x_n` which
-separate all points, meaning that the closure of the rational map from `Y` to projective
-space of dimension `n` is injective. Then a (closed) point `P` on `Y` can also be represented 
-by the tupel `(x_1(P),..,x_n(P))`.
+A curve `X` is defined via its function field `F_X`. Points are represented by
+the corresponding valuations on `F_X`, and no smooth projective model of `X` is
+actually computed. However, we do compute a list of 'coordinate functions'
+`x_1,..,x_n` which separate all points, meaning that the closure of the rational
+map from `X` to projective space of dimension `n` is injective. Then a (closed)
+point `x` on `X` can also be represented by the tupel `(f_1(x),..,f_n(x))`.
 
-A function field in Sage is always realized as a simple separable extension of a rational 
-function field. Geometrically, this means that the curve `Y` is equipped with a finite 
-separable morphism `phi:Y-->X`, where `X` is the projective line over the base field `k`.
+A function field in Sage is always realized as a simple separable extension of a
+rational function field. Geometrically, this means that the curve `X` is implicitly
+equipped with a finite separable morphism `\phi:X\to\mathbb{P}^1_k`
+to the projective line over the base field `k`.
 
-The base field `k` is called the 'constant base field' of the curve, and it is part 
-of the data. We do not assume that the extension `F_Y/k` is regular (i.e. that `k` is 
-algebraically closed in `F_Y`). Geometrically this means that the curve `Y` may not be
-absolutely irreducibel as a `k`-scheme. The 'field of constants' of `Y` is defined as 
-the algebraic closure of `k` inside `F_Y`. It is a finite extension `k_c/k`. If we regard
-`Y` as a curve over its fields of constants then it becomes absolute irreducible.
+The base field `k` is called the *constant base field* of the curve, and it is
+part of the data. We do not assume that the extension `F_X/k` is regular (i.e.
+that `k` is algebraically closed in `F_X`). Geometrically this means that the
+curve `X` may not be absolutely irreducibel as a `k`-scheme. The 'field of
+constants' of `X` is defined as the algebraic closure of `k` inside `F_X`.
+It is a finite extension `k_c/k`. If we regard `X` as a curve over its fields of
+constants then it becomes absolute irreducible.
 
-It would be interesting to have an efficient algorithm for computing the field of constants,
-but it seems that this has not been implemented in Sage yet. 
-To compute the genus of `Y` it is necessary to know at least the degree `[k_c:k]`.
-We have implemented a probabilistic algorithm for computing the degree `[k_c:k]' 
-(if `k` is finite, this determines `k_c` uniquely). 
+It would be interesting to have an efficient algorithm for computing the field
+of constants, but it seems that this has not been implemented in Sage yet.
+To compute the genus of `X` it is necessary to know at least the degree `[k_c:k]`.
+We have implemented a probabilistic algorithm for computing the degree `[k_c:k]`
+(if `k` is finite, this determines `k_c` uniquely).
 
 
 AUTHORS:
@@ -74,48 +78,57 @@ from sage.structure.sage_object import SageObject
 from sage.rings.all import Infinity, ZZ
 from sage.misc.prandom import randint
 from sage.rings.power_series_ring import PowerSeriesRing
+from sage.misc.cachefunc import CachedFunction
 from mac_lane import *
 
 
 class SmoothProjectiveCurve(SageObject):
-    
+    r"""
+    Return the smooth projective curve with function field `F`.
+
+    """
+
     def __init__(self, F):
         self._function_field = F
-        self._constant_base_field = F.constant_base_field()       #  F/k need not be regular
+        self._constant_base_field = F.constant_base_field()
         # self._field_of_constants_degree = 1
         self._coordinate_functions = self.coordinate_functions()
         self._field_of_constants_degree = self.field_of_constants_degree()
-        
+
     def __repr__(self):
-        return "The smooth projective curve over %s with %s."%(self._constant_base_field, self._function_field)
-    
+        return "The smooth projective curve over %s with %s."\
+            %(self._constant_base_field, self._function_field)
+
     def point(self, v):
-        """ Returns the point on the curve corresponding to v.
-        
+        r""" Returns the point on the curve corresponding to ``v``.
+
         INPUT:
-        
-        - v -- a discrete valuaton on the function field of the curve
-        
+
+        - ``v`` -- a discrete valuaton on the function field of the curve
+
         OUTPUT:
-        
-        The point on the curve corresponding to v.
-        
+
+        The point on the curve corresponding to ``v``.
+
         """
-        
+
         return PointOnSmoothProjectiveCurve(self, v)
-    
-    
+
+
     @cached_method
     def field_of_constants_degree(self):
-        """ Return the degree of the field of constants over the constant base field.
-        
-        If F is the function field of self and k the constant base field, then the 
-        field of constansts k_c is the algebraic closure of k in F. 
-        
-        We use a probabilistic algorithms for computing the degree [k_c:k].
-        
+        r""" Return the degree of the field of constants over the constant base field.
+
+        If `F` is the function field of the curve and `k` the constant base field,
+        then the *field of constants* `k_c` is the algebraic closure of `k` in `F`.
+
+        We use a probabilistic algorithms for computing the degree ``[k_c:k]`.
+
         """
-        
+
+        if hasattr(self, "_field_of_constants_degree"):
+            return self._field_of_constants_degree
+
         F = self._function_field
         k = self._constant_base_field
         P = self.random_point()
@@ -125,32 +138,58 @@ class SmoothProjectiveCurve(SageObject):
             P = self.random_point()
             n = n.gcd(P.absolute_degree())
             count += 1
+        self._field_of_constants_degree = n
         return n
-    
+
     def function_field(self):
-        """ Return the function field of self.
-        
         """
-        
+        Return the function field of the curve ``self``.
+
+        """
+
         return self._function_field
-    
-    @cached_method
-    def coordinate_functions(self):
-        """ Return a list of coordinate functions.
-        
-        By 'list of coordinate functions' we mean elements x_i in 
-        the function field, such that the map P --> [x_1(P):..:1]
-        from the set of points to projective space is injective.
-        But the image of this map may not be a smooth model of self.
+
+    def rational_function_field(self):
+        r"""
+        Return the rational function field underlying the function field of `X`.
+
+        By definition, the function field `F_X` of the curve `X` is a finite
+        separable extension of a rational function field `k(x)`, where `k` is
+        the base field of `X`.
+
         """
+        return self._function_field.base_field()
+
+
+    def coordinate_functions(self):
+        r""" Return a list of coordinate functions.
+
+        By 'list of coordinate functions' we mean elements `f_i` in
+        the function field, such that the map
+
+        .. MATH::
+
+              x \mapsto (f_1(x),\ldots, f_n(x))
+
+        from `X` to `(\mathbb{P}^1)^n` is injective.
+
+        Note that this map may not be an embedding, i.e. image of this map may
+        not be a smooth model of the curve.
+
+        """
+
+        if hasattr(self, "_coordinate_functions"):
+            return self._coordinate_functions()
+
         F = self._function_field
         F0 = F.base_field()
         if F0 is F:
+            self._coordinate_functions = [F.gen()]
             return [F.gen()]
-        
+
         # F is an extension of a rational ff F0
         ret = [F0.gen(), F.gen()]     # the coordinates of the affine plane model
-        v0 = FunctionFieldValuation(F0, 1/F0.gen()) 
+        v0 = FunctionFieldValuation(F0, 1/F0.gen())
         V = v0.extensions(F)          # list of points at infinity
         separate_points(ret, V)       # make sure they are separated
         D = F.polynomial().discriminant().numerator()
@@ -158,40 +197,40 @@ class SmoothProjectiveCurve(SageObject):
         for v0 in V0:
             separate_points(ret, v0.extensions(F))
             # separate all intersection points of the affine plane model
-        return ret    
-        
-        
+        self._coordinate_functions = ret
+        return ret
+
+
     def random_point(self):
-        """ Return a random point on self.
-        
         """
-        
-        
-        F = self._function_field
-        F0 = F.base_field()
+        Return a random closed point on the curve.
+
+        """
+
+
+        F = self.function_field()
+        F0 = self.rational_function_field()
         R = F0._ring
         f = R.random_element(degree=(1,3)).factor()[0][0](F0.gen())
         v0 = FunctionFieldValuation(F0, f)
         V = v0.extensions(F)
         v = V[randint(0, len(V)-1)]
         return PointOnSmoothProjectiveCurve(self, v)
-        
-    
+
+
     def principal_divisor(self, f):
-        """ Return the principal divisor of f.
-        
+        r""" Return the principal divisor of ``f``.
+
         INPUT:
-        
-        - f: a nonzero element of the function field of self
-        
-        OUTPUT:
-        
-        the principal divisor D =(f)
+
+        - ``f`` -- a nonzero element of the function field of ``self``
+
+        OUTPUT:  the principal divisor `D =(f)`.
         """
-        
+
         F = self._function_field
         F0 = F.base_field()
-        is_rational = (F is F0) 
+        is_rational = (F is F0)
         D = {}
         for g, m in f.norm().factor():
             v0 = FunctionFieldValuation(F0, g)
@@ -214,14 +253,14 @@ class SmoothProjectiveCurve(SageObject):
                 P = PointOnSmoothProjectiveCurve(self, v)
                 a = P.coordinates()
                 D[a] = (P, P.order(f))
-        assert self.degree(D) == 0, "Something is wrong: the degree of (f) is not zero!"        
-        return D        
-        
-    
+        assert self.degree(D) == 0, "Something is wrong: the degree of (f) is not zero!"
+        return D
+
+
     def divisor_of_zeroes(self, f):
-        """ Return the divisor of zeroes of f.
+        r""" Return the divisor of zeroes of ``f``.
         """
-        
+
         D = self.principal_divisor(f)
         ret = []
         for x,m in D:
@@ -229,44 +268,48 @@ class SmoothProjectiveCurve(SageObject):
         return ret
 
     def divisor_of_poles(self, f):
-        """ Return the divisor of poles of f.
+        r""" Return the divisor of poles of ``f``.
         """
-        
+
         D = self.principal_divisor(f)
         ret = []
         for x,m in D:
             if m < 0: ret.append((x,-m))
         return ret
-    
+
     def degree(self, D):
-        """ Return the degree of the divisor D.
-        
-        Note that the degree of D is defined relative to the 
+        r""" Return the degree of the divisor ``D``.
+
+        Note that the degree of `D` is defined relative to the
         field of constants of the curve.
         """
-        
+
         deg = ZZ.zero()
         for P, m in D.values():
             deg += m*P.degree()
         return deg
-    
+
     def canonical_divisor(self):
         pass
-    
-    @cached_method
+
     def ramification_divisor(self):
-        """ Return the ramification divisor of self.
-        
-        The function field of self is a finite separable extension
+        r""" Return the ramification divisor of self.
+
+        The function field of ``self`` is a finite separable extension
         of a rational function field. Geometrically, this means that
-        the curve Y is represented as a separable cover of 
-        the projective line X. The ramification divisor of this cover
+        the curve `X` is represented as a separable cover of
+        the projective line. The ramification divisor of this cover
         is supported in the set of ramification points of this cover.
         Sheaf theoretically, the divisor represents the sheaf of relative
-        differentials Omega_{Y/X}. See:
-        - Hartshorne, Algebraic Geometry, Definition IV.2.
+        differentials. See:
+
+        - Hartshorne, *Algebraic Geometry*, Definition IV.2.
+
         """
-        
+
+        if hasattr(self, "_ramification_divisor"):
+            return self._ramification_divisor
+
         FY = self._function_field
         FX = FY.base_field()
         R = {}
@@ -280,7 +323,7 @@ class SmoothProjectiveCurve(SageObject):
         for v in supp:
             P = PointOnSmoothProjectiveCurve(self, v)
             t = v.uniformizer()
-            F = t.minimal_polynomial('T')            
+            F = t.minimal_polynomial('T')
             Ft = F.derivative()(t)
             x = FX.gen()
             dx = FX.derivation()
@@ -291,49 +334,56 @@ class SmoothProjectiveCurve(SageObject):
             Fx = F.map_coefficients(der)(t)
             m = P.order(Ft) - P.order(Fx)
             R[P._coordinates] = (P, m)
-        return R    
-    
-    @cached_method
+        self._ramification_divisor = R
+        return R
+
     def genus(self):
-        """ Return the genus of the curve.
-        
+        r""" Return the genus of the curve.
+
         The genus of the curve is defined as the dimension of
-        the cohomology group `H^1(X,OO_X)`, as a vector space
-        *over the field of constants k_c*. 
-        
-        The genus g of Y is computed using the Riemann-Hurwitz formula,
-        applied to the cover phi:Y-->X corresponding to the realization
-        of the function field of Y as a finite separable extension of 
-        a rational function field. See:
-        - Hartshorne, Algebraic Geometry, Corollary IV.2.4
-        
+        the cohomology group `H^1(X,\mathcal{O}_X)`, as a vector space
+        *over the field of constants `k_c`*.
+
+        The genus `g` of the curve `X` is computed using the Riemann-Hurwitz
+        formula, applied to the cover `X\to\mathbb{P}^1` corresponding to the
+        underlying realization of the function field of `X` as a finite
+        separable extension of a rational function field. See:
+
+        - Hartshorne, *Algebraic Geometry*, Corollary IV.2.4
+
         """
+
+        if hasattr(self,"_genus"):
+            return self._genus
+
         FY = self._function_field
         if FY.base_field() is FY:
             return 0
         n = FY.polynomial().degree()/self._field_of_constants_degree
         r = self.degree(self.ramification_divisor())
-        return ZZ(-n + r/2 +1)   
-    
+        g = ZZ(-n + r/2 +1)
+        self._genus = g
+        return g
+
     def count_points(self, d):
-        """ Return number of points of degree <= d.
-        
+        r""" Return number of points of degree less or equal to ``d``.
+
         INPUT:
-        
-        - d: an interger >=1
-        
+
+        - ``d`` -- an interger `\geq 1`
+
         OUTPUT:
-         
-        a list N, where N[i] is the number of points on self
-        of *absolute* degree i, for i=1,..,d.
-        
-        Recall that the absolute degree of a point if the degree of 
+
+        a list ``N``, where ``N[i]`` is the number of points on self
+        of *absolute* degree `i`, for `i=1,..,d`.
+
+        Recall that the absolute degree of a point if the degree of
         the residue field of the point over the constant base field
-        (*not* over the field of constants). 
-        
-        This is a very slow realization and should be improved at some point. 
+        (*not* over the field of constants).
+
+        This is a very slow realization and should be improved at some point.
         """
-        
+
         F = self._function_field
         F0 = F.base_field()
         K = self._constant_base_field
@@ -341,8 +391,8 @@ class SmoothProjectiveCurve(SageObject):
         p = K.characteristic()
         d0 = K.degree()
         q = K.cardinality()
-        assert q == p**d0        
-        
+        assert q == p**d0
+
         # compute all nonconstant irreducible polynomials of degree <= g
         R = F0._ring
         x = R.gen()
@@ -374,37 +424,45 @@ class SmoothProjectiveCurve(SageObject):
                 pass
             k = ZZ(L.degree()/d0)
             if k <= d:
-                N[k] += 1  
+                N[k] += 1
         return N
-    
-    @cached_method
+
     def zeta_function(self, var_name='T'):
-        """ Return the Zeta function of the curve.
-        
-        For any scheme X of finite type over ZZ, the arithmetic 
-        zeta funtion of X is defined as the product
-        
-            zeta(X,s) := \prod_x 1/(1-N(x)^(-s)),
-            
-        where x runs over over all closed points of X and N(x)
-        denotes the cardinality of the residue field of x.
-        
-        If X is a smooth projective curve over a field with 
-        q elements, then zeta(x,s) = Zeta(X,q^(-s)), 
-        where Zeta(X,T) is a rational function in T of the form
-        
-            Zeta(X,T) =  P(T)/(1-T)/(1-qT),
-            
-        for a polynomial P of degree 2g, with some extra properties
+        r""" Return the Zeta function of the curve.
+
+        For any scheme `X` of finite type over `\mathbb{Z}`, the **arithmetic
+        zeta funtion** of `X` is defined as the product
+
+        .. MATH::
+
+             \zeta(X,s) := \prod_x \frac{1}{1-N(x)^(-s)},
+
+        where `x` runs over over all closed points of `X` and `N(x)`
+        denotes the cardinality of the residue field of `x`.
+
+        If `X` is a smooth projective curve over a field with
+        `q` elements, then `\zeta(X,s) = Z(X,q^(-s))`,
+        where `Z(X,T)` is a rational function in `T` of the form
+
+        .. MATH::
+
+               Z(X,T) =  \frac{P(T)}{(1-T)(1-qT)},
+
+        for a polynomial `P` of degree `2g`, with some extra properties
         reflecting the Weil conjectures. See:
-        - Hartshorn, Algebraic Geometry, Appendix C, Section 1.
-        
-        Note that that this makes only sense if the constant base 
-        field of self is finite, and that Zeta(X,T) depends on the
-        choice of the constant base field. (unlike the function
-        zeta(X,s)).
+
+        - Hartshorn, *Algebraic Geometry*, Appendix C, Section 1.
+
+        Note that that this makes only sense if the constant base
+        field of self is finite, and that `Z(X,T)` depends on the
+        choice of the constant base field (unlike the function
+        `\zeta(X,s)`!).
+
         """
-        
+
+        if hasattr(self,"_zeta_function"):
+            return self._zeta_function
+
         K = self._constant_base_field
         q = K.order()
         g = self.genus()
@@ -420,24 +478,26 @@ class SmoothProjectiveCurve(SageObject):
         for k in range(g+1,2*g+1):
             c[k] = c[2*g-k]*q**(k-g)
         R = P.parent()
-        return R(c)/(1-R.gen())/(1-q*R.gen())
+        zeta = R(c)/(1-R.gen())/(1-q*R.gen())
+        self._zeta_function = zeta
+        return zeta
 
-    
+
     def points_with_coordinates(self, a):
-        """ Return all points with given coordinates.
-        
+        r""" Return all points with given coordinates.
+
         INPUT:
-        
-        - a -- a tupel of coordinates, of lenght n, at most the 
-               number of coordinate functions of the curve 
-        
+
+        - ``a`` -- a tupel of coordinates, of lenght `n`, at most the
+          number of coordinate functions of the curve
+
         OUTPUT:
-        
-        a list containing all points on the curve whose first 
-        n coordinate values agree with a.
-        
+
+        a list containing all points on the curve whose first
+        `n` coordinate values agree with ``a``.
+
         """
-        
+
         n = len(a)
         assert n >= 1, "You must give at least one coordinate!"
         assert n <= len(self._coordinate_functions), "Too many coordinates given."
@@ -445,7 +505,7 @@ class SmoothProjectiveCurve(SageObject):
         F0 = F.base_field()
         if a[0] == Infinity:
             v0 = FunctionFieldValuation(F0, 1/F0.gen())
-        else:    
+        else:
             v0 = FunctionFieldValuation(F0, F0.gen()-a[0])
         if F0 is F:
             return self.point(v0)
@@ -455,129 +515,157 @@ class SmoothProjectiveCurve(SageObject):
         for v in V:
             if all([compute_value(v, f[i]) == a[i] for i in range(n)]):
                 ret.append(self.point(v))
-        return ret    
-        
-    
-    
+        return ret
+
+
+
 class PointOnSmoothProjectiveCurve(SageObject):
-    """ A closed point on a smooth projective curve.
-    
-    A point on a curve X is identified with the corresponding 
-    valuation on the function field of X. 
-    However, we also evaluate a set of coordinate functions in the point;
-    the corresponding tupel is used to identify the point (e.g.
-    when checking for equality of points).
+    r""" A closed point on a smooth projective curve.
+
+    A point on a curve `X` is identified with the corresponding
+    valuation `v_x` on the function field `F` of `X`.
+
+    Alternatively, a point `x` on `X` can be represented by the vector
+
+    .. MATH::
+
+         [v_x(f_1),\ldots, v_x(f_n)]
+
+    where `f_1,\ldots,f_n` is a list of *coordinate functions*, i.e. rational
+    functions which define an injective map from `X` into
+    `\mathbb{P}^1\times\ldots\times\mathbb{P}^1`.
+
+    We use the latter representation to check for equality of points.
     """
-    
+
     def __init__(self, X, v):
         self._curve = X
         self._valuation = v/v(v.uniformizer())
         self._coordinates = self.coordinates()
-        
-        
+
+
     def __repr__(self):
         return "Point on %s with coordinates %s."%(self._curve, self._coordinates)
-    
+
     def curve(self):
         """ Return the underlying curve of the point.
         """
-        
+
         return self._curve
-    
+
     def valuation(self):
         """ Return the valuation corresponding to the point.
         """
-        
+
         return self._valuation
-    
+
     def residue_field(self):
         """ Return the residue field of the point.
         """
-        
+
         return self._valuation.residue_field()
-    
-    @cached_method
+
+
     def absolute_degree(self):
-        """ Return the absolute degree of self.
-        
-        The absolute degree of a point x on a curve X over k is the 
-        degree of the extension k(x)/k.
-        Here k is the base field, which may not be equal to the field of constants.
+        r""" Return the absolute degree of self.
+
+        The *absolute degree* of a point `x` on a curve `X` over `k` is the
+        degree of the extension `k(x)/k`.
+
+        Here `k` is the base field of the curve, which may not be equal to
+        the field of constants.
         """
-        try:
-            return self._absolute_degree
-        except AttributeError:
+
+        if not hasattr(self,"_absolute_degree"):
             self._absolute_degree = extension_degree(self._curve._constant_base_field, self._valuation.residue_field())
-            return self._absolute_degree
-    
-    @cached_method
+        return self._absolute_degree
+
+
     def degree(self):
-        """ Return the degree of self.
-        
-        The absolute degree of a point x on a curve X is the 
-        degree of the extension k(x)/k.
-        Here k is the field of constants of X.
+        r""" Return the degree of self.
+
+        The *degree* of a point `x` on a curve `X` over `k` is the degree of the
+        residue field `k(x)` as an extension of the field of constants of `X`.
+        The latter may be a proper extension of the base field `k`!
+
         """
-        
-        return ZZ(extension_degree(self._curve._constant_base_field, self._valuation.residue_field())/self._curve._field_of_constants_degree)
-    
-    def value(self, f): 
-        """ Return the value of the function f in the point.
-        
-        If f has a pole then `Infinity` is returned.
+
+        if not hasattr(self, "_degree"):
+            self._degree = ZZ(extension_degree(self._curve._constant_base_field, self._valuation.residue_field())/self._curve._field_of_constants_degree)
+        return self._degree
+
+    def value(self, f):
+        r""" Return the value of the function ``f`` in the point.
+
+        If ``f`` has a pole then ``Infinity`` is returned.
         """
-        
+
         if self._valuation(f) < 0:
             return Infinity
         else:
             return self._valuation.reduce(f)
-        
+
     def order(self, f):
-        """ Return the order of the function in the point.
-        
-        This is the same as self.valuation()(f).
+        r""" Return the order of the function in the point.
+
+        This is the same as ``self.valuation()(f)``.
         """
-        
+
         return self._valuation(f)
-    
-    @cached_method
+
+
     def coordinates(self):
-        """ Return the coordinate tupel of the point.
+        r""" Return the coordinate tupel of the point.
         """
-        
-        return tuple([self.value(x) for x in self._curve._coordinate_functions])
-    
-    
-#------------------------------------------------------------------------------    
-    
+
+        if not hasattr(self,"_coordinates"):
+            self._coordinates = tuple([self.value(x) for x in self._curve._coordinate_functions])
+        return self._coordinates
+
+
+#------------------------------------------------------------------------------
+
 # auxiliary functions
 
 
 def compute_value(v, f):
-    
+    r"""
+    Return the value of ``f`` at ``v``.
+
+    INPUT:
+
+    - ``v`` -- a function field valuation on `F`
+    - ``f`` -- an element of `F`
+
+    OUTPUT: The value of ``f`` at the point corresponding to ``v``.
+
+    This is either an element of the residue field of the valuation ``v``
+    (which is a finite extension of the base field of `F`), or `\infty`.
+
+    """
+
     from sage.rings.infinity import Infinity
     if v(f) < 0:
         return Infinity
     else:
         return v.reduce(f)
-      
-    
+
+
 def separate_points(coordinate_functions, valuations):
-    """ Add new coordinate functions to separate the points in V.
-    
-    INPUT: 
-    
-    - coordinate_functions: a list of elements of a function field F
-    - valuations: a list of valuations on F
-    
-    OUTPUT: 
-    compute
-      an enlargement of 'coordinate_functions' with the property 
-      that [value(v,x) for x in coordinate_functions] are pairwise
-      distinct, when v runs through 'valuations'
-      
+    r"""
+    Add new coordinate functions to separate the points in V.
+
+    INPUT:
+
+    - ``coordinate_functions`` -- a list of elements of a function field `F`
+    - ``valuations`` -- a list of function field valuations on `F`
+
+    OUTPUT: enlarges the list ``coordinate_functions`` in such a way
+    that the lists ``[value(v,x) for x in coordinate_functions]``,
+    where ``v`` runs through ``valuations``, are pairwise distinct.
+
     """
-    
+
     repeat = True
     while repeat:
         dict = {}
@@ -596,22 +684,23 @@ def separate_points(coordinate_functions, valuations):
 
 # This function has been replaced by the method 'separating_element'
 def separate_two_points(v1, v2):
-    """ Return a function which separates v1 and v2.
-    
+    r""" Return a rational function which separates two points
+
     INPUT:
-    
-    - v1, v2: discrete valuations on a common function field F
-    
+
+    - ``v1``, ``v2`` -- discrete, nonequivalent  valuations on a common function field `F`
+
     OUTPUT:
-    
-    an element f of F such that value(f, v1) != value(f, v2)
-    
+
+    An element `f` of `F` which takes distinct values at the two points corresponding
+    to ``v1`` and ``v2``.
+
     """
-    
+
     # print "calling <separate_points> with v1 = %s and v = %s."%(v1, v2)
     f = v1.uniformizer()
-    if v2(f)<=0:
-        return f    
+    if v2(f) <= 0:
+        return f
     else:
         w = v2._base_valuation
         try:
@@ -625,26 +714,26 @@ def separate_two_points(v1, v2):
         # assert v2(g) > v1(g)
         n = ZZ(v1(g)/v1(f))
         return g*f**(-n)
-    
-    
-def extension_degree(K, L):
-    """ Return the degree of the field extension L/K.
-    
-        INPUT: 
-        
-        - K, L -- two field, where K has a natural embedding into L
-        - check (default: False) -- boolean
-        
+
+
+def extension_degree(K, L, check=False):
+    r""" Return the degree of the field extension.
+
+        INPUT:
+
+        - ``K``, ``L`` -- two fields, where ``K`` has a natural embedding into ``L``
+        - ``check`` (default: ``False``) -- boolean
+
         OUTPUT:
-        
-        the degree [L:K]
-        
-        At the moment, this works correctly only if K and L are 
-        finite extensions of a common base field. It is not checked 
-        whether K really maps to L. 
-        
+
+        the degree `[L:K]`
+
+        At the moment, this works correctly only if `K` and `L` are
+        finite extensions of a common base field. It is not checked
+        whether `K` really maps to `L`.
+
     """
-    
+
     # assert K.is_finite(), "K must be finite."
     # assert L.is_finite(), "L must be finite."
     # assert K.characteristic() == L.characteristic(), "K and L must have the same characteristic."
@@ -652,30 +741,30 @@ def extension_degree(K, L):
         n = K.degree()
     except (AttributeError, NotImplementedError):
         n = K.absolute_degree()
-    try:    
+    try:
         m = L.degree()
     except (AttributeError, NotImplementedError):
         m = L.absolute_degree()
     assert n.divides(m), "K is not a subfield of L."
     return ZZ(m/n)
-    
-    
+
+
 def sum_of_divisors(D1, D2):
-    """" Return the sum of the divisors D1 and D2.
-    
+    r""" Return the sum of the divisors ``D1`` and ``D2``.
+
     INPUT:
-    
-    - D1, D2: divisors on the same curve X
-    
+
+    - ``D1``, ``D2``: divisors on the same curve `X`
+
     OUTPUT:
-    
-    D1 is replaced by the sum D1+D2 (note that this changes D1!).
-    
-    Here a divisor is given by a dictionary with entries (a:(P,m)),
-    where a is a coordinate tupel, P is a point on X with coordinates a
-    and m is the multiplicity of P in D.
+
+    `D_1` is replaced by the sum `D_1+D_2` (note that this changes `D_1`!).
+
+    Here a divisor `D` is given by a dictionary with entries ``(a:(P,m))``,
+    where ``a`` is a coordinate tupel, ``P`` is a point on `X` with coordinates
+    ``a`` and ``m`` is the multiplicity of ``P`` in `D`.
     """
-        
+
     for a in D2.keys():
         P, m2 = D2[a]
         if a in D1.keys():
@@ -683,11 +772,4 @@ def sum_of_divisors(D1, D2):
             D1[a] = (P, m1+m2)
         else:
             D1[a] = D2[a]
-    return D1        
-     
-    
-    
-    
-    
-    
-        
+    return D1
