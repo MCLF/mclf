@@ -333,7 +333,7 @@ def p_approximation_generic(f,p):
 
     OUTPUT:
 
-    Two polynomials `H` and `K` in `K(x)[t]` which are the `p`-approximation
+    Two polynomials `H` and `G` in `K(x)[t]` which are the `p`-approximation
     of the polynomial `F:=f(x+t)`, considered as polynomial in `t`.
 
     """
