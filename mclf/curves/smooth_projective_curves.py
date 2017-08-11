@@ -99,6 +99,12 @@ class SmoothProjectiveCurve(SageObject):
         return "The smooth projective curve over %s with %s."\
             %(self._constant_base_field, self._function_field)
 
+    def constant_base_field(self):
+        r"""
+        Return the constant base field.
+        """
+        return self._constant_base_field
+
     def point(self, v):
         r""" Returns the point on the curve corresponding to ``v``.
 
