@@ -465,6 +465,10 @@ class BerkovichLine(SageObject):
                         xi.approximation(D[j][0].approximation())
         return D
 
+#-----------------------------------------------------------------------------
+
+#                   generic points
+#                   ==============
 
 class PointOnBerkovichLine(SageObject):
     r"""
@@ -532,6 +536,10 @@ class PointOnBerkovichLine(SageObject):
         else:
             return R(f)
 
+#-----------------------------------------------------------------------------
+
+#                    points of type I
+#                    ================
 
 class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
     r"""
@@ -568,16 +576,6 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
 
     def __repr__(self):
 
-        """
-        phi, s, is_in_unit_disk = self.discoid()
-        assert s == Infinity
-        if is_in_unit_disk:
-            return "Point of type I on Berkovich line corresponding to %s = 0"%phi
-        elif phi[0]==0:
-            return "Point of type I on Berkovich line corresponding to %s = Infinity"%phi
-        else:
-            return "Point of type I on Berkovich line corresponding to %s = 0"%phi.reverse()
-        """
         f, s = self.discoid()
         if s == Infinity:
             return "Point of type I on Berkovich line given by %s = 0"%f
@@ -588,6 +586,12 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         """ Return the type of self
         """
         return "I"
+
+    def berkovich_line(self):
+        """
+        Return the Berkovich line of which this point lies.
+        """
+        return self._X
 
     def is_gauss_point(self):
         """ Return True if self is the Gauss point.
@@ -637,6 +641,36 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             return self._v._base_valuation
         else:
             return self._v._base_valuation._base_valuation
+
+    def function_field_valuation(self):
+        r"""
+        Return the function field valuation corresponding to this point
+
+        OUTPUT:
+
+        the discrete valuation on the function field `F=K(x)` of `X^{an}` which
+        corresponds to the image of this point on `X=\mathbb{P}^1_K` (which is,
+        by hypothesis, a closed point).
+
+        """
+        F = self.berkovich_line().function_field()
+        if self.is_inductive():
+            g, s = self.discoid()
+            if not self.is_in_unit_disk():
+                if not g.numerator().is_one():
+                    # xi is not in the unit disk, and is not infty
+                    g = g.numerator().monic()
+                else:
+                    # xi is infty
+                    g = 1/F.gen()
+            # now g=0 is a monic irreducible equation for xi
+        else:
+            # xi is a limit point
+            g = self.pseudovaluation_on_polynomial_ring()._G
+            if not self.is_in_unit_disk():
+                g = g.reverse().monic()
+        # in both cases, g=0 is a mnic irreducible equation for xi
+        return FunctionFieldValuation(F, g)
 
 
     def is_inductive(self):
@@ -856,6 +890,10 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
 
         return self._X.gauss_point()
 
+#----------------------------------------------------------------------------
+
+#                  points of type II
+#                  =================
 
 class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
     r""" A point of type II on a Berkovich line.
