@@ -125,13 +125,15 @@ class WeakPadicGaloisExtension(SageObject):
 
     - ``vK`` -- a `p`-adic valuation on a number field `K`
     - ``F`` -- a polynomial over `K`, or a list of irreducibel polynomials
+    - ``minimal_ramification`` -- a positive integer (default: ``1``)
     - ``version`` -- a string (default: "experimental1")
 
-    OUTPUT: a weak splitting field of ``F``.
+    OUTPUT: a weak splitting field of ``F`` whose ramification index (as an
+    extension of ``vK``) is a multiple of ``minimal_ramification``
 
     """
 
-    def __init__(self, vK, F, version="experimental1"):
+    def __init__(self, vK, F, minimal_ramification=ZZ(1), version="experimental1"):
 
         p = vK.p()
         self._vK = vK
@@ -145,8 +147,20 @@ class WeakPadicGaloisExtension(SageObject):
         if version == "experimental1":
             assert vK.domain() == QQ, "the base field must be QQ"
             vL = weak_splitting_field_1(vK, F)
-            pi = vL.uniformizer()
-            vLn = vL.scale(1/vL(vL.uniformizer()))
+            piL = vL.uniformizer()
+            piK = vK.uniformizer()
+            eL = vL(p)/vL(piL)  # absolute ramification index of vL
+            eK = vK(p)/vK(piK)  # absolute ramification index of vK
+            e = ZZ(eL/eK)       # the ramification index of L/K
+                                # formulas should hold no matter how vK, vL
+                                # are normalized
+            if not minimal_ramification.divides(e):
+                        # enlarge the absolute ramification index of vL
+                        # such that minimal_ramification divides e(vL/vK):
+                m = ZZ(eL*minimal_ramification/e.gcd(minimal_ramification))
+                vL = padic_sufficiently_ramified_extension(vL, m)
+                piL = vL.uniformizer()
+            vLn = vL.scale(1/vL(piL))
             self._ram_degree = vLn(p)
             if self._ram_degree > 1:
                 self._inertia_degree = vL.residue_field().degree()
@@ -170,7 +184,7 @@ class WeakPadicGaloisExtension(SageObject):
         else:
             vK1 = padic_unramified_extension(vK, self._inertia_degree)
             K1 = vK1.domain()
-            P = pi.minpoly().change_ring(K1)
+            P = piL.minpoly().change_ring(K1)
             P1 = padic_irreducible_factor(vK1, P)
             assert P1.degree() == self._ram_degree
             R = P1.parent()
