@@ -115,6 +115,18 @@ We have implemented a probabilistic algorithm for computing the degree <span cla
 <span class="go">(2*T^2 + T + 1)/(2*T^2 - 3*T + 1)</span>
 </pre></div>
 </div>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<ul class="last simple">
+<li>write more doctests !!</li>
+<li>implement an algorithm for computing the field of constants
+(and not just the degree)</li>
+<li>the residue field of a point should be explicitly an extension of
+the constant base field.</li>
+<li>treat the base curve <span class="math">\(X\)</span> as a <em>curve</em>, not just as a function field</li>
+<li>realize morphisms between curves, in particular the canonical to <span class="math">\(X\)</span></li>
+</ul>
+</div>
 <dl class="class">
 <dt id="mclf.curves.smooth_projective_curves.PointOnSmoothProjectiveCurve">
 <em class="property">class </em><code class="descclassname">mclf.curves.smooth_projective_curves.</code><code class="descname">PointOnSmoothProjectiveCurve</code><span class="sig-paren">(</span><em>X</em>, <em>v</em><span class="sig-paren">)</span><a class="headerlink" href="#mclf.curves.smooth_projective_curves.PointOnSmoothProjectiveCurve" title="Permalink to this definition">¶</a></dt>
@@ -245,6 +257,31 @@ field of constants of the curve.</p>
 <dt id="mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.divisor_of_zeroes">
 <code class="descname">divisor_of_zeroes</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="headerlink" href="#mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.divisor_of_zeroes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the divisor of zeroes of <code class="docutils literal"><span class="pre">f</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.fiber">
+<code class="descname">fiber</code><span class="sig-paren">(</span><em>v0</em><span class="sig-paren">)</span><a class="headerlink" href="#mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.fiber" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the set of points lying above a point on the projective line.</p>
+<p>INPUT:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">v0</span></code> &#8211; a function field valuation on the rational function field</li>
+</ul>
+<p>OUTPUT:</p>
+<p>a list containing the points on this curve <span class="math">\(Y\)</span> corresponding to extensions
+of <code class="docutils literal"><span class="pre">v0</span></code> to the function field of <span class="math">\(Y\)</span>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.field_of_constants_degree">
+<code class="descname">field_of_constants_degree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.field_of_constants_degree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the degree of the field of constants over the constant base field.</p>
+<p>If <span class="math">\(F\)</span> is the function field of the curve and <span class="math">\(k\)</span> the constant base field,
+then the <em>field of constants</em> <span class="math">\(k_c\)</span> is the algebraic closure of <span class="math">\(k\)</span> in <span class="math">\(F\)</span>.</p>
+<p>We use a probabilistic algorithms for computing the degree <span class="math">\([k_c:k]\)</span>.
+This works well over finite fields, but over number fields it often gives
+false results. Since we use this function maily to compute zeta-functions,
+this is tolerable, for the moment.</p>
 </dd></dl>
 
 <dl class="method">

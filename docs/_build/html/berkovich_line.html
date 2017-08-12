@@ -26,7 +26,7 @@
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
     <link rel="top" title="MCLF 1.0 documentation" href="index.html" />
     <link rel="up" title="The Berkovich line" href="berkovich.html" />
-    <link rel="next" title="Finite subtrees of the Berkovich projective line" href="berkovich_trees.html" />
+    <link rel="next" title="Finite subtrees of the Berkovich line" href="berkovich_trees.html" />
     <link rel="prev" title="The Berkovich line" href="berkovich.html" /> 
   </head>
   <body role="document">
@@ -40,7 +40,7 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="berkovich_trees.html" title="Finite subtrees of the Berkovich projective line"
+          <a href="berkovich_trees.html" title="Finite subtrees of the Berkovich line"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="berkovich.html" title="The Berkovich line"
@@ -522,6 +522,12 @@ a principal divisor, then this should be ok, because of the default
 </dd></dl>
 
 <dl class="method">
+<dt id="mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.berkovich_line">
+<code class="descname">berkovich_line</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.berkovich_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the Berkovich line of which this point lies.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.discoid">
 <code class="descname">discoid</code><span class="sig-paren">(</span><em>certified_point=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.discoid" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a representation of a discoid approximating <code class="docutils literal"><span class="pre">self</span></code>.</p>
@@ -540,6 +546,16 @@ This data represents a (possibly degenerate) discoid <span class="math">\(D\)</s
 (this simply means that <code class="docutils literal"><span class="pre">self</span></code> is contained in <span class="math">\(D\)</span>). If
 <code class="docutils literal"><span class="pre">certified_point</span></code> is given then it is guaranteed that it is not
 contained in <span class="math">\(D\)</span>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.function_field_valuation">
+<code class="descname">function_field_valuation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.function_field_valuation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the function field valuation corresponding to this point</p>
+<p>OUTPUT:</p>
+<p>the discrete valuation on the function field <span class="math">\(F=K(x)\)</span> of <span class="math">\(X^{an}\)</span> which
+corresponds to the image of this point on <span class="math">\(X=\mathbb{P}^1_K\)</span> (which is,
+by hypothesis, a closed point).</p>
 </dd></dl>
 
 <dl class="method">
@@ -716,7 +732,7 @@ and <span class="math">\(v\)</span> is its unique boundary point.</p>
                         title="previous chapter">The Berkovich line</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="berkovich_trees.html"
-                        title="next chapter">Finite subtrees of the Berkovich projective line</a></p>
+                        title="next chapter">Finite subtrees of the Berkovich line</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -748,7 +764,7 @@ and <span class="math">\(v\)</span> is its unique boundary point.</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="berkovich_trees.html" title="Finite subtrees of the Berkovich projective line"
+          <a href="berkovich_trees.html" title="Finite subtrees of the Berkovich line"
              >next</a> |</li>
         <li class="right" >
           <a href="berkovich.html" title="The Berkovich line"
