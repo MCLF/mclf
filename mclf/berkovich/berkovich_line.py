@@ -1252,11 +1252,6 @@ def valuation_from_discoid(vK, f, s):
 
     R = f.parent()
     K = R.base_ring()
-    if not K is vK.domain():
-        print "K =", K
-        print "vK =", vK
-        print "f = ", f
-        print "R =", R
     assert K is vK.domain()
     v0 = GaussValuation(R, vK)
     assert f.is_monic()
@@ -1284,12 +1279,8 @@ def valuation_from_discoid(vK, f, s):
         assert v0(f) < s
         assert v(f) > s
         assert v._base_valuation == v0
-        # print "v0=", v0
-        # print "v =", v
         a = [v0(c) for c in v.coefficients(f)]
-        # print "a = ", a
         t = max([(s-a[i])/i for i in range(1,len(a)) ])
-        # print "t =", t
         v = v0.augmentation(v.phi(), t)
         assert v(f) == s
         return v

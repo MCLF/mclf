@@ -859,13 +859,6 @@ class RationalDomainOnBerkovichLine(AffinoidDomainOnBerkovichLine):
                 # there must be a point between xi1 and xi2 where v(f)=0
                 # which we have to add to the in_list
                 xi3 = xi1._X.find_zero(xi1, xi2, f)
-                if xi3.v(f) != 0:
-                    print "Error in ``find_zero``:"
-                    print "f = ", f
-                    print "xi1 = ", xi1
-                    print "xi2 = ", xi2
-                    print "xi3 = ", xi3
-                    print "xi3.v(f) = ", xi3.v(f)
                 assert xi3.v(f) == 0, "got the wrong value for t!"
                 in_list.append(xi3)
             U = U.add_points(in_list, out_list)
