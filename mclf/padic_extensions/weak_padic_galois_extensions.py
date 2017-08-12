@@ -113,8 +113,10 @@ from sage.misc.cachefunc import cached_method
 from sage.rings.infinity import Infinity
 from sage.functions.generalized import sgn
 from sage.geometry.newton_polygon import NewtonPolygon
+from sage.misc.misc_c import prod
 from mac_lane import *
 
+ZZ = Integer
 
 
 class WeakPadicGaloisExtension(SageObject):
@@ -142,11 +144,24 @@ class WeakPadicGaloisExtension(SageObject):
         # if isinstance(F, Polynomial):
         #     F = [f for f, m in F.factor()]
         if not isinstance(F, Polynomial):
-            F = prod(F)
+            if F == []:
+                F = PolynomialRing(self._K,'x')(1)
+            else:
+                F = prod(F)
+        if F.is_constant():
+            self._vL = vK
+            self._L = vK.domain()
+            self._vLn = vK.scale(1/vK(vK.uniformizer()))
+            self._ram_degree = ZZ(1)
+            self._inertia_degree = ZZ(1)
+            self._degree = ZZ(1)
 
         if version == "experimental1":
             assert vK.domain() == QQ, "the base field must be QQ"
-            vL = weak_splitting_field_1(vK, F)
+            if F.is_constant():
+                vL = vK
+            else:
+                vL = weak_splitting_field_1(vK, F)
             piL = vL.uniformizer()
             piK = vK.uniformizer()
             eL = vL(p)/vL(piL)  # absolute ramification index of vL
@@ -179,7 +194,7 @@ class WeakPadicGaloisExtension(SageObject):
 
         # compute ramification jumps, lower numbering:
 
-        if self._ram_degree == 0:
+        if self._ram_degree == ZZ(1):
             jumps = []
         else:
             vK1 = padic_unramified_extension(vK, self._inertia_degree)
