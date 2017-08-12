@@ -1,4 +1,4 @@
-import sage.all
+
 from mac_lane import *
 from curves.smooth_projective_curves import SmoothProjectiveCurve
 from berkovich.berkovich_line import *

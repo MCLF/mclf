@@ -104,7 +104,7 @@ TO DO:
 
 
 from sage.structure.sage_object import SageObject
-from sage.rings import *
+from sage.rings.number_field.number_field import NumberField
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.rings.polynomial.polynomial_element import Polynomial
 from sage.rings.integer import Integer
@@ -112,6 +112,7 @@ from sage.rings.finite_rings.integer_mod import mod
 from sage.misc.cachefunc import cached_method
 from sage.rings.infinity import Infinity
 from sage.functions.generalized import sgn
+from sage.misc.prandom import randint
 from sage.geometry.newton_polygon import NewtonPolygon
 from sage.misc.misc_c import prod
 from mac_lane import *
@@ -566,7 +567,7 @@ def padic_sufficiently_ramified_extension(vK, e):
 
     p = vK.residue_field().characteristic()
     e1 = vK(p)/vK(vK.uniformizer())
-    n = e/gcd(e,e1)
+    n = e/e.gcd(e1)
     # print "n = ",n
     if n > 1:
         K = vK.domain()
