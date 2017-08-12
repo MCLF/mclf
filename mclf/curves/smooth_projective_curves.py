@@ -62,6 +62,16 @@ EXAMPLES::
     (2*T^2 + T + 1)/(2*T^2 - 3*T + 1)
 
 
+.. TODO::
+
+    - write more doctests !!
+    - implement an algorithm for computing the field of constants
+      (and not just the degree)
+    - the residue field of a point should be explicitly an extension of
+      the constant base field.
+    - treat the base curve `X` as a *curve*, not just as a function field
+    - realize morphisms between curves, in particular the canonical to `X`
+
 """
 
 #*****************************************************************************
@@ -121,14 +131,16 @@ class SmoothProjectiveCurve(SageObject):
         return PointOnSmoothProjectiveCurve(self, v)
 
 
-    @cached_method
     def field_of_constants_degree(self):
         r""" Return the degree of the field of constants over the constant base field.
 
         If `F` is the function field of the curve and `k` the constant base field,
         then the *field of constants* `k_c` is the algebraic closure of `k` in `F`.
 
-        We use a probabilistic algorithms for computing the degree ``[k_c:k]`.
+        We use a probabilistic algorithms for computing the degree `[k_c:k]`.
+        This works well over finite fields, but over number fields it often gives
+        false results. Since we use this function maily to compute zeta-functions,
+        this is tolerable, for the moment.
 
         """
 
@@ -147,13 +159,14 @@ class SmoothProjectiveCurve(SageObject):
         self._field_of_constants_degree = n
         return n
 
+
     def function_field(self):
         """
         Return the function field of the curve ``self``.
 
         """
-
         return self._function_field
+
 
     def rational_function_field(self):
         r"""
@@ -183,7 +196,6 @@ class SmoothProjectiveCurve(SageObject):
         not be a smooth model of the curve.
 
         """
-
         if hasattr(self, "_coordinate_functions"):
             return self._coordinate_functions()
 
@@ -212,8 +224,6 @@ class SmoothProjectiveCurve(SageObject):
         Return a random closed point on the curve.
 
         """
-
-
         F = self.function_field()
         F0 = self.rational_function_field()
         R = F0._ring
@@ -233,7 +243,6 @@ class SmoothProjectiveCurve(SageObject):
 
         OUTPUT:  the principal divisor `D =(f)`.
         """
-
         F = self._function_field
         F0 = F.base_field()
         is_rational = (F is F0)
@@ -266,22 +275,22 @@ class SmoothProjectiveCurve(SageObject):
     def divisor_of_zeroes(self, f):
         r""" Return the divisor of zeroes of ``f``.
         """
-
         D = self.principal_divisor(f)
         ret = []
         for x,m in D:
             if m > 0: ret.append((x,m))
         return ret
 
+
     def divisor_of_poles(self, f):
         r""" Return the divisor of poles of ``f``.
         """
-
         D = self.principal_divisor(f)
         ret = []
         for x,m in D:
             if m < 0: ret.append((x,-m))
         return ret
+
 
     def degree(self, D):
         r""" Return the degree of the divisor ``D``.
@@ -289,11 +298,11 @@ class SmoothProjectiveCurve(SageObject):
         Note that the degree of `D` is defined relative to the
         field of constants of the curve.
         """
-
         deg = ZZ.zero()
         for P, m in D.values():
             deg += m*P.degree()
         return deg
+
 
     def canonical_divisor(self):
         pass
@@ -312,7 +321,6 @@ class SmoothProjectiveCurve(SageObject):
         - Hartshorne, *Algebraic Geometry*, Definition IV.2.
 
         """
-
         if hasattr(self, "_ramification_divisor"):
             return self._ramification_divisor
 
@@ -343,6 +351,7 @@ class SmoothProjectiveCurve(SageObject):
         self._ramification_divisor = R
         return R
 
+
     def genus(self):
         r""" Return the genus of the curve.
 
@@ -358,7 +367,6 @@ class SmoothProjectiveCurve(SageObject):
         - Hartshorne, *Algebraic Geometry*, Corollary IV.2.4
 
         """
-
         if hasattr(self,"_genus"):
             return self._genus
 
@@ -370,6 +378,7 @@ class SmoothProjectiveCurve(SageObject):
         g = ZZ(-n + r/2 +1)
         self._genus = g
         return g
+
 
     def count_points(self, d):
         r""" Return number of points of degree less or equal to ``d``.
@@ -389,7 +398,6 @@ class SmoothProjectiveCurve(SageObject):
 
         This is a very slow realization and should be improved at some point.
         """
-
         F = self._function_field
         F0 = F.base_field()
         K = self._constant_base_field
@@ -433,6 +441,7 @@ class SmoothProjectiveCurve(SageObject):
                 N[k] += 1
         return N
 
+
     def zeta_function(self, var_name='T'):
         r""" Return the Zeta function of the curve.
 
@@ -465,7 +474,6 @@ class SmoothProjectiveCurve(SageObject):
         `\zeta(X,s)`!).
 
         """
-
         if hasattr(self,"_zeta_function"):
             return self._zeta_function
 
@@ -503,7 +511,6 @@ class SmoothProjectiveCurve(SageObject):
         `n` coordinate values agree with ``a``.
 
         """
-
         n = len(a)
         assert n >= 1, "You must give at least one coordinate!"
         assert n <= len(self._coordinate_functions), "Too many coordinates given."
@@ -523,6 +530,23 @@ class SmoothProjectiveCurve(SageObject):
                 ret.append(self.point(v))
         return ret
 
+
+    def fiber(self, v0):
+        r"""
+        Return the set of points lying above a point on the projective line.
+
+        INPUT:
+
+        - ``v0`` -- a function field valuation on the rational function field
+
+        OUTPUT:
+
+        a list containing the points on this curve `Y` corresponding to extensions
+        of ``v0`` to the function field of `Y`.
+
+        """
+        V = v0.extensions(self.function_field())
+        return [PointOnSmoothProjectiveCurve(self, v) for v in V]
 
 
 class PointOnSmoothProjectiveCurve(SageObject):
@@ -581,7 +605,6 @@ class PointOnSmoothProjectiveCurve(SageObject):
         Here `k` is the base field of the curve, which may not be equal to
         the field of constants.
         """
-
         if not hasattr(self,"_absolute_degree"):
             self._absolute_degree = extension_degree(self._curve._constant_base_field, self._valuation.residue_field())
         return self._absolute_degree
@@ -595,10 +618,10 @@ class PointOnSmoothProjectiveCurve(SageObject):
         The latter may be a proper extension of the base field `k`!
 
         """
-
         if not hasattr(self, "_degree"):
             self._degree = ZZ(extension_degree(self._curve._constant_base_field, self._valuation.residue_field())/self._curve._field_of_constants_degree)
         return self._degree
+
 
     def value(self, f):
         r""" Return the value of the function ``f`` in the point.
