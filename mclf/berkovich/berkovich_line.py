@@ -251,7 +251,6 @@ class BerkovichLine(SageObject):
             return TypeIPointOnBerkovichLine(self, v)
 
 
-
     def point_from_discoid(self, phi, s, in_unit_disk=True):
         r"""
         Return the point on ``self`` determined by a discoid.
@@ -283,6 +282,49 @@ class BerkovichLine(SageObject):
             assert v(x) > 0, "The point does lie in the unit disk"
             v = FunctionFieldValuation(F, (v, F.hom([1/x]), F.hom([1/x])))
         return self.point_from_pseudovaluation(v)
+
+    def points_from_inequality(self, f, s):
+        r"""
+        Return the boundary points of the affinoid given an inequality.
+
+        INPUT:
+
+        - ``f`` -- a monic and integral polynomial in `x` or in `1/x`
+        - ``s`` -- a nonnegative rational number, or `\infty`
+
+        OUTPUT:
+
+        a list of points which are the boundary points of the affinoid given
+        by the inequality `v(f) \geq s`. Note that the affinoid is a union
+        of finitely many discoids (or of finitely many algebraic points if
+        `s=\infty`).
+
+        .. NOTE::
+
+            For the moment we have to assume that if `f=g(1/x)`, then all the
+            roots of `g` have strictly positive valuations.
+
+        """
+        vK = self.base_valuation()
+        F = self.function_field()
+        x = F.gen()
+        if f.denominator().is_one():
+            # f is a polynomial in x
+            f = f.numerator()
+            V = valuations_from_inequality(vK, f, s)
+            V = [FunctionFieldValuation(F, v) for v in V]
+            return [self.point_from_pseudovaluation(v) for v in V]
+        else:
+            # f should now be a polynomial in 1/x
+            f = F.hom([1/x])(f)
+            assert f.denominator().is_one(), 'f is not a polynomial in x or 1/x'
+            g = f.numerator()
+            assert all( [ vK(g[i]) > 0 for i in range(g.degree())]), \
+                "the roots of g must have negative valuation"
+            V = valuations_from_inequality(vK, g, s)
+            V = [FunctionFieldValuation(F, v) for v in V]
+            V = [FunctionFieldValuation(F, (v, F.hom([~x]), F.hom([~x]))) for v in V]
+            return [self.point_from_pseudovaluation(v) for v in V]
 
 
     def find_zero(self, xi1, xi2, f):
@@ -330,10 +372,6 @@ class BerkovichLine(SageObject):
         xi2_approx = xi2.approximation()
         count = 0
         while sgn(xi2_approx.v(f)) != sgn(h2) and count < 20:
-            # print "insufficient approximation!"
-            # print "f = ", f
-            # print "xi1 = ", xi1
-            # print "xi2 = ", xi2
             xi2_approx = xi2.improved_approximation()
             count += 1
         assert count < 20, "could not find sufficient approximation!"
@@ -356,13 +394,6 @@ class BerkovichLine(SageObject):
             phi1 = phit.numerator()
             assert phit.denominator().is_one()
             xi3 = xi1._X.point_from_discoid(phi1, t, in_unit_disk=False)
-
-        if xi3.v(f) != 0:
-            print "Error in ``find_zero``:"
-            print "f = ", f
-            print "xi1 = ", xi1
-            print "xi2 = ", xi2
-            print "xi3 = ", xi3
         assert xi3.v(f) ==0, "got the wrong point xi3!"
         return xi3
 
@@ -574,8 +605,8 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             self._is_in_unit_disk = False
             self._v1 = v._base_valuation._base_valuation
 
-    def __repr__(self):
 
+    def __repr__(self):
         f, s = self.discoid()
         if s == Infinity:
             return "Point of type I on Berkovich line given by %s = 0"%f
@@ -706,7 +737,6 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         a principal divisor, then this should be ok, because of the default
         "require_final_EF=True" in "vK.approximants(f)".
         """
-
         if self.is_inductive():
             return self
         w = self.pseudovaluation_on_polynomial_ring()
@@ -721,11 +751,11 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         X = self._X
         return X.point_from_polynomial_pseudovaluation(wa, self.is_in_unit_disk())
 
+
     def improved_approximation(self):
         r"""
         Return an improved approximation of ``self``.
         """
-
         if self.is_inductive():
             return self
         w = self.pseudovaluation_on_polynomial_ring()
@@ -739,7 +769,6 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         r"""
         Return True is self is equal to ``xi``.
         """
-
         if xi.type() != "I":
             return False
         if self.is_in_unit_disk() != xi.is_in_unit_disk():
@@ -750,6 +779,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             return equality_of_pseudo_valuations(v1, v2)
         else:
             return equality_of_pseudo_valuations(self._v, xi._v)
+
 
     def is_leq(self, xi):
         r"""
@@ -767,8 +797,8 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         unless `xi` is equal to self.
 
         """
-
         return self.is_equal(xi)
+
 
     def discoid(self, certified_point=None):
         r""" Return a representation of a discoid approximating ``self``.
@@ -791,7 +821,6 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         ``certified_point`` is given then it is guaranteed that it is not
         contained in `D`.
         """
-
         if self.is_limit_point():
             xi = self.approximation(certified_point)
         else:
@@ -812,6 +841,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             s = xi.v(f)
             return f, s
 
+
     def infimum(self, xi2):
         r"""
         Return the infimum of self and `\xi_2`.
@@ -825,7 +855,6 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         The infimum of self and `\xi_2`. Unless self or `\xi_2` are equal,
         this is a point of type II.
         """
-
         if xi2.type() == "II":
             return xi2.infimum(self)
         if self.is_leq(xi2):
@@ -878,17 +907,11 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             x = F.gen()
             v3 = FunctionFieldValuation(F, w3)
             v3 = FunctionFieldValuation(F, (v3, F.hom([1/x]), F.hom([1/x])))
-            if not v3.is_discrete_valuation():
-                print "self = ", self
-                print "xi2 = ", xi2
-                print "v3 = ", v3
-                print "self == xi2:",self.is_equal(xi2)
-                print " <= :", self.is_leq(xi2)
-                print " >= :", xi2.is_leq(self)
             assert v3.is_discrete_valuation()
             return TypeIIPointOnBerkovichLine(self._X, v3)
 
         return self._X.gauss_point()
+
 
 #----------------------------------------------------------------------------
 
@@ -904,9 +927,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
     - ``v`` -- a discrete valuation on the function field of X extending the base valuation
 
     """
-
     def __init__(self, X, v):
-
         self._X = X
         F = X._F
         K = X._K
@@ -925,8 +946,8 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
             self._is_in_unit_disk = False
             self._v1 = v._base_valuation._base_valuation
 
-    def __repr__(self):
 
+    def __repr__(self):
         return "Point of type II on Berkovich line, corresponding to v(%s) >= %s"%self.discoid()
 
 
@@ -935,22 +956,22 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         """
         return "II"
 
-    @cached_method
     def is_gauss_point(self):
-        """ Return True is self is the Gauss point.
+        """ Return True if self is the Gauss point.
         """
+        x = self._X.function_field().gen()
+        if self.v(x) != 0:
+            return False
 
-        if not hasattr(self._v1, "is_gauss_valuation"):
-            print "self._v1 = ", self._v1
-            print "self = ", self
-        return self._v1.is_gauss_valuation()
+        v1 = self._v1
+        while not hasattr(self._v1, "is_gauss_valuation"):
+            v1 = v1._base_valuation
+        return v1.is_gauss_valuation()
 
-    @cached_method
     def is_in_unit_disk(self):
         r"""
         True is self is contained in the unit disk.
         """
-
         return self.v(self._X._F.gen()) >= 0
 
     def v(self, f):
@@ -1132,10 +1153,6 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         """
 
         xi0 = self
-        # print "calling ``point_in_between`` with "
-        # print "xi0 = ", xi0
-        # print "xi1 = ", xi1
-        # print
         assert xi0.is_leq(xi1) and not xi0.is_equal(xi1), "xi1 must be strictly smaller than self"
         in_unit_disk = xi1.is_in_unit_disk()
         v0 = self.pseudovaluation_on_polynomial_ring()
@@ -1211,8 +1228,6 @@ def mac_lane_infimum(v1, v2):
 
     on the set of all MacLane valuations on `K[x]`.
     """
-
-    # print "call mac_lane_infimum with %s and %s"%(v1, v2)
     R = v1.domain()
     assert v2.domain() is R
     if v1.is_gauss_valuation():
@@ -1284,6 +1299,66 @@ def valuation_from_discoid(vK, f, s):
         v = v0.augmentation(v.phi(), t)
         assert v(f) == s
         return v
+
+def valuations_from_inequality(vK, f, s):
+    r"""
+    Return the list of inductive valuations corresponding to the given inequlities.
+
+    INPUT:
+
+    - ``vK`` -- a discrete valuation on a field `K`
+    - ``f`` -- a nonconstant monic integral polynomial over `K`
+    - ``s`` -- a nonnegative rational number, or `\infty`
+
+    OUTPUT:
+
+    a list of inductive valuations on the domain of ``f``, extending ``vK``,
+    corresponding to the boundary points of the irreducible components of the
+    affinoid defined by the condition `v(f)\geq s`. Note that these components
+    are all discoids.
+
+    """
+    R = f.parent()
+    K = R.base_ring()
+    assert K is vK.domain()
+    v0 = GaussValuation(R, vK)
+    assert f.is_monic()
+    assert v0(f) >= 0
+    assert s >= 0
+    V = [v0]
+    V_new = []
+    ret = []
+    while len(V) > 0:
+        # V contains all valuations which still need to be developped
+        V_new = []
+        for v in V:
+            vf = v(f)
+            if vf < s:
+                V_new += v.mac_lane_step(f)
+            elif vf == s:
+                ret.append(v)
+            else:
+                # now v is an inductive valuation such that v(f) > s
+                for v0 in v.augmentation_chain():
+                    if v0(f) <= s:
+                        break
+                    else:
+                        v = v0
+                if v0(f) == s:
+                    ret.append(v0)
+                # now v0 is an inductive valuation such that v0(f) < s,
+                # and v is an augmentation of v0 such that v(f) > s.
+                # We test this:
+                assert v0(f) < s
+                assert v(f) > s
+                assert v._base_valuation == v0
+                a = [v0(c) for c in v.coefficients(f)]
+                t = max([(s-a[i])/i for i in range(1,len(a)) ])
+                v = v0.augmentation(v.phi(), t)
+                assert v(f) == s
+                ret.append(v)
+        V = V_new
+    return ret
 
 
 def equality_of_pseudo_valuations(v1, v2):
