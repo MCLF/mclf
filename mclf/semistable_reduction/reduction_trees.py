@@ -95,8 +95,14 @@ EXAMPLES::
 #*****************************************************************************
 
 from sage.structure.sage_object import SageObject
+from sage.rings.all import ZZ, NumberField, FunctionField
 from mac_lane import *
-from mclf.berkovich import *
+from mclf.berkovich.berkovich_line import *
+from mclf.berkovich.berkovich_trees import BerkovichTree
+from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
+from mclf.berkovich.affinoid_domain import ElementaryAffinoidOnBerkovichLine
+from mclf.padic_extensions.weak_padic_galois_extensions import WeakPadicGaloisExtension
+
 
 #----------------------------------------------------------------------------
 
@@ -122,7 +128,8 @@ class ReductionTree(SageObject):
 
     .. NOTE::
 
-        In the present release, the base field `K` must be a number field.
+        In the present release, the base field `K` must be the field of rational_function_field
+        numbers.
 
     """
 
@@ -141,9 +148,11 @@ class ReductionTree(SageObject):
         self._reduction_components = []
         self._reduction_nodes = []
 
+
     def __repr__(self):
 
         return "Reduction of %s, relative to %s"%(self._Y, self._vK)
+
 
     def curve(self):
         r"""
@@ -151,17 +160,20 @@ class ReductionTree(SageObject):
         """
         return self._Y
 
+
     def berkovich_line(self):
         r"""
         Return the Berkovich line `X` of which the curve `Y` is a cover.
         """
         return self._X
 
+
     def base_valuation(self):
         r"""
         Return the specified valuation of the base field.
         """
         return self._vK
+
 
     def base_field(self):
         r"""
@@ -176,32 +188,35 @@ class ReductionTree(SageObject):
         """
         return self._reduction_components
 
-    def add_reduction_component(self, xi, eta_list=[], basepoint=None):
+
+    def add_reduction_component(self, xi, basepoint=None):
         r"""
         Add a new reduction component to the tree.
 
         INPUT:
 
         - ``xi`` -- a point of type II on the underlying Berkovich line
-        - ``eta_list`` -- a list of type-V-points (default: ``[]``)
         - ``base_point`` -- a point of type I (default: ``None``)
 
         OUTPUT: The reduction tree is changed in the following way:
 
         - the point ``xi`` is added as a vertex of the reduction tree
         - a new ``ReductionComponent`` is created (with the initial values
-          ``xi``, ``eta_list`` and ``base_point``) and added to the list
+          ``xi`` and ``base_point``) and added to the list
           of reduction components of this reduction tree.
 
-        WARNING:
+        .. WARNING::
 
         We note that this is a potentially dangerous operation, if ``xi`` is
         not already a vertex of the tree. The probems is that when the tree
         changes, this information is not passed down to the reduction components.
 
         """
-        self._T, subtree = self._T.add_point(xi)
-        self._reduction_components.append(ReductionComponent(self, subtree, eta_list, basepoint))
+        subtree = self._T.find_point(xi)
+        if subtree == None:
+            self._T, subtree = self._T.add_point(xi)
+            print "warning: had to add %s to the tree."%xi
+        self._reduction_components.append(ReductionComponent(self, subtree, basepoint))
 
 
     def reduction_genus(self):
@@ -218,13 +233,11 @@ class ReductionTree(SageObject):
             result is correct only if `Y` has abelian reduction.
 
         """
-
         if not hasattr(self, "_reduction_genus"):
             self._reduction_genus = sum([Z.reduction_genus() for Z in self.reduction_components()])
             # for the moment, we only count the contribution of the components
             # and dismiss the loops.
         return self._reduction_genus
-
 
 
     def reduction_conductor(self):
@@ -243,13 +256,11 @@ class ReductionTree(SageObject):
             result is only correct if the curve `Y` has abelian reduction.
 
         """
-
         if not hasattr(self, "_reduction_genus"):
             self._reduction_genus = sum([Z.reduction_genus() for Z in self.reduction_components()])
             # for the moment, we only count the contribution of the components
             # and dismiss the loops.
         return self._reduction_genus
-
 
 
     def is_semistable(self):
@@ -276,22 +287,19 @@ class ReductionComponent(SageObject):
     INPUT:
 
     - ``Y`` -- a reduction tree
-    - ``subtree`` -- a subtree of the Berkovich tree of `Y`
-    - ``eta_list`` -- a list of points of type V on `X`, with boundary point ``xi``
+    - ``xi`` -- a point of type II on the Berkovich line `X` underlying `Y`
     - ``basepoint`` -- (default: ``None``) a point of type I on `X`, or ``None``
 
     OUTPUT: The reduction component on ``Y``, corresponding to the root of ``subtree``.
 
-    The root `\xi` of the given subtree must be a point of type II on the
-    Berkovich line `X` underlying `Y`. It corresponds to an irreducible component
-    of the special fiber of the inertial model `\mathcal{X}_0` of `X` given
-    by this reduction tree.
+    It is assumed that `\xi` is a vertex of the given reduction tree. It thus
+    corresponds to an irreducible component of the special fiber of the base
+    model `\mathcal{X}_0` of `X` given by this reduction tree. (If `\xi` is not
+    a vertex of the tree, it is added to the tree.)
 
     The *reduction component* which is generated by this command is an object
     for hosting methods which compute information about the irreducible components
     of models `Y` lying above `\xi`, over various extensions of the base field.
-
-    ``eta_list`` is not used at the moment.
 
     ``basepoint`` should be a point which specializes to the interior of the
     component of the model `\mathcal{X}_0` corresponding to `\xi`. It is used
@@ -300,19 +308,24 @@ class ReductionComponent(SageObject):
 
     """
 
-
-    def __init__(self, Y, subtree, eta_list=[], basepoint=None):
-
+    def __init__(self, Y, subtree, basepoint=None):
         self._Y = Y
         self._subtree = subtree
         self._xi = subtree.root()
         assert self._xi.type() == "II", "xi must be a point of type II!"
-        self._eta_list = eta_list
         self._basepoint = basepoint
         # we check whether the basepoint lies in the interior; both
         # basepoint and interior are created by this (if they were not already given)
         assert self.interior().is_contained_in(self.basepoint()), \
             "the basepoint must lie in the interior of the reduction component!"
+
+
+    def reduction_tree(self):
+        """
+        Return the reduction tree of this component.
+        """
+        return self._Y
+
 
     def curve(self):
         """
@@ -320,17 +333,20 @@ class ReductionComponent(SageObject):
         """
         return self._Y.curve()
 
+
     def berkovich_line(self):
         """
         Return the underlying Berkovich line `X`.
         """
         return self._Y.berkovich_line()
 
+
     def type_II_point(self):
         """
         Return the type-II-point corresponding to this reduction component.
         """
         return self._xi
+
 
     def basepoint(self):
         """
@@ -371,18 +387,17 @@ class ReductionComponent(SageObject):
             component is created. If the tree is changed later, the interior
             is not updated.
         """
-
         if not hasattr(self, "_interior"):
-            eta_list = self._eta_list
+            eta_list = []
             subtree = self._subtree
             xi = self._xi
             if not subtree.parent() == None:
                 eta_list.append(TypeVPointOnBerkovichLine(xi, subtree.parent().root()))
             for child in subtree.children():
-                eta_list.append(TypeVPointOnBerkovichLine(child.root(), subtree.parent().root()))
-            print "eta_list = ", eta_list
+                eta_list.append(TypeVPointOnBerkovichLine(xi, child.root()))
             self._interior = ElementaryAffinoidOnBerkovichLine([eta_list])
         return self._interior
+
 
     def splitting_field(self, check=False):
         r"""
@@ -402,8 +417,46 @@ class ReductionComponent(SageObject):
         - all lower components have multiplicities one over `(L,v_L)`
         - the fiber of the cover `\phi:Y\to X` over the base point splits over
           the strict henselization of `(L,v_L)`
+
+        .. WARNING::
+
+            For the moment, this only works if the basepoint is contained inside
+            the closed unit disk.
         """
-        pass
+        if not hasattr(self, "_splitting_field"):
+            vK = self.reduction_tree().base_valuation()
+            K = vK.domain()
+            # K must be number field for the rest to work
+            # Actually, it must be QQ!
+            assert K == QQ, "K must be QQ"
+            fiber = self.curve().fiber(self.basepoint().function_field_valuation())
+            # `fiber` should be a list of points on Y
+            F = []
+            for xi in fiber:
+                L = xi.residue_field()
+                # L should be a (relative) number field (which may include QQ)
+                if not L == QQ:
+                    f = L.absolute_polynomial().change_ring(K)
+                    F += [g for g,m in f.factor()]
+            # F = self.curve().fiber_equations(self.basepoint().function_field_valuation())
+            e = self.type_II_point().pseudovaluation_on_polynomial_ring().E()
+            self._splitting_field = WeakPadicGaloisExtension(vK, F, minimal_ramification=e)
+        return self._splitting_field
+
+
+    def inertial_valuations(self):
+        r"""
+        Return the valuations corresponding to the inertial components.
+
+        """
+        if not hasattr(self, "_inertial_valuations"):
+            F = self.reduction_tree().curve().function_field()
+            F0 = self.reduction_tree().berkovich_line().function_field()
+            assert F0 is F.base()
+            v = self.type_II_point().valuation()
+            # v is a discrete valuation on F0
+            self._inertial_valuations = [FunctionFieldValuation(F, w) for w in v.mac_lane_approximants(F.polynomial())]
+        return self._inertial_valuations
 
 
     def upper_components(self, vL=None, multiplicities=False):
@@ -426,7 +479,11 @@ class ReductionComponent(SageObject):
         over the given reduction component (possibly with their multiplicities).
 
         """
-        pass
+        if vL == None:
+            vL = self.splitting_field().valuation()
+        upper_valuations = self.upper_valuations(vL)
+        return [v.residue_field() for v in upper_valuations]
+
 
     def lower_components(self, vL=None, multiplicities=False):
         r"""
@@ -449,7 +506,72 @@ class ReductionComponent(SageObject):
         `m` acompanying the curve (if given) is the multiplivity of this component.
 
         """
-        pass
+        if vL == None:
+            vL = self.splitting_field().valuation()
+        lower_valuations = self.lower_valuations(vL)
+        return [v.residue_field() for v in lower_valuations]
+
+
+    def lower_valuations(self, vL=None):
+        r"""
+        Return the valuations corresponding to the lower components, relative to
+        a given extension of the base field.
+
+        INPUT:
+
+        - ``vL`` -- a discrete valuation on a finite extension `L` of the base field
+
+        OUTPUT:
+
+        the list of all extensions of the valuation corresponding to this
+        reduction component to the function field `L(x)` which restrict to `v_L`.
+
+        """
+        if vL == None:
+            vL = self.splitting_field().valuation()
+        FX = self.berkovich_line().function_field()
+        L = vL.domain()
+        FXL = FunctionField(L, FX.variable_name())
+        XL = BerkovichLine(FXL, vL)
+        f, s = self.type_II_point().discoid()
+        f = FXL(f)
+        return [xi.valuation() for xi in XL.points_from_inequality(f, s)]
+
+
+    def upper_valuations(self, vL=None):
+        r"""
+        Return the valuations corresponding to the upper components of this
+        reduction component, relative to a given extension of the base field.
+
+        INPUT:
+
+        - ``vL`` -- a discrete valuation of a finite extension `L` of the base field.
+
+        OUTPUT:
+
+        the list of all extensions of the inertial component to the function field
+        of the base of `Y` to L, which restrict to `v_L`.
+
+        .. WARNING::
+
+            For the moment, it is not checked whether the resulting valuations
+            extend `v_L`. Hnece the result is only correct if `v_L` is the unique
+            extension of the base valuation to `L`.
+
+        """
+        if vL == None:
+            vL = self.splitting_field().valuation()
+        lower_valuations = self.lower_valuations(vL)
+        FYL = base_change_of_function_field(self.curve().function_field(), vL.domain())
+        upper_valuations = []
+        for v in lower_valuations:
+            # upper_valuations += v.extensions(FYL)
+            # this does not work due to a bug in mac_lane
+            new_valuations = [FunctionFieldValuation(FYL, w) for w in v.mac_lane_approximants(FYL.polynomial())]
+            upper_valuations += new_valuations
+            # it is not checked whether these extensions restrict to vL
+        return upper_valuations
+
 
     def reduction_genus(self, vL=None):
         r"""
@@ -467,3 +589,34 @@ class ReductionComponent(SageObject):
         """
 
         pass
+
+
+#-----------------------------------------------------------------------------
+
+#                       auxiliary functions
+#                       -------------------
+
+def base_change_of_function_field(F, L):
+    r"""
+    Return the base change of a function field with respect to an extension
+    of the base field.
+
+    INPUT:
+
+    - ``F`` -- a function field over a field `K`
+    - ``L`` -- a finite field extension of `K`
+
+    OUTPUT:
+
+    the function field `F_L:= F\otimes_K L`.
+
+    It is not checked whether the result is really a function field.
+
+    """
+    F0 = F.base()
+    F0L = FunctionField(L, F0.variable_name())
+    if F0 == F:
+        # F is a rational function field
+        return F0L
+    else:
+        return F0L.extension(F.polynomial().change_ring(F0L), F.variable_name())
