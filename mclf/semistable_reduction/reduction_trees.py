@@ -482,7 +482,7 @@ class ReductionComponent(SageObject):
         if vL == None:
             vL = self.splitting_field().valuation()
         upper_valuations = self.upper_valuations(vL)
-        return [v.residue_field() for v in upper_valuations]
+        return [make_function_field(v.residue_field()) for v in upper_valuations]
 
 
     def lower_components(self, vL=None, multiplicities=False):
@@ -509,7 +509,7 @@ class ReductionComponent(SageObject):
         if vL == None:
             vL = self.splitting_field().valuation()
         lower_valuations = self.lower_valuations(vL)
-        return [v.residue_field() for v in lower_valuations]
+        return [make_function_field(v.residue_field()) for v in lower_valuations]
 
 
     def lower_valuations(self, vL=None):
@@ -620,3 +620,22 @@ def base_change_of_function_field(F, L):
         return F0L
     else:
         return F0L.extension(F.polynomial().change_ring(F0L), F.variable_name())
+
+
+def make_function_field(k):
+    r"""
+    Return the function field corresponding to this field.
+
+    INPUT:
+
+    - ``k`` -- the residue field of a discrete valuation on a function field.
+
+    OUTPUT:
+
+    the field `k` as a function field; this is rather experimental..
+
+    """
+    k0 = k.base_field()
+    f0 = FunctionField(k0.base_ring(), k0.base().variable_name())
+    G = k.modulus().change_ring(f0)
+    return f0.extension(G, 'y')
