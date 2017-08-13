@@ -534,7 +534,7 @@ class PointOnBerkovichLine(SageObject):
 
     def base_valuation(self):
 
-        return self._vK
+        return self._X._vK
 
     def is_strictly_less(self, xi1):
         """ return True if self is strictly smaller than xi1."""
