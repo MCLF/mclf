@@ -524,22 +524,39 @@ class PointOnBerkovichLine(SageObject):
     def __init__(self):
         pass   # Initialization depends on the type
 
-    def X(self):
-
+    def berkovich_line(self):
+        """
+        Return the Berkovich line of which this point lies.
+        """
         return self._X
 
-    def function_field(self):
 
+    def function_field(self):
+        """
+        Return the function field of this Berkovich line.
+        """
         return self._F
 
-    def base_valuation(self):
 
+    def base_field(self):
+        """
+        Return the base field of this Berkovich line.
+        """
+        return self._X._vK.domain()
+
+
+    def base_valuation(self):
+        """
+        Return the valuation on the base field of this Berkovich line.
+        """
         return self._X._vK
 
-    def is_strictly_less(self, xi1):
-        """ return True if self is strictly smaller than xi1."""
 
+    def is_strictly_less(self, xi1):
+        """ Check whether ``self`` is strictly smaller than ``xi1``.
+        """
         return self.is_leq(xi1) and not self.is_equal(xi1)
+
 
     def make_polynomial(self, f):
         r""" Return the polynomial corresponding to ``f``.
@@ -555,15 +572,14 @@ class PointOnBerkovichLine(SageObject):
            - f(1/x) as an element of `K[x]` if possible and ``lies outside the unit disk
         Otherwise an error is raised.
 
-
         This function is useful to converting elements of the function field to
         elements of the domain of the MacLane valuation underlying ``self``.
         """
 
         R = self._v._base_valuation.domain()
-        if f.parent() is self.X().function_field() and not self.is_in_unit_disk():
+        if f.parent() is self.berkovich_line().function_field() and not self.is_in_unit_disk():
             print "f =", f
-            return R(f(1/self.X().function_field().gen()))
+            return R(f(1/self.berkovich_line().function_field().gen()))
         else:
             return R(f)
 
@@ -618,23 +634,17 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         """
         return "I"
 
-    def berkovich_line(self):
-        """
-        Return the Berkovich line of which this point lies.
-        """
-        return self._X
 
     def is_gauss_point(self):
         """ Return True if self is the Gauss point.
         """
-
         return False   #  self is of type I
+
 
     def is_in_unit_disk(self):
         r"""
         True is self is contained in the unit disk.
         """
-
         return self._is_in_unit_disk
 
 
@@ -654,24 +664,37 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         corresponding to ``self``.
 
         """
-        if f.parent() is self.X().function_field():
+        if f.parent() is self.berkovich_line().function_field():
             return self._v(f)
         else:
             return self.pseudovaluation_on_polynomial_ring()(f)
 
 
-    def pseudovaluation_on_polynomial_ring(self):
-        r""" Return the MacLane valuation representing ``self``.
+    def pseudovaluation(self):
+        r"""
+        Return the pseudovaluation corresponding to this point.
 
         OUTPUT:
 
-        A MacLane valuation on the polynomial ring `K[x]` representing ``self``.
+        a discrete pseudovaluation on the rational function field of the
+        Berkovich line of which ``self`` is a point.
+        """
+        return self._v
+
+
+    def pseudovaluation_on_polynomial_ring(self):
+        r""" Return the pseudovaluation representing ``self``.
+
+        OUTPUT:
+
+        A discrete pseudovaluation on the polynomial ring `K[x]` representing ``self``.
         It is either inductive or a limit valuation.
         """
         if self._is_in_unit_disk:
             return self._v._base_valuation
         else:
             return self._v._base_valuation._base_valuation
+
 
     def function_field_valuation(self):
         r"""
@@ -705,17 +728,22 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
 
 
     def is_inductive(self):
-        r""" True if ``self`` corresponds to an inductive MacLane valuation.
+        r"""
+        Check whether this points corresponds to an inductive valuation.
         """
         return not self.is_limit_point()
 
+
     def is_limit_point(self):
-        r""" True if ``self`` corresponds to a limit valuation.
+        r"""
+        Check whether this point corresponds to a limit valuation.
         """
         return hasattr(self.pseudovaluation_on_polynomial_ring(), "_approximation")
 
+
     def approximation(self, certified_point=None):
-        r""" Return an approximation of ``self``.
+        r"""
+        Return an approximation of this point.
 
         INPUT:
 
@@ -723,7 +751,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
 
         OUTPUT:
 
-        An inductive point which approximates ``self``, in such a way that
+        A a point which is inductive and approximates ``self``, in such a way that
         we can distinguish ``self`` from ``certified point``.
 
         If ``self`` is an inductive point, then ``self`` is returned. Otherwise,
@@ -732,10 +760,13 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         If ``certified_point`` is not None and distinct from ``self``, then
         the output is not greater or equal to ``certified_point``.
 
-        TO DO : We should also make sure that the approximation has the same degree
-        as the point itself. If the point is generated as part of the support of
-        a principal divisor, then this should be ok, because of the default
-        "require_final_EF=True" in "vK.approximants(f)".
+        .. TODO::
+
+            We should also make sure that the approximation has the same degree
+            as the point itself. If the point is generated as part of the support of
+            a principal divisor, then this should be ok, because of the default
+            "require_final_EF=True" in "vK.approximants(f)".
+
         """
         if self.is_inductive():
             return self
@@ -764,10 +795,9 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         return X.point_from_polynomial_pseudovaluation(w._approximation, self.is_in_unit_disk())
 
 
-
     def is_equal(self, xi):
         r"""
-        Return True is self is equal to ``xi``.
+        Return ``True`` is self is equal to ``xi``.
         """
         if xi.type() != "I":
             return False
@@ -783,7 +813,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
 
     def is_leq(self, xi):
         r"""
-        Return True is self is less or equal to xi.
+        Return ``True`` if ``self`` is less or equal to ``xi``.
 
         INPUT:
 
@@ -791,7 +821,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
 
         OUTPUT:
 
-        True if self is less or equal to ``xi`` (w.r.t. the natural
+        ``True`` if self is less or equal to ``xi`` (w.r.t. the natural
         partial order on `X` for which the Gauss pont is the smallest element).
         Since self is a point of type I and hence maximal, this is never true
         unless `xi` is equal to self.
@@ -801,7 +831,8 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
 
 
     def discoid(self, certified_point=None):
-        r""" Return a representation of a discoid approximating ``self``.
+        r"""
+        Return a representation of a discoid approximating ``self``.
 
         INPUT:
 
@@ -919,7 +950,8 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
 #                  =================
 
 class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
-    r""" A point of type II on a Berkovich line.
+    r"""
+    A point of type II on a Berkovich line.
 
     INPUT:
 
@@ -986,22 +1018,47 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
 
         the value `v(f)`, where `v` is the valuation corresponding to self
         """
-
         return self._v(f)
+
 
     def is_inductive(self):
         r""" True if ``self`` corresponds to an inductive pseud-valuation.
         This is always true for points of type II.
         """
-
         return True
+
 
     def is_limit_point(self):
         r""" True is ``self`` corresponds to a limit valuation.
         This is never true for points of type II.
         """
-
         return False
+
+    def pseudovaluation(self):
+        r"""
+        Return the pseudovaluation corresponding to this point.
+
+        OUTPUT:
+
+        Since ``self`` is a point of type II, the output is a discrete
+        valuation on the function field of the underlying Berkovich line.
+
+        """
+        return self._v
+
+
+    def pseudovaluation(self):
+        r"""
+        Return the pseudovaluation corresponding to this point.
+
+        OUTPUT:
+
+        Since ``self`` is a point of type II, the output is a discrete
+        valuation on the function field of the underlying Berkovich line.
+
+        """
+        return self._v
+
 
     def pseudovaluation_on_polynomial_ring(self):
         r""" Return the pseudo-valuation on the polynomial ring 'K[y]'
@@ -1014,22 +1071,25 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         #    return self._v._base_valuation._base_valuation
         return self._v1
 
+
     def approximation(self):
         r""" Return an approximation of ``self``.
         For a point of type II, ``self`` is already an approximation of itself.
         """
-
         return self
+
 
     def improved_approximation(self):
         r""" Return an improved approximation of ``self``.
+
         This is meaningless for type-II-points, so self is returned.
         """
-
         return self
 
+
     def discoid(self, certified_point=None):
-        r""" Return a representation of the discoid of which ``self`` is the
+        r"""
+        Return a representation of the discoid of which ``self`` is the
         unique boundary point.
 
         INPUT:
@@ -1050,7 +1110,6 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         ``self``. If ``self`` is the Gauss point then `D` is the standard
         closed unit disk, `f=x` and `s=0`.
         """
-
         xi = self
         if xi.is_gauss_point():
             return xi._X._F.gen(), 0
@@ -1069,11 +1128,11 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
             s = xi.v(f)
             return f, s
 
+
     def is_equal(self, xi):
         r"""
         Return ``True`` if self is equal to ``xi``.
         """
-
         if xi.type() != "II":
             return False
         return self.is_leq(xi) and xi.is_leq(self)
@@ -1092,7 +1151,6 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         True if self is less or equal to ``xi`` (w.r.t. the natural
         partial order on `X`)
         """
-
         if self.is_gauss_point():
             return True      # the Gauss point is the least element of X
         if self.is_in_unit_disk() != xi.is_in_unit_disk():
@@ -1101,6 +1159,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
             v1 = self.pseudovaluation_on_polynomial_ring()
             v2 = xi.pseudovaluation_on_polynomial_ring()
             return v1(v1.phi()) <= v2(v1.phi())
+
 
     def infimum(self, xi2):
         r"""
@@ -1116,7 +1175,6 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         Unless `\xi_2=\infty` or self is equal to `\xi_2`,
         the result is a point of type II.
         """
-
         if self.is_leq(xi2):
             return self
         if xi2.is_leq(self):
@@ -1140,6 +1198,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
             return TypeIIPointOnBerkovichLine(self._X, v3)
         return self._X.gauss_point()
 
+
     def point_in_between(self, xi1):
         r"""
         Return a point in between ``self`` and ``xi1``.
@@ -1151,7 +1210,6 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         OUTPUT: a point which lies strictly between ``self`` and ``xi1``
 
         """
-
         xi0 = self
         assert xi0.is_leq(xi1) and not xi0.is_equal(xi1), "xi1 must be strictly smaller than self"
         in_unit_disk = xi1.is_in_unit_disk()
