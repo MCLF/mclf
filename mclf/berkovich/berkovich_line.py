@@ -1047,14 +1047,14 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         return self._v
 
 
-    def pseudovaluation(self):
+    def valuation(self):
         r"""
-        Return the pseudovaluation corresponding to this point.
+        Return the valuation corresponding to this point.
 
         OUTPUT:
 
-        Since ``self`` is a point of type II, the output is a discrete
-        valuation on the function field of the underlying Berkovich line.
+        The discrete valuation on the function field of the underlying Berkovich
+        line corresponding to this point.
 
         """
         return self._v
