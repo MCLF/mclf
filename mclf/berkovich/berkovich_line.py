@@ -304,6 +304,28 @@ class BerkovichLine(SageObject):
             For the moment we have to assume that if `f=g(1/x)`, then all the
             roots of `g` have strictly positive valuations.
 
+        EXAMPLES:
+
+            sage: from mclf import *
+            sage: F.<x> = FunctionField(QQ)
+            sage: v_2 = pAdicValuation(QQ, 2)
+            sage: X = BerkovichLine(F, v_2)
+            sage: f = x^2 + 2
+            sage: X.points_from_inequality(f, 3)
+            [Point of type II on Berkovich line, corresponding to v(x^2 + 2) >= 3]
+            sage: from mclf.padic_extensions.weak_padic_galois_extensions import WeakPadicGaloisExtension
+            sage: LL = WeakPadicGaloisExtension(v_2, f.numerator())
+            sage: L = LL.field()
+            sage: vL = LL.valuation()
+            sage: FL.<x> = FunctionField(L)
+            sage: XL = BerkovichLine(FL, vL)
+            sage: f = FL(f)
+            sage: XL.points_from_inequality(f, 3)
+            [Point of type II on Berkovich line, corresponding to v(x + pi2) >= 3/2]
+            sage: XL.points_from_inequality(f, 4)
+            [Point of type II on Berkovich line, corresponding to v(x + pi2) >= 5/2,
+            Point of type II on Berkovich line, corresponding to v(x + 7*pi2) >= 5/2]
+
         """
         vK = self.base_valuation()
         F = self.function_field()
@@ -1394,7 +1416,8 @@ def valuations_from_inequality(vK, f, s):
             if vf < s:
                 V_new += v.mac_lane_step(f)
             elif vf == s:
-                ret.append(v)
+                if all([not v == w for w in ret]):
+                    ret.append(v)
             else:
                 # now v is an inductive valuation such that v(f) > s
                 for v0 in v.augmentation_chain():
@@ -1403,7 +1426,8 @@ def valuations_from_inequality(vK, f, s):
                     else:
                         v = v0
                 if v0(f) == s:
-                    ret.append(v0)
+                    if all([not v == w for w in ret]):
+                        ret.append(v0)
                 # now v0 is an inductive valuation such that v0(f) < s,
                 # and v is an augmentation of v0 such that v(f) > s.
                 # We test this:
@@ -1414,7 +1438,8 @@ def valuations_from_inequality(vK, f, s):
                 t = max([(s-a[i])/i for i in range(1,len(a)) ])
                 v = v0.augmentation(v.phi(), t)
                 assert v(f) == s
-                ret.append(v)
+                if all([not v == w  for w in ret]):
+                    ret.append(v)
         V = V_new
     return ret
 
