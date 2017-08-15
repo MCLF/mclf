@@ -102,7 +102,7 @@ from mclf.berkovich.berkovich_trees import BerkovichTree
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
 from mclf.berkovich.affinoid_domain import ElementaryAffinoidOnBerkovichLine
 from mclf.padic_extensions.weak_padic_galois_extensions import WeakPadicGaloisExtension
-
+from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
 
 #----------------------------------------------------------------------------
 
@@ -256,11 +256,11 @@ class ReductionTree(SageObject):
             result is only correct if the curve `Y` has abelian reduction.
 
         """
-        if not hasattr(self, "_reduction_genus"):
-            self._reduction_genus = sum([Z.reduction_genus() for Z in self.reduction_components()])
+        if not hasattr(self, "_reduction_conductor"):
+            self._reduction_conductor = sum([Z.reduction_conductor() for Z in self.reduction_components()])
             # for the moment, we only count the contribution of the components
             # and dismiss the loops.
-        return self._reduction_genus
+        return self._reduction_conductor
 
 
     def is_semistable(self):
@@ -482,7 +482,7 @@ class ReductionComponent(SageObject):
         if vL == None:
             vL = self.splitting_field().valuation()
         upper_valuations = self.upper_valuations(vL)
-        return [make_function_field(v.residue_field()) for v in upper_valuations]
+        return [SmoothProjectiveCurve(make_function_field(v.residue_field())) for v in upper_valuations]
 
 
     def lower_components(self, vL=None, multiplicities=False):
@@ -509,7 +509,7 @@ class ReductionComponent(SageObject):
         if vL == None:
             vL = self.splitting_field().valuation()
         lower_valuations = self.lower_valuations(vL)
-        return [make_function_field(v.residue_field()) for v in lower_valuations]
+        return [SmoothProjectiveCurve(make_function_field(v.residue_field())) for v in lower_valuations]
 
 
     def lower_valuations(self, vL=None):
@@ -588,7 +588,10 @@ class ReductionComponent(SageObject):
         extension `(L,v_L)`.
         """
 
-        pass
+        if not hasattr(self, "_reduction_genus"):
+            self._reduction_genus = sum([W.genus() for W in self.upper_components()])
+        return self._reduction_genus
+
 
 
 #-----------------------------------------------------------------------------
@@ -635,7 +638,12 @@ def make_function_field(k):
     the field `k` as a function field; this is rather experimental..
 
     """
-    k0 = k.base_field()
-    f0 = FunctionField(k0.base_ring(), k0.base().variable_name())
-    G = k.modulus().change_ring(f0)
-    return f0.extension(G, 'y')
+    if hasattr(k, "base_field"):
+        # it seems that k is an extension of a rational function field
+        k0 = k.base_field()
+        f0 = FunctionField(k0.base_ring(), k0.base().variable_name())
+        G = k.modulus().change_ring(f0)
+        return f0.extension(G, 'y')
+    else:
+        # it seems that k is simply a rational function field
+        return FunctionField(k.base_ring(), k.variable_name())
