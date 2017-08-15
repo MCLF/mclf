@@ -104,6 +104,8 @@ class SmoothProjectiveCurve(SageObject):
         # self._field_of_constants_degree = 1
         self._coordinate_functions = self.coordinate_functions()
         self._field_of_constants_degree = self.field_of_constants_degree()
+        self.compute_separable_model()
+
 
     def __repr__(self):
         return "The smooth projective curve over %s with %s."\
@@ -129,6 +131,46 @@ class SmoothProjectiveCurve(SageObject):
         """
 
         return PointOnSmoothProjectiveCurve(self, v)
+
+
+    def singular_locus(self):
+        r""" Return the singular locus of the affine model of the curve.
+
+        OUTPUT:
+
+        a list of discrete valuations on the base field `k(x)` which represent
+        the `x`-coordinates of the points where the affine model of the curve
+        given by the defining equation of the function field may be singular.
+
+        """
+        print "calling singular_locus"
+        F = self.function_field()
+        F0 = F.base_field()
+        if F is F0:
+            # the curve is the projective line
+            print "return []"
+            return []
+        f = F.polynomial()
+        # this is the defining equation, as a polynomial over F0 = k(x)
+        # the coefficients may not be integral; we have to multiply f by
+        # the lcm of the denominators of the coefficients
+        c = prod([f[i].denominator() for i in range(f.degree()+1)])
+        f = c*f
+        f = f.map_coefficients(lambda c:c.numerator(), F0._ring)
+        y = f.parent().gen()
+        x = f.base_ring().gen()
+        # now f is a polynomial in y over the polynomial ring in x
+        if f.derivative(y) == 0:
+            # F/F0 is inseparable
+            g = f.derivative(x)
+            D = f.resultant(g)
+        else:
+            D = f.discriminant().numerator()
+        print "D = ", D
+        print "D.parent = ", D.parent()
+        ret =  [FunctionFieldValuation(F0, g) for g, m in D.factor()]
+        print "return ", ret
+        return [FunctionFieldValuation(F0, g) for g, m in D.factor()]
 
 
     def field_of_constants_degree(self):
@@ -197,7 +239,7 @@ class SmoothProjectiveCurve(SageObject):
 
         """
         if hasattr(self, "_coordinate_functions"):
-            return self._coordinate_functions()
+            return self._coordinate_functions
 
         F = self._function_field
         F0 = F.base_field()
@@ -210,14 +252,17 @@ class SmoothProjectiveCurve(SageObject):
         v0 = FunctionFieldValuation(F0, 1/F0.gen())
         V = v0.extensions(F)          # list of points at infinity
         separate_points(ret, V)       # make sure they are separated
-        D = F.polynomial().discriminant().numerator()
-        V0 = [FunctionFieldValuation(F0, g) for g, m in D.factor()]
+        # D = F.polynomial().discriminant().numerator()
+        # this may give an error message if the derivative of F is zero
+        # and this is the case iff F/F0 is inseparable.
+        # V0 = [FunctionFieldValuation(F0, g) for g, m in D.factor()]
+        # Should be replaced by V0 = singular_locus(F):
+        V0 = self.singular_locus()
         for v0 in V0:
             separate_points(ret, v0.extensions(F))
             # separate all intersection points of the affine plane model
         self._coordinate_functions = ret
         return ret
-
 
     def random_point(self):
         """
@@ -303,14 +348,119 @@ class SmoothProjectiveCurve(SageObject):
             deg += m*P.degree()
         return deg
 
+    def separable_model(self):
+        r"""
+        Return the separable model of this curve.
+
+        OUTPUT: a smooth projective curve over the same constant base field
+
+        The *separable model* of this curve `Y` is a curve `Y_s` defined over the
+        same constant base field and whose defining equation realizes `Y_s`
+        as a finite *separable* cover of the projective line. It comes equipped
+        with a finite, purely inseparable morphism `Y\to Y_s`. In particular,
+        `Y_s` has the same genus as `Y`.
+
+        The inclusion of function fields `\phi:F(Y_s)\to F(Y)` can be accessed
+        via the method ``phi()``, the degree of the extension `Y/Y_s` via the
+        method ``degree_of_inseparability``.
+
+        """
+        if self._is_separable:
+            return self
+        else:
+            return self._separable_model
+
+
+    def phi(self):
+        r""" Return the natural embedding of the function field of the separable
+        model into the function field of this curve.
+
+        OUTPUT: a field homomorphism
+
+        """
+        if self._is_separable:
+            F = self.function_field()
+            y = F.gen()
+            return F.hom([y])
+        else:
+            return self._phi
+
+    def degree_of_inseparability(self):
+        r"""
+        Return the degree of inseparability of this curve.
+
+        OUTPUT: positive integer, which is a power of the characteristic of the
+        function field of this curve.
+
+        """
+        if self._is_separable:
+            return ZZ(1)
+        else:
+            return self._degree_of_inseparability
+
+
+    def compute_separable_model(self):
+        r"""
+        Compute a separable model of the curve (if necessary).
+
+        OUTPUT: ``None``
+
+        This function only has to be called only once. It then decides whether
+        or not the function field of the curve is given as a separable extension
+        of the base field or not. If it is not separable then we compute a
+        separable model, which is a tripel `(Y_1,\phi, q)` where
+
+        - `Y_1` is a smooth projective curve over the same constant base field
+          `k` as the curve `Y` itself, and which is given by a separable extension,
+        - `\phi` is a field homomorphism from the function field of `Y_1` into
+          the function field of `Y` corresponding to a purely inseparable extension,
+        - `q` is the degree of the extension given by `\phi`, i.e. the degree of
+          inseparability of the map `Y\to Y_1` given by `\phi`.
+          Note that `q` is a power of the characteristic of `k`.
+
+        """
+        from sage.functions.other import floor
+        F = self.function_field()
+        p = F.characteristic()
+        if p == 0:
+            self._is_separable = True
+            return
+        F0 = F.base_field()
+        G = F.polynomial()
+        q = ZZ(1)
+        while q < G.degree():
+            if all([G[i].is_zero() for i in range(G.degree()+1) if not (p*q).divides(i)]):
+                q = q*p
+            else:
+                break
+        # now q is the degree of inseparability
+        if q.is_one():
+            self._is_separable = True
+            return
+        # now q>1 and hence F/F_0 is inseparable
+        self._is_separable = False
+        self._degree_of_inseparability = q
+        R1 = PolynomialRing(F0, F.variable_name()+'_s')
+        G1 = R1([G[q*i] for i in range((G.degree()/q).floor()+1)])
+        F1 = F0.extension(G1, R1.variable_name())
+        self._separable_model = SmoothProjectiveCurve(F1)
+        self._phi = F1.hom([F.gen()**q])
+        self._degree_of_inseparability = q
+
 
     def canonical_divisor(self):
         pass
 
+
     def ramification_divisor(self):
         r""" Return the ramification divisor of self.
 
-        The function field of ``self`` is a finite separable extension
+        OUTPUT:
+
+        The ramification divisor of the curve, if the curve is given by
+        a separable model. Otherwise, an error is raised.
+
+        So the function field of of the curve is a finite separable extension
         of a rational function field. Geometrically, this means that
         the curve `X` is represented as a separable cover of
         the projective line. The ramification divisor of this cover
@@ -321,6 +471,8 @@ class SmoothProjectiveCurve(SageObject):
         - Hartshorne, *Algebraic Geometry*, Definition IV.2.
 
         """
+        if not self._is_separable:
+            raise Error, "Y is not separable, hence the ramification divisor is not defined"
         if hasattr(self, "_ramification_divisor"):
             return self._ramification_divisor
 
@@ -369,6 +521,8 @@ class SmoothProjectiveCurve(SageObject):
         """
         if hasattr(self,"_genus"):
             return self._genus
+        if not self._is_separable:
+            return self.separable_model().genus()
 
         FY = self._function_field
         if FY.base_field() is FY:
@@ -577,22 +731,22 @@ class PointOnSmoothProjectiveCurve(SageObject):
     def __repr__(self):
         return "Point on %s with coordinates %s."%(self._curve, self._coordinates)
 
+
     def curve(self):
         """ Return the underlying curve of the point.
         """
-
         return self._curve
+
 
     def valuation(self):
         """ Return the valuation corresponding to the point.
         """
-
         return self._valuation
+
 
     def residue_field(self):
         """ Return the residue field of the point.
         """
-
         return self._valuation.residue_field()
 
 
