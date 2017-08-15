@@ -58,6 +58,8 @@ from sage.functions.other import floor
 from mac_lane import *
 from mclf.berkovich.berkovich_line import *
 from mclf.berkovich.affinoid_domain import *
+from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
+from mclf.semistable_reduction.reduction_trees import ReductionTree
 
 
 
@@ -164,13 +166,31 @@ class Superp(SageObject):
         self._FY = FY
         X = BerkovichLine(FX, vK)
         self._X = X
+        Y = SmoothProjectiveCurve(FY)
+        self._Y = Y
 
     def __repr__(self):
 
         return "The superelliptic curve Y: y^%s = %s over %s with %s"%(self._p,
                         self._f, self._vK.domain(), self._vK)
 
-    def compute_etale_locus(self):
+
+    def curve(self):
+        """
+        Return the curve.
+
+        """
+        return self._Y
+
+    def base_valuation(self):
+        """
+        Return the valuation on the base field.
+
+        """
+        return self._vK
+
+
+    def etale_locus(self):
         r"""
         Return the etale locus of the cover `Y\to X`.
 
@@ -242,7 +262,10 @@ class Superp(SageObject):
         and of degree prime to `p`. The motivation for this restriction, and its
         result is that the etale locus is contained in the closed unit disk.
 
-    """
+        """
+
+        if hasattr(self, "_etale_locus"):
+            return self._etale_locus
 
         X = self._X
         FX = self._FX
@@ -274,8 +297,31 @@ class Superp(SageObject):
         for i in range(1, len(delta)):
             X_et = X_et.union(RationalDomainOnBerkovichLine(X, delta[i]))
             X_et.simplify()
-        return X_et.intersection(ClosedUnitDisk(X))
+        self._etale_locus = X_et.intersection(ClosedUnitDisk(X))
+        return self._etale_locus
 
+
+    def reduction_tree(self):
+        r"""
+        Return the reduction tree which determines the semistabel model.
+
+        """
+
+        if hasattr(self, "_reduction_tree"):
+            return self._reduction_tree
+
+        Y = self.curve()
+        vK = self.base_valuation()
+        X_et = self.etale_locus()
+        T = X_et._T
+        # this is the affinoid tree underlying the etale locus
+        # the reduction components are the boundary points
+        reduction_tree = ReductionTree(Y, vK, T)
+        for xi in X_et.boundary():
+            reduction_tree.add_reduction_component(xi)
+
+        self._reduction_tree = reduction_tree
+        return reduction_tree
 
 
 #-----------------------------------------------------------------------
