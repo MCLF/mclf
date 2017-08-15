@@ -144,12 +144,10 @@ class SmoothProjectiveCurve(SageObject):
         given by the defining equation of the function field may be singular.
 
         """
-        print "calling singular_locus"
         F = self.function_field()
         F0 = F.base_field()
         if F is F0:
             # the curve is the projective line
-            print "return []"
             return []
         f = F.polynomial()
         # this is the defining equation, as a polynomial over F0 = k(x)
@@ -167,10 +165,7 @@ class SmoothProjectiveCurve(SageObject):
             D = f.resultant(g)
         else:
             D = f.discriminant().numerator()
-        print "D = ", D
-        print "D.parent = ", D.parent()
         ret =  [FunctionFieldValuation(F0, g) for g, m in D.factor()]
-        print "return ", ret
         return [FunctionFieldValuation(F0, g) for g, m in D.factor()]
 
 
@@ -194,7 +189,7 @@ class SmoothProjectiveCurve(SageObject):
             test_points = [P[0] for P in self.ramification_divisor().values()]
         else:
            test_points = [self.random_point()]
-        n = Y.function_field().degree()
+        n = self.function_field().degree()
         for P in test_points:
             n = n.gcd(P.absolute_degree())
         count = 0
@@ -440,6 +435,9 @@ class SmoothProjectiveCurve(SageObject):
             self._is_separable = True
             return
         F0 = F.base_field()
+        if F is F0:
+            self._is_separable = True
+            return
         G = F.polynomial()
         q = ZZ(1)
         while q < G.degree():
@@ -902,12 +900,10 @@ def separate_two_points(v1, v2):
         w = v2._base_valuation
         try:
             g = w._approximation.phi()
-            print "g = ", g
             # maybe replace with _initial_approximation
         except AttributeError:
             w = w._base_valuation
             g = w._approximation.phi()
-            print "! g = ",g
         # assert v2(g) > v1(g)
         n = ZZ(v1(g)/v1(f))
         return g*f**(-n)
