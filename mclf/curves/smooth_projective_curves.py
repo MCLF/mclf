@@ -85,8 +85,9 @@ EXAMPLES::
 #*****************************************************************************
 
 from sage.structure.sage_object import SageObject
-from sage.rings.all import Infinity, ZZ
+from sage.rings.all import Infinity, ZZ, PolynomialRing
 from sage.misc.prandom import randint
+from sage.misc.misc_c import prod
 from sage.rings.power_series_ring import PowerSeriesRing
 from sage.misc.cachefunc import CachedFunction
 from mac_lane import *
@@ -181,18 +182,21 @@ class SmoothProjectiveCurve(SageObject):
 
         We use a probabilistic algorithms for computing the degree `[k_c:k]`.
         This works well over finite fields, but over number fields it often gives
-        false results. Since we use this function maily to compute zeta-functions,
-        this is tolerable, for the moment.
+        false results. Usually, this will result in a miscalculation of the genus.
 
         """
 
         if hasattr(self, "_field_of_constants_degree"):
             return self._field_of_constants_degree
-
         F = self._function_field
         k = self._constant_base_field
-        P = self.random_point()
-        n = P.absolute_degree()
+        if self.is_separable():
+            test_points = [P[0] for P in self.ramification_divisor().values()]
+        else:
+           test_points = [self.random_point()]
+        n = Y.function_field().degree()
+        for P in test_points:
+            n = n.gcd(P.absolute_degree())
         count = 0
         while n>1 and count < 10:
             P = self.random_point()
@@ -369,6 +373,16 @@ class SmoothProjectiveCurve(SageObject):
             return self
         else:
             return self._separable_model
+
+
+    def is_separable(self):
+        r"""
+        Check whether this curve is represented as a separable cover of the projective line.
+
+        """
+        if not hasattr(self, "_is_separable"):
+            self.compute_separable_model()
+        return self._is_separable
 
 
     def phi(self):
