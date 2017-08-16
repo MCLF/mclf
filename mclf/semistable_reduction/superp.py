@@ -297,8 +297,11 @@ class Superp(SageObject):
         for i in range(1, len(delta)):
             X_et = X_et.union(RationalDomainOnBerkovichLine(X, delta[i]))
             X_et.simplify()
-        self._etale_locus = X_et.intersection(ClosedUnitDisk(X))
-        return self._etale_locus
+        X_et = X_et.intersection(ClosedUnitDisk(X))
+        # this is artificial
+        X_et.simplify()
+        self._etale_locus = X_et
+        return X_et
 
 
     def reduction_tree(self):
