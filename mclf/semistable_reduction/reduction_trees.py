@@ -268,8 +268,15 @@ class ReductionTree(SageObject):
         Check wether the reduction specified by this object is semistable.
 
         """
-
         return self.reduction_genus() == self.curve().genus()
+
+
+    def is_reduced(self):
+        r"""
+        Check whether all upper components of this reduction tree have multiplicity one.
+
+        """
+        return all(Z.is_reduced() for Z in self.reduction_components())
 
 
 
@@ -481,8 +488,27 @@ class ReductionComponent(SageObject):
         """
         if vL == None:
             vL = self.splitting_field().valuation()
+            # if vL is None (which is the default) then we want to do this
+            # computation only once
+            if hasattr(self, "_upper_components"):
+                if multiplicities == False:
+                    return [W for W, m in self._upper_components]
+                else:
+                    return self._upper_components
+            else:
+                store_data = True
         upper_valuations = self.upper_valuations(vL)
-        return [SmoothProjectiveCurve(make_function_field(v.residue_field())) for v in upper_valuations]
+        upper_components = []
+        for v in upper_valuations:
+            W = SmoothProjectiveCurve(make_function_field(v.residue_field()))
+            m = vL(vL.uniformizer())/v(v.uniformizer())
+            upper_components.append((W, m))
+        if store_data:
+            self._upper_components = upper_components
+        if multiplicities == False:
+            return [W for W,m in upper_components]
+        else:
+            return upper_components
 
 
     def lower_components(self, vL=None, multiplicities=False):
@@ -508,6 +534,7 @@ class ReductionComponent(SageObject):
         """
         if vL == None:
             vL = self.splitting_field().valuation()
+            store_upper_components = True
         lower_valuations = self.lower_valuations(vL)
         return [SmoothProjectiveCurve(make_function_field(v.residue_field())) for v in lower_valuations]
 
@@ -593,6 +620,13 @@ class ReductionComponent(SageObject):
         return self._reduction_genus
 
 
+    def is_reduced():
+        r"""
+        Check whether all upper components have multiplicity one.
+
+        """
+        return all([m == 1 for W,m in self.upper_components(multiplicities=True)])
+
 
 #-----------------------------------------------------------------------------
 
@@ -643,6 +677,9 @@ def make_function_field(k):
         k0 = k.base_field()
         f0 = FunctionField(k0.base_ring(), k0.base().variable_name())
         G = k.modulus().change_ring(f0)
+        # G *should* be irreducible, but unfortunately this is sometimes
+        # not true, due to a bug in Sage's factoring
+        assert G.is_irreducible(), "G must be irreducible! This problem is probably caused by a bug in Sage's factoring."
         return f0.extension(G, 'y')
     else:
         # it seems that k is simply a rational function field
