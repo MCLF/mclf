@@ -171,7 +171,7 @@ class Superp(SageObject):
 
     def __repr__(self):
 
-        return "The superelliptic curve Y: y^%s = %s over %s with %s"%(self._p,
+        return "superelliptic curve Y: y^%s = %s over %s, with respect to %s"%(self._p,
                         self._f, self._vK.domain(), self._vK)
 
 
@@ -325,6 +325,54 @@ class Superp(SageObject):
 
         self._reduction_tree = reduction_tree
         return reduction_tree
+
+
+    def compute_semistable_reduction(self):
+        r"""
+        Compute the semistable reduction of this curve, and report on the
+        computation and the result.
+
+        """
+        print "We try to compute the semistable reduction of the"
+        print self
+        print "which has genus ", Y.curve().genus()
+        print
+        print "First we compute the etale locus: "
+        print self.etale_locus()
+
+        reduction_tree = self.reduction_tree()
+        reduction_components = reduction_tree.reduction_components()
+        assert reduction_components != [], "no reduction components found! Something is wrong.."
+        if len(reduction_components) > 1:
+            print "There are %s reduction components to consider: "%len(reduction_components)
+        else:
+            print "There is exactly one reduction component to consider:"
+        print
+        for Z in reduction_components:
+            print "Reduction component corresponding to "
+            print Z.interior()
+            print "It splits over ", Z.splitting_field().field()
+            print "into %s lower components."%len(Z.lower_components())
+            print "The upper components are: "
+            for W in Z.upper_components():
+                print W
+            print "Contribution of this component to the reduction genus is ", Z.reduction_genus()
+        print    
+        if reduction_tree.is_semistable():
+            print "The curve has abelian reduction, since the total reduction genus"
+            print "is equal to the genus of the generic fiber."
+        else:
+            print "We failed to compute the semistable reduction of the curve."
+            if reduction_tree.is_reduced():
+                print "This is probably due to the fact that the curve does not have"
+                print "abeian reduction; the computation of the loops has not yet been realized."
+            else:
+                print "Something went wrong! At least one of upper components has"
+                print "multiplicity > 1."
+
+
+
+
 
 
 #-----------------------------------------------------------------------
