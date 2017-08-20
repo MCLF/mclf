@@ -138,6 +138,9 @@ class WeakPadicGaloisExtension(SageObject):
 
     def __init__(self, vK, F, minimal_ramification=ZZ(1), version="experimental1"):
 
+        print "calling WeakPadicGaloisExtension with vK = ", vK
+        print "F = ", F
+        print "and minimal_ramification = ", minimal_ramification
         p = vK.p()
         self._vK = vK
         self._K = vK.domain()
@@ -336,11 +339,14 @@ def is_padic_irreducible_factor(vK, g, f):
 
     - ``vK`` -- a `p`-adic valuation on a number field `K`
     - ``f``, ``g``: univariate polynomials in over `K`; it is assumed that
-        ``g` is monic and irreducible over the completion of `K`, and of degree
+        ``g` is monic
+        do we need this assumption ??
+        and irreducible over the completion of `K`, and of degree
         strictly less than the degree of ``f``
 
     Output: True if ``g`` is an approximate factor of f, i.e.
-    if Krasner's condition is satified (see below), and False otherwise.
+    if g is irreducible and Krasner's condition is satified (see below),
+    and False otherwise.
 
 
     Krasner's condition implies that the stem field of ``g`` over the completion
@@ -364,9 +370,11 @@ def is_padic_irreducible_factor(vK, g, f):
     assert K is vK.domain(), 'the base ring of f is not the domain of vK'
     assert R is g.parent(), 'f and g do not lie in the same ring'
     assert g.is_monic(), 'g has to be monic'
-    assert g.degree() < f.degree(), "the degree of g must be less than the degree of f"
+    # assert g.degree() < f.degree(), "the degree of g must be less than the degree of f"
     x = R.gen()
 
+    if g == f:
+        return True
     if g.degree() == 1:             # the case deg(g)=1 is different
         alpha = -g[0]               # the unique root of g
         F = f(x+alpha)
@@ -380,8 +388,8 @@ def is_padic_irreducible_factor(vK, g, f):
     # now deg(g)>1
     # we check that g is really irreducible over the completion
     V = vK.mac_lane_approximants(g)
-    assert len(V) == 1, \
-        "g is not irreducible over the completion of its base field."
+    if len(V) != 1:
+        return False   # g is not irreducible
     v = V[0]
     while v(g) < Infinity:
         v = v.mac_lane_step(g)[0]
@@ -444,13 +452,16 @@ def padic_irreducible_factor(vK, f):
     e = vK(p)/vK(vK.uniformizer())  # the total ramification degree of (K,vK)
     assert not f.is_constant(), 'f must not be constant'
     V = vK.mac_lane_approximants(f, require_incomparability=True)
+    # V = [improve_maclane_valuation(v) for v in V]
     V = [LimitValuation(v, f) for v in V]
     # print "V = ", V
     n = f.degree()
     while V != []:
         V_new = []
         for v in V:
-            g = v._approximation.phi()
+            v1 = v._approximation
+            # v1 = improve_maclane_valuation(v1)
+            g = v1.phi()
             # print "g = ", g
             if g.degree() == f.degree() or is_padic_irreducible_factor(vK, g, f):
                 if v(p)/v(v.uniformizer()) > e:
@@ -501,12 +512,13 @@ def weak_splitting_field_1(vK, f):
         if g == None:
             return vL
         # print "g = ", g
-        # n = g.degree()
-        # if p.gcd(n) == 1:
-        #     vL = padic_sufficiently_ramified_extension(vL, n)
-        # else:
-        vL = padic_simple_extension(vL, g)
+        n = g.degree()
+        if p.gcd(n) == 1:
+            vL = padic_sufficiently_ramified_extension(vL, n)
+        else:
+            vL = padic_simple_extension(vL, g)
         L = vL.domain()
+        print "L = ", L
         R = PolynomialRing(L,'x%s'%randint(10,20))
         f = R(f)
         assert f.base_ring() is L
@@ -529,9 +541,9 @@ def padic_simple_extension(vK,f):
 
     """
 
-    # print '.....'
-    # print 'calling padic_simple_extension with K = ', vK.domain()
-    # print 'and f = ', f
+    print '.....'
+    print 'calling padic_simple_extension with K = ', vK.domain()
+    print 'and f = ', f
 
     K = vK.domain()
     R = f.parent()
@@ -539,7 +551,9 @@ def padic_simple_extension(vK,f):
 
     assert R.base_ring() is K, 'f is not defined over the domain of vK'
 
-    n = K.absolute_degree()*f.degree()
+    # we try to simplify f
+    f = simplify_irreducible_polynomial(vK, f)
+    # n = K.absolute_degree()*f.degree()
     V = vK.mac_lane_approximants(f)
     assert len(V) == 1, "f is not irreducible over the completion"
     v = LimitValuation(V[0], f)
@@ -547,11 +561,15 @@ def padic_simple_extension(vK,f):
     r = v(pix)
     for m in range(2,10):                                           # this loop has been added on 25.10.2016
         pix1 = pix.map_coefficients(lambda c:simplify_coeff(c, p, m))
-        if v(pix1) == r: break
-    # e = v(p)/r
-    # fL = n/e
-    P = compute_approximate_minpoly(K, f, pix1, p, m + 5)    # der Exponent m+5 ist rein heuristisch gewaehlt
+        if v(pix1) == r:
+            break
+    # P = compute_approximate_minpoly(K, f, pix1, p, m + 5)    # der Exponent m+5 ist rein heuristisch gewaehlt
                                                                # eigentlich muesste man eine Abschaetzung berechnen
+    L = K.extension(f, 'gamma')
+    vL = vK.extension(L)
+    pi = vL.uniformizer()
+    P = pi.absolute_minpoly()
+    P = simplify_irreducible_polynomial(pAdicValuation(QQ, p), P)
 
     # print "P = ", P
     L = NumberField(P, 'pi%s'%P.degree(), maximize_at_primes=[])
@@ -559,6 +577,7 @@ def padic_simple_extension(vK,f):
 
     v_L = pAdicValuation(QQ,p).extension(L)
     return v_L
+
 
 def padic_sufficiently_ramified_extension(vK, e):
     """
@@ -576,12 +595,12 @@ def padic_sufficiently_ramified_extension(vK, e):
     else:
         return vK
 
+
 def padic_unramified_extension(vK, n):
     r"""
     Return an unramified extension of degree ``n``.
 
     """
-
     if n == 1:
         return vK
     k0 = vK.residue_field()
@@ -606,23 +625,23 @@ def compute_approximate_minpoly(K, f, g, p, N):
     # returns the absolute minimal polynomial of beta=g(alpha) with respect
     # to the extension L:=K[alpha|f(alpha)=0]/QQ, modulo p**N
 
-    # print '...'
-    # print 'calling compute_absolute_minpoly with K=',K,',\nl f=',f,', \n g=',g
+    print '...'
+    print 'calling compute_absolute_minpoly with K=',K,',\nl f=',f,', \n g=',g
 
     L = K.extension(f, 'alpha')
-    # print "L = ", L
+    print "L = ", L
     d = L.absolute_degree()
     La = L.absolute_field('gamma'+str(d))
-    # print "La = ", La
+    print "La = ", La
     phi, psi = La.structure()
     ga = g.map_coefficients(psi, La)
     beta = ga(psi(L.gen()))
-    # print "beta = ", beta
-    # print "computing the minimal polynomial of beta: "
-    F = beta.minpoly()                          # it should be much faster to compute
-    # print "F = ", F
-    # print
-    #print [c.valuation(p) for c in F.padded_list()]
+    print "beta = ", beta
+    print "computing the minimal polynomial of beta: "
+    F = beta.minpoly()
+    print "F = ", F
+    print
+    print [c.valuation(p) for c in F.padded_list()]
     return F.map_coefficients(lambda c:Integer(mod(c,p**N))) # F mod p**N , i.e. over the ring Z/p**N
 
 
@@ -643,8 +662,8 @@ def improve_maclane_valuation(v):
     coefficients are as small as possible.
     """
 
-    # print '....'
-    # print 'calling improve_maclane_valuation with v=',v
+    print '....'
+    print 'calling improve_maclane_valuation with v=',v
     v0 = v._base_valuation
     # vK = v.constant_valuation()
 
@@ -660,11 +679,58 @@ def improve_maclane_valuation(v):
         if v0.is_key(phi1) and v(phi1) == s:
             v1=v0.augmentation(phi1, s)
             if v1(phi) == s:
+                print "v1 = ", v1
                 return v1
             else:
                 print "v1(phi)!= s"
         print "improvement for N=%s not sufficient."%N
         N += 1
+
+
+def simplify_irreducible_polynomial(vK, f):
+    r"""
+    Return a simpler polynomial generating the same extension.
+
+    INPUT:
+
+    - ``vK`` -- a p-adic valuation on a number field `K`
+    - ``f`` -- an univariate polynomial over K which is irreducible over the completion of `K`
+
+    OUTPUT:
+
+    A polynomial `g` over `K` which is irreducible over the completion `\hat{K}`
+    of `K`, and which generates the same extension of `\hat{K}` as `f`.
+
+    """
+    R = f.parent()
+    p = vK.p()
+    assert R.base_ring() == vK.domain(), "f must be defined over the domain of vK"
+    # first we see if we can normalize f such that the unique slope of the
+    # Newton polygon is >-1 and <=0.
+    NP = NewtonPolygon([(i, vK(f[i])) for i in range(f.degree()+1)])
+    slopes = NP.slopes(repetition=False)
+    assert len(slopes) == 1, "f is not irreducible over the completion!"
+    s = slopes[0]
+    assert s <= 0, "f is not integral"
+    if s <= -1:
+        m = floor(-s)
+        pi = vK.uniformizer()
+        f = f(pi**m*R.gen()).monic()
+        print "replaced f by ", f
+    # Now we simplify the coefficients of f
+    N = ceil(vK(f[0])/vK(p)) + 1
+    while true:
+        print "N = ", N
+        g = R([simplify_coeff(f[i], p, N) for i in range(f.degree()+1)])
+        print "g = ", g
+        try:
+            is_irreducible_factor = is_padic_irreducible_factor(vK, g, f)
+        except AssertionError:
+            is_irreducible_factor = False
+        if is_irreducible_factor:
+            return g
+        else:
+            N = N + 1
 
 
 def simplify_coeff(c,p,N):
