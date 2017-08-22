@@ -620,7 +620,7 @@ class ReductionComponent(SageObject):
         return self._reduction_genus
 
 
-    def is_reduced():
+    def is_reduced(self):
         r"""
         Check whether all upper components have multiplicity one.
 
