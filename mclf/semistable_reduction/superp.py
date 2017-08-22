@@ -335,7 +335,7 @@ class Superp(SageObject):
         """
         print "We try to compute the semistable reduction of the"
         print self
-        print "which has genus ", Y.curve().genus()
+        print "which has genus ", self.curve().genus()
         print
         print "First we compute the etale locus: "
         print self.etale_locus()
@@ -357,7 +357,7 @@ class Superp(SageObject):
             for W in Z.upper_components():
                 print W
             print "Contribution of this component to the reduction genus is ", Z.reduction_genus()
-        print    
+        print
         if reduction_tree.is_semistable():
             print "The curve has abelian reduction, since the total reduction genus"
             print "is equal to the genus of the generic fiber."
