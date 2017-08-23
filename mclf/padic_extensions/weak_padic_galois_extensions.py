@@ -929,18 +929,18 @@ def padic_simple_extension(vK,f):
         pix1 = pix.map_coefficients(lambda c:simplify_coeff(c, p, m))
         if v(pix1) == r:
             break
-    P = approximate_characteristic_polynomial(K, f, pix1, p, m + 70)    # der Exponent m+5 ist rein heuristisch gewaehlt
+    P = approximate_characteristic_polynomial(K, f, pix1, p, m + 6)    # der Exponent m+5 ist rein heuristisch gewaehlt
                                                                        # eigentlich muesste man eine Abschaetzung berechnen
     # L = K.extension(f, 'gamma')
     # vL = vK.extension(L)
     # pi = vL.uniformizer()
     # P = pi.absolute_minpoly()
 
-    print "P = ", P
+    # print "P = ", P
     P = simplify_irreducible_polynomial(pAdicValuation(QQ, p), P)
-    print "P simplified = ", P
+    # print "P simplified = ", P
     L = NumberField(P, 'pi%s'%P.degree(), maximize_at_primes=[])
-    print "L = ", L
+    # print "L = ", L
     v_L = pAdicValuation(QQ,p).extension(L)
     return v_L
 
@@ -956,8 +956,17 @@ def padic_sufficiently_ramified_extension(vK, e):
     # print "n = ",n
     if n > 1:
         K = vK.domain()
-        A = PolynomialRing(K, 'w')
-        return padic_simple_extension(vK, A.gen()**n-vK.uniformizer())
+        if K == QQ:
+            R = PolynomialRing(K, 'x')
+            x = R.gen()
+            L = K.extension(x**n-p, 'pi'+str(n))
+        else:
+            P = K.polynomial()
+            x = P.parent().gen()
+            P = P(x**n)
+            L = QQ.extension(P, 'pi'+str(P.degree()))
+        vL = pAdicValuation(QQ, p).extension(L)
+        return vL
     else:
         return vK
 
@@ -1028,8 +1037,8 @@ def improve_maclane_valuation(v):
     coefficients are as small as possible.
     """
 
-    print '....'
-    print 'calling improve_maclane_valuation with v=',v
+    # print '....'
+    # print 'calling improve_maclane_valuation with v=',v
     v0 = v._base_valuation
     # vK = v.constant_valuation()
 
@@ -1045,11 +1054,11 @@ def improve_maclane_valuation(v):
         if v0.is_key(phi1) and v(phi1) == s:
             v1=v0.augmentation(phi1, s)
             if v1(phi) == s:
-                print "v1 = ", v1
+                # print "v1 = ", v1
                 return v1
-            else:
-                print "v1(phi)!= s"
-        print "improvement for N=%s not sufficient."%N
+            # else:
+                # print "v1(phi)!= s"
+        # print "improvement for N=%s not sufficient."%N
         N += 1
 
 
