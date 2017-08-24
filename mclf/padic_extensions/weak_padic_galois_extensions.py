@@ -1088,7 +1088,7 @@ def simplify_irreducible_polynomial(vK, f):
     s = slopes[0]
     assert s <= 0, "f is not integral"
     if s <= -1:
-        m = floor(-s)
+        m = (-s).floor()
         pi = vK.uniformizer()
         f = f(pi**m*R.gen()).monic()
     # Now we simplify the coefficients of f
