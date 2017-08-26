@@ -1,7 +1,7 @@
 r"""  Weak p-adic Galois extensions
 
 Let `\hat{K}` be a `p`-adic number field. For our project we need to be able to
-compute with Galois extensions `\hat{L]/}`\hat{K}` of large ramification degree.
+compute with Galois extensions `\hat{L}/\hat{K}` of large ramification degree.
 For instance, we need to be able to compute the breaks of the ramification
 filtration of the Galois group of `\hat{L}/\hat{K}`, as well as the corresponding
 subfields.
@@ -9,11 +9,10 @@ subfields.
 At the moment, computations with large Galois extensions of `p`-adic fields are
 still problematic. In particular, it seems difficult to obtain results which are
 provably correct. For this reason we do not work which `p`-adic numbers at all.
-Instead, we approximate `p`-adic fields by pairs `(K, v_K)`, where `K` is  a
-number field and `v_K` a `p`-adic valuation on `K`. Given any finite extension
-`\hat{L}/\hat{K}`, there always exists a finite extension `L/K` and an extension
-`v_L` of `v_K` such that `\hat{L}` is the completion of `L` and `v_L` (this is
-an easy consequence of Krasner's lemma).
+Instead, we use our own class ``pAdicExtension``, in which a `p`-adic number
+field is approximated by a pair `(K, v_K)`, where `K` is a suitable number field
+an `v_K` is a `p`-adic valuation on `K` such that `\hat{K}` is the completion
+of `K` at `v_K`.
 
 From a more abstract point of view our approach means that
 we work with the **henselization** `K^h` of `K` at `v_K`. Since we are mostly
@@ -107,7 +106,8 @@ from sage.structure.sage_object import SageObject
 from sage.rings.number_field.number_field import NumberField
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.rings.polynomial.polynomial_element import Polynomial
-from sage.rings.integer import Integer
+from sage.rings.integer_ring import IntegerRing
+from sage.rings.rational_field import RationalField
 from sage.rings.finite_rings.integer_mod import mod
 from sage.misc.cachefunc import cached_method
 from sage.rings.infinity import Infinity
@@ -118,9 +118,10 @@ from sage.geometry.newton_polygon import NewtonPolygon
 from sage.misc.misc_c import prod
 from sage.arith.misc import lcm
 from mac_lane import *
-from mclf.padic_extensions.approximate_characteristic_polynomial import approximate_characteristic_polynomial
+from mclf.padic_extensions.padic_extensions import pAdicExtension
 
-ZZ = Integer
+ZZ = IntegerRing()
+QQ = RationalField()
 
 
 class WeakPadicGaloisExtension(SageObject):
@@ -129,33 +130,27 @@ class WeakPadicGaloisExtension(SageObject):
 
     INPUT:
 
-    - ``vK`` -- a `p`-adic valuation on a number field `K`
+    - ``K`` -- a `p`-adic extension
     - ``F`` -- a polynomial over `K`, or a list of irreducibel polynomials
     - ``minimal_ramification`` -- a positive integer (default: ``1``)
     - ``version`` -- a string (default: "experimental1")
 
-    OUTPUT: a weak splitting field of ``F`` whose ramification index (as an
-    extension of ``vK``) is a multiple of ``minimal_ramification``
+    OUTPUT: a weak splitting field of ``F`` whose ramification index over `K`
+    is a multiple of ``minimal_ramification``
 
     """
 
-    def __init__(self, vK, F, minimal_ramification=ZZ(1), version="experimental2"):
+    def __init__(self, K, F, minimal_ramification=ZZ(1)):
 
-        # print "calling WeakPadicGaloisExtension with vK = ", vK
-        # print "F = ", F
-        # print "and minimal_ramification = ", minimal_ramification
-        p = vK.p()
-        self._vK = vK
-        self._K = vK.domain()
-        # # if F is a polynomial, replace it by the list of its irreducible factors
-        # if isinstance(F, Polynomial):
-        #     F = [f for f, m in F.factor()]
-        if not isinstance(F, Polynomial):
-            if F == []:
-                F = PolynomialRing(self._K,'x')(1)
-            else:
-                F = prod(F)
-        if F.is_constant():
+        # if F is a polynomial, replace it by the list of its irreducible factors
+        if isinstance(F, Polynomial):
+            F = [f for f, m in F.factor()]
+        # if not isinstance(F, Polynomial):
+        #     if F == []:
+        #         F = PolynomialRing(self._K,'x')(1)
+        #     else:
+        #         F = prod(F)
+        if len(F) == 0:
             self._vL = vK
             self._L = vK.domain()
             self._vLn = vK.scale(1/vK(vK.uniformizer()))
