@@ -366,7 +366,6 @@ class pAdicExtension(SageObject):
         p = K.p()
         while True:
             factor_list = K.approximate_factorization(F)
-            print "ram indices: ", [e for g, e in factor_list]
             if all([e == 1 for g, e in factor_list]):
                 # all factors split over an unramified extension, hence we are done
                 return K
@@ -375,14 +374,10 @@ class pAdicExtension(SageObject):
             if totally_wild_factors != []:
                 # it is preferable to choose the factors which yield a totally wild extension
                 g = totally_wild_factors[0][0]
-                print "g = ", g
                 K = K.extension(g)
-                print " K = ", K
             elif wild_factors != []:
                 g = wild_factors[0][0]
-                print "g = ", g
                 K = K.extension(g)
-                print "K = ", K
             else:
                 # we only need a tame extension and then we are done
                 n = lcm([e for g, e in factor_list])
@@ -557,19 +552,21 @@ class pAdicExtension(SageObject):
                 N = N + 1
 
 
-    def is_approximate_irreducible_factor(self, g, f):
+    def is_approximate_irreducible_factor(self, g, f, v=None):
         r"""
         Check whether ``g`` is an approximate irreducible factor of ``f``.
 
         INPUT:
 
-        - ``f``, ``g``: univariate polynomials in over `K`; it is assumed that
-            ``g` is monic and integral
+        - ``g``: univariate polynomial over the underlying number field `K_0`
+        - ``f``: univariate polynomial over `K_0`
+        - ``v``: a MacLane valuation on `K_0[x]` approximating ``g``, or ``None``
 
-        Output: True if ``g`` is an approximate irreducible factor of f, i.e.
-        if g is irreducible over `\hat{K}` and Krasner's condition is satified,
-        If true, the stem field of ``g`` over `\hat{K}` is a subfield of the
-        splitting field of ``f`` over `\hat{K}`.
+        Output: True if ``g`` (or ``v``, if it is given)
+        is an approximate irreducible factor of f, i.e.
+        if g is irreducible over `K` and Krasner's condition is satified,
+        If true, the stem field of ``g`` over `K` is a subfield of the
+        splitting field of ``f`` over `K`.
 
         Her we say that *Krasner's Condition* holds if for some root `\alpha`
         of `g` there exists a root `\beta` of `f` such that `\alpha` is `p`-adically
@@ -579,7 +576,6 @@ class pAdicExtension(SageObject):
         the conclusion from Krasner's Lemma is trivial.
 
         """
-
         K = self.number_field()
         vK = self.valuation()
         assert K.has_coerce_map_from(f.parent().base_ring())
@@ -589,10 +585,10 @@ class pAdicExtension(SageObject):
         g = R(g)
         assert g.is_monic(), 'g has to be monic'
         f = f.monic()
-        x = R.gen()
-
         if g == f:
             return True
+        x = R.gen()
+
         if g.degree() == 1:             # the case deg(g)=1 is different
             alpha = -g[0]               # the unique root of g
             F = f(x+alpha)
@@ -604,11 +600,12 @@ class pAdicExtension(SageObject):
                     np_f.slopes()[0]<0 )
 
         # now deg(g)>1
-        # we check that g is really irreducible over the completion
-        V = vK.mac_lane_approximants(g)
-        if len(V) != 1:
-            return False   # g is not irreducible
-        v = LimitValuation(V[0], g)
+        if v == None:
+            V = vK.mac_lane_approximants(g)
+            if len(V) != 1:
+                return False   # g is not irreducible
+            v = V[0]
+        v = LimitValuation(v, g)
         # the valuation v has the property
         #        v(h)=vK(h(alpha))
         # for all h in K[x], where alpha is a root of g
@@ -657,8 +654,28 @@ class pAdicExtension(SageObject):
         f = f.change_ring(K)
         n = f.degree()
         vK = self.valuation()
-        V = vK.mac_lane_approximants(f, require_incomparability=True)
+        V = vK.mac_lane_approximants(f, require_incomparability=True, assume_squarefree=True)
         V = [LimitValuation(v, f) for v in V]
+        # first we approximate until the degrees of the factors add up
+        while sum(v._approximation.phi().degree() for v in V) < n:
+            for v in V:
+                v._improve_approximation()
+        factor_list = []
+        for v in V:
+            while True:
+                g = v._approximation.phi()
+                # we check whether g is already an approximate factor of f
+                # we pass the current approximation of v
+                if self.is_approximate_irreducible_factor(g, f, v._approximation):
+                    break
+                else:
+                    v._improve_approximation()
+            g = self.simplify_irreducible_polynomial(g)
+            e = ZZ(vK(vK.uniformizer())/v(v.uniformizer()))
+            factor_list.append((g,e))
+        return factor_list
+
+        """  old version:
         ret = []
         while sum([g.degree() for g, e in ret]) < n:
             ret = []
@@ -673,7 +690,7 @@ class pAdicExtension(SageObject):
                 e = ZZ(vK(vK.uniformizer())/v(v.uniformizer()))
                 ret.append((g,e))
         return ret
-
+        """
 
     def characteristic_polynomial(self, f, g):
         r"""
