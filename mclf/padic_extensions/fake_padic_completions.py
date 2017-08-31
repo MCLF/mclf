@@ -321,6 +321,9 @@ class FakepAdicCompletion(SageObject):
             raise NotImplementedError
 
         V = vK.mac_lane_approximants(f)
+        # this should often be superfluous because we may already know a good
+        # approximation of f by construction
+         
         assert len(V) == 1, "f is not irreducible"
         v = LimitValuation(V[0], f)
         pix = v.uniformizer()
