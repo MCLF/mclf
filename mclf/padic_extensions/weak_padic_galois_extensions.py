@@ -319,8 +319,6 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         - For the time being, we have to assume that `K=\mathbb{Q}_p`. In this
           case we can choose for `\pi` the canonical generator of the absolute
           number field `L_0` underlying `L`.
-        - At the moment the algorithm has an heuristic element and does not
-          guarantee that the result is correct.
 
         """
         if not hasattr(self, "_ramification_polygon"):
@@ -372,61 +370,6 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         ramification_subfields = self.ramification_subfields()
         assert u in ramification_subfields.keys(), "u is not a lower jump"
         return ramification_subfield[u]
-
-
-    # this function should be obsolete
-
-    def compute_ramification_filtration(self, subfields=False):
-        r"""
-        Compute the ramification filtration of this weak Galois extension.
-
-        This methods computes the ramification filtration of this weak Galois
-        extension `L/K`, with respect to the lower numbering. If ``subfields``
-        is ``True``, the subextensions of `L/K` corresponding to the jumps of
-        the filtration are also computed.
-
-        """
-
-        if self._ram_degree == ZZ(1):
-            jumps = []
-        else:
-            vK1 = padic_unramified_extension(vK, self._inertia_degree)
-            K1 = vK1.domain()
-            P = piL.minpoly().change_ring(K1)
-            P1 = padic_irreducible_factor(vK1, P)
-            assert P1.degree() == self._ram_degree
-            R = P1.parent()
-            v1 = vK1.mac_lane_approximants(P1)[0]
-            v1 = LimitValuation(v1, P1)
-            v1 = v1.scale(1/v1(v1.uniformizer()))
-            assert v1(P1) == Infinity
-            S = PolynomialRing(R, 'T')
-            G = P1(S(R.gen()) + S.gen()).shift(-1)
-            NP = NewtonPolygon([(i, v1(G[i])) for i in range(G.degree()+1)])
-            jumps = []
-            for v1, v2 in NP.sides():
-                u = (v1[1]-v2[1])/(v2[0]-v1[0]) - 1  # jump = -slope - 1
-                m = v2[0] + 1
-                if u == 0:                # G does not distinguish Gamma and Gamma_0
-                    m = self._ram_degree
-                jumps.append((u, m))
-            jumps.reverse()               # increasing order for jumps
-            if len(jumps) >= 2 and jumps[0][1] == jumps[1][1]:
-                jumps = jumps[1:]     # u=0 is not a jump
-        self._lower_jumps = jumps
-
-        # compute ramificaton jumps, upper numbering:
-
-        if jumps == []:
-            self._upper_jumps = []
-        else:
-            m = [m_i for m_i, g_i in jumps]
-            g = [g_i for m_i, g_i in jumps]
-            e = self._ram_degree
-            u = [m[0]*g[0]/e]
-            for i in range(1, len(jumps)):
-                u.append(u[i-1]+(m[i]-m[i-1])*g[i]/e)
-            self._upper_jumps = [(u[i], g[i]) for i in range(len(jumps))]
 
 
 #-----------------------------------------------------------------------------

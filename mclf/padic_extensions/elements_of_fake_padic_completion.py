@@ -1,5 +1,57 @@
+r"""
 
 
+AUTHORS:
+
+- Stefan Wewers (2017-09-01): initial version
+
+
+EXAMPLES:
+
+
+
+TO DO:
+
+
+
+"""
+
+#*****************************************************************************
+#       Copyright (C) 2017 Stefan Wewers <stefan.wewers@uni-ulm.de>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 2 of the License, or
+# (at your option) any later version.
+#                  http://www.gnu.org/licenses/
+#*****************************************************************************
+
+
+from sage.structure.sage_object import SageObject
+from sage.rings.integer_ring import IntegerRing
+from sage.rings.rational_field import RationalField
+from sage.rings.number_field.number_field import NumberField
+from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
+from sage.rings.polynomial.polynomial_element import Polynomial
+from sage.rings.integer import Integer
+from sage.matrix.constructor import matrix
+from sage.matrix.special import zero_matrix, identity_matrix
+from sage.rings.finite_rings.integer_mod_ring import IntegerModRing
+from sage.rings.finite_rings.integer_mod import mod
+from sage.rings.infinity import Infinity
+from sage.functions.generalized import sgn
+from sage.functions.other import ceil, floor
+from sage.geometry.newton_polygon import NewtonPolygon
+from sage.misc.misc_c import prod
+from sage.arith.misc import lcm
+from sage.modules.free_module_element import vector
+from mac_lane import *
+
+ZZ = IntegerRing()
+QQ = RationalField()
+
+
+#------------------------------------------------------------------------------
 
 
 class ElementOfFakepAdicCompletion(SageObject):
