@@ -292,31 +292,6 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
             self._upper_jumps = [(u[i], g[i]) for i in range(len(jumps))]
 
 
-    def ramification_polynomial(self):
-        r"""
-        Return the ramification polynomial of this extension.
-
-        The *ramification polynomial* of a weak Galois extension `L/K`
-        of `p`-adic number fields is the polynomial
-
-        .. MATH::
-
-            G := P(x+\pi)/x
-
-        where `\pi` is a prime element of `L` which generates the extension
-        `L/K` and `P` is the minimal polynomial of `\pi` over `K^{nr}`, the
-        maximal unramified subextension of `L/K`.
-
-        NOTE:
-
-        For the time being, we have to assume that `K=\mathbb{Q}_p`. In this
-        case we can choose for `\pi` the canonical generator of the absolute
-        number field `L_0` underlying `L`.
-
-        """
-        pass
-
-
     def ramification_polygon(self):
         r"""
         Return the ramification polygon of this extension.
@@ -350,25 +325,11 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         """
         if not hasattr(self, "_ramification_polygon"):
             assert self.base_field().is_Qp(), "K has to be equal to Q_p"
-            P = L.polynomial()
-            v_Knr = unramified_extension(self.p(), self.inertia_degree())
-            Knr = v_Knr.domain()
-            P = P.change_ring(Knr)
-            V = v_Knr.mac_lane_approximants(P, assume_squarefree=True, require_incomparability=True, require_maximal_degree=True)
-            print "V = ", V
-            v = V[0]
-            for i in range(10):
-                if v.mu() < Infinity:
-                    v = v.mac_lane_step(P)[0]
-                else:
-                    break
-            # careful: so far I have no guarantee that the approximation P1 is good enough
-            P1 = v.phi()
-            assert P1.degree() == self.ramification_degree()
-            v = LimitValuation(v, P1)
-            v = v.scale(self.ramification_degree())
+            L = self.extension_field()
+            P = L.minpoly_over_unramified_subextension()
+            v = L.minpoly_over_unramified_subextension_as_valuation()
             S = PolynomialRing(P.parent(), 'T')
-            G = P1(P1.parent().gen()+S.gen()).shift(-1)
+            G = P(P.parent().gen()+S.gen()).shift(-1)
             self._ramification_polygon = NewtonPolygon([(i, v(G[i])) for i in range(G.degree()+1)])
         return self._ramification_polygon
 
@@ -469,28 +430,3 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
 
 
 #-----------------------------------------------------------------------------
-
-def unramified_extension(p, n):
-    r"""
-    Return the unramified extension of Q_p of given degree.
-
-    INPUT:
-
-    - ``p`` -- a prime number
-    - ``n`` -- a positive integer
-
-    OUTPUT:
-
-    A pair `(K_0, v_K)`, where `K_0` is an absolute number field of degree `f`
-    and `v_K` is a `p`-adic valuation on `K_0`, such that the completion of
-    `K_0` at `v_K` is the unique unramified extension of `\mathbb{Q}_p` of
-    degree `n`.
-
-    """
-    v_p = pAdicValuation(QQ, p)
-    if n == 1:
-        return v_p
-
-    g = GF(p**n).polynomial().change_ring(ZZ)
-    K0 = NumberField(g, 'zeta')
-    return v_p.extension(K0)
