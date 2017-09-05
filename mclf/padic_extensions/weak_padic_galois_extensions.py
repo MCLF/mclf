@@ -292,6 +292,37 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
             self._upper_jumps = [(u[i], g[i]) for i in range(len(jumps))]
 
 
+    def ramification_polynomial(self, precision=20):
+        r"""
+        Return the ramification polynomial of this weak Galois extension.
+
+        The *ramification polynomial* is the polynomial
+
+        .. MATH::
+
+            G := P(x+\pi)/x
+
+        where `\pi` is a prime element of `L` which generates the extension
+        `L/K` and `P` is the minimal polynomial of `\pi` over `K^{nr}`, the
+        maximal unramified subextension of .
+
+        NOTE:
+
+        - For the time being, we have to assume that `K=\mathbb{Q}_p`. In this
+          case we can choose for `\pi` the canonical generator of the absolute
+          number field `L_0` underlying `L`.
+
+        """
+        if not hasattr(self, "_ramification_polynomial"):
+            assert self.base_field().is_Qp(), "K has to be equal to Q_p"
+            L = self.extension_field()
+            pi = L.uniformizer()
+            P = L.minpoly_over_unramified_subextension(precision)
+            x = P.parent().gen()
+            self._ramification_polynomial = P(pi+x).shift(-1)
+        return self._ramification_polynomial
+
+
     def ramification_polygon(self):
         r"""
         Return the ramification polygon of this extension.
@@ -324,15 +355,69 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         if not hasattr(self, "_ramification_polygon"):
             assert self.base_field().is_Qp(), "K has to be equal to Q_p"
             L = self.extension_field()
-            P = L.minpoly_over_unramified_subextension()
-            v = L.minpoly_over_unramified_subextension_as_valuation()
-            S = PolynomialRing(P.parent(), 'T')
-            G = P(P.parent().gen()+S.gen()).shift(-1)
-            self._ramification_polygon = NewtonPolygon([(i, v(G[i])) for i in range(G.degree()+1)])
+            vL = L.normalized_valuation()
+            G = self.ramification_polynomial()
+            self._ramification_polygon = NewtonPolygon([(i, vL(G[i])) for i in range(G.degree()+1)])
         return self._ramification_polygon
 
 
-    def ramification_subfields(self):
+    def factors_of_ramification_polynomial(self, precision=10):
+        r"""
+        Return the factorization of the ramification polynomial into factors
+        with fixed slope.
+
+        OUTPUT: a dictionary ``factors`` such that `g=` ``factors[s]``
+        is the maximal factor of the ramification polynomial `G` whose Newton
+        polygon has a single slope `s`. We omit the factor with slope `s=-1`.
+
+        """
+        from mclf.padic_extensions.slope_factors import slope_factors
+
+        NP = self.ramification_polygon()
+        slopes = NP.slopes(False)
+        G = self.ramification_polynomial()
+        R = G.parent()
+        L = self.extension_field()
+        vL = self.valuation()
+        print "precision = ", precision
+        reduce_function = lambda g: L.reduce_polynomial(g, precision + 2)
+        F = slope_factors_2(G, vL, precision*self.ramification_degree(),
+            reduce_function, slope_bound=-1)
+        N = (vL(G[0]) + precision).ceil()
+        F_reduced = {}
+        for s in F.keys():
+            g = F[s]
+            g = R([L.reduce(g[i], N) for i in range(g.degree()+1)])
+            F_reduced[s] = g
+        return F_reduced
+
+        """
+        old version:
+
+        for i in range(len(slopes)):
+            s = slopes[i]
+            if s < -1:
+                v = v0.augmentation(x, -s)
+                print "v0 = ", v
+                # the factors with slope s are obtained from augmenting v
+                d = vertices[i+1][0] - vertices[i][0]
+                print "d = ", d
+                # d is the degree of the factor with slope s
+                V = [v]
+                while sum(v.phi().degree() for v in V) < d:
+                    V_new = []
+                    for v in V:
+                        V_new += v.mac_lane_step(G, assume_squarefree=True,
+                            check=False)
+                    V = V_new
+                    print "V = ", V
+                # one step more, to be safe:
+                V = [v.mac_lane_step(G, assume_squarefree=True, check=False)[0] for v in V]
+                factors[s] = prod(v.phi() for v in V)
+        return factors
+        """
+
+    def ramification_subfields(self, precision=3):
         r"""
         Return the ramification subfields of this weak Galois extension.
 
@@ -343,8 +428,35 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         """
         if hasattr(self, "_ramification_subfields"):
             return self._ramification_subfields
-        # do something
-
+        L = self.extension_field()
+        e = self.ramification_degree()
+        v_p = L.base_valuation()
+        pi = L.uniformizer()
+        NP = self.ramification_polygon()
+        slopes = NP.slopes(False)
+        vertices = NP.vertices()
+        subfields = {}
+        while len(subfields.keys()) < len(slopes):
+            factors = self.factors_of_ramification_polynomial(precision)
+            # we compute approximate factors of G corresponding to the slopes that occur
+            beta = pi
+            for i in range(len(slopes)):
+                s = -slopes[i]
+                print "s = ", s
+                m = vertices[i+1][0] + 1
+                k = vertices[i+1][0] - vertices[i][0]
+                if s == 1:        # this slope corresponds to the inertia subgroup G_0
+                                # the corresponding subfield is the max. unramified ext.
+                                #  we return Q_p because unramified extensions are ignored
+                    subfields[0] = FakepAdicCompletion(QQ, v_p)
+                else:
+                    g = factors[-s]
+                    beta = beta*(-1)**k*g(-pi)
+                    K_i = L.subfield(beta, ZZ(e/m))
+                    if K_i != None:
+                        subfields[s-1] = K_i
+            print "subfields: ", subfields
+            precision = precision + 1
         self._ramification_subfields = subfields
         return subfields
 

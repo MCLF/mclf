@@ -108,7 +108,7 @@ class FakepAdicEmbedding(SageObject):
                 v0 = approximation
             # now we have to find a limit valuation v such that v(P_K)=infinity
             # which is approximated by v0
-            P = K.polynomial()
+            P = R(K.polynomial())
             V = [v0]
             done = False
             while len(V) > 0 and not done > 0:
@@ -120,7 +120,7 @@ class FakepAdicEmbedding(SageObject):
                             done = True
                             break
                         else:
-                            V_new += v.mac_lane_step(P)
+                            V_new += v.mac_lane_step(P, assume_squarefree=True, check=False)
                 V = V_new
             if len(V) == 0:
                 raise AssertionError("no embedding exists")

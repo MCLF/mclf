@@ -33,7 +33,7 @@ from sage.rings.integer_ring import IntegerRing
 ZZ = IntegerRing()
 
 
-def slope_factors(f, vK, precision, slope_bound=0):
+def slope_factors(f, vK, precision, reduce_function, slope_bound=0):
     r"""
     Return the slope factorizaton of a polynomial over a discretely valued field.
 
@@ -72,79 +72,58 @@ def slope_factors(f, vK, precision, slope_bound=0):
     slopes = NP.slopes(False)
     vertices = NP.vertices()
     assert all( s <= 0 for s in slopes), "f must be integral"
-    # assert vertices[1][1] < N, "precision is too small to see the first slope"
     pi = vK.uniformizer()
-    f_1, f_2 = first_slope_factor(f, vK, precision)
-    # now f_1 is the factor with the first slope, and f_2 is the product of
-    # the remaining factors
-    if f_2.is_constant() or slopes[1] >= slope_bound:
-        return {slopes[0]:f_1}
-    else:
-        F = slope_factors(f_2, vK, precision, slope_bound)
-        F[slopes[0]] = f_1
-        return F
+    F = {}
+    for i in range(len(slopes)):
+        s = slopes[i]
+        if s < slope_bound:
+            g = factor_with_slope(f, vK, s, precision, reduce_function)
+            F[s] = g
+    return F
 
 
-def first_slope_factor(f, vK, precision):
+def factor_with_slope(f, vK, s, precision, reduce_function):
     r"""
-    Return the factor corresponding to the first slope.
+    Return the factor with slope `s`.
 
     INPUT:
 
     - ``f`` -- a monic polynomial over a field `K`
     - ``vK`` -- a discrete valuation on `K` such that `f` for which `f` is integral
+    - ``s`` -- a nonpositive **integer**
     - ``precision`` -- a positive integer
 
-    OUTPUT: a pair `(f_1, f_2)`, where `f_1` is the first slope factor of `f`,
-    and `f_2` is the product of the remaining factors.
+    OUTPUT: a monic and integral polynomial `g` which approximates the factor
+    of `f` with slope `s`. We assume that `s` is a slope of `f` (hence `g`)
+    will be nonconstant. The precision of the approximation is such that the
+    relative precision of the coefficients of `g` is at least ``precision``.
 
     """
     vK = vK.scale(1/vK(vK.uniformizer()))
     R = f.parent()
-    v0 = GaussValuation(R, vK)
-    NP = NewtonPolygon([(i,vK(f[i])) for i in range(f.degree()+1)])
-    slopes = NP.slopes(False)
-    vertices = NP.vertices()
-    if len(slopes) == 1:
-        return f, f.parent().one()
-
-    # now has at least two slopes
-    k = vertices[1][0]
-    mu = vertices[1][1]
-    # the kth coefficients of f has valuation mu, and represents the second
-    # vertex of the Newton polygon; it follows that we can factor f = f_1*f_2
-    # where f_1 has degree k, and the constant term of f_2 has valuation mu
-    s = slopes[1]
+    x = R.gen()
     pi = vK.uniformizer()
-    x = f.parent().gen()
-    g = f(pi**ZZ(-s)*x)
-    nu = v0(g)
-    g = g*pi**(-nu)
-    assert vK(g[k]) == 0
-    N = max(vK(g[i]) for i in range(g.degree()+1)) + precision
-    g1, g2 = factor_with_positive_slope(g, vK, N)
-    f1 = g1(pi**(ZZ(s))*x).monic()
-    NP1 = NewtonPolygon([(i, vK(f1[i])) for i in range(f1.degree()+1)])
-    assert len(NP1.slopes(False)) == 1
-    assert NP1.slopes(False)[0] == slopes[0]
-    f2 = g2(pi**(ZZ(s))*x).monic()
-    assert f.degree() == f1.degree() + f2.degree()
-    return f1, f2
+    v0 = GaussValuation(R, vK)
+    f1 = f(pi**ZZ(-s)*x)
+    f2 = reduce_function(f1 * pi**(-v0(f1)))
+    g = factor_with_slope_zero(f2, vK, precision, reduce_function)
+    g = reduce_function(g)
+    return g(pi**ZZ(s)*x).monic()
 
 
-def factor_with_positive_slope(f, vK, N):
+def factor_with_slope_zero(f, vK, N, reduce_function):
     r"""
-    Return the factorization into a factor with positive slopes and the rest.
+    Return the factor of `f` with slope zero.
 
     INPUT:
 
     - ``f`` -- a nonconstant polynomial over a field `K` (not necessarily monic)
-        whose reduction to the residue field of `v_K` is nonzero
-    - ``vK`` -- a discrete valuation on `K` for which `f` is integral
+        whose reduction to the residue field of `v_K` is nonconstant.
+    - ``vK`` -- a normalized discrete valuation on `K` for which `f` is integral
     - ``N`` -- a positive integer
 
-    OUTPUT: a pair `(f_1,f_2)` of polynomials such that `f_1` has only strictly
-    negative slopes, `f_2` has only nonnegative slopes, and
+    OUTPUT: a pair `(f_1,f_2)` of polynomials such that `f_1` has slope zero,
+    `f_2` has only nonzero slopes, and
 
     .. MATH::
 
@@ -153,72 +132,59 @@ def factor_with_positive_slope(f, vK, N):
     """
     R = f.parent()
     x = R.gen()
-    m = vK(f.leading_coefficient())
-    assert m < N, "not enough precision: N = %s but m = %s"%(N,m)
     pi = vK.uniformizer()
-    e = 1/vK(pi)
-    vK = vK.scale(e)
     v0 = GaussValuation(R, vK)
-    # we make sure that vK(pi) = 1
-    # but now the precision gets a factor e
     Kb = vK.residue_field()
     fb = f.map_coefficients(lambda c: vK.reduce(c), Kb)
     k = min([i for i in range(fb.degree()+1) if fb[i] != 0])
-    if k == 0:
-        return R.one(), f
-    f1b = fb.parent().gen()**k
-    f2b = fb.shift(-k)
-    assert fb == f1b*f2b
-    f1 = x**k
-    f2 = R([vK.lift(f2b[i]) for i in range(f2b.degree()+1)])
-    d0 = 0
-    while True:
-        Delta = f - f1*f2
-        d = v0(Delta)
-        # we check that we have made progress:
-        assert d > d0
-        if d*e > N:
-            return f1, f2
-        else:
-            d0 = d
-            delta = (Delta*pi**(-d)).map_coefficients(lambda c:vK.reduce(c), Kb)
-            g1b, g2b =  x_to_k_presentation(delta, f2b, k)
-            # now  delta = g1b*f2b + g2b*x^k
-            g1 =  R([vK.lift(g1b[i]) for i in range(g1b.degree()+1)])
-            g2 =  R([vK.lift(g2b[i]) for i in range(g2b.degree()+1)])
-            f1 = f1 + pi**d*g1
-            f2 = f2 + pi**d*g2
+    gb = fb.shift(-k).monic()
+    g = R([vK.lift(gb[i]) for i in range(gb.degree()+1)])
+    # g = reduce_function(g)
+    print "g = ", g
+    q, r0 = f.quo_rem(g)
+    qb = q.map_coefficients(lambda c:vK.reduce(c), Kb)
+    assert qb != 0
+    m = v0(r0)
+    r = r0*pi**(-m)
 
+    while m <= N:
+        # we have f = q*g + pi^m*r
+        rb = r.map_coefficients(lambda c:vK.reduce(c), Kb)
+        ab, bb = pol_linear_combination(rb, qb, gb)
+        # now  rb = ab*qb + bb*gb and deg(ab) < deg(gb)
+        a =  R([vK.lift(ab[i]) for i in range(ab.degree()+1)])
+        b =  R([vK.lift(bb[i]) for i in range(bb.degree()+1)])
+        r0 = r - (a*q + b*g + pi**m*a*b)
+        g = g + pi**m*a
+        q = q + pi**m*b
+        # l = v0(r0)
+        r = r0*pi**(-1)
+        m = m + 1
+    return g
 
-def x_to_k_presentation(f, g, k):
+def pol_linear_combination(f, g, h):
     r"""
-    Write ``f`` as ``f = a*g + b*x^k``.
+    Write ``f`` as ``f = a*g + b*h`` with ``deg(a) < deg(h).
 
     INPUT:
 
-    - ``f``, ``g`` -- polynomials over a field k; the constant term of ``g``
-      does not vanish
-    - ``k`` -- a positive integer
+    - ``f``, ``g``, ``h`` -- polynomials over a field k
+
+    We assume that `g` and `h` are relatively prime.
 
     OUTPUT: a pair `(a, b)` of polynomials such that
 
     .. MATH::
 
-            f = a\cdot g + b\cdot x^k.
+            f = a\cdot g + b\cdot h
+
+    and such that `deg(a) < deg(h)`.
 
     """
     R = f.parent()
-    assert g in R, "f and must lie in the same polynomial ring"
-    c = g[0]
-    assert c != 0, "the constant coefficnet of g must be nonzero"
-    x = R.gen()
-    b = f
-    a = R.zero()
-    l = min([i for i in range(f.degree()+1) if f[i] != 0])
-    while l < k:
-        # x^(l-1) divides b, but not x^l
-        a = a + (b[l]/c)*x**l
-        b = f - a*g
-        l = l + 1
-    assert (x**k).divides(b)
-    return a, b.shift(-k)
+    # assert g in R, "f and must lie in the same polynomial ring"
+    d, A, B = g.xgcd(h)
+    # now 1 = A*g + B*h
+    C, a = (f*A).quo_rem(h)
+    b = B*f + C*g
+    return a, b

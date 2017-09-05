@@ -99,7 +99,9 @@ from sage.geometry.newton_polygon import NewtonPolygon
 from sage.misc.misc_c import prod
 from sage.arith.misc import lcm
 from sage.modules.free_module_element import vector
+from sage.rings.finite_rings.finite_field_constructor import GF
 from mac_lane import *
+
 
 ZZ = IntegerRing()
 QQ = RationalField()
@@ -435,19 +437,6 @@ class FakepAdicCompletion(SageObject):
                 return K.ramified_extension(n)
 
 
-    def maximal_unramified_subextension(self):
-        r"""
-        Return the maximal unramified subextension of this `p`-adic number field.
-
-        OUTPUT:
-
-        An unramified extension of `\mathbb{Q}_p` of degree `n`, where
-        `n` is the absolute inertia degree of this `p`-adic number field.
-
-        """
-        return FakeUnramifiedExtension(self.p(), self.inertia_degree())
-
-
 #-----------------------------------------------------------------------------
 
 #                   auxiliary functions
@@ -489,6 +478,12 @@ class FakepAdicCompletion(SageObject):
         return self.element_from_vector(vector(vt))
 
 
+    def reduce_polynomial(self, f, N):
+
+        R = f.parent()
+        return R([self.reduce(f[i], N) for i in range(f.degree()+1)])
+
+
     def reduce_rational_number(self, a, N):
         r"""
         Return an approximation of ``a`` which is reduced modulo `p^N`.
@@ -513,13 +508,14 @@ class FakepAdicCompletion(SageObject):
         return QQ(mod(b, q).lift()*p**(-m))
 
 
-    def matrix(self, a):
+    def matrix(self, a, integral_basis="standard"):
         r"""
         Return the matrix representing the element ``a``.
 
         INPUT:
 
         - ``a`` -- an element of the underlying number field of this p-adic extension
+        - ``integral_basis`` -- a string (default: "standard")
 
         OUTPUT:
 
@@ -531,39 +527,60 @@ class FakepAdicCompletion(SageObject):
         if self.is_Qp():
             return matrix([QQ(a)])
         else:
-            S = self._S
+            S = self.base_change_matrix(integral_basis)
             a = self.number_field()(a)
             return S**(-1)*a.matrix()*S
 
 
-    def vector(self, a):
+    def vector(self, a, integral_basis="standard"):
         r"""
-        Return the vector corresponding to an element of `K`.
+        Return the vector corresponding to an element of the underlying number field.
 
         INPUT:
 
-        - ``a`` -- an element of the underlying number field `K`
+        - ``a`` -- an element of the number field `K_0` underlying this `p`-adic number field
+        - ``integral_basis`` -- a string (default: "standard")
 
         OUTPUT:
 
         the vector of coefficients corresponding to the representation
-        of `a` as a linear combination of the canonical integral basis of `K`.
+        of `a` as a linear combination of an integral basis of `K`.
+
+        If ``integral_basis`` is "standard" then we use the integral basis
+
+        .. MATH::
+
+            p^\lceil i/e \rceil \pi^i, i=0,\ldots,n,
+
+        where `\pi` is the standard uniformizer of `L`, `e` is the absolute
+        ramification degree and `n` the absolute degree of `K`.
+
+        If it is ``mixed`` then we use  the integral basis
+
+        .. MATH::
+
+                \pi^i \alpha_j,   i=0,\ldots,e-1, j=0,\ldots,n/e-1,
+
+        where `\alpha_j` is an approximation of an integral basis of the maximal
+        unramified subfield.
 
         """
         if self.is_Qp():
             return vector([QQ(a)])
         else:
             a = self.number_field()(a)
-            return self._S*a.vector()
+            S = self.base_change_matrix(integral_basis)
+            return S*a.vector()
 
 
-    def element_from_vector(self, v):
+    def element_from_vector(self, v, integral_basis="standard"):
         r"""
         Return the element corresponding to a given vector.
 
         INPUT:
 
         - ``v`` -- a vector of rational numbers with length equal to the degree of `K`
+        - ``integral_basis`` -- a string (default: "standard")
 
         OUTPUT:
 
@@ -571,8 +588,130 @@ class FakepAdicCompletion(SageObject):
         corresponding to `v`.
 
         """
-        return self.number_field()(list(self._S**(-1)*v))
+        S = self.base_change_matrix(integral_basis)
+        return self.number_field()(list(S**(-1)*v))
 
+
+    def base_change_matrix(self, integral_basis="standard", precision=5):
+        r"""
+        Return the base change matrix to an integral basis.
+
+        INPUT:
+
+        - ``integral_basis`` -- a string (default: "standard")
+        - ``precision`` -- a positive integer
+
+        OUTPUT:
+
+        An invertible `(n,n)`-matrix `S` over `\mathbb{Q}` with the following
+        property: for an element `a` of `K_0`, the vector ``S*a.vector()``
+        gives the representation of `a` as a linear combination of ``integral_basis``.
+
+        """
+        if integral_basis == "standard":
+            return self._S
+
+        n = self.degree()
+        e = self.ramification_degree()
+        m = self.inertia_degree()
+        S = matrix(QQ, n)
+        pi = self.uniformizer()
+        alpha = self.integral_basis_of_unramified_subfield(precision)
+        for i in range(e):
+            for j in range(m):
+                k = i + e*j
+                alpha_k = (pi**i*alpha[j]).vector()
+                for l in range(n):
+                    S[l, k] = alpha_k[l]
+        T = S**(-1)
+        T_reduced = matrix(QQ, n)
+        for i in range(n):
+            for j in range(n):
+                T_reduced[i,j] = self.reduce_rational_number(T[i,j], precision)
+        return T_reduced
+
+
+    def integral_basis_of_unramified_subfield(self, precision=5):
+        """
+        Return an (approximate) integral basis of the maximal unramified subfield.
+
+        INPUT:
+
+        - ``precison`` -- a positive integer
+
+        OUTPUT:
+
+        A list `\alpha = (\alpha_0,\ldots,\alpha_{m-1})` of elements of `K_0`
+        which approximate (with precision `p^N` an integral basis of the
+        maximal unramified subfield.
+
+        """
+        if not hasattr(self, "_integral_basis_of_unramified_subfield") or precision > 5:
+            m = self.inertia_degree()
+            if m == 1:
+                return [QQ.one()]
+
+            N = precision
+            p = self.p()
+            fb = GF(p**m, 'zeta').polynomial()
+            f = fb.change_ring(self.number_field())
+            fx = f.derivative()
+            vK = self.valuation()
+            k = vK.residue_field()
+            zetab = fb.change_ring(k).roots()[0][0]
+            assert fb(zetab) == 0
+            zeta = vK.lift(zetab)
+            while vK(f(zeta)) <= precision:
+                zeta = zeta - f(zeta)/fx(zeta)
+                zeta = self.reduce(zeta, precision +1)
+            # now zeta is an approximate generator of the maximal unramified subfield
+            self._integral_basis_of_unramified_subfield = [self.reduce(zeta**i, precision +1) for i in range(m)]
+        return self._integral_basis_of_unramified_subfield
+
+
+    def minpoly_over_unramified_subextension(self, N):
+        r"""
+        Return the minimal polynomial of the standard uniformizer of this `p`-adic
+        number field `K`, relative to the maximal unramified subfield,
+        as a polynomial over `K` itself.
+
+        INPUT:
+
+        - ``N`` -- a positive integer
+
+        OUTPUT:
+
+        A polynomial `P` over the number field `K_0` underlying `K`. `P` is an
+        approximation (with precision ``N``) of the minimal polynomial
+        of the standard uniformizer `\pi` of `K`, relative to the maximal
+        unramified subfield `K_{nr}` of `K`. Moreover, `P(\pi)=0` holds exactly.
+
+        If the approximation is sufficient (note: this still has to be made
+        precise) then `P` has a root `\pi_1` in `K` which is also a uniformizer of `K`, and `K = K_{nr}[\pi_1]`.
+
+        NOTE:
+
+        To check that `P` is ok, it should suffice to see that `P` is "Eisenstein
+        over `K_nr`" and has a root in `K`. Unfortunately, the coefficient will
+        likely not lie in `K_{nr}` exactly, and so this criterion probably makes
+        no sense.
+
+        """
+        K0 = self.number_field()
+        R = PolynomialRing(K0, 'x')
+        x = R.gen()
+        e = self.ramification_degree()
+        m = self.inertia_degree()
+        if m == 1:
+            return self.polynomial().change_ring(K0)
+
+        zeta = self.integral_basis_of_unramified_subfield(N)
+        S = self.base_change_matrix(precision=N, integral_basis="mixed")
+        P = x**e - sum( sum(S[i+e*j,e]*zeta[j] for j in range(m))*x**i for i in range(e))
+        return self.reduce_polynomial(P, N)
+
+
+#------------------------------------------------------------------------------
 
     def simplify_irreducible_polynomial(self, f):
         r"""
@@ -855,113 +994,65 @@ class FakepAdicCompletion(SageObject):
         return BB.charpoly()
 
 
-    def minpoly_over_unramified_subextension(self):
+    def subfield(self, alpha, e):
         r"""
-        Return the minimal polynomial of the standard unifomizer over the
-        maximal unramified subextension.
-
-        """
-        if not hasattr(self, "_minpoly_over_unramified_subextension"):
-            P = self.polynomial()
-            Knr = self.maximal_unramified_subextension()
-            P = P.change_ring(Knr.number_field())
-            P1 = Knr.approximate_irreducible_factor(P)
-            v = Knr.valuation().mac_lane_approximants(P1)[0]
-            v = LimitValuation(v, P1).scale(P1.degree())
-            self._minpoly_over_unramified_subextension = P1
-            self._minpoly_over_unramified_subextension_as_valuation = v
-        return self._minpoly_over_unramified_subextension
-
-
-    def minpoly_over_unramified_subextension_as_valuation(self):
-        if not hasattr(self, "_minpoly_over_unramified_subextension_as_valuation"):
-            self.minpoly_over_unramified_subextension()
-        return self._minpoly_over_unramified_subextension_as_valuation
-
-#------------------------------------------------------------------------------
-
-
-
-class FakeUnramifiedExtension(FakepAdicCompletion):
-    r"""
-    Return the unramified extension of the `p`-adics if a given degree.
-
-    INPUT:
-
-    - ``p`` -- a prime number
-    - ``n`` -- a positive integer
-
-    OUTPUT:
-
-    the (unique) unramified extension of the field of `p`-adic numbers
-    of degree `n`
-
-    """
-    def __init__(self, p, n):
-        assert p.is_prime(), "p must be a prime number"
-        assert n.is_integer(), "n must be an integer"
-        v_p = pAdicValuation(QQ, p)
-        from sage.rings.finite_rings.finite_field_constructor import GF
-
-        if n > 1:
-            g = GF(p**n, 'zeta').polynomial().change_ring(ZZ)
-            K0 = NumberField(g, 'zeta'+str(n))
-            vK = v_p.extension(K0)
-        else:
-            K0 = QQ
-            vK = v_p
-            R = PolynomialRing(QQ, 'x')
-            g = R.gen() - R.one()
-
-        self._number_field = K0
-        self._v_p = v_p
-        self._valuation = vK
-        self._p = p
-        self._uniformizer = K0(p)
-        self._generator = K0.gen()
-        self._degree = n
-        self._inertia_degree = n
-        self._ramification_degree = ZZ(1)
-        self._polynomial = g
-        self._is_Qp = (n == 1)
-
-    def __repr__(self):
-        return "unramified extension of Q_%s of degree %s"%(self.p(), self.degree())
-
-
-    def vector(self, a):
-        r"""
-        Return the vector corresponding to an element of `K`.
+        Return a subfield approximated by a given element.
 
         INPUT:
 
-        - ``a`` -- an element of the underlying number field `K`
+        - ``alpha`` -- an element of the number field `K_0` underlying `K`
+        - ``e`` -- a divisor of the absolute degree of `K_0`
 
         OUTPUT:
 
-        the vector of coefficients corresponding to the representation
-        of `a` as a linear combination of the canonical integral basis of `K`.
+        A `p`-adic number field `L` with ramification index `e` which has an
+        embedding into `K`, or ``None`` if no such field can be found.
+
+        If `L` is a subfield of `K` with ramification index `e` and `\alpha_i`
+        is a sequence of element of `K_0` converging to a generator of `L`, then
+        calling ``K.subfield(alpha_i,e)`` will find the subfield `L` for `i`
+        sufficiently large.
+
+        TODO:
+
+        One easy improvement could be to not try to embed L into K after every
+        MacLane step, but only for the last step before the degree of v jumps.
 
         """
-        if self.is_Qp():
-            return vector([QQ(a)])
-        else:
-            a = self.number_field()(a)
-            return a.vector()
-
-
-    def element_from_vector(self, v):
-        r"""
-        Return the element corresponding to a given vector.
-
-        INPUT:
-
-        - ``v`` -- a vector of rational numbers with length equal to the degree of `K`
-
-        OUTPUT:
-
-        the linear combination of the canonical integral basis of `K`
-        corresponding to `v`.
-
-        """
-        return self.number_field()(list(v))
+        from mclf.padic_extensions.fake_padic_embeddings import FakepAdicEmbedding
+        print
+        print "trying to find a subfield of ", self
+        print "with ramification index ", e
+        K = self
+        v_p = K.base_valuation()
+        if e == 1:
+            return FakepAdicCompletion(QQ, v_p)
+        n = K.degree()
+        assert e.divides(n), "e must be a divisor of the degree of K"
+        alpha = K.number_field()(alpha)
+        f = alpha.minpoly()
+        R = f.parent()
+        v = GaussValuation(R, v_p)
+        while True:
+            g = v.phi()
+            if g.degree() > 1:
+                L = FakepAdicCompletion(QQ, v_p).extension(g)
+                if L.ramification_degree() == e:
+                    print " L = ", L
+                    try:
+                        FakepAdicEmbedding(L, K)
+                        # this can be very slow, but so far it is the only
+                        # conclusive test I know
+                        print "found subfield of degree %s and ramification degree %s"%(L.degree(), L.ramification_degree())
+                        return L
+                    except AssertionError:
+                        print "no embedding into L!"
+            if v.mu() == Infinity:
+                print "v.mu()==Infinity"
+                return None
+            V = v.mac_lane_step(f, assume_squarefree=True, check=False)
+            print "V = ", V
+            if len(V) > 1:
+                print "len(V) > 1"
+                return None
+            v = V[0]
