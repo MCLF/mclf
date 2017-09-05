@@ -381,7 +381,7 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         vL = self.valuation()
         print "precision = ", precision
         reduce_function = lambda g: L.reduce_polynomial(g, precision + 2)
-        F = slope_factors_2(G, vL, precision*self.ramification_degree(),
+        F = slope_factors(G, vL, precision*self.ramification_degree(),
             reduce_function, slope_bound=-1)
         N = (vL(G[0]) + precision).ceil()
         F_reduced = {}
@@ -391,31 +391,6 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
             F_reduced[s] = g
         return F_reduced
 
-        """
-        old version:
-
-        for i in range(len(slopes)):
-            s = slopes[i]
-            if s < -1:
-                v = v0.augmentation(x, -s)
-                print "v0 = ", v
-                # the factors with slope s are obtained from augmenting v
-                d = vertices[i+1][0] - vertices[i][0]
-                print "d = ", d
-                # d is the degree of the factor with slope s
-                V = [v]
-                while sum(v.phi().degree() for v in V) < d:
-                    V_new = []
-                    for v in V:
-                        V_new += v.mac_lane_step(G, assume_squarefree=True,
-                            check=False)
-                    V = V_new
-                    print "V = ", V
-                # one step more, to be safe:
-                V = [v.mac_lane_step(G, assume_squarefree=True, check=False)[0] for v in V]
-                factors[s] = prod(v.phi() for v in V)
-        return factors
-        """
 
     def ramification_subfields(self, precision=3):
         r"""
@@ -442,7 +417,6 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
             beta = pi
             for i in range(len(slopes)):
                 s = -slopes[i]
-                print "s = ", s
                 m = vertices[i+1][0] + 1
                 k = vertices[i+1][0] - vertices[i][0]
                 if s == 1:        # this slope corresponds to the inertia subgroup G_0
@@ -455,7 +429,6 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
                     K_i = L.subfield(beta, ZZ(e/m))
                     if K_i != None:
                         subfields[s-1] = K_i
-            print "subfields: ", subfields
             precision = precision + 1
         self._ramification_subfields = subfields
         return subfields

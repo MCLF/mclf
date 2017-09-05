@@ -23,7 +23,19 @@ We call the factorization just described the **slope factorization** of `f`,
 and the factors `f_i` the **slope factors** of `f`.
 
 In this module we realize a function ``slope_factor(f, vK, N)`` which computes
-the slope factorization, up to a given precision `N`.
+the slope factorization, up to a given **relative** precision `N`. This means
+that our result is a list of monic polynomials `g_i` with slope `s_i` which agree
+with the true slope factors `f_i` up to relative and coefficientwise
+v_K`-adic precision ``precision``. In particular, it follows that
+
+.. MATH::
+
+      v_K( f - \prod_i g_i) > ``precision``.
+
+The algorithm is based on a straightforward application of Hensel's Lemma. To
+make sure we get the relative precision right, we first scale the polynomial
+`f` for each of its slope `s` in such a way that the segment of the Newton
+polygon with slope `s` is moved to a segment of slope `0` with ordinate `0`.
 
 """
 
@@ -42,7 +54,10 @@ def slope_factors(f, vK, precision, reduce_function, slope_bound=0):
     - ``f`` -- a monic polynomial over a field `K`
     - ``vK`` -- a discrete valuation on `K` such that `f` for which `f` is integral
     - ``precision`` -- a positive integer
-    - ``slope_bound``
+    - ``reduce_function`` -- a function which takes as input an element of `K`
+      and returns a simpler approximation; the approximation is with relative
+      precision ``precsion``
+    - ``slope_bound`` -- a rational number (default: `0`)
 
     OUTPUT: a dictionary ``F`` whose keys are the pairwise distinct slopes `s_i`
     of the Newton polygon of `f` and the corresponding value is a monic and integral
@@ -57,12 +72,6 @@ def slope_factors(f, vK, precision, reduce_function, slope_bound=0):
 
     If ``slope_bound`` is given, then only those factors with slope < ``slope_bound``
     are computed.
-
-    TODO:
-
-    It would be enough if the relative `p`-adic precision of the coefficients of
-    of the `f_i` we as givne by ``precision``. This is a weaker condition
-    than above, and it may allow for a faster computation.
 
     """
     vK = vK.scale(1/vK(vK.uniformizer()))
@@ -139,7 +148,6 @@ def factor_with_slope_zero(f, vK, N, reduce_function):
     k = min([i for i in range(fb.degree()+1) if fb[i] != 0])
     gb = fb.shift(-k).monic()
     g = R([vK.lift(gb[i]) for i in range(gb.degree()+1)])
-    # g = reduce_function(g)
     print "g = ", g
     q, r0 = f.quo_rem(g)
     qb = q.map_coefficients(lambda c:vK.reduce(c), Kb)
@@ -157,10 +165,10 @@ def factor_with_slope_zero(f, vK, N, reduce_function):
         r0 = r - (a*q + b*g + pi**m*a*b)
         g = g + pi**m*a
         q = q + pi**m*b
-        # l = v0(r0)
         r = r0*pi**(-1)
         m = m + 1
     return g
+
 
 def pol_linear_combination(f, g, h):
     r"""
@@ -182,9 +190,8 @@ def pol_linear_combination(f, g, h):
 
     """
     R = f.parent()
-    # assert g in R, "f and must lie in the same polynomial ring"
     d, A, B = g.xgcd(h)
-    # now 1 = A*g + B*h
+    # now 1 = d = A*g + B*h
     C, a = (f*A).quo_rem(h)
     b = B*f + C*g
     return a, b

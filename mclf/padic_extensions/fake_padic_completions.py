@@ -66,6 +66,9 @@ EXAMPLES:
 
 TO DO:
 
+- one should try to always find a totally ramified extension (but it is not
+  so clear how to do that)
+
 
 
 """
@@ -352,7 +355,7 @@ class FakepAdicCompletion(SageObject):
         # optimal from the start
 
         # first we simply lift the coefficients of Pmod to ZZ, then we try to
-        # reduce them as much as possible
+        # reduce them as much as possible (actually we don't do this any more)
         P = Pmod.map_coefficients(lambda c:c.lift(), QQ)
         N = vK(P[0]).ceil() + 1
         n = P.degree()
@@ -911,7 +914,7 @@ class FakepAdicCompletion(SageObject):
         v = LimitValuation(V[0], f)
         for i in range(3):
             v._improve_approximation()
-            # we do this because the test for being an irreucible factor
+            # we do this because the test for being an irreducible factor
             # is quite expensive for large examples
             # the number of iterations is chosen heuristically and so factor
             # a bit arbitrary
@@ -1023,6 +1026,7 @@ class FakepAdicCompletion(SageObject):
         print
         print "trying to find a subfield of ", self
         print "with ramification index ", e
+        print
         K = self
         v_p = K.base_valuation()
         if e == 1:
@@ -1034,11 +1038,23 @@ class FakepAdicCompletion(SageObject):
         R = f.parent()
         v = GaussValuation(R, v_p)
         while True:
+            d = v.phi().degree()
+            v1 = v
+            while v1.phi().degree() == d:
+                v = v1
+                if v.mu() == Infinity:
+                    print "v.mu()==Infinity"
+                    return None
+                V = v.mac_lane_step(f, assume_squarefree=True, check=False)
+                if len(V) > 1:
+                    print "len(V) > 1"
+                    return None
+                v1 = V[0]
+            # now v.phi().degree() = d, and v1.phi().degree() > d
             g = v.phi()
             if g.degree() > 1:
                 L = FakepAdicCompletion(QQ, v_p).extension(g)
                 if L.ramification_degree() == e:
-                    print " L = ", L
                     try:
                         FakepAdicEmbedding(L, K)
                         # this can be very slow, but so far it is the only
@@ -1047,12 +1063,4 @@ class FakepAdicCompletion(SageObject):
                         return L
                     except AssertionError:
                         print "no embedding into L!"
-            if v.mu() == Infinity:
-                print "v.mu()==Infinity"
-                return None
-            V = v.mac_lane_step(f, assume_squarefree=True, check=False)
-            print "V = ", V
-            if len(V) > 1:
-                print "len(V) > 1"
-                return None
-            v = V[0]
+            v = v1  # we go to a larger degree
