@@ -351,7 +351,7 @@ class Superp(SageObject):
         for Z in reduction_components:
             print "Reduction component corresponding to "
             print Z.interior()
-            print "It splits over ", Z.splitting_field().field()
+            print "It splits over ", Z.splitting_field().extension_field()
             print "into %s lower components."%len(Z.lower_components())
             print "The upper components are: "
             for W in Z.upper_components():
