@@ -145,7 +145,7 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         # if isinstance(F, Polynomial):
         #     F = [f for f, m in F.factor()]
         assert K.is_Qp(), "for the moment, K has to be Q_p"
-        assert not K.p().divides(minimal_ramification), "minimal_ramification has to be prime to p"
+        # assert not K.p().divides(minimal_ramification), "minimal_ramification has to be prime to p"
         if not isinstance(F, Polynomial):
             if F == []:
                 F = PolynomialRing(K.number_field(),'x')(1)
@@ -157,7 +157,8 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         if not minimal_ramification.divides(e):
                         # enlarge the absolute ramification index of vL
                         # such that minimal_ramification divides e(vL/vK):
-            m = ZZ(eL*minimal_ramification/e.gcd(minimal_ramification))
+            m = ZZ(minimal_ramification/e.gcd(minimal_ramification))
+            assert not self.p().divides(m)
             L = L.ramified_extension(m)
             # if m was not prime to p, L/K may not be weak Galois anymore
         else:
@@ -392,7 +393,7 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         return F_reduced
 
 
-    def ramification_subfields(self, precision=3):
+    def ramification_subfields(self, precision=1):
         r"""
         Return the ramification subfields of this weak Galois extension.
 
@@ -454,7 +455,7 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         """
         ramification_subfields = self.ramification_subfields()
         assert u in ramification_subfields.keys(), "u is not a lower jump"
-        return ramification_subfield[u]
+        return ramification_subfields[u]
 
 
 #-----------------------------------------------------------------------------
