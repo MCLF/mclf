@@ -101,6 +101,7 @@ from mclf.berkovich.berkovich_line import *
 from mclf.berkovich.berkovich_trees import BerkovichTree
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
 from mclf.berkovich.affinoid_domain import ElementaryAffinoidOnBerkovichLine
+from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
 from mclf.padic_extensions.weak_padic_galois_extensions import WeakPadicGaloisExtension
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
 
@@ -436,6 +437,7 @@ class ReductionComponent(SageObject):
             # K must be number field for the rest to work
             # Actually, it must be QQ!
             assert K == QQ, "K must be QQ"
+            Kh = FakepAdicCompletion(K, vK)
             fiber = self.curve().fiber(self.basepoint().function_field_valuation())
             # `fiber` should be a list of points on Y
             F = []
@@ -447,7 +449,7 @@ class ReductionComponent(SageObject):
                     F += [g for g,m in f.factor()]
             # F = self.curve().fiber_equations(self.basepoint().function_field_valuation())
             e = self.type_II_point().pseudovaluation_on_polynomial_ring().E()
-            self._splitting_field = WeakPadicGaloisExtension(vK, F, minimal_ramification=e)
+            self._splitting_field = WeakPadicGaloisExtension(Kh, F, minimal_ramification=e)
         return self._splitting_field
 
 
@@ -486,6 +488,7 @@ class ReductionComponent(SageObject):
         over the given reduction component (possibly with their multiplicities).
 
         """
+        store_data = False
         if vL == None:
             vL = self.splitting_field().valuation()
             # if vL is None (which is the default) then we want to do this
@@ -614,10 +617,12 @@ class ReductionComponent(SageObject):
         components for this reduction component, computed with respect to the
         extension `(L,v_L)`.
         """
-
-        if not hasattr(self, "_reduction_genus"):
-            self._reduction_genus = sum([W.genus() for W in self.upper_components()])
-        return self._reduction_genus
+        if vL != None:
+            return sum([W.genus() for W in self.upper_components(vL)])
+        else:
+            if not hasattr(self, "_reduction_genus"):
+                self._reduction_genus = sum([W.genus() for W in self.upper_components()])
+            return self._reduction_genus
 
 
     def is_reduced(self):
@@ -627,6 +632,37 @@ class ReductionComponent(SageObject):
         """
         return all([m == 1 for W,m in self.upper_components(multiplicities=True)])
 
+
+    def reduction_conductor(self):
+        r"""
+        Return the contribution of this reduction component to the conductor exponent.
+
+        """
+        if not hasattr(self, "_reduction_conductor"):
+            L = self.splitting_field()
+            n = L.ramification_degree()
+            ramification_filtration = L.ramification_filtration()
+            delta_list = []
+            for u, m_u in ramification_filtration:
+                L_u = L.ramification_subfield(u)
+                v_L_u = L_u.valuation()
+                g_u = self.reduction_genus(v_L_u)
+                delta_list.append((u, m_u, g_u))
+            print "(u, m_u, g_u) = ", delta_list
+            g = self.reduction_genus()
+            print " g = ", g
+            g_0 = delta_list[0][2]
+            epsilon = 2*(g - g_0)
+            print "epsilon = ", epsilon
+            u, m_u, g_u = delta_list[0]
+            delta = m_u/n*2*(g - g_u)*u
+            for i in range(1,len(delta_list)):
+                u, m_u, g_u = delta_list[i]
+                v = delta_list[i-1][0]
+                delta += m_u/n*2*(g - g_u)*(u - v)
+            print "delta = ", delta
+            self._reduction_conductor = epsilon + delta
+        return self._reduction_conductor
 
 #-----------------------------------------------------------------------------
 
