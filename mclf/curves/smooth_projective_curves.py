@@ -165,8 +165,8 @@ class SmoothProjectiveCurve(SageObject):
             D = f.resultant(g)
         else:
             D = f.discriminant().numerator()
-        ret =  [FunctionFieldValuation(F0, g) for g, m in D.factor()]
-        return [FunctionFieldValuation(F0, g) for g, m in D.factor()]
+        ret =  [FunctionFieldValuation(F0, g.monic()) for g, m in D.factor()]
+        return [FunctionFieldValuation(F0, g.monic()) for g, m in D.factor()]
 
 
     def field_of_constants_degree(self):
