@@ -708,6 +708,9 @@ def make_function_field(k):
     the field `k` as a function field; this is rather experimental..
 
     """
+    from sage.rings.function_field.function_field import is_FunctionField
+    if is_FunctionField(k):
+        return k
     if hasattr(k, "base_field"):
         # it seems that k is an extension of a rational function field
         k0 = k.base_field()
