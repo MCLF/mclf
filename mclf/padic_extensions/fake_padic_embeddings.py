@@ -115,7 +115,7 @@ class FakepAdicEmbedding(SageObject):
                 V_new = []
                 for v in V:
                     if v.phi().degree() == 1:
-                        if v.effective_degree(P) == 1:
+                        if v.effective_degree(P) == 1 or v.mu() == Infinity:
                             V_new = [v]
                             done = True
                             break
