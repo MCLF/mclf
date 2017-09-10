@@ -1127,6 +1127,7 @@ class FakepAdicCompletion(SageObject):
                         # print "found subfield of degree %s and ramification degree %s"%(L.degree(), L.ramification_degree())
                         return L
                     except AssertionError:
+                        pass
                         # print "no embedding into L!"
             if v.mu() == Infinity:
                 print "v.mu() = Infinity"
