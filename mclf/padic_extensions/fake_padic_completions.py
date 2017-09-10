@@ -1093,10 +1093,6 @@ class FakepAdicCompletion(SageObject):
 
         """
         from mclf.padic_extensions.fake_padic_embeddings import FakepAdicEmbedding
-        print
-        print "trying to find a subfield of ", self
-        print "with ramification index ", e
-        print
         K = self
         v_p = K.base_valuation()
         if e == 1:
@@ -1110,17 +1106,16 @@ class FakepAdicCompletion(SageObject):
         while True:
             d = v.phi().degree()
             v1 = v
-            while v1.phi().degree() == d:
+            while v1.phi().degree() == d and v.mu() < Infinity:
                 v = v1
-                if v.mu() == Infinity:
-                    print "v.mu()==Infinity"
-                    return None
-                V = v.mac_lane_step(f, assume_squarefree=True, check=False)
-                if len(V) > 1:
-                    print "len(V) > 1"
-                    return None
-                v1 = V[0]
-            # now v.phi().degree() = d, and v1.phi().degree() > d
+                if v.mu() < Infinity:
+                    V = v.mac_lane_step(f, assume_squarefree=True, check=False)
+                    if len(V) > 1:
+                        print "len(V) > 1"
+                        return None
+                    v1 = V[0]
+            # now v.phi().degree() = d, and either v1.phi().degree() > d
+            # or v.mu() = Infinity
             g = v.phi()
             if g.degree() > 1:
                 L = FakepAdicCompletion(QQ, v_p).extension(g)
@@ -1129,8 +1124,12 @@ class FakepAdicCompletion(SageObject):
                         FakepAdicEmbedding(L, K)
                         # this can be very slow, but so far it is the only
                         # conclusive test I know
-                        print "found subfield of degree %s and ramification degree %s"%(L.degree(), L.ramification_degree())
+                        # print "found subfield of degree %s and ramification degree %s"%(L.degree(), L.ramification_degree())
                         return L
                     except AssertionError:
-                        print "no embedding into L!"
-            v = v1  # we go to a larger degree
+                        # print "no embedding into L!"
+            if v.mu() == Infinity:
+                print "v.mu() = Infinity"
+                return None
+            else:
+                v = v1  # we go to a larger degree
