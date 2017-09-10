@@ -1,0 +1,4 @@
+
+- when computing the genus of a component of a reduction tree, one has
+  to take the degree of the extensions of the base field into account
+- implement my own 'weakly_separating_element' in 'SmoothProjectiveCurve'

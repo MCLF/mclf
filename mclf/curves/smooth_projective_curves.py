@@ -869,6 +869,9 @@ def separate_points(coordinate_functions, valuations):
             if a in dict.keys():
                 v1 = dict[a]
                 coordinate_functions.append(v.separating_element([v1]))
+                # this is not always implemented, e.g. for function field valuations
+                # which are defined via an automorphism of the rational function field
+                # therefore I have to implement my own function
                 repeat = True
                 break
             else:
