@@ -393,10 +393,10 @@ class BerkovichLine(SageObject):
         # of xi2.v(f) right:
         xi2_approx = xi2.approximation()
         count = 0
-        while sgn(xi2_approx.v(f)) != sgn(h2) and count < 20:
+        while sgn(xi2_approx.v(f)) != sgn(h2) and count < 100:
             xi2_approx = xi2.improved_approximation()
             count += 1
-        assert count < 20, "could not find sufficient approximation!"
+        assert count < 100, "could not find sufficient approximation!"
 
         phi, s2 = xi2.discoid()
         s1 = xi1.v(phi)
@@ -479,7 +479,11 @@ class BerkovichLine(SageObject):
         # we check that the additional conditon on f holds, and
         # decide whether the roots lie inside or outside the unit disk
         NP = NewtonPolygon([(i, vK(f[i])) for i in range(f.degree() + 1)])
-        slopes = NP.slopes()
+        slopes = NP.slopes(False)
+        if not (slopes == [] or max(slopes) <= 0 or min(slopes) >0):
+            print "f = ", f
+            print "NP = ", NP
+            print "slopes = ", NP.slopes(False)
         assert slopes == [] or max(slopes) <= 0 or min(slopes) >0,\
             "all roots of f must either lie inside or outside the unit disk"
         is_in_unit_disk = (slopes == [] or max(slopes) <= 0)

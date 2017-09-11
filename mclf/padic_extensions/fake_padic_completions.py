@@ -448,6 +448,8 @@ class FakepAdicCompletion(SageObject):
             F = prod(F).radical()
         K = self
         assert F.parent().base_ring() == QQ, "For the time being, F has to be defined over QQ"
+        if F.is_constant():
+            return K
         p = K.p()
         first_step = True
         while True:

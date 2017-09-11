@@ -651,26 +651,27 @@ class ReductionComponent(SageObject):
             L = self.splitting_field()
             n = L.ramification_degree()
             ramification_filtration = L.ramification_filtration()
+            if len(ramification_filtration) == 0:
+                self._reduction_conductor = ZZ(0)
+                return ZZ(0)
+                
             delta_list = []
             for u, m_u in ramification_filtration:
                 L_u = L.ramification_subfield(u)
                 v_L_u = L_u.valuation()
                 g_u = self.reduction_genus(v_L_u)
                 delta_list.append((u, m_u, g_u))
-            print "(u, m_u, g_u) = ", delta_list
             g = self.reduction_genus()
-            print " g = ", g
             g_0 = delta_list[0][2]
             epsilon = 2*(g - g_0)
-            print "epsilon = ", epsilon
             u, m_u, g_u = delta_list[0]
             delta = m_u/n*2*(g - g_u)*u
             for i in range(1,len(delta_list)):
                 u, m_u, g_u = delta_list[i]
                 v = delta_list[i-1][0]
                 delta += m_u/n*2*(g - g_u)*(u - v)
-            print "delta = ", delta
             self._reduction_conductor = epsilon + delta
+
         return self._reduction_conductor
 
 #-----------------------------------------------------------------------------

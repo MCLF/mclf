@@ -1,6 +1,10 @@
 
-- when computing the genus of a component of a reduction tree, one has
-  to take the degree of the extensions of the base field into account
-  (try to allow to specify the constant base field in the definition
-  of a curve; this is done on the branch "constant_base_field")
-- implement my own 'weakly_separating_element' in 'SmoothProjectiveCurve'
+- allow twists: y^p = a*f, with f monic (done - more or less)
+- take the right twist when making a coordinate change in x (done)
+- solve the problem that sometimes irreducible polynomials have roots
+  inside and outside the unit disk
+- understand why the computation of the upper components takes so long
+  (in the hyperelliptic example)
+- realize loops in reduction_trees
+- adapt the computation of the reduction genus and reduction conductor
+- use verbose messages
