@@ -868,10 +868,7 @@ def separate_points(coordinate_functions, valuations):
             a = tuple([compute_value(v, x) for x in coordinate_functions])
             if a in dict.keys():
                 v1 = dict[a]
-                coordinate_functions.append(v.separating_element([v1]))
-                # this is not always implemented, e.g. for function field valuations
-                # which are defined via an automorphism of the rational function field
-                # therefore I have to implement my own function
+                coordinate_functions.append(separate_two_points(v, v1))
                 repeat = True
                 break
             else:
@@ -880,7 +877,6 @@ def separate_points(coordinate_functions, valuations):
     return coordinate_functions
 
 
-# This function has been replaced by the method 'separating_element'
 def separate_two_points(v1, v2):
     r""" Return a rational function which separates two points
 
@@ -894,22 +890,17 @@ def separate_two_points(v1, v2):
     to ``v1`` and ``v2``.
 
     """
-
-    # print "calling <separate_points> with v1 = %s and v = %s."%(v1, v2)
-    f = v1.uniformizer()
-    if v2(f) <= 0:
-        return f
-    else:
-        w = v2._base_valuation
-        try:
-            g = w._approximation.phi()
-            # maybe replace with _initial_approximation
-        except AttributeError:
-            w = w._base_valuation
-            g = w._approximation.phi()
-        # assert v2(g) > v1(g)
-        n = ZZ(v1(g)/v1(f))
-        return g*f**(-n)
+    f1 = v1.uniformizer()
+    f2 = v2.uniformizer()
+    test_elements = [f1, f2, f1/f2, f2/f1]
+    for f in test_elements:
+        if compute_value(v1, f) != compute_value(v2, f):
+            return f
+    F = v1.domain()
+    while True:
+        f = F.random_element()
+        if compute_value(v1, f) != compute_value(v2, f):
+            return f
 
 
 def extension_degree(K, L, check=False):
