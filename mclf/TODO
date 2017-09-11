@@ -1,4 +1,6 @@
 
 - when computing the genus of a component of a reduction tree, one has
   to take the degree of the extensions of the base field into account
+  (try to allow to specify the constant base field in the definition
+  of a curve; this is done on the branch "constant_base_field")
 - implement my own 'weakly_separating_element' in 'SmoothProjectiveCurve'

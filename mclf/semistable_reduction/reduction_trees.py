@@ -503,7 +503,7 @@ class ReductionComponent(SageObject):
         upper_valuations = self.upper_valuations(vL)
         upper_components = []
         for v in upper_valuations:
-            W = SmoothProjectiveCurve(make_function_field(v.residue_field()))
+            W = SmoothProjectiveCurve(make_function_field(v.residue_field()), vL.residue_field())
             m = vL(vL.uniformizer())/v(v.uniformizer())
             upper_components.append((W, m))
         if store_data:
@@ -539,7 +539,7 @@ class ReductionComponent(SageObject):
             vL = self.splitting_field().valuation()
             store_upper_components = True
         lower_valuations = self.lower_valuations(vL)
-        return [SmoothProjectiveCurve(make_function_field(v.residue_field())) for v in lower_valuations]
+        return [SmoothProjectiveCurve(make_function_field(v.residue_field()), vL.residue_field()) for v in lower_valuations]
 
 
     def lower_valuations(self, vL=None):
@@ -616,12 +616,21 @@ class ReductionComponent(SageObject):
         OUTPUT: a nonnegative integer, the sum of the genera of the upper
         components for this reduction component, computed with respect to the
         extension `(L,v_L)`.
+
+        TODO:
+
+        At the moment, the output is correct only if field of constants of all
+        upper components is equal to the residue field of the valuation `v_L`.
+        In general we have to multiply the genus of a component with the degree
+        of the extension 'field of constants' over 'residue field of `v_L`'.
+
         """
         if vL != None:
             return sum([W.genus() for W in self.upper_components(vL)])
         else:
             if not hasattr(self, "_reduction_genus"):
-                self._reduction_genus = sum([W.genus() for W in self.upper_components()])
+                self._reduction_genus = sum([W.genus()*W.field_of_constants_degree()
+                    for W in self.upper_components()])
             return self._reduction_genus
 
 
