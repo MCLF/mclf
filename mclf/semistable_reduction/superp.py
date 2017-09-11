@@ -152,6 +152,7 @@ class Superp(SageObject):
         assert R.base_ring() is vK.domain(), "the domain of vK must be the base field of f"
         assert p == vK.residue_field().characteristic(), "the exponent p must be the residue characteristic of vK"
         assert not p.divides(f.degree()), "the degree of f must be prime to p"
+        self._p = p
         v0 = GaussValuation(R, vK)
         phi, psi, f1 = v0.monic_integral_model(f)
         # now f1 = phi(f).monic()
@@ -160,11 +161,10 @@ class Superp(SageObject):
         self._f = f1
         a = phi(f).leading_coefficient()
         pi = vK.uniformizer()
-        m = (vK(a)/2).floor()
+        m = (vK(a)/p).floor()
         a = pi**(-2*m)*a
         self._a = a
         self._vK = vK
-        self._p = p
         FX = FunctionField(vK.domain(), names=R.variable_names())  # this does not work in Sage 8.0
         S = PolynomialRing(FX, 'T')
         T = S.gen()
