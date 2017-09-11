@@ -380,7 +380,6 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         R = G.parent()
         L = self.extension_field()
         vL = self.valuation()
-        print "precision = ", precision
         reduce_function = lambda g: L.reduce_polynomial(g, precision + 2)
         F = slope_factors(G, vL, precision*self.ramification_degree(),
             reduce_function, slope_bound=-1)

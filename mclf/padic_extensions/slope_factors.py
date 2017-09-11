@@ -148,7 +148,6 @@ def factor_with_slope_zero(f, vK, N, reduce_function):
     k = min([i for i in range(fb.degree()+1) if fb[i] != 0])
     gb = fb.shift(-k).monic()
     g = R([vK.lift(gb[i]) for i in range(gb.degree()+1)])
-    print "g = ", g
     q, r0 = f.quo_rem(g)
     qb = q.map_coefficients(lambda c:vK.reduce(c), Kb)
     assert qb != 0
