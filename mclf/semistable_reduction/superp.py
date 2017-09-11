@@ -104,8 +104,7 @@ class Superp(SageObject):
     - ``p`` -- a prime number
 
     Here the residue characteristic of ``vK`` must be equal to the prime ``p``.
-    Moreover, ``f`` must be monic, integral with respect to ``vK`` and
-    of degree prime to ``p``.
+    Moreover, ``f`` must be of degree prime to ``p``.
 
     OUTPUT: the object representing the superelliptic curve
 
@@ -139,11 +138,9 @@ class Superp(SageObject):
         For the time being, we need to make the following additional assumptions
         on `f`:
 
-        - `f` must be monic,
-        - integral with respect to `v_K` and
         - of degree prime to `p`.
 
-        These restrictions are preliminary and will be removed in a future version.
+        This restrictions is preliminary and will be removed in a future version.
         Note that a superelliptic curve of degree `p` can be written in the required
         form if and only if the map `Y\to X` has a `K`-rational branch point.
 
@@ -154,14 +151,25 @@ class Superp(SageObject):
         R = f.parent()
         assert R.base_ring() is vK.domain(), "the domain of vK must be the base field of f"
         assert p == vK.residue_field().characteristic(), "the exponent p must be the residue characteristic of vK"
-        assert f.is_monic(), "f must be monic"
-        self._f = f
+        assert not p.divides(f.degree()), "the degree of f must be prime to p"
+        v0 = GaussValuation(R, vK)
+        phi, psi, f1 = v0.monic_integral_model(f)
+        # now f1 = phi(f).monic()
+        if f1 != f.monic():
+            print "We make the coordinate change (x --> %s) in order to work with an integral polynomial f"%phi(R.gen())
+        self._f = f1
+        a = phi(f).leading_coefficient()
+        pi = vK.uniformizer()
+        m = (vK(a)/2).floor()
+        a = pi**(-2*m)*a
+        self._a = a
         self._vK = vK
         self._p = p
         FX = FunctionField(vK.domain(), names=R.variable_names())  # this does not work in Sage 8.0
         S = PolynomialRing(FX, 'T')
         T = S.gen()
-        FY = FX.extension(T**p-FX(f), 'y')
+        FY = FX.extension(T**p-FX(a*f1), 'y')
+        print "equation: ", FY.polynomial()
         self._FX = FX
         self._FY = FY
         X = BerkovichLine(FX, vK)
@@ -169,10 +177,10 @@ class Superp(SageObject):
         Y = SmoothProjectiveCurve(FY)
         self._Y = Y
 
-    def __repr__(self):
 
+    def __repr__(self):
         return "superelliptic curve Y: y^%s = %s over %s, with respect to %s"%(self._p,
-                        self._f, self._vK.domain(), self._vK)
+                        self._a*self._f, self._vK.domain(), self._vK)
 
 
     def curve(self):
@@ -181,6 +189,7 @@ class Superp(SageObject):
 
         """
         return self._Y
+
 
     def base_valuation(self):
         """
@@ -309,7 +318,6 @@ class Superp(SageObject):
         Return the reduction tree which determines the semistabel model.
 
         """
-
         if hasattr(self, "_reduction_tree"):
             return self._reduction_tree
 
@@ -356,7 +364,10 @@ class Superp(SageObject):
             print "The upper components are: "
             for W in Z.upper_components():
                 print W
+                if W.field_of_constants_degree() > 1:
+                    print "   (note that this component is defined over an extension of degree %s over the residue field)"%W.field_of_constants_degree()
             print "Contribution of this component to the reduction genus is ", Z.reduction_genus()
+            print
         print
         if reduction_tree.is_semistable():
             print "The curve has abelian reduction, since the total reduction genus"
@@ -365,11 +376,18 @@ class Superp(SageObject):
             print "We failed to compute the semistable reduction of the curve."
             if reduction_tree.is_reduced():
                 print "This is probably due to the fact that the curve does not have"
-                print "abeian reduction; the computation of the loops has not yet been realized."
+                print "abelian reduction; the computation of the loops has not yet been realized."
             else:
                 print "Something went wrong! At least one of upper components has"
                 print "multiplicity > 1."
 
+
+    def conductor_exponent(self):
+        r"""
+        Return the conductor exponent at p of this superelliptic curve.
+
+        """
+        return self.reduction_tree().reduction_conductor()
 
 
 
