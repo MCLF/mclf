@@ -64,6 +64,7 @@ EXAMPLES::
 
 .. TODO::
 
+    - allow to specify the constant base field in a more flexible way
     - write more doctests !!
     - implement an algorithm for computing the field of constants
       (and not just the degree)
@@ -97,12 +98,42 @@ class SmoothProjectiveCurve(SageObject):
     r"""
     Return the smooth projective curve with function field `F`.
 
+    INPUT:
+
+    - ``F`` -- a function field
+    - ``k`` -- a field which has a natural embedding into the constant
+      base field of `F`, such that the constant base field is a finite
+      extension of k (or ``None``).
+
+    OUTPUT:
+
+    the smooth projective curve `X` with function field `F`. If `k` is given,
+    then `X` is considered as a `k`-scheme. If `k` is not given then we
+    use the field of constants of `F` instead.
+
+    NOTE:
+
+    At the moment, `k` should only be different from the constant base field of
+    `F` if `k` is finite (because it is then easy to compute the degree of the
+    degree of the constant base field of `F` over `k`).
     """
 
-    def __init__(self, F):
+    def __init__(self, F, k=None):
+
         self._function_field = F
-        self._constant_base_field = F.constant_base_field()
-        # self._field_of_constants_degree = 1
+
+        if k != None:
+            k1 = F.constant_base_field()
+            assert k.is_finite() and k1.is_finite(), "k must be finite or None"
+            assert k.is_subring(k1), "k must be a subfield of the field of constants of F"
+            self._constant_base_field = k
+            self._extra_extension_degree = extension_degree(k, k1)
+            self._covering_degree = F.degree()*self._extra_extension_degree
+        else:
+            self._constant_base_field = F.constant_base_field()
+            self._extra_extension_degree = ZZ(1)
+            self._covering_degree = F.degree()
+
         self._coordinate_functions = self.coordinate_functions()
         self._field_of_constants_degree = self.field_of_constants_degree()
         self.compute_separable_model()
@@ -112,11 +143,13 @@ class SmoothProjectiveCurve(SageObject):
         return "The smooth projective curve over %s with %s."\
             %(self._constant_base_field, self._function_field)
 
+
     def constant_base_field(self):
         r"""
         Return the constant base field.
         """
         return self._constant_base_field
+
 
     def point(self, v):
         r""" Returns the point on the curve corresponding to ``v``.
@@ -130,7 +163,6 @@ class SmoothProjectiveCurve(SageObject):
         The point on the curve corresponding to ``v``.
 
         """
-
         return PointOnSmoothProjectiveCurve(self, v)
 
 
@@ -180,11 +212,9 @@ class SmoothProjectiveCurve(SageObject):
         false results. Usually, this will result in a miscalculation of the genus.
 
         """
-
         if hasattr(self, "_field_of_constants_degree"):
             return self._field_of_constants_degree
         F = self._function_field
-        k = self._constant_base_field
         if self.is_separable():
             test_points = [P[0] for P in self.ramification_divisor().values()]
         else:
@@ -198,7 +228,15 @@ class SmoothProjectiveCurve(SageObject):
             n = n.gcd(P.absolute_degree())
             count += 1
         self._field_of_constants_degree = n
-        return n
+        return self._field_of_constants_degree
+
+
+    def covering_degree(self):
+        r"""
+        Return the degree of this curve as a covering of the projective line.
+
+        """
+        return self._covering_degree
 
 
     def function_field(self):
@@ -251,17 +289,13 @@ class SmoothProjectiveCurve(SageObject):
         v0 = FunctionFieldValuation(F0, 1/F0.gen())
         V = v0.extensions(F)          # list of points at infinity
         separate_points(ret, V)       # make sure they are separated
-        # D = F.polynomial().discriminant().numerator()
-        # this may give an error message if the derivative of F is zero
-        # and this is the case iff F/F0 is inseparable.
-        # V0 = [FunctionFieldValuation(F0, g) for g, m in D.factor()]
-        # Should be replaced by V0 = singular_locus(F):
         V0 = self.singular_locus()
         for v0 in V0:
             separate_points(ret, v0.extensions(F))
             # separate all intersection points of the affine plane model
         self._coordinate_functions = ret
         return ret
+
 
     def random_point(self):
         """
@@ -347,6 +381,7 @@ class SmoothProjectiveCurve(SageObject):
             deg += m*P.degree()
         return deg
 
+
     def separable_model(self):
         r"""
         Return the separable model of this curve.
@@ -393,6 +428,7 @@ class SmoothProjectiveCurve(SageObject):
             return F.hom([y])
         else:
             return self._phi
+
 
     def degree_of_inseparability(self):
         r"""
@@ -539,7 +575,7 @@ class SmoothProjectiveCurve(SageObject):
         FY = self._function_field
         if FY.base_field() is FY:
             return 0
-        n = FY.polynomial().degree()/self._field_of_constants_degree
+        n = self.covering_degree()/self.field_of_constants_degree()
         r = self.degree(self.ramification_divisor())
         g = ZZ(-n + r/2 +1)
         self._genus = g
@@ -768,7 +804,7 @@ class PointOnSmoothProjectiveCurve(SageObject):
         The *absolute degree* of a point `x` on a curve `X` over `k` is the
         degree of the extension `k(x)/k`.
 
-        Here `k` is the base field of the curve, which may not be equal to
+        Here `k` is the constant base field of the curve, which may not be equal to
         the field of constants.
         """
         if not hasattr(self,"_absolute_degree"):
@@ -799,6 +835,7 @@ class PointOnSmoothProjectiveCurve(SageObject):
             return Infinity
         else:
             return self._valuation.reduce(f)
+
 
     def order(self, f):
         r""" Return the order of the function in the point.
@@ -923,15 +960,19 @@ def extension_degree(K, L, check=False):
 
     # assert K.is_finite(), "K must be finite."
     # assert L.is_finite(), "L must be finite."
-    # assert K.characteristic() == L.characteristic(), "K and L must have the same characteristic."
+    assert K.characteristic() == L.characteristic(), "K and L must have the same characteristic."
+    if hasattr(K, "absolute_extension"):
+        K = K.absolute_extension()[2]
+    if hasattr(L, "absolute_extension"):
+        L = L.absolute_extension()[2]
     try:
-        n = K.degree()
-    except (AttributeError, NotImplementedError):
         n = K.absolute_degree()
-    try:
-        m = L.degree()
     except (AttributeError, NotImplementedError):
+        n = K.degree()
+    try:
         m = L.absolute_degree()
+    except (AttributeError, NotImplementedError):
+        m = L.degree()
     assert n.divides(m), "K is not a subfield of L."
     return ZZ(m/n)
 
