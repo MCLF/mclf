@@ -169,7 +169,6 @@ class Superp(SageObject):
         S = PolynomialRing(FX, 'T')
         T = S.gen()
         FY = FX.extension(T**p-FX(a*f1), 'y')
-        print "equation: ", FY.polynomial()
         self._FX = FX
         self._FY = FY
         X = BerkovichLine(FX, vK)

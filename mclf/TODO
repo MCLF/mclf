@@ -1,10 +1,17 @@
 
 - allow twists: y^p = a*f, with f monic (done - more or less)
 - take the right twist when making a coordinate change in x (done)
+
 - solve the problem that sometimes irreducible polynomials have roots
   inside and outside the unit disk
 - understand why the computation of the upper components takes so long
   (in the hyperelliptic example)
+
 - realize loops in reduction_trees
 - adapt the computation of the reduction genus and reduction conductor
+
 - use verbose messages
+
+- computation of L-factors
+
+- include the complement of the unit disk
