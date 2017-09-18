@@ -82,12 +82,14 @@ Contribution of this component to the reduction genus is  3
 The curve has abelian reduction, since the total reduction genus
 is equal to the genus of the generic fiber.
 ```
-This result shows that the the curve `Y` has potentially good reduction over a tame extension of the `3`-adic numbers of ramification index `8`. The reduction is the
-curve over FF_3 given by the equation y^3 + y +2x^4 = 0. Now we can also compute
+This result shows that the curve `Y` has potentially good reduction over a tame extension of the `3`-adic numbers of ramification index `8`. The reduction is the
+curve over the finite field with 3 elements, given by the equation y^3 + y +2x^4 = 0.
+
+Now we can also compute
 the conductor exponent at p=3:
 ```
 sage: Y.conductor_exponent()
 6
 ```
 
-Update with more functionality should appear regularly.
+Updates with more functionality should appear regularly.
