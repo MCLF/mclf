@@ -162,7 +162,7 @@ class Superp(SageObject):
         a = phi(f).leading_coefficient()
         pi = vK.uniformizer()
         m = (vK(a)/p).floor()
-        a = pi**(-2*m)*a
+        a = pi**(-p*m)*a
         self._a = a
         self._vK = vK
         FX = FunctionField(vK.domain(), names=R.variable_names())  # this does not work in Sage 8.0
