@@ -17,7 +17,7 @@ following data:
 
 - a finite extension `L/K`,
 - an extension `v_L` of `v_K` to `L`,
-- semistable models `\mathcal{X},\mathcal{Y}` of `X_L, Y_L` (with respect to `v_L`),
+- normal models `\mathcal{X},\mathcal{Y}` of `X_L, Y_L` (with respect to `v_L`),
 - a finite morphism `\Phi_L: \mathcal{Y} \to \mathcal{X}` extending `\phi`.
 
   Restriction of `\Phi_L` to the special fibers yields a finite
@@ -28,7 +28,7 @@ following data:
     \bar{\phi}: \bar{Y} \to \bar{X}
 
 between (not necessarily smooth) curves over the residue field of `L`. This map
-is often called the *reduction* of the cover `\phi`, by abuse of
+is often called a *reduction* of the cover `\phi`, by abuse of
 terminology.
 
 A reduction `\Phi_L` is called **Galois** if
@@ -654,7 +654,7 @@ class ReductionComponent(SageObject):
             if len(ramification_filtration) == 0:
                 self._reduction_conductor = ZZ(0)
                 return ZZ(0)
-                
+
             delta_list = []
             for u, m_u in ramification_filtration:
                 L_u = L.ramification_subfield(u)
