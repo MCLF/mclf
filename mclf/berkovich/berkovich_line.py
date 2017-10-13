@@ -1384,7 +1384,8 @@ def valuation_from_discoid(vK, f, s):
         assert v(f) == s
         return v
 
-def valuations_from_inequality(vK, f, s):
+
+def valuations_from_inequality(vK, f, s, v0=None):
     r"""
     Return the list of inductive valuations corresponding to the given inequlities.
 
@@ -1393,6 +1394,7 @@ def valuations_from_inequality(vK, f, s):
     - ``vK`` -- a discrete valuation on a field `K`
     - ``f`` -- a nonconstant monic integral polynomial over `K`
     - ``s`` -- a nonnegative rational number, or `\infty`
+    - ``v0`` -- an inductive valuation on the parent of ``f`` (default: ``None``)
 
     OUTPUT:
 
@@ -1401,11 +1403,17 @@ def valuations_from_inequality(vK, f, s):
     affinoid defined by the condition `v(f)\geq s`. Note that these components
     are all discoids.
 
+    If `v_0` is given then the output only includes the valuations greater or
+    equal to `v_0`.
+
     """
     R = f.parent()
     K = R.base_ring()
     assert K is vK.domain()
-    v0 = GaussValuation(R, vK)
+    if v0 == None:
+        v0 = GaussValuation(R, vK)
+    else:
+        assert f in v0.domain()
     assert f.is_monic()
     assert v0(f) >= 0
     assert s >= 0

@@ -142,7 +142,7 @@ class BerkovichTree(SageObject):
 
     def leaves(self):
         r"""
-        Return the list of all vertices.
+        Return the list of all leaves.
         """
 
         leaves = []
@@ -401,6 +401,44 @@ class BerkovichTree(SageObject):
         return T
 
 
+    def permanent_completion(self):
+        r"""
+        Return the permanent completion of ``self``.
+
+        OUTPUT:
+
+        A Berkovich tree `T_1` which is the permanent completion of ``self``.
+
+        A Berkovich tree tree `T` on a Berkovich line `X` over `(K,v_K)` is
+        called *permanently complete* if for all finite extensions `(L,v_L)` of
+        `(K,v_K)`, the inverse image of the set of vertices of `T` in `X_L` is
+        again the set of vertices of a Berkovich tree. It is easy to see that
+        for any Berkovich tree `T` there exists a minimal refinement `T_1` which
+        is permanently complete. It is called the *permanent completion* of `T`.
+
+        ALGORITHM:
+
+        Let `\xi_0` be the root and `\xi_1,\ldots,\xi_n` the leaves of `T`.
+        To compute `T_1` we consider, for `i=1,\ldots,n`, the path
+        `\gamma = [\xi_0,\xi_n]` and the function on `\gamma` which maps a point
+        `\xi` to the number of geometric components of the discoid `D_\xi`.
+        We add the jumps of this function to `T`. Having done this for all `i`
+        we obtain the permant completion `T_1` of `T`.
+
+        """
+        T = self
+        if len(T.children()) == 0:
+            return T
+        xi0 = T.root()
+        leaves = T.leaves()
+        for xi1 in leaves:
+            for xi in component_jumps(xi0, xi1):
+                T, _ = T.add_point(xi)
+        return T
+
+
+
+
 #-------------------------------------------------------------------------------
 
 
@@ -414,3 +452,45 @@ def create_graph_recursive(T, G, vertex_dict, root_index):
         n = G.num_verts()
         G.add_edge(root_index, n)
         create_graph_recursive(T1, G, vertex_dict, n)
+
+
+def component_jumps(xi0, xi1):
+    r""" Helper function for ``permanent_completion``.
+
+    """
+    from sage.geometry.newton_polygon import NewtonPolygon
+    from mclf.berkovich.berkovich_line import valuations_from_inequality
+    from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
+
+    assert xi0.is_leq(xi1), "xi0 has to be an ancestor of xi1"
+    X = xi0.berkovich_line()
+    vK = X.base_valuation()
+
+    v0 = xi0.pseudovaluation_on_polynomial_ring()
+    v1 = xi1.pseudovaluation_on_polynomial_ring()
+    if hasattr(v1, "phi"):
+        phi = v1.phi()
+    else:
+        phi = v1._G 
+    assert v0(phi) < v1(phi), "xi0 is not an ancestor of xi1!"
+    R = phi.parent()
+    x = R.gen()
+    S = PolynomialRing(R, 'T')
+    T = S.gen()
+    G = phi(x+T)
+    NP = NewtonPolygon([(i, v1(G[i])) for i in range(G.degree()+1)])
+    print "phi = ", phi
+    print "G = ", G
+    print "NP = ", NP
+    V = []
+    for s in NP.sides():
+        i, ai = s[0]
+        j, aj = s[1]
+        a0 = aj - j*(ai-aj)/(i-j)
+        print "a0 = ", a0
+        V += valuations_from_inequality(vK, phi, a0, v0)
+    print "V = ", V
+    if xi1.is_in_unit_disk():
+        return [X.point_from_polynomial_pseudovaluation(v) for v in V]
+    else:
+        return [X.point_from_polynomial_pseudovaluation(v, in_unit_disk=False) for v in V]

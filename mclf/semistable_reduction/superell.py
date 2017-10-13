@@ -179,3 +179,81 @@ class Superell(SageObject):
 
         """
         return self._vK
+
+
+    def reduction_tree(self):
+        r"""
+        Return the reduction tree which determines the semistabel model.
+
+        """
+        if hasattr(self, "_reduction_tree"):
+            return self._reduction_tree
+
+        X = self._X
+        FX = self._FX
+        Y = self.curve()
+        vK = self.base_valuation()
+        f = self._f
+        T = BerkovichTree(X)
+        T = T.adapt_to_function(FX(f))
+        T = T.permanent_completion()
+        reduction_tree = ReductionTree(Y, vK, T)
+        for xi in T.vertices():
+            if xi.type() == 'II':
+                reduction_tree.add_reduction_component(xi)
+
+        self._reduction_tree = reduction_tree
+        return reduction_tree
+
+
+    def compute_semistable_reduction(self):
+        r"""
+        Compute the semistable reduction of this curve, and report on the
+        computation and the result.
+
+        """
+        print "We try to compute the semistable reduction of the"
+        print self
+        print "which has genus ", self.curve().genus()
+        print
+
+        reduction_tree = self.reduction_tree()
+        reduction_components = reduction_tree.reduction_components()
+        assert reduction_components != [], "no reduction components found! Something is wrong.."
+        if len(reduction_components) > 1:
+            print "There are %s reduction components to consider: "%len(reduction_components)
+        else:
+            print "There is exactly one reduction component to consider:"
+        print
+        for Z in reduction_components:
+            print "Reduction component corresponding to "
+            print Z.interior()
+            print "It splits over ", Z.splitting_field().extension_field()
+            print "into %s lower components."%len(Z.lower_components())
+            print "The upper components are: "
+            for W in Z.upper_components():
+                print W
+                if W.field_of_constants_degree() > 1:
+                    print "   (note that this component is defined over an extension of degree %s over the residue field)"%W.field_of_constants_degree()
+            print "Contribution of this component to the reduction genus is ", Z.reduction_genus()
+            print
+        print
+        if reduction_tree.is_semistable():
+            print "The curve has abelian reduction, since the total reduction genus"
+            print "is equal to the genus of the generic fiber."
+        else:
+            print "We failed to compute the semistable reduction of the curve."
+            if reduction_tree.is_reduced():
+                print "This is probably due to the fact that the curve does not have"
+                print "abelian reduction; the computation of the loops has not yet been realized."
+            else:
+                print "Something went wrong! At least one of upper components has"
+                print "multiplicity > 1."
+
+
+    def conductor_exponent(self):
+        r"""
+        Return the conductor exponent at p of this superelliptic curve.
+
+        """
+        return self.reduction_tree().reduction_conductor()
