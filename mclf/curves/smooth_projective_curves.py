@@ -218,8 +218,11 @@ class SmoothProjectiveCurve(SageObject):
         if self.is_separable():
             test_points = [P[0] for P in self.ramification_divisor().values()]
         else:
+            test_points = []
+        if test_points == []:
            test_points = [self.random_point()]
-        n = self.function_field().degree()
+        P = test_points.pop()
+        n = P.absolute_degree()
         for P in test_points:
             n = n.gcd(P.absolute_degree())
         count = 0
