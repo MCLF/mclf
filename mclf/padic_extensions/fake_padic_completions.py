@@ -322,10 +322,10 @@ class FakepAdicCompletion(SageObject):
         into `L_0`.
 
         """
-        print "entering extension with "
-        print "K = ", self
-        print "f = ", f
-        print
+        # print "entering extension with "
+        # print "K = ", self
+        # print "f = ", f
+        # print
 
         K0 = self.number_field()
         assert K0.has_coerce_map_from(f.parent().base_ring())
@@ -354,8 +354,6 @@ class FakepAdicCompletion(SageObject):
         g = g.squarefree_decomposition()[0][0]
         # now we compute the absolute characteristic polynomial of a root
         # of g
-        print "g = ", g
-        print [vK(g[i]) for i in range(g.degree()+1)]
         Pmod = self.characteristic_polynomial_mod(g, m + 5)
         # m+5 is a purely heuristic choice; there should be a test whether
         # the result is correct, or the choice should be made correctly and
@@ -755,7 +753,7 @@ class FakepAdicCompletion(SageObject):
 
         zeta = self.integral_basis_of_unramified_subfield(N)
         S = self.base_change_matrix(precision=N, integral_basis="mixed")
-        P = x**e - sum( sum(S[i+e*j,e]*zeta[j] for j in range(m))*x**i for i in range(e))
+        P = x**e - sum( sum(S[e,i+e*j]*zeta[j] for j in range(m))*x**i for i in range(e))
         return self.reduce_polynomial(P, N)
 
 
@@ -1063,8 +1061,6 @@ class FakepAdicCompletion(SageObject):
             B[i+1, i] = K(1)
         for i in range(m):
             B[i, m-1] = -f[i]
-        # print "B = ", B
-        print [vK(B[i,j]) for i, j in CartesianProduct_iters(range(m), range(m))]
         # construct BB as the matrix representing alpha as endo of L/QQ, modulo p^N
         # note the the function self.matrix gives the representation with respect
         # to a p-integral basis of L/QQ, hence BB should be p-integral
@@ -1074,7 +1070,7 @@ class FakepAdicCompletion(SageObject):
         for i in range(m):
             for j in range(m):
                 B_ij = self.matrix(B[i,j], "mixed")
-                # print "i, j, B_ij = ", i,j, B_ij
+                # this had been changed, and it is not sufficiently tested
                 for k in range(n):
                     for l in range(n):
                         if vK(B_ij[k,l]) < 0:
