@@ -322,6 +322,11 @@ class FakepAdicCompletion(SageObject):
         into `L_0`.
 
         """
+        # print "entering extension with "
+        # print "K = ", self
+        # print "f = ", f
+        # print
+
         K0 = self.number_field()
         assert K0.has_coerce_map_from(f.parent().base_ring())
         f = f.change_ring(K0)
@@ -663,7 +668,7 @@ class FakepAdicCompletion(SageObject):
                 k = i + e*j
                 alpha_k = (pi**i*alpha[j]).vector()
                 for l in range(n):
-                    S[l, k] = alpha_k[l]
+                    S[k, l] = alpha_k[l]
         T = S**(-1)
         T_reduced = matrix(QQ, n)
         for i in range(n):
@@ -748,7 +753,7 @@ class FakepAdicCompletion(SageObject):
 
         zeta = self.integral_basis_of_unramified_subfield(N)
         S = self.base_change_matrix(precision=N, integral_basis="mixed")
-        P = x**e - sum( sum(S[i+e*j,e]*zeta[j] for j in range(m))*x**i for i in range(e))
+        P = x**e - sum( sum(S[e,i+e*j]*zeta[j] for j in range(m))*x**i for i in range(e))
         return self.reduce_polynomial(P, N)
 
 
@@ -1038,7 +1043,7 @@ class FakepAdicCompletion(SageObject):
         INPUT:
 
         - ``f`` -- a monic `p`-integral and irreducible polynomial over the
-          underyling number field `K`
+          underlying number field `K`
         - ``N`` -- a positive integer
 
         OUTPUT:
@@ -1046,9 +1051,11 @@ class FakepAdicCompletion(SageObject):
         the absolute characteristic polynomial of a root of `f`, modulo `p^N`.
 
         """
+        from sage.combinat.cartesian_product import CartesianProduct_iters
         # construct the rational representation of a(formal) root alpha of f
         m = f.degree()
         K = self.number_field()
+        vK = self.valuation()
         B = matrix(K, m)
         for i in range(m-1):
             B[i+1, i] = K(1)
@@ -1062,9 +1069,15 @@ class FakepAdicCompletion(SageObject):
         BB = matrix(R, n*m)
         for i in range(m):
             for j in range(m):
-                B_ij = self.matrix(B[i,j])
+                B_ij = self.matrix(B[i,j], "mixed")
+                # this had been changed, and it is not sufficiently tested
                 for k in range(n):
                     for l in range(n):
+                        if vK(B_ij[k,l]) < 0:
+                            print "B[i,j] = ", B[i,j]
+                            print "vK(..) = ", vK(B[i,j])
+                            print "B_ij[k,l] = ", B_ij[k,l]
+                            raise ValueError
                         BB[i*n+k, j*n+l] = R(B_ij[k,l])
         return BB.charpoly()
 
