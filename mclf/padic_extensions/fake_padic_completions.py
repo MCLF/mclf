@@ -451,6 +451,8 @@ class FakepAdicCompletion(SageObject):
         """
         if not isinstance(F, Polynomial):
             F = prod(F).radical()
+        else:
+            F = F.radical()
         K = self
         assert F.parent().base_ring() == QQ, "For the time being, F has to be defined over QQ"
         if F.is_constant():
