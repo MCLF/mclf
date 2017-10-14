@@ -322,6 +322,11 @@ class FakepAdicCompletion(SageObject):
         into `L_0`.
 
         """
+        print "entering extension with "
+        print "K = ", self
+        print "f = ", f
+        print
+
         K0 = self.number_field()
         assert K0.has_coerce_map_from(f.parent().base_ring())
         f = f.change_ring(K0)
@@ -349,6 +354,8 @@ class FakepAdicCompletion(SageObject):
         g = g.squarefree_decomposition()[0][0]
         # now we compute the absolute characteristic polynomial of a root
         # of g
+        print "g = ", g
+        print [vK(g[i]) for i in range(g.degree()+1)]
         Pmod = self.characteristic_polynomial_mod(g, m + 5)
         # m+5 is a purely heuristic choice; there should be a test whether
         # the result is correct, or the choice should be made correctly and
@@ -663,7 +670,7 @@ class FakepAdicCompletion(SageObject):
                 k = i + e*j
                 alpha_k = (pi**i*alpha[j]).vector()
                 for l in range(n):
-                    S[l, k] = alpha_k[l]
+                    S[k, l] = alpha_k[l]
         T = S**(-1)
         T_reduced = matrix(QQ, n)
         for i in range(n):
@@ -1038,7 +1045,7 @@ class FakepAdicCompletion(SageObject):
         INPUT:
 
         - ``f`` -- a monic `p`-integral and irreducible polynomial over the
-          underyling number field `K`
+          underlying number field `K`
         - ``N`` -- a positive integer
 
         OUTPUT:
@@ -1046,14 +1053,18 @@ class FakepAdicCompletion(SageObject):
         the absolute characteristic polynomial of a root of `f`, modulo `p^N`.
 
         """
+        from sage.combinat.cartesian_product import CartesianProduct_iters
         # construct the rational representation of a(formal) root alpha of f
         m = f.degree()
         K = self.number_field()
+        vK = self.valuation()
         B = matrix(K, m)
         for i in range(m-1):
             B[i+1, i] = K(1)
         for i in range(m):
             B[i, m-1] = -f[i]
+        # print "B = ", B
+        print [vK(B[i,j]) for i, j in CartesianProduct_iters(range(m), range(m))]
         # construct BB as the matrix representing alpha as endo of L/QQ, modulo p^N
         # note the the function self.matrix gives the representation with respect
         # to a p-integral basis of L/QQ, hence BB should be p-integral
@@ -1062,9 +1073,15 @@ class FakepAdicCompletion(SageObject):
         BB = matrix(R, n*m)
         for i in range(m):
             for j in range(m):
-                B_ij = self.matrix(B[i,j])
+                B_ij = self.matrix(B[i,j], "mixed")
+                # print "i, j, B_ij = ", i,j, B_ij
                 for k in range(n):
                     for l in range(n):
+                        if vK(B_ij[k,l]) < 0:
+                            print "B[i,j] = ", B[i,j]
+                            print "vK(..) = ", vK(B[i,j])
+                            print "B_ij[k,l] = ", B_ij[k,l]
+                            raise ValueError
                         BB[i*n+k, j*n+l] = R(B_ij[k,l])
         return BB.charpoly()
 
