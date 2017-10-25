@@ -95,7 +95,7 @@ EXAMPLES::
 #*****************************************************************************
 
 from sage.structure.sage_object import SageObject
-from sage.rings.all import ZZ, NumberField, FunctionField
+from sage.rings.all import ZZ, QQ, NumberField, FunctionField
 from mac_lane import *
 from mclf.berkovich.berkovich_line import *
 from mclf.berkovich.berkovich_trees import BerkovichTree
