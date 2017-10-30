@@ -63,7 +63,6 @@ from mclf.semistable_reduction.reduction_trees import ReductionTree
 
 
 
-
 class Superp(SageObject):
     r"""
     Return the superelliptic curve of degree ``p`` defined by ``f``,
