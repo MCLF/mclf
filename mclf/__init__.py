@@ -10,4 +10,4 @@ from semistable_reduction.superell import *
 from padic_extensions.weak_padic_galois_extensions import *
 from padic_extensions.fake_padic_completions import *
 from padic_extensions.fake_padic_embeddings import *
-from semistable_reduction.reduction_trees import ReductionTree, ReductionComponent
+from semistable_reduction.reduction_trees import *
