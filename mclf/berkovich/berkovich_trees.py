@@ -471,7 +471,7 @@ def component_jumps(xi0, xi1):
     if hasattr(v1, "phi"):
         phi = v1.phi()
     else:
-        phi = v1._G 
+        phi = v1._G
     assert v0(phi) < v1(phi), "xi0 is not an ancestor of xi1!"
     R = phi.parent()
     x = R.gen()
@@ -491,6 +491,7 @@ def component_jumps(xi0, xi1):
         V += valuations_from_inequality(vK, phi, a0, v0)
     print "V = ", V
     if xi1.is_in_unit_disk():
-        return [X.point_from_polynomial_pseudovaluation(v) for v in V]
+        ret = [X.point_from_polynomial_pseudovaluation(v) for v in V]
     else:
-        return [X.point_from_polynomial_pseudovaluation(v, in_unit_disk=False) for v in V]
+        ret = [X.point_from_polynomial_pseudovaluation(v, in_unit_disk=False) for v in V]
+    return [xi for xi in ret if (xi0.is_leq(xi) and xi.is_leq(xi1))]
