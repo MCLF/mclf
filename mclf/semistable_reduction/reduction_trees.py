@@ -50,7 +50,7 @@ of our method is that the reduction `\Phi_L` is uniquely determined by the
 following data:
 
 - the `v_K`- model `\mathcal{X}_0` of `X=\mathbb{P}^1_K`, and
-- the Galois extension `L/K`, and
+- the extension `L/K`, and
 - the extension `v_L` of `v_K` to `L`.
 
 To see this, note that `\mathcal{Y}` and `\mathcal{X}` are the normalization of
@@ -79,7 +79,32 @@ AUTHORS:
 
 EXAMPLES::
 
-    Add examples ..
+    # sage: from mclf import *
+    sage: FX.<x> = FunctionField(QQ)
+    sage: v_2 = pAdicValuation(QQ, 2)
+    sage: X = BerkovichLine(FX, v_2)
+    sage: T = BerkovichTree(X, X.gauss_point())
+    sage: T, _ = T.add_point(X.infty())
+    sage: R.<y> = FX[]
+    sage: FY.<y> = FX.extension(y^2-x^3-1)
+    sage: Y = SmoothProjectiveCurve(FY)
+    sage: RT = ReductionTree(Y, v_2, T)
+    sage: RT.add_reduction_component(T.root())
+    sage: Z = RT.reduction_components()[0]
+    sage: Z
+    base component of reduction tree with interior Elementary affinoid defined by
+    v(x) >= 0
+
+TODO:
+
+- if we create a reduction tree from a tree `T`, there should be certain
+  requirements on `T` which insure that it makes sense. For instance, if
+  we mark a vertex as a ``BaseComponent``, then the interior of this component
+  should be well defined.
+- if we allow adding new vertices to the tree, then it must be made sure that
+  the above requirements are kept, and all the adjustements which we do to the
+  tree must be passed on to the base components.
+- Maybe it is safer to not allow any adjustements to the tree at all.
 
 """
 
@@ -129,10 +154,10 @@ class ReductionTree(SageObject):
 
     .. NOTE::
 
-        In the present release, the base field `K` must be the field of rational_function_field
+        In the present release, the base field `K` must be the field of rational
         numbers.
-
     """
+
 
     def __init__(self, Y, vK, T=None):
 
@@ -322,7 +347,8 @@ class BaseComponent(SageObject):
         self._subtree = subtree
         self._xi = subtree.root()
         assert self._xi.type() == "II", "xi must be a point of type II!"
-        self._basepoint = basepoint
+        if basepoint != None:
+            self._basepoint = basepoint
         # we check whether the basepoint lies in the interior; both
         # basepoint and interior are created by this (if they were not already given)
         assert self.interior().is_contained_in(self.basepoint()), \
@@ -330,6 +356,10 @@ class BaseComponent(SageObject):
         self._lower_components = {}
         self._upper_components = {}
         self._reduction_genus = {}
+
+
+    def __repr__(self):
+        return "base component of reduction tree with interior %s"%self.interior()
 
 
     def reduction_tree(self):
@@ -370,7 +400,7 @@ class BaseComponent(SageObject):
         was created, then such a point is computed now.
 
         """
-        if self._basepoint == None:
+        if not hasattr(self, "_basepoint"):
             self._basepoint = self.interior().point_close_to_boundary(self._xi)
         return self._basepoint
 
@@ -762,6 +792,10 @@ class LowerComponent(ReductionComponent):
         self._curve = SmoothProjectiveCurve(F, vL.residue_field())
 
 
+    def __repr__(self):
+        return "lower component of reduction tree corresponding to  %s"%self.valuation()
+
+
     def upper_components(self):
         r"""
         Return the list of all upper components lying above this lower component.
@@ -795,6 +829,10 @@ class UpperComponent(ReductionComponent):
         self._function_field = make_function_field(v.residue_field())
         self._constant_base_field = Z.constant_base_field()
         self._curve = SmoothProjectiveCurve(self._function_field, Z.constant_base_field())
+
+
+    def __repr__(self):
+        return "upper component of reduction tree corresponding to  %s"%self.valuation()
 
 
     def genus(self):
