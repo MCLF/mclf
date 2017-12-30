@@ -69,8 +69,8 @@ class BerkovichTree(SageObject):
     parent ``parent``.
     `T` may be empty (no root and no children), but if there are children
     then there must be root.
-    """
 
+    """
     def __init__(self, X, root=None, children=None, parent=None):
 
         # print "calling BerkovichTree with root %s, children %s and
@@ -88,57 +88,59 @@ class BerkovichTree(SageObject):
         assert all([self._X == T._X for T in self._children]), \
                         "children must live on the same Berkovich line as root"
 
-    def __repr__(self):
 
+    def __repr__(self):
         return "Berkovich tree with %s vertices"%len(self.vertices())
 
-    def is_empty(self):
 
+    def is_empty(self):
         return self._root == None
+
 
     def root(self):
         """ Return the root of the tree."""
-
         return self._root
+
 
     def has_parent(self):
         """ Return True if self has a parent."""
-
         return not self._parent == None
+
 
     def parent(self):
         """ Return the parent of self."""
-
         return self._parent
+
 
     def make_parent(self, parent):
         """ add ``parent`` as parent of self."""
-
         self._parent = parent
+
 
     def children(self):
         """ Return the list of all children."""
-
         return self._children
+
 
     def is_leaf(self):
         """ Return True if self is a leaf.
-        """
 
+        """
         return self._root != None and self._children == []
 
 
     def vertices(self):
         r"""
         Return the list of all vertices.
-        """
 
+        """
         vertices = []
         if self._root != None:
             vertices.append(self._root)
         for T in self._children:
             vertices += T.vertices()
         return vertices
+
 
     def leaves(self):
         r"""
@@ -153,6 +155,7 @@ class BerkovichTree(SageObject):
                 leaves += T.leaves()
         return leaves
 
+
     def subtrees(self):
         r""" Return the list of all subtrees.
         """
@@ -163,6 +166,7 @@ class BerkovichTree(SageObject):
         for T in self.children():
             subtrees += T.subtrees()
         return subtrees
+
 
     def paths(self):
         r"""
@@ -182,6 +186,7 @@ class BerkovichTree(SageObject):
             path_list += T2.paths()
         return path_list
 
+
     def copy(self):
         r""" Return a copy of self."""
 
@@ -191,6 +196,7 @@ class BerkovichTree(SageObject):
             children.append(child.copy())
         T._children = children
         return T
+
 
     def add_point(self, xi):
         r"""
@@ -280,6 +286,7 @@ class BerkovichTree(SageObject):
             T_xi.make_parent(T_new)
             return T_new, T_xi
 
+
     def find_point(self, xi):
         r""" Find subtree with root ``xi``.
 
@@ -302,6 +309,22 @@ class BerkovichTree(SageObject):
                     return T1
             return None
 
+
+    def adjacent_vertices(self, xi0):
+        """
+        List all vertices of the tree adjacent to ``xi``.
+
+        """
+        T = self.find_point(xi0)
+        if T == None:
+            return []
+        ret = []
+        if T.has_parent():
+            ret.append(T.parent().root())
+        for child in T.children():
+            ret.append(child.root())
+        return ret
+                     
 
     def print_tree(self, depth=0):
         """ Print the vertices of the tree, with identation corresponding to depth.
