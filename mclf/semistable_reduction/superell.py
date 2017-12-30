@@ -200,7 +200,7 @@ class Superell(SageObject):
         reduction_tree = ReductionTree(Y, vK, T)
         for xi in T.vertices():
             if xi.type() == 'II':
-                reduction_tree.add_reduction_component(xi)
+                reduction_tree.add_inertial_component(xi)
 
         self._reduction_tree = reduction_tree
         return reduction_tree
@@ -218,15 +218,15 @@ class Superell(SageObject):
         print
 
         reduction_tree = self.reduction_tree()
-        reduction_components = reduction_tree.reduction_components()
-        assert reduction_components != [], "no reduction components found! Something is wrong.."
-        if len(reduction_components) > 1:
-            print "There are %s reduction components to consider: "%len(reduction_components)
+        inertial_components = reduction_tree.inertial_components()
+        assert inertial_components != [], "no inertial components found! Something is wrong.."
+        if len(inertial_components) > 1:
+            print "There are %s inertial components to consider: "%len(inertial_components)
         else:
-            print "There is exactly one reduction component to consider:"
+            print "There is exactly one inertial component to consider:"
         print
-        for Z in reduction_components:
-            print "Reduction component corresponding to "
+        for Z in inertial_components:
+            print "Inertial component corresponding to "
             print Z.interior()
             print "It splits over ", Z.splitting_field().extension_field()
             print "into %s lower components."%len(Z.lower_components())
@@ -243,12 +243,9 @@ class Superell(SageObject):
             print "is equal to the genus of the generic fiber."
         else:
             print "We failed to compute the semistable reduction of the curve."
-            if reduction_tree.is_reduced():
-                print "This is probably due to the fact that the curve does not have"
-                print "abelian reduction; the computation of the loops has not yet been realized."
-            else:
-                print "Something went wrong! At least one of upper components has"
-                print "multiplicity > 1."
+            print "This is probably due to the fact that the curve does not have"
+            print "abelian reduction; the computation of the loops has not yet been realized."
+
 
 
     def conductor_exponent(self):
