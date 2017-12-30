@@ -71,7 +71,7 @@ EXAMPLES::
     - the residue field of a point should be explicitly an extension of
       the constant base field.
     - treat the base curve `X` as a *curve*, not just as a function field
-    - realize morphisms between curves, in particular the canonical to `X`
+    - realize morphisms between curves, in particular the canonical map to `X`
 
 """
 
