@@ -265,7 +265,7 @@ class BerkovichTree(SageObject):
         elif xi.is_leq(xi0):
             # xi is less than the root of T0
             # we have to make xi the root and append T0 as the only subtree
-            T_new = AffinoidTree(T0._X, xi, [T0], None)
+            T_new = BerkovichTree(T0._X, xi, [T0], None)
             T0.make_parent(T_new)
             return T_new, T_new
 
@@ -425,8 +425,24 @@ class BerkovichTree(SageObject):
         We add the jumps of this function to `T`. Having done this for all `i`
         we obtain the permant completion `T_1` of `T`.
 
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: FX.<x> = FunctionField(QQ)
+            sage: v_2 = pAdicValuation(QQ, 2)
+            sage: X = BerkovichLine(FX, v_2)
+            sage: xi0 = X.point_from_discoid(x^4+2, 5)
+            sage: T = BerkovichTree(X, xi0)
+            sage: T.permanent_completion()
+            Berkovich tree with 3 vertices
+
         """
         T = self
+        xi0 = T.root()
+        X = xi0.berkovich_line()
+        if not xi0.is_gauss_point():
+            for xi in component_jumps(X.gauss_point(), xi0):
+                T, _ = T.add_point(xi)
         if len(T.children()) == 0:
             return T
         xi0 = T.root()
@@ -479,19 +495,20 @@ def component_jumps(xi0, xi1):
     T = S.gen()
     G = phi(x+T)
     NP = NewtonPolygon([(i, v1(G[i])) for i in range(G.degree()+1)])
-    print "phi = ", phi
-    print "G = ", G
-    print "NP = ", NP
+    # print "phi = ", phi
+    # print "G = ", G
+    # print "NP = ", NP
     V = []
     for s in NP.sides():
         i, ai = s[0]
         j, aj = s[1]
         a0 = aj - j*(ai-aj)/(i-j)
-        print "a0 = ", a0
+        # print "a0 = ", a0
         V += valuations_from_inequality(vK, phi, a0, v0)
-    print "V = ", V
+    # print "V = ", V
     if xi1.is_in_unit_disk():
         ret = [X.point_from_polynomial_pseudovaluation(v) for v in V]
     else:
         ret = [X.point_from_polynomial_pseudovaluation(v, in_unit_disk=False) for v in V]
     return [xi for xi in ret if (xi0.is_leq(xi) and xi.is_leq(xi1))]
+    # the last 'if' is necessary if phi = v1._G above
