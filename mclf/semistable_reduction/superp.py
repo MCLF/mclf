@@ -324,10 +324,10 @@ class Superp(SageObject):
         X_et = self.etale_locus()
         T = X_et._T
         # this is the affinoid tree underlying the etale locus
-        # the reduction components are the boundary points
+        # the inertial components are the boundary points
         reduction_tree = ReductionTree(Y, vK, T)
         for xi in X_et.boundary():
-            reduction_tree.add_reduction_component(xi)
+            reduction_tree.add_inertial_component(xi)
 
         self._reduction_tree = reduction_tree
         return reduction_tree
@@ -347,15 +347,15 @@ class Superp(SageObject):
         print self.etale_locus()
 
         reduction_tree = self.reduction_tree()
-        reduction_components = reduction_tree.reduction_components()
-        assert reduction_components != [], "no reduction components found! Something is wrong.."
-        if len(reduction_components) > 1:
-            print "There are %s reduction components to consider: "%len(reduction_components)
+        inertial_components = reduction_tree.inertial_components()
+        assert inertial_components != [], "no inertial components found! Something is wrong.."
+        if len(inertial_components) > 1:
+            print "There are %s inertial components to consider: "%len(inertial_components)
         else:
-            print "There is exactly one reduction component to consider:"
+            print "There is exactly one inertial component to consider:"
         print
-        for Z in reduction_components:
-            print "Reduction component corresponding to "
+        for Z in inertial_components:
+            print "inertial component corresponding to "
             print Z.interior()
             print "It splits over ", Z.splitting_field().extension_field()
             print "into %s lower components."%len(Z.lower_components())
