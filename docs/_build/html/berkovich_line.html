@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>The Berkovich projective line over a discretely valued field. &mdash; MCLF 1.0 documentation</title>
+    <title>The Berkovich projective line over a discretely valued field. &mdash; MCLF  documentation</title>
     
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.0',
+        VERSION:     '',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="MCLF 1.0 documentation" href="index.html" />
+    <link rel="top" title="MCLF  documentation" href="index.html" />
     <link rel="up" title="The Berkovich line" href="berkovich.html" />
     <link rel="next" title="Finite subtrees of the Berkovich line" href="berkovich_trees.html" />
     <link rel="prev" title="The Berkovich line" href="berkovich.html" /> 
@@ -45,7 +45,7 @@
         <li class="right" >
           <a href="berkovich.html" title="The Berkovich line"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MCLF 1.0 documentation</a> &raquo;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MCLF  documentation</a> &raquo;</li>
           <li class="nav-item nav-item-1"><a href="berkovich.html" accesskey="U">The Berkovich line</a> &raquo;</li> 
       </ul>
     </div>  
@@ -272,6 +272,48 @@ the pseudo valuation <code class="docutils literal"><span class="pre">v</span></
 </dd></dl>
 
 <dl class="method">
+<dt id="mclf.berkovich.berkovich_line.BerkovichLine.points_from_inequality">
+<code class="descname">points_from_inequality</code><span class="sig-paren">(</span><em>f</em>, <em>s</em><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.BerkovichLine.points_from_inequality" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the boundary points of the affinoid given an inequality.</p>
+<p>INPUT:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">f</span></code> &#8211; a monic and integral polynomial in <span class="math">\(x\)</span> or in <span class="math">\(1/x\)</span></li>
+<li><code class="docutils literal"><span class="pre">s</span></code> &#8211; a nonnegative rational number, or <span class="math">\(\infty\)</span></li>
+</ul>
+<p>OUTPUT:</p>
+<p>a list of points which are the boundary points of the affinoid given
+by the inequality <span class="math">\(v(f) \geq s\)</span>. Note that the affinoid is a union
+of finitely many discoids (or of finitely many algebraic points if
+<span class="math">\(s=\infty\)</span>).</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">For the moment we have to assume that if <span class="math">\(f=g(1/x)\)</span>, then all the
+roots of <span class="math">\(g\)</span> have strictly positive valuations.</p>
+</div>
+<p>EXAMPLES:</p>
+<blockquote>
+<div>sage: from mclf import *
+sage: F.&lt;x&gt; = FunctionField(QQ)
+sage: v_2 = pAdicValuation(QQ, 2)
+sage: X = BerkovichLine(F, v_2)
+sage: f = x^2 + 2
+sage: X.points_from_inequality(f, 3)
+[Point of type II on Berkovich line, corresponding to v(x^2 + 2) &gt;= 3]
+sage: from mclf.padic_extensions.weak_padic_galois_extensions import WeakPadicGaloisExtension
+sage: LL = WeakPadicGaloisExtension(v_2, f.numerator())
+sage: L = LL.field()
+sage: vL = LL.valuation()
+sage: FL.&lt;x&gt; = FunctionField(L)
+sage: XL = BerkovichLine(FL, vL)
+sage: f = FL(f)
+sage: XL.points_from_inequality(f, 3)
+[Point of type II on Berkovich line, corresponding to v(x + pi2) &gt;= 3/2]
+sage: XL.points_from_inequality(f, 4)
+[Point of type II on Berkovich line, corresponding to v(x + pi2) &gt;= 5/2,
+Point of type II on Berkovich line, corresponding to v(x + 7*pi2) &gt;= 5/2]</div></blockquote>
+</dd></dl>
+
+<dl class="method">
 <dt id="mclf.berkovich.berkovich_line.BerkovichLine.polynomial_divisor">
 <code class="descname">polynomial_divisor</code><span class="sig-paren">(</span><em>f</em>, <em>m</em><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.BerkovichLine.polynomial_divisor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the divisor of zeroes of a squarefree polynomial.</p>
@@ -324,9 +366,33 @@ the <em>Gauss point</em>.</p>
 <p>The set <span class="math">\(X^{an}\)</span> has a canonical partial ordering in which the Gauss point
 is the smallest elements. All point of type I are maximal elements.</p>
 <dl class="method">
+<dt id="mclf.berkovich.berkovich_line.PointOnBerkovichLine.base_field">
+<code class="descname">base_field</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.PointOnBerkovichLine.base_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the base field of this Berkovich line.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.berkovich.berkovich_line.PointOnBerkovichLine.base_valuation">
+<code class="descname">base_valuation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.PointOnBerkovichLine.base_valuation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the valuation on the base field of this Berkovich line.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.berkovich.berkovich_line.PointOnBerkovichLine.berkovich_line">
+<code class="descname">berkovich_line</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.PointOnBerkovichLine.berkovich_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the Berkovich line of which this point lies.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.berkovich.berkovich_line.PointOnBerkovichLine.function_field">
+<code class="descname">function_field</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.PointOnBerkovichLine.function_field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the function field of this Berkovich line.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="mclf.berkovich.berkovich_line.PointOnBerkovichLine.is_strictly_less">
 <code class="descname">is_strictly_less</code><span class="sig-paren">(</span><em>xi1</em><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.PointOnBerkovichLine.is_strictly_less" title="Permalink to this definition">¶</a></dt>
-<dd><p>return True if self is strictly smaller than xi1.</p>
+<dd><p>Check whether <code class="docutils literal"><span class="pre">self</span></code> is strictly smaller than <code class="docutils literal"><span class="pre">xi1</span></code>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -398,8 +464,8 @@ closed unit disk, <span class="math">\(f=x\)</span> and <span class="math">\(s=0
 <dl class="method">
 <dt id="mclf.berkovich.berkovich_line.TypeIIPointOnBerkovichLine.improved_approximation">
 <code class="descname">improved_approximation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIIPointOnBerkovichLine.improved_approximation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return an improved approximation of <code class="docutils literal"><span class="pre">self</span></code>.
-This is meaningless for type-II-points, so self is returned.</p>
+<dd><p>Return an improved approximation of <code class="docutils literal"><span class="pre">self</span></code>.</p>
+<p>This is meaningless for type-II-points, so self is returned.</p>
 </dd></dl>
 
 <dl class="method">
@@ -420,6 +486,18 @@ the result is a point of type II.</p>
 <dt id="mclf.berkovich.berkovich_line.TypeIIPointOnBerkovichLine.is_equal">
 <code class="descname">is_equal</code><span class="sig-paren">(</span><em>xi</em><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIIPointOnBerkovichLine.is_equal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <code class="docutils literal"><span class="pre">True</span></code> if self is equal to <code class="docutils literal"><span class="pre">xi</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.berkovich.berkovich_line.TypeIIPointOnBerkovichLine.is_gauss_point">
+<code class="descname">is_gauss_point</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIIPointOnBerkovichLine.is_gauss_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if self is the Gauss point.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.berkovich.berkovich_line.TypeIIPointOnBerkovichLine.is_in_unit_disk">
+<code class="descname">is_in_unit_disk</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIIPointOnBerkovichLine.is_in_unit_disk" title="Permalink to this definition">¶</a></dt>
+<dd><p>True is self is contained in the unit disk.</p>
 </dd></dl>
 
 <dl class="method">
@@ -461,6 +539,15 @@ This is never true for points of type II.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="mclf.berkovich.berkovich_line.TypeIIPointOnBerkovichLine.pseudovaluation">
+<code class="descname">pseudovaluation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIIPointOnBerkovichLine.pseudovaluation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the pseudovaluation corresponding to this point.</p>
+<p>OUTPUT:</p>
+<p>Since <code class="docutils literal"><span class="pre">self</span></code> is a point of type II, the output is a discrete
+valuation on the function field of the underlying Berkovich line.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="mclf.berkovich.berkovich_line.TypeIIPointOnBerkovichLine.pseudovaluation_on_polynomial_ring">
 <code class="descname">pseudovaluation_on_polynomial_ring</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIIPointOnBerkovichLine.pseudovaluation_on_polynomial_ring" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the pseudo-valuation on the polynomial ring &#8216;K[y]&#8217;
@@ -486,6 +573,15 @@ on whether self lies in the standard closed unit disk or not.</p>
 <p>the value <span class="math">\(v(f)\)</span>, where <span class="math">\(v\)</span> is the valuation corresponding to self</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="mclf.berkovich.berkovich_line.TypeIIPointOnBerkovichLine.valuation">
+<code class="descname">valuation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIIPointOnBerkovichLine.valuation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the valuation corresponding to this point.</p>
+<p>OUTPUT:</p>
+<p>The discrete valuation on the function field of the underlying Berkovich
+line corresponding to this point.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -502,29 +598,26 @@ on whether self lies in the standard closed unit disk or not.</p>
 <dl class="method">
 <dt id="mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.approximation">
 <code class="descname">approximation</code><span class="sig-paren">(</span><em>certified_point=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.approximation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return an approximation of <code class="docutils literal"><span class="pre">self</span></code>.</p>
+<dd><p>Return an approximation of this point.</p>
 <p>INPUT:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">certified</span> <span class="pre">point</span></code> (default=None) &#8211; a point on the Berkovich line</li>
 </ul>
 <p>OUTPUT:</p>
-<p>An inductive point which approximates <code class="docutils literal"><span class="pre">self</span></code>, in such a way that
+<p>A a point which is inductive and approximates <code class="docutils literal"><span class="pre">self</span></code>, in such a way that
 we can distinguish <code class="docutils literal"><span class="pre">self</span></code> from <code class="docutils literal"><span class="pre">certified</span> <span class="pre">point</span></code>.</p>
 <p>If <code class="docutils literal"><span class="pre">self</span></code> is an inductive point, then <code class="docutils literal"><span class="pre">self</span></code> is returned. Otherwise,
 <code class="docutils literal"><span class="pre">self</span></code> is a limit point, and the output is a point of type II greater
 or equal to <code class="docutils literal"><span class="pre">self</span></code> (i.e. corresponding to a discoid containing <code class="docutils literal"><span class="pre">self</span></code>).
 If <code class="docutils literal"><span class="pre">certified_point</span></code> is not None and distinct from <code class="docutils literal"><span class="pre">self</span></code>, then
 the output is not greater or equal to <code class="docutils literal"><span class="pre">certified_point</span></code>.</p>
-<p>TO DO : We should also make sure that the approximation has the same degree
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">We should also make sure that the approximation has the same degree
 as the point itself. If the point is generated as part of the support of
 a principal divisor, then this should be ok, because of the default
 &#8220;require_final_EF=True&#8221; in &#8220;vK.approximants(f)&#8221;.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.berkovich_line">
-<code class="descname">berkovich_line</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.berkovich_line" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the Berkovich line of which this point lies.</p>
+</div>
 </dd></dl>
 
 <dl class="method">
@@ -580,7 +673,7 @@ this is a point of type II.</p>
 <dl class="method">
 <dt id="mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.is_equal">
 <code class="descname">is_equal</code><span class="sig-paren">(</span><em>xi</em><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.is_equal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return True is self is equal to <code class="docutils literal"><span class="pre">xi</span></code>.</p>
+<dd><p>Return <code class="docutils literal"><span class="pre">True</span></code> is self is equal to <code class="docutils literal"><span class="pre">xi</span></code>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -598,19 +691,19 @@ this is a point of type II.</p>
 <dl class="method">
 <dt id="mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.is_inductive">
 <code class="descname">is_inductive</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.is_inductive" title="Permalink to this definition">¶</a></dt>
-<dd><p>True if <code class="docutils literal"><span class="pre">self</span></code> corresponds to an inductive MacLane valuation.</p>
+<dd><p>Check whether this points corresponds to an inductive valuation.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.is_leq">
 <code class="descname">is_leq</code><span class="sig-paren">(</span><em>xi</em><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.is_leq" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return True is self is less or equal to xi.</p>
+<dd><p>Return <code class="docutils literal"><span class="pre">True</span></code> if <code class="docutils literal"><span class="pre">self</span></code> is less or equal to <code class="docutils literal"><span class="pre">xi</span></code>.</p>
 <p>INPUT:</p>
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">xi</span></code> &#8211; a point of type I or II</li>
 </ul>
 <p>OUTPUT:</p>
-<p>True if self is less or equal to <code class="docutils literal"><span class="pre">xi</span></code> (w.r.t. the natural
+<p><code class="docutils literal"><span class="pre">True</span></code> if self is less or equal to <code class="docutils literal"><span class="pre">xi</span></code> (w.r.t. the natural
 partial order on <span class="math">\(X\)</span> for which the Gauss pont is the smallest element).
 Since self is a point of type I and hence maximal, this is never true
 unless <span class="math">\(xi\)</span> is equal to self.</p>
@@ -619,15 +712,24 @@ unless <span class="math">\(xi\)</span> is equal to self.</p>
 <dl class="method">
 <dt id="mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.is_limit_point">
 <code class="descname">is_limit_point</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.is_limit_point" title="Permalink to this definition">¶</a></dt>
-<dd><p>True if <code class="docutils literal"><span class="pre">self</span></code> corresponds to a limit valuation.</p>
+<dd><p>Check whether this point corresponds to a limit valuation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.pseudovaluation">
+<code class="descname">pseudovaluation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.pseudovaluation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the pseudovaluation corresponding to this point.</p>
+<p>OUTPUT:</p>
+<p>a discrete pseudovaluation on the rational function field of the
+Berkovich line of which <code class="docutils literal"><span class="pre">self</span></code> is a point.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.pseudovaluation_on_polynomial_ring">
 <code class="descname">pseudovaluation_on_polynomial_ring</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.TypeIPointOnBerkovichLine.pseudovaluation_on_polynomial_ring" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the MacLane valuation representing <code class="docutils literal"><span class="pre">self</span></code>.</p>
+<dd><p>Return the pseudovaluation representing <code class="docutils literal"><span class="pre">self</span></code>.</p>
 <p>OUTPUT:</p>
-<p>A MacLane valuation on the polynomial ring <span class="math">\(K[x]\)</span> representing <code class="docutils literal"><span class="pre">self</span></code>.
+<p>A discrete pseudovaluation on the polynomial ring <span class="math">\(K[x]\)</span> representing <code class="docutils literal"><span class="pre">self</span></code>.
 It is either inductive or a limit valuation.</p>
 </dd></dl>
 
@@ -719,6 +821,26 @@ and <span class="math">\(v\)</span> is its unique boundary point.</p>
 <p>If <span class="math">\(D\)</span> is not irreducible, an error is raised.</p>
 </dd></dl>
 
+<dl class="function">
+<dt id="mclf.berkovich.berkovich_line.valuations_from_inequality">
+<code class="descclassname">mclf.berkovich.berkovich_line.</code><code class="descname">valuations_from_inequality</code><span class="sig-paren">(</span><em>vK</em>, <em>f</em>, <em>s</em>, <em>v0=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mclf.berkovich.berkovich_line.valuations_from_inequality" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the list of inductive valuations corresponding to the given inequlities.</p>
+<p>INPUT:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">vK</span></code> &#8211; a discrete valuation on a field <span class="math">\(K\)</span></li>
+<li><code class="docutils literal"><span class="pre">f</span></code> &#8211; a nonconstant monic integral polynomial over <span class="math">\(K\)</span></li>
+<li><code class="docutils literal"><span class="pre">s</span></code> &#8211; a nonnegative rational number, or <span class="math">\(\infty\)</span></li>
+<li><code class="docutils literal"><span class="pre">v0</span></code> &#8211; an inductive valuation on the parent of <code class="docutils literal"><span class="pre">f</span></code> (default: <code class="docutils literal"><span class="pre">None</span></code>)</li>
+</ul>
+<p>OUTPUT:</p>
+<p>a list of inductive valuations on the domain of <code class="docutils literal"><span class="pre">f</span></code>, extending <code class="docutils literal"><span class="pre">vK</span></code>,
+corresponding to the boundary points of the irreducible components of the
+affinoid defined by the condition <span class="math">\(v(f)\geq s\)</span>. Note that these components
+are all discoids.</p>
+<p>If <span class="math">\(v_0\)</span> is given then the output only includes the valuations greater or
+equal to <span class="math">\(v_0\)</span>.</p>
+</dd></dl>
+
 </div>
 
 
@@ -769,7 +891,7 @@ and <span class="math">\(v\)</span> is its unique boundary point.</p>
         <li class="right" >
           <a href="berkovich.html" title="The Berkovich line"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MCLF 1.0 documentation</a> &raquo;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MCLF  documentation</a> &raquo;</li>
           <li class="nav-item nav-item-1"><a href="berkovich.html" >The Berkovich line</a> &raquo;</li> 
       </ul>
     </div>

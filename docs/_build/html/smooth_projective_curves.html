@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Smooth projective curves over a field. &mdash; MCLF 1.0 documentation</title>
+    <title>Smooth projective curves over a field. &mdash; MCLF  documentation</title>
     
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.0',
+        VERSION:     '',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,7 +24,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="MCLF 1.0 documentation" href="index.html" />
+    <link rel="top" title="MCLF  documentation" href="index.html" />
     <link rel="up" title="Curves" href="curves.html" />
     <link rel="next" title="The Berkovich line" href="berkovich.html" />
     <link rel="prev" title="Curves" href="curves.html" /> 
@@ -45,7 +45,7 @@
         <li class="right" >
           <a href="curves.html" title="Curves"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MCLF 1.0 documentation</a> &raquo;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MCLF  documentation</a> &raquo;</li>
           <li class="nav-item nav-item-1"><a href="curves.html" accesskey="U">Curves</a> &raquo;</li> 
       </ul>
     </div>  
@@ -118,13 +118,14 @@ We have implemented a probabilistic algorithm for computing the degree <span cla
 <div class="admonition-todo admonition" id="index-0">
 <p class="first admonition-title">Todo</p>
 <ul class="last simple">
+<li>allow to specify the constant base field in a more flexible way</li>
 <li>write more doctests !!</li>
 <li>implement an algorithm for computing the field of constants
 (and not just the degree)</li>
 <li>the residue field of a point should be explicitly an extension of
 the constant base field.</li>
 <li>treat the base curve <span class="math">\(X\)</span> as a <em>curve</em>, not just as a function field</li>
-<li>realize morphisms between curves, in particular the canonical to <span class="math">\(X\)</span></li>
+<li>realize morphisms between curves, in particular the canonical map to <span class="math">\(X\)</span></li>
 </ul>
 </div>
 <dl class="class">
@@ -146,7 +147,7 @@ functions which define an injective map from <span class="math">\(X\)</span> int
 <dd><p>Return the absolute degree of self.</p>
 <p>The <em>absolute degree</em> of a point <span class="math">\(x\)</span> on a curve <span class="math">\(X\)</span> over <span class="math">\(k\)</span> is the
 degree of the extension <span class="math">\(k(x)/k\)</span>.</p>
-<p>Here <span class="math">\(k\)</span> is the base field of the curve, which may not be equal to
+<p>Here <span class="math">\(k\)</span> is the constant base field of the curve, which may not be equal to
 the field of constants.</p>
 </dd></dl>
 
@@ -201,8 +202,43 @@ The latter may be a proper extension of the base field <span class="math">\(k\)<
 
 <dl class="class">
 <dt id="mclf.curves.smooth_projective_curves.SmoothProjectiveCurve">
-<em class="property">class </em><code class="descclassname">mclf.curves.smooth_projective_curves.</code><code class="descname">SmoothProjectiveCurve</code><span class="sig-paren">(</span><em>F</em><span class="sig-paren">)</span><a class="headerlink" href="#mclf.curves.smooth_projective_curves.SmoothProjectiveCurve" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">mclf.curves.smooth_projective_curves.</code><code class="descname">SmoothProjectiveCurve</code><span class="sig-paren">(</span><em>F</em>, <em>k=None</em><span class="sig-paren">)</span><a class="headerlink" href="#mclf.curves.smooth_projective_curves.SmoothProjectiveCurve" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the smooth projective curve with function field <span class="math">\(F\)</span>.</p>
+<p>INPUT:</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">F</span></code> &#8211; a function field</li>
+<li><code class="docutils literal"><span class="pre">k</span></code> &#8211; a field which has a natural embedding into the constant
+base field of <span class="math">\(F\)</span>, such that the constant base field is a finite
+extension of k (or <code class="docutils literal"><span class="pre">None</span></code>).</li>
+</ul>
+<p>OUTPUT:</p>
+<p>the smooth projective curve <span class="math">\(X\)</span> with function field <span class="math">\(F\)</span>. If <span class="math">\(k\)</span> is given,
+then <span class="math">\(X\)</span> is considered as a <span class="math">\(k\)</span>-scheme. If <span class="math">\(k\)</span> is not given then we
+use the field of constants of <span class="math">\(F\)</span> instead.</p>
+<p>NOTE:</p>
+<p>At the moment, <span class="math">\(k\)</span> should only be different from the constant base field of
+<span class="math">\(F\)</span> if <span class="math">\(k\)</span> is finite (because it is then easy to compute the degree of the
+degree of the constant base field of <span class="math">\(F\)</span> over <span class="math">\(k\)</span>).</p>
+<dl class="method">
+<dt id="mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.compute_separable_model">
+<code class="descname">compute_separable_model</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.compute_separable_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute a separable model of the curve (if necessary).</p>
+<p>OUTPUT: <code class="docutils literal"><span class="pre">None</span></code></p>
+<p>This function only has to be called only once. It then decides whether
+or not the function field of the curve is given as a separable extension
+of the base field or not. If it is not separable then we compute a
+separable model, which is a tripel <span class="math">\((Y_1,\phi, q)\)</span> where</p>
+<ul class="simple">
+<li><span class="math">\(Y_1\)</span> is a smooth projective curve over the same constant base field
+<span class="math">\(k\)</span> as the curve <span class="math">\(Y\)</span> itself, and which is given by a separable extension,</li>
+<li><span class="math">\(\phi\)</span> is a field homomorphism from the function field of <span class="math">\(Y_1\)</span> into
+the function field of <span class="math">\(Y\)</span> corresponding to a purely inseparable extension,</li>
+<li><span class="math">\(q\)</span> is the degree of the extension given by <span class="math">\(\phi\)</span>, i.e. the degree of
+inseparability of the map <span class="math">\(Y\to Y_1\)</span> given by <span class="math">\(\phi\)</span>.
+Note that <span class="math">\(q\)</span> is a power of the characteristic of <span class="math">\(k\)</span>.</li>
+</ul>
+</dd></dl>
+
 <dl class="method">
 <dt id="mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.constant_base_field">
 <code class="descname">constant_base_field</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.constant_base_field" title="Permalink to this definition">¶</a></dt>
@@ -240,11 +276,25 @@ the residue field of the point over the constant base field
 </dd></dl>
 
 <dl class="method">
+<dt id="mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.covering_degree">
+<code class="descname">covering_degree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.covering_degree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the degree of this curve as a covering of the projective line.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.degree">
 <code class="descname">degree</code><span class="sig-paren">(</span><em>D</em><span class="sig-paren">)</span><a class="headerlink" href="#mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.degree" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the degree of the divisor <code class="docutils literal"><span class="pre">D</span></code>.</p>
 <p>Note that the degree of <span class="math">\(D\)</span> is defined relative to the
 field of constants of the curve.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.degree_of_inseparability">
+<code class="descname">degree_of_inseparability</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.degree_of_inseparability" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the degree of inseparability of this curve.</p>
+<p>OUTPUT: positive integer, which is a power of the characteristic of the
+function field of this curve.</p>
 </dd></dl>
 
 <dl class="method">
@@ -280,8 +330,7 @@ of <code class="docutils literal"><span class="pre">v0</span></code> to the func
 then the <em>field of constants</em> <span class="math">\(k_c\)</span> is the algebraic closure of <span class="math">\(k\)</span> in <span class="math">\(F\)</span>.</p>
 <p>We use a probabilistic algorithms for computing the degree <span class="math">\([k_c:k]\)</span>.
 This works well over finite fields, but over number fields it often gives
-false results. Since we use this function maily to compute zeta-functions,
-this is tolerable, for the moment.</p>
+false results. Usually, this will result in a miscalculation of the genus.</p>
 </dd></dl>
 
 <dl class="method">
@@ -304,6 +353,20 @@ separable extension of a rational function field. See:</p>
 <ul class="simple">
 <li>Hartshorne, <em>Algebraic Geometry</em>, Corollary IV.2.4</li>
 </ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.is_separable">
+<code class="descname">is_separable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.is_separable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether this curve is represented as a separable cover of the projective line.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.phi">
+<code class="descname">phi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.phi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the natural embedding of the function field of the separable
+model into the function field of this curve.</p>
+<p>OUTPUT: a field homomorphism</p>
 </dd></dl>
 
 <dl class="method">
@@ -347,7 +410,10 @@ number of coordinate functions of the curve</li>
 <dt id="mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.ramification_divisor">
 <code class="descname">ramification_divisor</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.ramification_divisor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the ramification divisor of self.</p>
-<p>The function field of <code class="docutils literal"><span class="pre">self</span></code> is a finite separable extension
+<p>OUTPUT:</p>
+<p>The ramification divisor of the curve, if the curve is given by
+a separable model. Otherwise, an error is raised.</p>
+<p>So the function field of of the curve is a finite separable extension
 of a rational function field. Geometrically, this means that
 the curve <span class="math">\(X\)</span> is represented as a separable cover of
 the projective line. The ramification divisor of this cover
@@ -372,6 +438,31 @@ differentials. See:</p>
 <p>By definition, the function field <span class="math">\(F_X\)</span> of the curve <span class="math">\(X\)</span> is a finite
 separable extension of a rational function field <span class="math">\(k(x)\)</span>, where <span class="math">\(k\)</span> is
 the base field of <span class="math">\(X\)</span>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.separable_model">
+<code class="descname">separable_model</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.separable_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the separable model of this curve.</p>
+<p>OUTPUT: a smooth projective curve over the same constant base field</p>
+<p>The <em>separable model</em> of this curve <span class="math">\(Y\)</span> is a curve <span class="math">\(Y_s\)</span> defined over the
+same constant base field and whose defining equation realizes <span class="math">\(Y_s\)</span>
+as a finite <em>separable</em> cover of the projective line. It comes equipped
+with a finite, purely inseparable morphism <span class="math">\(Y\to Y_s\)</span>. In particular,
+<span class="math">\(Y_s\)</span> has the same genus as <span class="math">\(Y\)</span>.</p>
+<p>The inclusion of function fields <span class="math">\(\phi:F(Y_s)\to F(Y)\)</span> can be accessed
+via the method <code class="docutils literal"><span class="pre">phi()</span></code>, the degree of the extension <span class="math">\(Y/Y_s\)</span> via the
+method <code class="docutils literal"><span class="pre">degree_of_inseparability</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.singular_locus">
+<code class="descname">singular_locus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.curves.smooth_projective_curves.SmoothProjectiveCurve.singular_locus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the singular locus of the affine model of the curve.</p>
+<p>OUTPUT:</p>
+<p>a list of discrete valuations on the base field <span class="math">\(k(x)\)</span> which represent
+the <span class="math">\(x\)</span>-coordinates of the points where the affine model of the curve
+given by the defining equation of the function field may be singular.</p>
 </dd></dl>
 
 <dl class="method">
@@ -524,7 +615,7 @@ where <code class="docutils literal"><span class="pre">a</span></code> is a coor
         <li class="right" >
           <a href="curves.html" title="Curves"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MCLF 1.0 documentation</a> &raquo;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MCLF  documentation</a> &raquo;</li>
           <li class="nav-item nav-item-1"><a href="curves.html" >Curves</a> &raquo;</li> 
       </ul>
     </div>

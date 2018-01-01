@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Semistable reduction of superelliptic curves of degree \(p\) &mdash; MCLF 1.0 documentation</title>
+    <title>Semistable reduction of superelliptic curves of degree \(p\) &mdash; MCLF  documentation</title>
     
     <link rel="stylesheet" href="_static/classic.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.0',
+        VERSION:     '',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -24,9 +24,9 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="MCLF 1.0 documentation" href="index.html" />
+    <link rel="top" title="MCLF  documentation" href="index.html" />
     <link rel="up" title="Semistable reduction of curves" href="semistable_reduction.html" />
-    <link rel="prev" title="Reduction trees: a data structure for reduction of covers of the projective line." href="reduction_trees.html" /> 
+    <link rel="prev" title="Reduction trees:" href="reduction_trees.html" /> 
   </head>
   <body role="document">
     <div class="related" role="navigation" aria-label="related navigation">
@@ -39,9 +39,9 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="reduction_trees.html" title="Reduction trees: a data structure for reduction of covers of the projective line."
+          <a href="reduction_trees.html" title="Reduction trees:"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MCLF 1.0 documentation</a> &raquo;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MCLF  documentation</a> &raquo;</li>
           <li class="nav-item nav-item-1"><a href="semistable_reduction.html" accesskey="U">Semistable reduction of curves</a> &raquo;</li> 
       </ul>
     </div>  
@@ -114,8 +114,7 @@ semistable reduction in this particular case is explained in detail in</p>
 <li><code class="docutils literal"><span class="pre">p</span></code> &#8211; a prime number</li>
 </ul>
 <p>Here the residue characteristic of <code class="docutils literal"><span class="pre">vK</span></code> must be equal to the prime <code class="docutils literal"><span class="pre">p</span></code>.
-Moreover, <code class="docutils literal"><span class="pre">f</span></code> must be monic, integral with respect to <code class="docutils literal"><span class="pre">vK</span></code> and
-of degree prime to <code class="docutils literal"><span class="pre">p</span></code>.</p>
+Moreover, <code class="docutils literal"><span class="pre">f</span></code> must be of degree prime to <code class="docutils literal"><span class="pre">p</span></code>.</p>
 <p>OUTPUT: the object representing the superelliptic curve</p>
 <div class="math">
 \[Y: y^p = f(x).\]</div>
@@ -143,17 +142,40 @@ of degree prime to <code class="docutils literal"><span class="pre">p</span></co
 <p>For the time being, we need to make the following additional assumptions
 on <span class="math">\(f\)</span>:</p>
 <ul class="simple">
-<li><span class="math">\(f\)</span> must be monic,</li>
-<li>integral with respect to <span class="math">\(v_K\)</span> and</li>
 <li>of degree prime to <span class="math">\(p\)</span>.</li>
 </ul>
-<p class="last">These restrictions are preliminary and will be removed in a future version.
+<p class="last">This restrictions is preliminary and will be removed in a future version.
 Note that a superelliptic curve of degree <span class="math">\(p\)</span> can be written in the required
 form if and only if the map <span class="math">\(Y\to X\)</span> has a <span class="math">\(K\)</span>-rational branch point.</p>
 </div>
 <dl class="method">
-<dt id="mclf.semistable_reduction.superp.Superp.compute_etale_locus">
-<code class="descname">compute_etale_locus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.semistable_reduction.superp.Superp.compute_etale_locus" title="Permalink to this definition">¶</a></dt>
+<dt id="mclf.semistable_reduction.superp.Superp.base_valuation">
+<code class="descname">base_valuation</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.semistable_reduction.superp.Superp.base_valuation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the valuation on the base field.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.semistable_reduction.superp.Superp.compute_semistable_reduction">
+<code class="descname">compute_semistable_reduction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.semistable_reduction.superp.Superp.compute_semistable_reduction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the semistable reduction of this curve, and report on the
+computation and the result.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.semistable_reduction.superp.Superp.conductor_exponent">
+<code class="descname">conductor_exponent</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.semistable_reduction.superp.Superp.conductor_exponent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the conductor exponent at p of this superelliptic curve.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.semistable_reduction.superp.Superp.curve">
+<code class="descname">curve</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.semistable_reduction.superp.Superp.curve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the curve.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="mclf.semistable_reduction.superp.Superp.etale_locus">
+<code class="descname">etale_locus</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.semistable_reduction.superp.Superp.etale_locus" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div><p>Return the etale locus of the cover <span class="math">\(Y\to X\)</span>.</p>
 <p>The superelliptic curve <span class="math">\(Y\)</span> is, by definition, a cyclic cover</p>
@@ -215,6 +237,12 @@ result is that the etale locus is contained in the closed unit disk.</p>
 </div>
 </dd></dl>
 
+<dl class="method">
+<dt id="mclf.semistable_reduction.superp.Superp.reduction_tree">
+<code class="descname">reduction_tree</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#mclf.semistable_reduction.superp.Superp.reduction_tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the reduction tree which determines the semistabel model.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="function">
@@ -266,7 +294,7 @@ of the polynomial <span class="math">\(F:=f(x+t)\)</span>, considered as polynom
         <div class="sphinxsidebarwrapper">
   <h4>Previous topic</h4>
   <p class="topless"><a href="reduction_trees.html"
-                        title="previous chapter">Reduction trees: a data structure for reduction of covers of the projective line.</a></p>
+                        title="previous chapter">Reduction trees:</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -298,9 +326,9 @@ of the polynomial <span class="math">\(F:=f(x+t)\)</span>, considered as polynom
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="reduction_trees.html" title="Reduction trees: a data structure for reduction of covers of the projective line."
+          <a href="reduction_trees.html" title="Reduction trees:"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">MCLF 1.0 documentation</a> &raquo;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">MCLF  documentation</a> &raquo;</li>
           <li class="nav-item nav-item-1"><a href="semistable_reduction.html" >Semistable reduction of curves</a> &raquo;</li> 
       </ul>
     </div>
