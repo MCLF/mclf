@@ -1,8 +1,6 @@
 r"""
-Reduction trees:
-================
-a data structure for semistable reduction of covers of the projective line.
-===========================================================================
+Reduction trees: a data structure for semistable reduction of covers of the projective line.
+============================================================================================
 
 Let `K` be a field with a discrete valuation `v_K`. We let `X:=\mathbb{P}^1_K`
 denote the projective line over `K`. We are also given a finite cover
@@ -14,7 +12,7 @@ denote the projective line over `K`. We are also given a finite cover
 where `Y` is a smooth projective and absolutely irreducible curve. We assume that
 `Y` has positive genus.
 
-Let `\mathcal{X}_0` be a (normal) `\v_K`-model of `X`. Then for every finite
+Let `\mathcal{X}_0` be a (normal) `v_K`-model of `X`. Then for every finite
 field extension `L/K` and every extension `v_L` of `v_K` to `L`, we obtain
 `v_L`-models `\mathcal{X}` of `X_L` and `\mathcal{Y}` of `Y_L` and a finite map
 `\mathcal{Y}\to\mathcal{X}` extending `\phi` by normalizing `\mathcal{X}_0`.
@@ -25,7 +23,7 @@ Restricting this map to the special fiber yields a finite map
          \bar{\phi}: \bar{Y} \to \bar{X}
 
 between projective curves over the residue field of `v_L`. We call this the
-*reduction* of `\phi` *over* `L` with respect to `v_L` the *inertial model*
+*reduction* of `\phi` *over* `(L,v_L)` with respect to the *inertial model*
 `\mathcal{X}_0`.
 
 If we fix `\phi` and `\mathcal{X}_0` then there exists `(L,v_L)` such that the
@@ -47,6 +45,49 @@ and provides functionality for computing the reduction
 particular, it allows us to check whether the given inertial model `\mathcal{X}_0`
 is semistable and, if this is the case, to compute the semistable reduction of
 the curve `Y`.
+
+
+The inertial model
+------------------
+
+The inertial model `\mathcal{X}_0` of `X` is determined by a *Berkovich tree*
+`T` on the analytic space `X^{an}` (the *Berkovich line* over `\hat{K}`, the
+completion of `K` with respect to `v_K`). Thus,
+* the irreducible components of the special fiber of `\mathcal{X}_0` (called
+  the *inertial components*) correspond to the vertices of `T` which are points
+  of type II on `X^{an}`.
+* the vertices of `T` which are points of type I (i.e. closed points on `X`)
+  are considered *marked points* on `X`
+* an edge of `T` connecting two points of type II correspond to the point
+  of intersection of the two corresponding inertial components
+* an edge of `T` connecting a point of type II and a point of type II corresponds
+  to the specialization of a marked point to an inertial component
+
+In particular, the inertial model `\mathcal{X}_0` is a *marked* model. As a
+result, the models `\mathcal{X}` and `\mathcal{Y}` induced by `\mathcal{X}_0`
+and an extension `(L,v_L)` are marked models, too. The condition that
+`\mathcal{X}_0` is a semistable inertial model therefore implies that `\mathcal{X}`
+and `\mathcal{Y}` are *marked* semistable models, for `L/K` sufficiently large.
+Recall that this means that the marked points specialize to the smooth points
+on the special fiber.
+
+
+Reduction components
+--------------------
+
+Let us fix an inertial component `Z_0`. The *interior* of `Z_0` is the affinoid
+subdomain of `X^{an}` consisting of all points which specialize to a point on
+`Z_0` which is neither the point of intersection with another inertial component
+nor the specialization of a marked point (exception: if there is a unique
+inertial component and no marking then this is all of `X^{an}` and not an
+affinoid). We have to choose a *basepoint* for `Z_0`, which is a closed point on
+`X` lying inside the interior. This choice is made in a heuristic manner;
+the degree of the base point should be as small as possible. Then a *splitting
+field* for `Z_0` is a finite extension `(L,v_L)` of `(K,v_K)` with the property
+that the base point and all points on `Y` above it are `\hat{L}`-rational (where
+`\hat{L}` denotes the completion of `L` with respect to `v_L`).
+
+
 
 
 
@@ -75,14 +116,6 @@ EXAMPLES::
 
 TODO:
 
-- if we create a reduction tree from a tree `T`, there should be certain
-  requirements on `T` which insure that it makes sense. For instance, if
-  we mark a vertex as a ``BaseComponent``, then the interior of this component
-  should be well defined.
-- if we allow adding new vertices to the tree, then it must be made sure that
-  the above requirements are kept, and all the adjustements which we do to the
-  tree must be passed on to the base components.
-- Maybe it is safer to not allow any adjustements to the tree at all.
 
 """
 
@@ -107,6 +140,7 @@ from mclf.berkovich.affinoid_domain import ElementaryAffinoidOnBerkovichLine
 from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
 from mclf.padic_extensions.weak_padic_galois_extensions import WeakPadicGaloisExtension
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
+from mclf.curves.morphisms_of_smooth_projective_curves import MorphismOfSmoothProjectiveCurves
 
 #----------------------------------------------------------------------------
 
@@ -154,7 +188,7 @@ class ReductionTree(SageObject):
 
     def __repr__(self):
 
-        return "Reduction of %s, relative to %s"%(self._Y, self._vK)
+        return "A reduction tree for  %s, relative to %s"%(self._Y, self._vK)
 
 
     def curve(self):
@@ -289,13 +323,15 @@ class InertialComponent(SageObject):
     of models `Y` of `X` lying above `\xi`, over various extensions of the base field.
 
     """
-    def __init__(self, Y, xi):
+    def __init__(self, R, xi):
         assert xi.type() == "II", "xi must be a point of type II!"
-        self._Y = Y
-        subtree = Y._T.find_point(xi)
+        self._R = R
+        subtree = R._T.find_point(xi)
         assert subtree, "xi must be a vertex of T"
         self._subtree = subtree
         self._xi = xi
+        self._valuation = xi.valuation()
+        self._curve = SmoothProjectiveCurve(make_function_field(xi.valuation().residue_field()))
         self._lower_components = {}
         self._upper_components = {}
         self._reduction_genus = {}
@@ -309,21 +345,29 @@ class InertialComponent(SageObject):
         r"""
         Return the reduction tree of this component.
         """
-        return self._Y
+        return self._R
 
 
     def curve(self):
         r"""
-        Return the curve `Y`.
+        Return the smooth projective curve underlying this inertial component.
         """
-        return self._Y.curve()
+        return self._curve
+
+
+    def function_field(self):
+        r"""
+        Return the function field of this inertial component
+        (which is the residue field of the valuation corresponding to it).
+        """
+        return self.curve().function_field()
 
 
     def berkovich_line(self):
         r"""
         Return the underlying Berkovich line `X`.
         """
-        return self._Y.berkovich_line()
+        return self._R.berkovich_line()
 
 
     def type_II_point(self):
@@ -332,6 +376,10 @@ class InertialComponent(SageObject):
 
         """
         return self._xi
+
+
+    def valuation(self):
+        return self._valuation
 
 
     def basepoint(self):
@@ -411,7 +459,7 @@ class InertialComponent(SageObject):
             # Actually, it must be QQ!
             assert K == QQ, "K must be QQ"
             Kh = FakepAdicCompletion(K, vK)
-            fiber = self.curve().fiber(self.basepoint().function_field_valuation())
+            fiber = self.reduction_tree().curve().fiber(self.basepoint().function_field_valuation())
             # `fiber` should be a list of points on Y
             F = []
             for xi in fiber:
@@ -490,9 +538,15 @@ class InertialComponent(SageObject):
         f, s = self.type_II_point().discoid()
         f = FXL(f)
 
+        v0 = self.valuation()
+        F0 = self.function_field()
+        x0 = FXL(v0.lift(v0.residue_field().gen()))
         lower_valuations = [xi.valuation() for xi in XL.points_from_inequality(f, s)]
-
-        lower_components = [LowerComponent(self, vL, v) for v in lower_valuations]
+        lower_components = []
+        for v in lower_valuations:
+            F1 = make_function_field(v0.residue_field())
+            phi = F0.hom(F1(v.reduce(x0)))
+            lower_components.append(LowerComponent(self, vL, v, phi))
         self._lower_components[u] = lower_components
         return lower_components
 
@@ -659,11 +713,13 @@ class LowerComponent(ReductionComponent):
       field of `Y`, extending the base valuation on `Y`
     - ``v`` -- a discrete valuation on the base extension to `L` of the function
       field `F_X`, extending `v_L`
+    - ``phi`` -- the natural morphism from the function field of ``Z0`` into
+        the residue field of ``v``
 
     OUTPUT: The lower component above `Z` corresponding to `v`.
 
     """
-    def __init__(self, Z0, vL, v):
+    def __init__(self, Z0, vL, v, phi):
         self._inertial_component = Z0
         self._valuation = v
         self._base_valuation = vL
@@ -671,6 +727,7 @@ class LowerComponent(ReductionComponent):
         self._function_field = F
         self._constant_base_field = vL.residue_field()
         self._curve = SmoothProjectiveCurve(F, vL.residue_field())
+        self._phi = phi
 
 
     def __repr__(self):
@@ -687,6 +744,15 @@ class LowerComponent(ReductionComponent):
         FYL = base_change_of_function_field(FY, self.base_field())
         upper_valuations = [FunctionFieldValuation(FYL, w) for w in v.mac_lane_approximants(FYL.polynomial())]
         return [UpperComponent(self, w) for w in upper_valuations]
+
+
+    def map_to_inertial_component(self):
+        r"""
+        Return the natural map from this lower component to its inertial component.
+
+        """
+        # we hope that this works by the natural inclusion of function fields:
+        return MorphismOfSmoothProjectiveCurves(self.curve(), self.inertial_component().curve(), self._phi)
 
 
 class UpperComponent(ReductionComponent):
@@ -731,6 +797,23 @@ class UpperComponent(ReductionComponent):
 
         """
         return self.curve().field_of_constants_degree()
+
+
+    def lower_component(self):
+        r"""
+        Return the lower component underneath this upper component.
+        """
+        return self._lower_component
+
+
+    def map_to_lower_component(self):
+        r"""
+        Return the natural map from this upper component to the lower component beneath.
+
+        """
+        # we hope that this works by the natural inclusion of function fields:
+        return MorphismOfSmoothProjectiveCurves(self.curve(), self.lower_component().curve())
+
 
 #-----------------------------------------------------------------------------
 
