@@ -110,8 +110,10 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
 
 
     def __repr__(self):
-        return "morphism from %s \nto %s,\ndetermined by inclusion of function fields"%(self.domain(), self.codomain())
-
+        if self._phi == None:
+            return "morphism from %s \nto %s,\ndetermined by inclusion of function fields"%(self.domain(), self.codomain())
+        else:
+            return "morphism from %s \nto %s,\ndetermined by %s"%(self.domain(), self.codomain(), self._phi)
 
     def domain(self):
         r""" Return the domain of this morphism.
