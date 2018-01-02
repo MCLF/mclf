@@ -3,7 +3,8 @@
 from sage.all_cmdline import *
 
 from mac_lane import *
-from curves.smooth_projective_curves import SmoothProjectiveCurve
+from curves.smooth_projective_curves import SmoothProjectiveCurve, PointOnSmoothProjectiveCurve
+from curves.morphisms_of_smooth_projective_curves import MorphismOfSmoothProjectiveCurves
 from berkovich.berkovich_line import *
 from berkovich.berkovich_trees import *
 from berkovich.type_V_points import *

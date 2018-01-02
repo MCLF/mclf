@@ -55,7 +55,7 @@ EXAMPLES::
     sage: FY.<y> = FX.extension(T^2+x^2*T+x^5+x^3)
     sage: Y = SmoothProjectiveCurve(FY)
     sage: Y
-    The smooth projective curve over Finite Field of size 2 with Function field in y defined by y^2 + x^2*y + x^5 + x^3.
+    the smooth projective curve with Function field in y defined by y^2 + x^2*y + x^5 + x^3
     sage: Y.genus()
     1
     sage: Y.zeta_function()
@@ -140,8 +140,7 @@ class SmoothProjectiveCurve(SageObject):
 
 
     def __repr__(self):
-        return "The smooth projective curve over %s with %s."\
-            %(self._constant_base_field, self._function_field)
+        return "the smooth projective curve with %s"%self.function_field()
 
 
     def constant_base_field(self):
