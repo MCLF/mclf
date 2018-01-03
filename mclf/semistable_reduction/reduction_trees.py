@@ -139,7 +139,7 @@ from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
 from mclf.berkovich.affinoid_domain import ElementaryAffinoidOnBerkovichLine
 from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
 from mclf.padic_extensions.weak_padic_galois_extensions import WeakPadicGaloisExtension
-from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
+from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve, PointOnSmoothProjectiveCurve
 from mclf.curves.morphisms_of_smooth_projective_curves import MorphismOfSmoothProjectiveCurves
 
 #----------------------------------------------------------------------------
@@ -157,14 +157,13 @@ class ReductionTree(SageObject):
     - ``Y`` -- a curve over a basefield `K`, given as ``SmoothProjectiveCurve``
     - ``vK`` -- a discrete valuation on `K`
     - ``T`` -- a Berkovich tree on the Berkovich line `X^{an}` underlying `(Y,v_K)`
+    - ``separable_components`` -- a list of type-II-points on `X^{an}` which
+      are vertices of `T` (or ``None``)
 
     OUTPUT: a reduction tree for ``Y`` relative to ``vK``; the inertial model
     `\mathcal{X}_0` is the marked model of `X` induced by the Berkovich tree `T`.
-    Note that after initialization, the list of *inertial components* is empty.
-    The user has to mark those vertices of `T` which correspond to components
-    of `\mathcal{X}_0` and which he wishes to use for the computation of the
-    reduction of `\phi` by adding them to this list via the method
-    ``add_inertial_component``.
+
+    Note that the tree `T` will be modified by the creation of the reduction tree.
 
 
     .. NOTE::
@@ -172,22 +171,39 @@ class ReductionTree(SageObject):
         In the present release, the base field `K` must be the field of rational
         numbers.
     """
-
-
-    def __init__(self, Y, vK, T):
+    def __init__(self, Y, vK, T, separable_components=None):
 
         assert Y.constant_base_field() == vK.domain()
         self._Y = Y
-                     # Y is a SmoothProjectiveCurve
-        self._X = BerkovichLine(Y.rational_function_field(), vK)
-                     # X is a BerkovichLine
         self._vK = vK
         self._T = T
-        self._inertial_components = []
+        self._X = T.berkovich_line()
+
+        if separable_components == None:
+            # all vertices of T are marked as "separable"
+            for T1 in T.subtrees():
+                T1.is_separable = True
+        else:
+            # only vertices in separable_components are marked as "separable"
+            for T1 in T.subtrees():
+                T1.is_separable = False
+            for xi in separable_components:
+                T1 = T.find_point(xi)
+                assert T1 != None, "xi is not a vertex of T"
+                T1.is_separable = True
+
+        # create the inertial components
+        inertial_components = []
+        for T1 in T.subtrees():
+            xi = T1.root()
+            if xi.type()=="II":
+                Z = InertialComponent(self, xi, T1.is_separable)
+                T1.inertial_component = Z
+                inertial_components.append(Z)
+        self._inertial_components = inertial_components
 
 
     def __repr__(self):
-
         return "A reduction tree for  %s, relative to %s"%(self._Y, self._vK)
 
 
@@ -203,6 +219,13 @@ class ReductionTree(SageObject):
         Return the Berkovich line `X` of which the curve `Y` is a cover.
         """
         return self._X
+
+
+    def berkovich_tree(self):
+        r"""
+        Return the Berkovich tree underlying this reduction tree.
+        """
+        return self._T
 
 
     def base_valuation(self):
@@ -226,7 +249,7 @@ class ReductionTree(SageObject):
         return self._inertial_components
 
 
-    def add_inertial_component(self, xi, basepoint=None):
+    def add_inertial_component(self, xi):
         r"""
         Add a new inertial component to the list of such.
 
@@ -235,11 +258,17 @@ class ReductionTree(SageObject):
         - ``xi`` -- a point of type II on the underlying Berkovich line; it
           is assumed that ``xi`` is a vertex of the Berkovich tree `T`
 
-        OUTPUT: a new inertial component is created and appended to the list
-        of all inertial components.
+        OUTPUT: a new inertial component `Z` is created and appended to the list
+        of all inertial components. Moreover, `Z` is assigned to the new
+        attribute ``inertial_component``  of the subtree of `T` with root
+        `\xi`.
 
         """
-        self._inertial_components.append(InertialComponent(self, xi))
+        subtree = self.berkovich_tree().find_point(xi)
+        assert subtree != None, "xi is not a vertex of the given Berkovich tree"
+        Z = InertialComponent(self, xi)
+        self._inertial_components.append(Z)
+        subtree.inertial_component = Z
 
 
     def reduction_genus(self):
@@ -311,6 +340,7 @@ class InertialComponent(SageObject):
     - ``R`` -- a reduction tree
     - ``xi`` -- a point of type II on the Berkovich line `X` underlying `R`;
       it is assumed that `\xi` is a vertex of the Berkovich tree `T` underlying `R`
+    - ``is_separable`` -- boolean (default: ``True``)
 
     OUTPUT: The base component corresponding to `\xi`.
 
@@ -323,7 +353,7 @@ class InertialComponent(SageObject):
     of models `Y` of `X` lying above `\xi`, over various extensions of the base field.
 
     """
-    def __init__(self, R, xi):
+    def __init__(self, R, xi, is_separable=True):
         assert xi.type() == "II", "xi must be a point of type II!"
         self._R = R
         subtree = R._T.find_point(xi)
@@ -335,6 +365,7 @@ class InertialComponent(SageObject):
         self._lower_components = {}
         self._upper_components = {}
         self._reduction_genus = {}
+        self._is_separable = is_separable
 
 
     def __repr__(self):
@@ -346,6 +377,13 @@ class InertialComponent(SageObject):
         Return the reduction tree of this component.
         """
         return self._R
+
+
+    def is_separable(self):
+        r"""
+        Return ``True`` is this inertial component is separable.
+        """
+        return self._is_separable
 
 
     def curve(self):
@@ -443,7 +481,8 @@ class InertialComponent(SageObject):
 
         - the basepoint becomes rational over the strict henselization of `(L,v_L)`
         - all lower components have multiplicities one over `(L,v_L)`
-        - the fiber of the cover `\phi:Y\to X` over the base point splits over
+        - if the inertial component is marked as *separable* then the fiber of
+          the cover `\phi:Y\to X` over the base point splits over
           the strict henselization of `(L,v_L)`
 
         .. WARNING::
@@ -459,16 +498,23 @@ class InertialComponent(SageObject):
             # Actually, it must be QQ!
             assert K == QQ, "K must be QQ"
             Kh = FakepAdicCompletion(K, vK)
-            fiber = self.reduction_tree().curve().fiber(self.basepoint().function_field_valuation())
-            # `fiber` should be a list of points on Y
-            F = []
-            for xi in fiber:
-                L = xi.residue_field()
-                # L should be a (relative) number field (which may include QQ)
-                if not L == QQ:
-                    f = L.absolute_polynomial().change_ring(K)
-                    F += [g for g,m in f.factor()]
-            # F = self.curve().fiber_equations(self.basepoint().function_field_valuation())
+            if self.is_separable():
+                fiber = self.reduction_tree().curve().fiber(self.basepoint().function_field_valuation())
+                # `fiber` should be a list of points on Y
+                F = []
+                for xi in fiber:
+                    L = xi.residue_field()
+                    # L should be a (relative) number field (which may include QQ)
+                    if not L == QQ:
+                        f = L.absolute_polynomial().change_ring(K)
+                        F += [g for g,m in f.factor()]
+                # F = self.curve().fiber_equations(self.basepoint().function_field_valuation())
+            else:
+                L = self.basepoint().function_field_valuation().residue_field()
+                if L == QQ:
+                    F = []
+                else:
+                    F = [L.absolute_polynomial().change_ring(K)]
             e = self.type_II_point().pseudovaluation_on_polynomial_ring().E()
             self._splitting_field = WeakPadicGaloisExtension(Kh, F, minimal_ramification=e)
         return self._splitting_field
@@ -549,6 +595,62 @@ class InertialComponent(SageObject):
             lower_components.append(LowerComponent(self, vL, v, phi))
         self._lower_components[u] = lower_components
         return lower_components
+
+
+    def outgoing_edges(self):
+        r"""
+        Return the list of outgoing edges from this inertial component.
+
+        Here an *edge* is a point on this inertial component where it intersects
+        another component; so it corresponds to an edge on the Berkovich tree
+        underlying the chosen inertial model. *Outgoing* is defined with respect
+        to the natural orientation of the Berkovich tree.
+
+        """
+        subtree = self._subtree
+        xi0 = self.type_II_point()
+        outgoing_edges = []
+        for child in subtree.children():
+            xi1 = child.root()
+            if xi1.type() == "II":
+                eta = TypeVPointOnBerkovichLine(xi0, xi1)
+                v = eta.minor_valuation()
+                outgoing_edges.append(PointOnSmoothProjectiveCurve(self.curve(), v))
+        return outgoing_edges
+
+
+
+    def outdegree(self, u=Infinity):
+        r"""
+        Return the outdegree of this inertial component.
+
+        INPUT:
+
+        - ``u`` -- an integer, or Infinity (default: ``Infinity``)
+
+        OUTPUT: the sum of the degrees of all edges emanating from components of
+        the curve `\bar{Y}^u` which lie above this inertial component.
+
+        Here `u` is a break in the ramification filtration of splitting field
+        of this inertial component, and the curve `\bar{Y}^u` is the special fiber
+        of the reduction of `Y` over the corresponding subfield `L^u` (with respect
+        to the given inertial model). By *edge* we mean an edge of the component
+        graph of the curve `\bar{Y}^u`; it corresponds to a point in which two
+        components intersect. We call an edge *outgoing* (with respect to this
+        inertail component) if it lies above an edge of the component graph of
+        the special fiber of the inertial model which is directed away from this
+        inertial component. The *degree* of an (upper) edge is the degree of
+        the corresponding point of `\bar{Y}^u`, with respect to the residue
+        field of `L^u`.
+
+        """
+        ret = 0
+        for z in self.outgoing_edges():
+            for Xb in self.lower_components(u):
+                for x in Xb.map_to_inertial_component().fiber(z):
+                    assert x.curve()==Xb.curve(), "x = %s,\nXb=%s"%(x,Xb)
+                    ret += Xb.fiber_degree_in_upper_components(x)
+        return ret
 
 
     def reduction_genus(self, u=Infinity):
@@ -753,6 +855,19 @@ class LowerComponent(ReductionComponent):
         """
         # we hope that this works by the natural inclusion of function fields:
         return MorphismOfSmoothProjectiveCurves(self.curve(), self.inertial_component().curve(), self._phi)
+
+
+    def fiber_degree_in_upper_components(self, P):
+        r"""
+        Return the sum of the absolute degrees of the points above ``P`` on
+        all upper components.
+
+        """
+        assert P.curve()==self.curve(), "P must be a point on this lower component"
+        ret = 0
+        for Yb in self.upper_components():
+            ret += Yb.map_to_lower_component().fiber_degree(P)
+        return ret
 
 
 class UpperComponent(ReductionComponent):
