@@ -198,10 +198,7 @@ class Superell(SageObject):
         T = T.adapt_to_function(FX(f))
         T = T.permanent_completion()
         reduction_tree = ReductionTree(Y, vK, T)
-        for xi in T.vertices():
-            if xi.type() == 'II':
-                reduction_tree.add_inertial_component(xi)
-
+        
         self._reduction_tree = reduction_tree
         return reduction_tree
 
