@@ -129,7 +129,7 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
 
     def fiber(self, P):
         r"""
-        Return the fiber of this map over the point `y` (without multiplicities).
+        Return the fiber of this map over the point `P` (without multiplicities).
 
         INPUT:
 
@@ -160,3 +160,20 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
                 if f.numerator().degree() > g.degree():
                     extensions.append(FunctionFieldValuation(FX,~FX.gen()))
             return [PointOnSmoothProjectiveCurve(X, w) for w in extensions]
+
+
+    def fiber_degree(self, P):
+        r"""
+        Return the (absolute) degree of the fiber of this map over the point ``P``.
+
+        INPUT:
+
+        - ``P`` -- a point on the curve `Y` (the codomain of this morphism)
+
+        OUTPUT: the fiber degree over `P`, the sum of the degrees of the
+        points on `X` (the domain of this morphism) lying above `P`. Here
+        *degree* means *absolute degree*, i.e. with respect to the
+        constant base field of `X` (which may differ from the field of constants).
+
+        """
+        return sum([Q.absolute_degree() for Q in self.fiber(P)])
