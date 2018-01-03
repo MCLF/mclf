@@ -102,6 +102,11 @@ class BerkovichTree(SageObject):
         return self._root
 
 
+    def berkovich_line(self):
+        """ Return the Berkovich line underlying this tree."""
+        return self._X
+        
+
     def has_parent(self):
         """ Return True if self has a parent."""
         return not self._parent == None
@@ -324,7 +329,7 @@ class BerkovichTree(SageObject):
         for child in T.children():
             ret.append(child.root())
         return ret
-                     
+
 
     def print_tree(self, depth=0):
         """ Print the vertices of the tree, with identation corresponding to depth.
