@@ -2,7 +2,6 @@
 # this is necessary for the documentation building:
 from sage.all_cmdline import *
 
-from mac_lane import *
 from curves.smooth_projective_curves import *
 from curves.morphisms_of_smooth_projective_curves import *
 from berkovich.berkovich_line import *
