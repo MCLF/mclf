@@ -116,6 +116,8 @@ EXAMPLES::
 
 TODO:
 
+* test the method InertialComponent.outdegree
+* complete the computaton of the true reduction genus and the conductor exponent
 
 """
 
@@ -285,7 +287,12 @@ class ReductionTree(SageObject):
 
         """
         if not hasattr(self, "_reduction_genus"):
-            self._reduction_genus = sum([Z.reduction_genus() for Z in self.inertial_components()])
+            reduction_genus = 1
+            for Z in self.inertial_components():
+                reduction_genus += Z.reduction_genus() + Z.outdegree() - Z.component_degree()
+            self._reduction_genus = reduction_genus
+
+            #sum([Z.reduction_genus() for Z in self.inertial_components()])
             # for the moment, we only count the contribution of the components
             # and dismiss the loops.
         return self._reduction_genus
@@ -515,6 +522,8 @@ class InertialComponent(SageObject):
                 else:
                     F = [L.absolute_polynomial().change_ring(K)]
             e = self.type_II_point().pseudovaluation_on_polynomial_ring().E()
+            print "F = ", F
+            print "e = ", e
             self._splitting_field = WeakPadicGaloisExtension(Kh, F, minimal_ramification=e)
         return self._splitting_field
 
@@ -589,7 +598,7 @@ class InertialComponent(SageObject):
         lower_valuations = [xi.valuation() for xi in XL.points_from_inequality(f, s)]
         lower_components = []
         for v in lower_valuations:
-            F1 = make_function_field(v0.residue_field())
+            F1 = make_function_field(v.residue_field())
             phi = F0.hom(F1(v.reduce(x0)))
             lower_components.append(LowerComponent(self, vL, v, phi))
         self._lower_components[u] = lower_components
@@ -680,6 +689,18 @@ class InertialComponent(SageObject):
             self._reduction_genus[u] = sum([W.genus()*W.field_of_constants_degree()
                     for W in self.upper_components(u)])
             return self._reduction_genus[u]
+
+
+    def component_degree(self, u=Infinity):
+        r"""
+        Return the sum of the degrees of the upper components above this inertial
+        component.
+
+        Here the *degree* of an upper component ist the degree of its field of
+        constants, as extension of the constant base field.
+
+        """
+        return sum([W.field_of_constants_degree() for W in self.upper_components(u)])
 
 
     def reduction_conductor(self):
