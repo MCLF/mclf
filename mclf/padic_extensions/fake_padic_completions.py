@@ -103,6 +103,7 @@ from sage.misc.misc_c import prod
 from sage.arith.misc import lcm
 from sage.modules.free_module_element import vector
 from sage.rings.finite_rings.finite_field_constructor import GF
+from sage.rings.valuation.limit_valuation import LimitValuation
 
 ZZ = IntegerRing()
 QQ = RationalField()
