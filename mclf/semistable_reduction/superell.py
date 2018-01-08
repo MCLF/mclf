@@ -198,7 +198,7 @@ class Superell(SageObject):
         T = T.adapt_to_function(FX(f))
         T = T.permanent_completion()
         reduction_tree = ReductionTree(Y, vK, T)
-        
+
         self._reduction_tree = reduction_tree
         return reduction_tree
 
@@ -236,12 +236,10 @@ class Superell(SageObject):
             print
         print
         if reduction_tree.is_semistable():
-            print "The curve has abelian reduction, since the total reduction genus"
-            print "is equal to the genus of the generic fiber."
+            print "We have computed the semistable reduction of the curve."
         else:
             print "We failed to compute the semistable reduction of the curve."
-            print "This is probably due to the fact that the curve does not have"
-            print "abelian reduction; the computation of the loops has not yet been realized."
+            raise ValueError()
 
 
 
