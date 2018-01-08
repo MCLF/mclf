@@ -103,8 +103,6 @@ from sage.misc.misc_c import prod
 from sage.arith.misc import lcm
 from sage.modules.free_module_element import vector
 from sage.rings.finite_rings.finite_field_constructor import GF
-from mac_lane import *
-
 
 ZZ = IntegerRing()
 QQ = RationalField()
@@ -163,7 +161,7 @@ class FakepAdicCompletion(SageObject):
         assert n == e*f
         assert n == P.degree()
         self._number_field = K0
-        self._v_p = pAdicValuation(QQ, p)
+        self._v_p = QQ.valuation(p)
         self._valuation = vK
         self._p = p
         self._uniformizer = piK
@@ -366,7 +364,7 @@ class FakepAdicCompletion(SageObject):
         n = P.degree()
 
         L0 = NumberField(P, 'pi%s'%P.degree(), maximize_at_primes=[])
-        vL = pAdicValuation(QQ, self.p()).extension(L0)
+        vL = QQ.valuation(self.p()).extension(L0)
         return FakepAdicCompletion(L0, vL)
 
 

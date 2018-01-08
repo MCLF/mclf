@@ -55,7 +55,6 @@ from sage.rings.function_field.constructor import FunctionField
 from sage.misc.cachefunc import cached_method
 from sage.rings.infinity import Infinity
 from sage.functions.other import floor
-from mac_lane import *
 from mclf.berkovich.berkovich_line import *
 from mclf.berkovich.affinoid_domain import *
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve

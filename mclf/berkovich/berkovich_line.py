@@ -103,7 +103,9 @@ from sage.misc.cachefunc import cached_method
 from sage.rings.infinity import Infinity
 from sage.functions.generalized import sgn
 from sage.geometry.newton_polygon import NewtonPolygon
-from mac_lane import *
+from sage.rings.valuation.gauss_valuation import GaussValuation
+from sage.rings.valuation.limit_valuation import LimitValuation
+
 
 
 class BerkovichLine(SageObject):
@@ -191,8 +193,8 @@ class BerkovichLine(SageObject):
         x = F.gen()
         v0 = GaussValuation(R, self._vK)
         v1 = v0.augmentation(R.gen(), Infinity)
-        v1 = FunctionFieldValuation(F, v1)
-        v1 = FunctionFieldValuation(F, (v1, F.hom([1/x]), F.hom([1/x])))
+        v1 = F.valuation(v1)
+        v1 = F.valuation((v1, F.hom([1/x]), F.hom([1/x])))
         return TypeIPointOnBerkovichLine(self, v1)
 
     def gauss_point(self):
@@ -204,7 +206,7 @@ class BerkovichLine(SageObject):
         """
 
         v0 = GaussValuation(self._F._ring, self._vK)
-        v0 = FunctionFieldValuation(self._F, v0)
+        v0 = self._F.valuation(v0)
         return TypeIIPointOnBerkovichLine(self, v0)
 
     def point_from_polynomial_pseudovaluation(self, v, in_unit_disk=True):
@@ -224,9 +226,9 @@ class BerkovichLine(SageObject):
 
         F = self.function_field()
         x = F.gen()
-        v = FunctionFieldValuation(F, v)
+        v = F.valuation(v)
         if not in_unit_disk:
-            v = FunctionFieldValuation(F, (v, F.hom([1/x]), F.hom([1/x])))
+            v = F.valuation((v, F.hom([1/x]), F.hom([1/x])))
         return self.point_from_pseudovaluation(v)
 
 
@@ -277,10 +279,10 @@ class BerkovichLine(SageObject):
         F = self.function_field()
         x = F.gen()
         v = valuation_from_discoid(self._vK, phi, s)
-        v = FunctionFieldValuation(F, v)
+        v = F.valuation(v)
         if not in_unit_disk and s>0:
             assert v(x) > 0, "The point does lie in the unit disk"
-            v = FunctionFieldValuation(F, (v, F.hom([1/x]), F.hom([1/x])))
+            v = F.valuation((v, F.hom([1/x]), F.hom([1/x])))
         return self.point_from_pseudovaluation(v)
 
     def points_from_inequality(self, f, s):
@@ -334,7 +336,7 @@ class BerkovichLine(SageObject):
             # f is a polynomial in x
             f = f.numerator()
             V = valuations_from_inequality(vK, f, s)
-            V = [FunctionFieldValuation(F, v) for v in V]
+            V = [F.valuation(v) for v in V]
             return [self.point_from_pseudovaluation(v) for v in V]
         else:
             # f should now be a polynomial in 1/x
@@ -344,8 +346,8 @@ class BerkovichLine(SageObject):
             assert all( [ vK(g[i]) > 0 for i in range(g.degree())]), \
                 "the roots of g must have negative valuation"
             V = valuations_from_inequality(vK, g, s)
-            V = [FunctionFieldValuation(F, v) for v in V]
-            V = [FunctionFieldValuation(F, (v, F.hom([~x]), F.hom([~x]))) for v in V]
+            V = [F.valuation(v) for v in V]
+            V = [F.valuation((v, F.hom([~x]), F.hom([~x]))) for v in V]
             return [self.point_from_pseudovaluation(v) for v in V]
 
 
@@ -495,7 +497,7 @@ class BerkovichLine(SageObject):
             if not v0.is_equivalence_unit(f):
                 V = vK.mac_lane_approximants(f, require_incomparability=True, required_precision=1)
                 V = [LimitValuation(v, f) for v in V if not v.is_gauss_valuation()]
-                V = [FunctionFieldValuation(F, v) for v in V]
+                V = [F.valuation(v) for v in V]
                 D = [(TypeIPointOnBerkovichLine(self, v), m) for v in V]
             else:
                 D = []
@@ -506,8 +508,8 @@ class BerkovichLine(SageObject):
                 V = vK.mac_lane_approximants(f, require_incomparability=True, required_precision=1)
                 V = [LimitValuation(v, f) for v in V]
                 V = [v for v in V if v(x) > 0]
-                V = [FunctionFieldValuation(F, v) for v in V]
-                V = [FunctionFieldValuation(F, (v, F.hom([1/x]), F.hom([1/x]))) for v in V]
+                V = [F.valuation(v) for v in V]
+                V = [F.valuation((v, F.hom([1/x]), F.hom([1/x]))) for v in V]
                 D = [(TypeIPointOnBerkovichLine(self, v), m) for v in V]
             else:
                 D = []
@@ -750,7 +752,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             if not self.is_in_unit_disk():
                 g = g.reverse().monic()
         # in both cases, g=0 is a mnic irreducible equation for xi
-        return FunctionFieldValuation(F, g)
+        return F.valuation(g)
 
 
     def is_inductive(self):
@@ -941,7 +943,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             assert w1(w1.phi()) > w2(w1.phi()), "bad approximation: w1 <= w2"
             assert w2(w2.phi()) > w1(w2.phi()), "bad approximation: w2 <= w1"
             w3 = mac_lane_infimum(w1, w2)
-            v3 = FunctionFieldValuation(self._X._F, w3)
+            v3 = self._X._F.valuation(w3)
             return TypeIIPointOnBerkovichLine(self._X, v3)
         if (not self.is_in_unit_disk()) and (not xi2.is_in_unit_disk()):
             v1 = self.pseudovaluation_on_polynomial_ring()
@@ -962,8 +964,8 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             w3 = mac_lane_infimum(w1, w2)
             F = self._X._F
             x = F.gen()
-            v3 = FunctionFieldValuation(F, w3)
-            v3 = FunctionFieldValuation(F, (v3, F.hom([1/x]), F.hom([1/x])))
+            v3 = F.valuation(w3)
+            v3 = F.valuation((v3, F.hom([1/x]), F.hom([1/x])))
             assert v3.is_discrete_valuation()
             return TypeIIPointOnBerkovichLine(self._X, v3)
 
@@ -1211,7 +1213,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
             v1 = self.pseudovaluation_on_polynomial_ring()
             v2 = xi2.pseudovaluation_on_polynomial_ring()
             v3 = mac_lane_infimum(v1, v2)
-            v3 = FunctionFieldValuation(self._X._F, v3)
+            v3 = self._X._F.valuation(v3)
             return TypeIIPointOnBerkovichLine(self._X, v3)
         if (not self.is_in_unit_disk()) and (not xi2.is_in_unit_disk()):
             v1 = self.pseudovaluation_on_polynomial_ring()
@@ -1219,8 +1221,8 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
             v3 = mac_lane_infimum(v1, v2)
             F = self._X._F
             x = F.gen()
-            v3 = FunctionFieldValuation(F, v3)
-            v3 = FunctionFieldValuation(F, (v3, F.hom([1/x]), F.hom([1/x])))
+            v3 = F.valuation(v3)
+            v3 = F.valuation((v3, F.hom([1/x]), F.hom([1/x])))
             return TypeIIPointOnBerkovichLine(self._X, v3)
         return self._X.gauss_point()
 

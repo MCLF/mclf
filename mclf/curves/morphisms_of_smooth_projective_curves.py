@@ -44,7 +44,7 @@ EXAMPLES::
 from sage.structure.sage_object import SageObject
 from sage.rings.all import Infinity, ZZ, PolynomialRing
 from mclf.curves.smooth_projective_curves import PointOnSmoothProjectiveCurve
-from mac_lane import *
+
 
 
 class MorphismOfSmoothProjectiveCurves(SageObject):

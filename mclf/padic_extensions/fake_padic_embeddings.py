@@ -57,7 +57,6 @@ from sage.rings.number_field.number_field import NumberField
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.rings.polynomial.polynomial_element import Polynomial
 from sage.rings.infinity import Infinity
-from mac_lane import *
 from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
 
 

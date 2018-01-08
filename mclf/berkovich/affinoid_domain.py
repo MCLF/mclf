@@ -60,7 +60,6 @@ TO DO:
 
 from sage.structure.sage_object import SageObject
 from sage.rings.infinity import Infinity
-from mac_lane import *
 from mclf.berkovich.berkovich_line import BerkovichLine, TypeIPointOnBerkovichLine,\
                                           TypeIIPointOnBerkovichLine
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine

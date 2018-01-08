@@ -131,8 +131,7 @@ TODO:
 #*****************************************************************************
 
 from sage.structure.sage_object import SageObject
-from sage.rings.all import ZZ, NumberField, FunctionField
-from mac_lane import *
+from sage.rings.all import ZZ, QQ, NumberField, FunctionField
 from mclf.berkovich.berkovich_line import *
 from mclf.berkovich.berkovich_trees import BerkovichTree
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
@@ -844,7 +843,7 @@ class LowerComponent(ReductionComponent):
         v = self.valuation()
         FY = self.reduction_tree().curve().function_field()
         FYL = base_change_of_function_field(FY, self.base_field())
-        upper_valuations = [FunctionFieldValuation(FYL, w) for w in v.mac_lane_approximants(FYL.polynomial())]
+        upper_valuations = [FYL.valuation(w) for w in v.mac_lane_approximants(FYL.polynomial())]
         return [UpperComponent(self, w) for w in upper_valuations]
 
 

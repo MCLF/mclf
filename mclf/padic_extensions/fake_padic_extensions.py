@@ -62,7 +62,6 @@ from sage.misc.prandom import randint
 from sage.geometry.newton_polygon import NewtonPolygon
 from sage.misc.misc_c import prod
 from sage.arith.misc import lcm
-from mac_lane import *
 from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
 from mclf.padic_extensions.fake_padic_embeddings import FakepAdicEmbedding
 

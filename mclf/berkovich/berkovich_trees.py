@@ -527,9 +527,10 @@ def component_jumps(xi0, xi1):
     # print "G = ", G
     # print "NP = ", NP
     V = []
-    for s in NP.sides():
-        i, ai = s[0]
-        j, aj = s[1]
+    vertices =  NP.vertices()
+    for k in range(len(vertices)-1):
+        i, ai = vertices[k]
+        j, aj = vertices[k+1]
         a0 = aj - j*(ai-aj)/(i-j)
         # print "a0 = ", a0
         V += valuations_from_inequality(vK, phi, a0, v0)

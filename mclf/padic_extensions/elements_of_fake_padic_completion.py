@@ -45,7 +45,6 @@ from sage.geometry.newton_polygon import NewtonPolygon
 from sage.misc.misc_c import prod
 from sage.arith.misc import lcm
 from sage.modules.free_module_element import vector
-from mac_lane import *
 
 ZZ = IntegerRing()
 QQ = RationalField()
