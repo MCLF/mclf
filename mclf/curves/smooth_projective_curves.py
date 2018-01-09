@@ -941,6 +941,16 @@ def separate_two_points(v1, v2):
         if compute_value(v1, f) != compute_value(v2, f):
             return f
 
+def absolute_degree(K):
+    r"""
+    Return the absolute degree of a (finite) field.
+
+    """
+    assert K.is_finite(), "K must be finite!"
+    p = K.characteristic()
+    q = K.cardinality()
+    return q.log(p)
+
 
 def extension_degree(K, L, check=False):
     r""" Return the degree of the field extension.
@@ -970,11 +980,11 @@ def extension_degree(K, L, check=False):
     try:
         n = K.absolute_degree()
     except (AttributeError, NotImplementedError):
-        n = K.degree()
+        n = absolute_degree(K)
     try:
         m = L.absolute_degree()
     except (AttributeError, NotImplementedError):
-        m = L.degree()
+        m = absolute_degree(L)
     assert n.divides(m), "K is not a subfield of L."
     return ZZ(m/n)
 
