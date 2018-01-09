@@ -523,8 +523,6 @@ class InertialComponent(SageObject):
                 else:
                     F = [L.absolute_polynomial().change_ring(K)]
             e = self.type_II_point().pseudovaluation_on_polynomial_ring().E()
-            print "F = ", F
-            print "e = ", e
             self._splitting_field = WeakPadicGaloisExtension(Kh, F, minimal_ramification=e)
         return self._splitting_field
 
