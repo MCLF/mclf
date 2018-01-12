@@ -96,8 +96,6 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
     """
 
     def __init__(self, X, Y, phi=None):
-        # assert phi==None, "parameter phi not implemented yet"
-        assert Y.constant_base_field().is_subring(X.constant_base_field()), "the base field of Y has to be a subring of the base field of X"
         FX = X.function_field()
         FY = Y.function_field()
         self._X = X
