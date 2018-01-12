@@ -139,10 +139,8 @@ class FakepAdicCompletion(SageObject):
         if n > 1:
             piK = K0.gen()
             e = ZZ(1/vK(vK.uniformizer()))
-            f = vK.residue_field().degree()
-            # assert e*f == n, "vK is not the unique extension of v_p to K"
-            # this test sometimes gives false results because f is computed incorrectly
-            # I'll skip it for the moment
+            F = vK.residue_field() # should be a finite field, therefore:
+            f = F.cardinality().log(F.characteristic()) # should be the absolute degree of F
             assert vK(piK) == 1/e, "the generator of K must be a uniformizer for vK"
             P = K0.polynomial()
             G = P(x+piK).shift(-1)
