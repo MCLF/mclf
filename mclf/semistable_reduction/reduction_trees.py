@@ -277,14 +277,14 @@ class ReductionTree(SageObject):
         r"""
         Return the genus of the reduction.
 
-        OUTPUT: a nonnegative integer, which is the genus of the reduction
-        of the curve `Y` specified by the data in this ``ReductionTree``.
+        OUTPUT: a nonnegative integer, which is the arithmetic genus of the reduction
+        of the curve `Y` specified by the data in this ``ReductionTree``, provided
+        this reduction is semistable.
 
-        .. Note::
-
-            For the moment we only count the contribution of the inertial
-            component, and the contribution of the loops is left out. Hence the
-            result is correct only if `Y` has abelian reduction.
+        In fact, the number we compute is the sum of the genera of the upper
+        components (i.e. the normalizations of the irreducible components of
+        `\bar{Y}`) and the number of loops of the component graph of `\bar{Y}`,
+        which is (number of double points) - (number of components) + 1.
 
         """
         if not hasattr(self, "_reduction_genus"):
@@ -292,10 +292,6 @@ class ReductionTree(SageObject):
             for Z in self.inertial_components():
                 reduction_genus += Z.reduction_genus() + Z.outdegree() - Z.component_degree()
             self._reduction_genus = reduction_genus
-
-            #sum([Z.reduction_genus() for Z in self.inertial_components()])
-            # for the moment, we only count the contribution of the components
-            # and dismiss the loops.
         return self._reduction_genus
 
 
@@ -673,13 +669,6 @@ class InertialComponent(SageObject):
         splitting field. If `u\neq\infty` then it is assumed that `u` is a
         break in the ramification filtration of the splitting field, and then
         the corresponding subfield is used instead.
-
-        TODO:
-
-        At the moment, the output is correct only if field of constants of all
-        upper components is equal to the residue field of the valuation `v_L`.
-        In general we have to multiply the genus of a component with the degree
-        of the extension 'field of constants' over 'residue field of `v_L`'.
 
         """
         if u in self._reduction_genus.keys():
