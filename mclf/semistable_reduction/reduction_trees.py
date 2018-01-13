@@ -590,11 +590,19 @@ class InertialComponent(SageObject):
         v0 = self.valuation()
         F0 = self.function_field()
         x0 = FXL(v0.lift(v0.residue_field().gen()))
+        k0 = F0.constant_base_field()
         lower_valuations = [xi.valuation() for xi in XL.points_from_inequality(f, s)]
         lower_components = []
         for v in lower_valuations:
             F1 = make_function_field(v.residue_field())
-            phi = F0.hom(F1(v.reduce(x0)))
+            # we need to find the correct inclusion of F0 into F1
+            if k0.is_prime_field():
+                phi = F0.hom(F1(v.reduce(x0)))
+            else:
+                k1 = F1.constant_base_field()
+                theta0 = FXL(v0.lift(k0.gen()))
+                psi = k0.hom([k1(F1(v.reduce(theta0)))])
+                phi = F0.hom(F1(v.reduce(x0)), psi)
             lower_components.append(LowerComponent(self, vL, v, phi))
         self._lower_components[u] = lower_components
         return lower_components
