@@ -120,6 +120,7 @@ class SmoothProjectiveCurve(SageObject):
 
     def __init__(self, F, k=None):
 
+        # print "creating curve with %s,\nconstant base field %s\n"%(F,k)
         self._function_field = F
 
         if k != None:
@@ -879,6 +880,7 @@ def compute_value(v, f):
     """
 
     from sage.rings.infinity import Infinity
+    # print "entering *compute_value* with f = %s,\n v = %s.\n"%(f,v)
     if v(f) < 0:
         return Infinity
     else:
@@ -887,7 +889,7 @@ def compute_value(v, f):
 
 def separate_points(coordinate_functions, valuations):
     r"""
-    Add new coordinate functions to separate the points in V.
+    Add new coordinate functions to separate a given number of points.
 
     INPUT:
 
@@ -929,17 +931,51 @@ def separate_two_points(v1, v2):
     to ``v1`` and ``v2``.
 
     """
+    # first a simple ad hoc test
+    # this should always work if F is a rational function field
     f1 = v1.uniformizer()
     f2 = v2.uniformizer()
     test_elements = [f1, f2, f1/f2, f2/f1]
     for f in test_elements:
         if compute_value(v1, f) != compute_value(v2, f):
             return f
-    F = v1.domain()
-    while True:
-        f = F.random_element()
+    # we can now assume that F is a finite extension of a rational function field
+    # Then v1 is either induced from a (pseudo)-valuation w1 on a polynomial
+    # ring or from a function field valuation via an automorphism
+    # In the first case we use the explicit realization of w1 to construct an element g,
+    # or a sequence of elements g, such that v1(g) goes to infinity
+    w1 = v1._base_valuation
+    if hasattr(w1, "_approximation"):
+        # w1 is a limit valuation
+        # we try to approximate it
+        loops = 0
+        # 10 loops should be enough
+        while loops < 10:
+            w1._improve_approximation()
+            u1 = w1._approximation
+            g = v1._from_base_domain(u1.phi())
+            f = g/v2.element_with_valuation(v2(g))
+            if compute_value(v1, f) != compute_value(v2, f):
+                return f
+            loops += 1
+        raise ValueError
+    elif hasattr(w1, "_phi"):
+        # w1 is an inductive valuation and hence w1.phi is a polynomial
+        # of 'minimal degree with maximal valuation'
+        g = v1._from_base_domain(w1.phi())
+        f = g/v2.element_with_valuation(v2(g))
         if compute_value(v1, f) != compute_value(v2, f):
             return f
+    else:
+        # probably, v1 is induced from w1 by an isomorphism of function fields
+        w2 = v2._base_valuation
+        if w2.domain() == w1.domain():
+            f = separate_two_points(w1,w2)
+            return v1._from_base_domain(f)
+        elif w1.domain() == v2.domain():
+            return separate_two_points(w1,v2)
+    raise NotImplementedError
+
 
 def absolute_degree(K):
     r"""
