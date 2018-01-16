@@ -302,8 +302,20 @@ class Superp(SageObject):
 
         X_et = RationalDomainOnBerkovichLine(X, delta[0])
         for i in range(1, len(delta)):
-            X_et = X_et.union(RationalDomainOnBerkovichLine(X, delta[i]))
-            X_et.simplify()
+            # the following exception if necessary because calling
+            # RationalDomainOnBerkovichLine(X, f) with f constant
+            # result in an error
+            k = delta[i].parent().constant_base_field()
+            if delta[i] in k:
+                # if delta[i] is constant, it must not be integral
+                # otherwise we add the whole Berkovich line which is
+                # not an affinoid
+                assert self._vK(delta[i]) < 0, "this is not an affinoid"
+                # if vK(delta[i]) >= 0 then we add the empty set, i.e
+                # we do nothing
+            else:
+                X_et = X_et.union(RationalDomainOnBerkovichLine(X, delta[i]))
+                X_et.simplify()
         X_et = X_et.intersection(ClosedUnitDisk(X))
         # this is artificial
         X_et.simplify()
@@ -368,7 +380,7 @@ class Superp(SageObject):
             print
         print
         if reduction_tree.is_semistable():
-            print "We have computed the semstable reduction of the curve."
+            print "We have computed the semistable reduction of the curve."
         else:
             print "We failed to compute the semistable reduction of the curve."
             raise ValueError()
