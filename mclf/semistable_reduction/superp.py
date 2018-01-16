@@ -325,9 +325,9 @@ class Superp(SageObject):
         T = X_et._T
         # this is the affinoid tree underlying the etale locus
         # the inertial components are the boundary points
-        reduction_tree = ReductionTree(Y, vK, T)
-        for xi in X_et.boundary():
-            reduction_tree.add_inertial_component(xi)
+        reduction_tree = ReductionTree(Y, vK, T, X_et.boundary())
+        # for xi in X_et.boundary():
+        #     reduction_tree.add_inertial_component(xi)
 
         self._reduction_tree = reduction_tree
         return reduction_tree
@@ -368,17 +368,10 @@ class Superp(SageObject):
             print
         print
         if reduction_tree.is_semistable():
-            print "The curve has abelian reduction, since the total reduction genus"
-            print "is equal to the genus of the generic fiber."
+            print "We have computed the semstable reduction of the curve."
         else:
             print "We failed to compute the semistable reduction of the curve."
-            if reduction_tree.is_reduced():
-                print "This is probably due to the fact that the curve does not have"
-                print "abelian reduction; the computation of the loops has not yet been realized."
-            else:
-                print "Something went wrong! At least one of upper components has"
-                print "multiplicity > 1."
-
+            raise ValueError()
 
     def conductor_exponent(self):
         r"""
