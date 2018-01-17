@@ -318,8 +318,8 @@ class Superp(SageObject):
                 X_et.simplify()
         X_et = X_et.intersection(ClosedUnitDisk(X))
         # this is artificial
-        X_et.simplify()
-        self._etale_locus = X_et
+        # X_et.simplify()
+        self._etale_locus = X_et.minimal_representation()
         return X_et
 
 
