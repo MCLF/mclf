@@ -43,6 +43,8 @@ TO DO:
 
 - add missing functions: intersection, ..
 
+- allow empty affinoids, and do something about the case where `U=X`
+
 
 """
 
@@ -186,7 +188,6 @@ class AffinoidTree(BerkovichTree):
         ``is_in_affinoid``.
 
         """
-
         T0 = self
         parent = T0.parent()
         if parent != None:
@@ -266,7 +267,6 @@ class AffinoidTree(BerkovichTree):
 
     def add_points(self, in_list, out_list):
 
-
         T = self
         for xi in in_list:
             T, subtree = T.add_point(xi, True)
@@ -292,12 +292,12 @@ class AffinoidTree(BerkovichTree):
         else:
             return T1._is_in_affinoid and T2._is_in_affinoid
 
+
     def simplify(self):
         r"""
         Return a simplified tree representing the same affinoid.
 
         """
-
         T = self
         T_new = AffinoidTree(T._X)
         for T1 in T.subtrees():
@@ -310,11 +310,9 @@ class AffinoidTree(BerkovichTree):
         return T_new
 
 
-
     def union(self, T1):
         r"""
         Construct the tree representing the union of two affinoids.
-
 
         INPUT:
 
@@ -324,8 +322,8 @@ class AffinoidTree(BerkovichTree):
 
         An affinoid tree which represents the union of the affinoids represented
         by T0 = ``self`` and T1.
-        """
 
+        """
         T0 = self
         # T = T0.copy()  strangely, this did not work
         T_new = AffinoidTree(self._X)
@@ -392,8 +390,8 @@ class AffinoidTree(BerkovichTree):
 
     def show(self):
         r""" Display a graphical representation of self.
-        """
 
+        """
         G, vertex_dict = self.graph()
         in_list = []
         out_list = []
@@ -405,6 +403,7 @@ class AffinoidTree(BerkovichTree):
             print i, ": ", xi
         # print vertex_dict
         G.show(partition=[in_list, out_list])
+
 
     def compute_connected_components(self, comp_list, new_comp):
         r""" Compute the connected components of the represented affinoid.
@@ -449,8 +448,8 @@ class AffinoidTree(BerkovichTree):
             [[[Point of type V given by residue class v(1/(x + 1)) > -2]],
             [[Point of type V given by residue class v(x + 1) > 0,
             Point of type V given by residue class v(1/x) > 0]]]
-        """
 
+        """
         T = self
         if T._is_in_affinoid:
             if T.parent() == None or T.parent()._is_in_affinoid:
@@ -502,7 +501,6 @@ class AffinoidDomainOnBerkovichLine(SageObject):
     - ..
 
     """
-
     def __init__(self, T):
         r""" Return the affinoid domain corresponding to the affinoid tree ``T``.
 
@@ -515,20 +513,19 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         the affinoid corresponding to ``T``
 
         """
-
         self._X = T._X
         self._T = T
 
-    def __repr__(self):
 
+    def __repr__(self):
         comp_str = ""
         for U in self.components():
             comp_str += str(U)
         return "Affinoid with %s components:\n%s"%(self.number_of_components(),
                                                  comp_str)
 
-    def berkovich_line(self):
 
+    def berkovich_line(self):
         return self._X
 
 
@@ -545,12 +542,10 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         ``True`` if ``xi`` lies on the affinoid, ``False`` otherwise
 
         """
-
         return self._T.is_in_affinoid(xi)
 
 
     def compute_components(self):
-
         T = self._T
         comp_list = []
         T.compute_connected_components(comp_list, [])
@@ -562,7 +557,6 @@ class AffinoidDomainOnBerkovichLine(SageObject):
 
 
     def components(self):
-
         if not hasattr(self, "_comp_list"):
             self.compute_components()
 
@@ -570,8 +564,8 @@ class AffinoidDomainOnBerkovichLine(SageObject):
 
 
     def number_of_components(self):
-
         return len(self.components())
+
 
     def boundary(self):
         r"""
@@ -585,7 +579,6 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         connected components.
 
         """
-
         if not hasattr(self, "_comp_list"):
             self.compute_components()
         boundary = []
@@ -604,7 +597,6 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         self._T = self._T.simplify()
 
 
-
     def union(self, V):
         r"""
         Return the affinoid which is the union of ``self`` with ``V``.
@@ -620,6 +612,7 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         """
         T = self._T.intersection(V._T)
         return AffinoidDomainOnBerkovichLine(T)
+
 
     def point_close_to_boundary(self, xi0):
         r"""
@@ -654,7 +647,6 @@ class AffinoidDomainOnBerkovichLine(SageObject):
             Point of type I on Berkovich line given by x + 2 = 0
 
         """
-
         U = self
         T = U._T
         X = U.berkovich_line()
@@ -707,7 +699,6 @@ class ClosedUnitDisk(AffinoidDomainOnBerkovichLine):
         v(x) >= 0
 
     """
-
     def __init__(self, X):
 
         self._X = X
@@ -746,9 +737,7 @@ class ElementaryAffinoidOnBerkovichLine(AffinoidDomainOnBerkovichLine):
       affinoid.
 
     """
-
     def __init__(self, boundary_list):
-
         assert boundary_list != [], "the boundary list must not be empty!"
         # boundary = [ xi_list[0].boundary_point() for xi_list in boundary_list]
         X = boundary_list[0][0].X()
@@ -768,15 +757,16 @@ class ElementaryAffinoidOnBerkovichLine(AffinoidDomainOnBerkovichLine):
         self._boundary = boundary
         self._complement = complement
 
-    def __repr__(self):
 
+    def __repr__(self):
         return "Elementary affinoid defined by %s"%self.inequalities()
+
 
     def inequalities(self):
         r"""
         Return the inequalities defining the elementary affinoid, as a string.
-        """
 
+        """
         inequalities = "\n"
         for eta in self._complement:
             phi, s = eta.open_discoid()
@@ -809,12 +799,20 @@ class RationalDomainOnBerkovichLine(AffinoidDomainOnBerkovichLine):
         sage: vK = pAdicValuation(K, 2)
         sage: F.<x> = FunctionField(K)
         sage: X = BerkovichLine(F, vK)
-        sage: U = RationalDomainOnBerkovichLine(X, (x^2+2)/x*(x+1)/2)
+        sage: RationalDomainOnBerkovichLine(X, (x^2+2)/x*(x+1)/2)
         Affinoid with 2 components:
         Elementary affinoid defined by
         v(x^2 + 2) >= 3/2
         Elementary affinoid defined by
         v(x + 1) >= 1
+
+        f must be nonconstant:
+
+        sage: RationalDomainOnBerkovichLine(X, F(1/2))
+        Traceback (most recent call last):
+        ...
+        AssertionError: f must be nonconstant
+
 
     TO DO:
 
@@ -834,8 +832,10 @@ class RationalDomainOnBerkovichLine(AffinoidDomainOnBerkovichLine):
       only need to know their valuations - which is constant on the subtree!
 
     """
-
     def __init__(self, X, f):
+        F = X.function_field()
+        f = F(f)
+        assert not f in F.constant_base_field(), "f must be nonconstant"
         self._X = X
         U = AffinoidTree(X)
         xi0 = X.gauss_point()
@@ -896,6 +896,7 @@ def irreducible_polynomial_prime_to(f, min_deg=1):
             if g.is_irreducible() and g.gcd(f).is_one():
                 return g
 
+
 def all_polynomials(F, x, d):
     """ List all polynomials in x over F of degree d.
 
@@ -907,8 +908,8 @@ def all_polynomials(F, x, d):
     OUTPUT:
 
     an iterator which list all elements of F[x] of degree d.
-    """
 
+    """
     if d == 0:
         for a in F.list():
             yield a*x**0
