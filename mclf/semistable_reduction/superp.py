@@ -334,9 +334,13 @@ class Superp(SageObject):
         Y = self.curve()
         vK = self.base_valuation()
         X_et = self.etale_locus()
-        T = X_et._T
+        T = BerkovichTree(self._X)
+        for xi in X_et._T.vertices():
+            T, _ = T.add_point(xi)
         # this is the affinoid tree underlying the etale locus
         # the inertial components are the boundary points
+        # we have to replace it by its permanent completion:
+        T.permanent_completion()
         reduction_tree = ReductionTree(Y, vK, T, X_et.boundary())
         # for xi in X_et.boundary():
         #     reduction_tree.add_inertial_component(xi)
