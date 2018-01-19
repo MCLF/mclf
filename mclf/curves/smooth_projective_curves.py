@@ -85,12 +85,7 @@ EXAMPLES::
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.structure.sage_object import SageObject
-from sage.rings.all import Infinity, ZZ, PolynomialRing
-from sage.misc.prandom import randint
-from sage.misc.misc_c import prod
-from sage.rings.power_series_ring import PowerSeriesRing
-from sage.misc.cachefunc import CachedFunction
+from sage.all import SageObject, Infinity, ZZ, PolynomialRing, randint, prod, PowerSeriesRing, CachedFunction
 
 
 class SmoothProjectiveCurve(SageObject):
@@ -520,7 +515,7 @@ class SmoothProjectiveCurve(SageObject):
 
         """
         if not self._is_separable:
-            raise Error, "Y is not separable, hence the ramification divisor is not defined"
+            raise Error("Y is not separable, hence the ramification divisor is not defined")
         if hasattr(self, "_ramification_divisor"):
             return self._ramification_divisor
 

@@ -41,8 +41,7 @@ EXAMPLES::
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.structure.sage_object import SageObject
-from sage.rings.all import Infinity, ZZ, PolynomialRing
+from sage.all import SageObject, Infinity, ZZ, PolynomialRing
 from mclf.curves.smooth_projective_curves import PointOnSmoothProjectiveCurve
 
 

@@ -63,10 +63,7 @@ EXAMPLES::
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.structure.sage_object import SageObject
-from sage.misc.cachefunc import cached_method
-from sage.rings.infinity import Infinity
-from mac_lane import *
+from sage.all import SageObject, cached_method, Infinity
 
 
 class ValuativeFunction(SageObject):

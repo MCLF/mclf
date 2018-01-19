@@ -27,27 +27,9 @@ TO DO:
 #*****************************************************************************
 
 
-from sage.structure.sage_object import SageObject
-from sage.rings.integer_ring import IntegerRing
-from sage.rings.rational_field import RationalField
-from sage.rings.number_field.number_field import NumberField
-from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-from sage.rings.polynomial.polynomial_element import Polynomial
-from sage.rings.integer import Integer
-from sage.matrix.constructor import matrix
-from sage.matrix.special import zero_matrix, identity_matrix
-from sage.rings.finite_rings.integer_mod_ring import IntegerModRing
-from sage.rings.finite_rings.integer_mod import mod
-from sage.rings.infinity import Infinity
-from sage.functions.generalized import sgn
-from sage.functions.other import ceil, floor
+from sage.all import SageObject, ZZ, QQ, NumberField, PolynomialRing, Polynomial, Integer, matrix, zero_matrix, identity_matrix, IntegerModRing, mod, Infinity, sgn, ceil, floor, prod, lcm, vector
 from sage.geometry.newton_polygon import NewtonPolygon
-from sage.misc.misc_c import prod
-from sage.arith.misc import lcm
-from sage.modules.free_module_element import vector
-
-ZZ = IntegerRing()
-QQ = RationalField()
+  
 
 
 #------------------------------------------------------------------------------

@@ -47,26 +47,10 @@ TO DO:
 #*****************************************************************************
 
 
-from sage.structure.sage_object import SageObject
-from sage.rings.number_field.number_field import NumberField
-from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-from sage.rings.polynomial.polynomial_element import Polynomial
-from sage.rings.integer_ring import IntegerRing
-from sage.rings.rational_field import RationalField
-from sage.rings.finite_rings.integer_mod import mod
-from sage.misc.cachefunc import cached_method
-from sage.rings.infinity import Infinity
-from sage.functions.generalized import sgn
-from sage.functions.other import ceil
-from sage.misc.prandom import randint
+from sage.all import SageObject, NumberField, PolynomialRing, Polynomial, ZZ, QQ, mod, cached_method, Infinity, sgn, ceil, randint, prod, lcm
 from sage.geometry.newton_polygon import NewtonPolygon
-from sage.misc.misc_c import prod
-from sage.arith.misc import lcm
 from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
 from mclf.padic_extensions.fake_padic_embeddings import FakepAdicEmbedding
-
-ZZ = IntegerRing()
-QQ = RationalField()
 
 
 class FakepAdicExtension(SageObject):

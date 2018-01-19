@@ -97,15 +97,9 @@ TO DO:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.structure.sage_object import SageObject
-from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-from sage.misc.cachefunc import cached_method
-from sage.rings.infinity import Infinity
-from sage.functions.generalized import sgn
-from sage.geometry.newton_polygon import NewtonPolygon
-from sage.rings.valuation.gauss_valuation import GaussValuation
+from sage.all import SageObject, PolynomialRing, cached_method, Infinity, sgn, GaussValuation
 from sage.rings.valuation.limit_valuation import LimitValuation
-
+from sage.geometry.newton_polygon import NewtonPolygon
 
 
 class BerkovichLine(SageObject):
@@ -483,9 +477,9 @@ class BerkovichLine(SageObject):
         NP = NewtonPolygon([(i, vK(f[i])) for i in range(f.degree() + 1)])
         slopes = NP.slopes(False)
         if not (slopes == [] or max(slopes) <= 0 or min(slopes) >0):
-            print "f = ", f
-            print "NP = ", NP
-            print "slopes = ", NP.slopes(False)
+            print("f = ", f)
+            print("NP = ", NP)
+            print("slopes = ", NP.slopes(False))
         assert slopes == [] or max(slopes) <= 0 or min(slopes) >0,\
             "all roots of f must either lie inside or outside the unit disk"
         is_in_unit_disk = (slopes == [] or max(slopes) <= 0)
@@ -606,7 +600,7 @@ class PointOnBerkovichLine(SageObject):
 
         R = self._v._base_valuation.domain()
         if f.parent() is self.berkovich_line().function_field() and not self.is_in_unit_disk():
-            print "f =", f
+            print("f =", f)
             return R(f(1/self.berkovich_line().function_field().gen()))
         else:
             return R(f)

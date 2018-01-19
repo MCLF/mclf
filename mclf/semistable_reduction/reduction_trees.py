@@ -132,8 +132,7 @@ TODO:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.structure.sage_object import SageObject
-from sage.rings.all import ZZ, QQ, NumberField, FunctionField
+from sage.all import ZZ, QQ, NumberField, FunctionField, SageObject
 from mclf.berkovich.berkovich_line import *
 from mclf.berkovich.berkovich_trees import BerkovichTree
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
@@ -522,8 +521,8 @@ class InertialComponent(SageObject):
                 else:
                     F = [L.absolute_polynomial().change_ring(K)]
             e = self.type_II_point().pseudovaluation_on_polynomial_ring().E()
-            print "F = ", F
-            print "e = ", e
+            print("F = ", F)
+            print("e = ", e)
             self._splitting_field = WeakPadicGaloisExtension(Kh, F, minimal_ramification=e)
         return self._splitting_field
 
