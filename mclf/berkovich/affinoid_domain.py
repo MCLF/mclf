@@ -58,8 +58,7 @@ TO DO:
 #*****************************************************************************
 
 
-from sage.structure.sage_object import SageObject
-from sage.rings.infinity import Infinity
+from sage.all import SageObject, Infinity
 from mclf.berkovich.berkovich_line import BerkovichLine, TypeIPointOnBerkovichLine,\
                                           TypeIIPointOnBerkovichLine
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
@@ -332,22 +331,22 @@ class AffinoidTree(BerkovichTree):
             T_new, dump = T_new.add_point(xi0, None)
         for xi1 in T1.vertices():
             T_new, dump = T_new.add_point(xi1, None)
-        # print "First step of T_new:", T_new.vertices()
+        # print("First step of T_new:", T_new.vertices())
         new_out = []
         for subtree in T_new.subtrees():
             xi = subtree.root()
-            # print "adding xi =", xi
+            # print("adding xi =", xi)
             xi_in_T0 = T0.is_in_affinoid(xi)
             xi_in_T1 = T1.is_in_affinoid(xi)
-            # print xi_in_T0, xi_in_T1
+            # print(xi_in_T0, xi_in_T1)
             if xi_in_T0 == xi_in_T1:
                 subtree._is_in_affinoid = xi_in_T0
-                # print "xi is in union: ", xi_in_T0
-                # print
+                # print("xi is in union: ", xi_in_T0)
+                # print()
             else:
                 subtree._is_in_affinoid = True
-                # print "xi is in union!"
-                # print
+                # print("xi is in union!")
+                # print()
                 if subtree.has_parent():
                     parent = subtree.parent()
                     xi0 = parent.root()
@@ -355,7 +354,7 @@ class AffinoidTree(BerkovichTree):
                     xi0_in_T1 = T1.is_in_affinoid(xi0)
                     if (xi_in_T0 != xi0_in_T0) and (xi0_in_T0 != xi0_in_T1):
                         new_out.append(xi0.point_in_between(xi))
-                        # print "we have to exclude ", xi0
+                        # print("we have to exclude ", xi0)
         T_new = T_new.add_points([], new_out)
         return T_new
 
@@ -401,8 +400,8 @@ class AffinoidTree(BerkovichTree):
                 in_list.append(i)
             else:
                 out_list.append(i)
-            print i, ": ", xi
-        # print vertex_dict
+            print(i, ": ", xi)
+        # print(vertex_dict)
         G.show(partition=[in_list, out_list])
 
     def compute_connected_components(self, comp_list, new_comp):

@@ -46,8 +46,7 @@ EXAMPLES::
 #*****************************************************************************
 
 
-from sage.structure.sage_object import SageObject
-from sage.graphs.graph import Graph
+from sage.all import SageObject, Graph
 from mclf.berkovich.berkovich_line import BerkovichLine
 
 
@@ -73,15 +72,15 @@ class BerkovichTree(SageObject):
     """
     def __init__(self, X, root=None, children=None, parent=None):
 
-        # print "calling BerkovichTree with root %s, children %s and
-        # parent %s"%(root, children, parent)
+        # print("calling BerkovichTree with root %s, children %s and
+        # parent %s"%(root, children, parent))
         self._root = root
         if children == None:
             self._children = []
         else:
             self._children = children
         if root == None and self._children != []:
-            raise ValueError, "tree with children must have a root"
+            raise ValueError("tree with children must have a root")
 
         self._parent = parent
         self._X = X
@@ -340,7 +339,7 @@ class BerkovichTree(SageObject):
 
         if self._root == None:
             return
-        print "___"*depth, " ", self._root
+        print("___"*depth, " ", self._root)
         for T in self._children:
             T.print_tree(depth + 1)
 
@@ -523,18 +522,18 @@ def component_jumps(xi0, xi1):
     T = S.gen()
     G = phi(x+T)
     NP = NewtonPolygon([(i, v1(G[i])) for i in range(G.degree()+1)])
-    # print "phi = ", phi
-    # print "G = ", G
-    # print "NP = ", NP
+    # print("phi = ", phi)
+    # print("G = ", G)
+    # print("NP = ", NP)
     V = []
     vertices =  NP.vertices()
     for k in range(len(vertices)-1):
         i, ai = vertices[k]
         j, aj = vertices[k+1]
         a0 = aj - j*(ai-aj)/(i-j)
-        # print "a0 = ", a0
+        # print("a0 = ", a0)
         V += valuations_from_inequality(vK, phi, a0, v0)
-    # print "V = ", V
+    # print("V = ", V)
     if xi1.is_in_unit_disk():
         ret = [X.point_from_polynomial_pseudovaluation(v) for v in V]
     else:
