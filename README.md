@@ -1,5 +1,7 @@
 # MCLF
 
+[![Documentation Status](https://readthedocs.org/projects/mclf/badge/)](http://mclf.readthedocs.io/?badge=latest)
+
 ### A Sage toolbox for computing with **M**odels of **C**urves over **L**ocal **F**ields
 
 
