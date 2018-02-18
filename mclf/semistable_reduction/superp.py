@@ -296,8 +296,20 @@ class Superp(SageObject):
 
         X_et = RationalDomainOnBerkovichLine(X, delta[0])
         for i in range(1, len(delta)):
-            X_et = X_et.union(RationalDomainOnBerkovichLine(X, delta[i]))
-            X_et.simplify()
+            # the following exception if necessary because calling
+            # RationalDomainOnBerkovichLine(X, f) with f constant
+            # result in an error
+            k = delta[i].parent().constant_base_field()
+            if delta[i] in k:
+                # if delta[i] is constant, it must not be integral
+                # otherwise we add the whole Berkovich line which is
+                # not an affinoid
+                assert self._vK(delta[i]) < 0, "this is not an affinoid"
+                # if vK(delta[i]) >= 0 then we add the empty set, i.e
+                # we do nothing
+            else:
+                X_et = X_et.union(RationalDomainOnBerkovichLine(X, delta[i]))
+                X_et.simplify()
         X_et = X_et.intersection(ClosedUnitDisk(X))
         # this is artificial
         X_et.simplify()
@@ -316,12 +328,16 @@ class Superp(SageObject):
         Y = self.curve()
         vK = self.base_valuation()
         X_et = self.etale_locus()
-        T = X_et._T
+        T = BerkovichTree(self._X)
+        for xi in X_et._T.vertices():
+            T, _ = T.add_point(xi)
         # this is the affinoid tree underlying the etale locus
         # the inertial components are the boundary points
-        reduction_tree = ReductionTree(Y, vK, T)
-        for xi in X_et.boundary():
-            reduction_tree.add_inertial_component(xi)
+        # we have to replace it by its permanent completion:
+        T.permanent_completion()
+        reduction_tree = ReductionTree(Y, vK, T, X_et.boundary())
+        # for xi in X_et.boundary():
+        #     reduction_tree.add_inertial_component(xi)
 
         self._reduction_tree = reduction_tree
         return reduction_tree
@@ -362,17 +378,10 @@ class Superp(SageObject):
             print
         print
         if reduction_tree.is_semistable():
-            print("The curve has abelian reduction, since the total reduction genus")
-            print("is equal to the genus of the generic fiber.")
+            print "We have computed the semistable reduction of the curve."
         else:
-            print("We failed to compute the semistable reduction of the curve.")
-            if reduction_tree.is_reduced():
-                print("This is probably due to the fact that the curve does not have")
-                print("abelian reduction; the computation of the loops has not yet been realized.")
-            else:
-                print("Something went wrong! At least one of upper components has")
-                print("multiplicity > 1.")
-
+            print "We failed to compute the semistable reduction of the curve."
+            raise ValueError()
 
     def conductor_exponent(self):
         r"""

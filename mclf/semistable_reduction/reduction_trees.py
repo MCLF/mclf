@@ -275,14 +275,14 @@ class ReductionTree(SageObject):
         r"""
         Return the genus of the reduction.
 
-        OUTPUT: a nonnegative integer, which is the genus of the reduction
-        of the curve `Y` specified by the data in this ``ReductionTree``.
+        OUTPUT: a nonnegative integer, which is the arithmetic genus of the reduction
+        of the curve `Y` specified by the data in this ``ReductionTree``, provided
+        this reduction is semistable.
 
-        .. Note::
-
-            For the moment we only count the contribution of the inertial
-            component, and the contribution of the loops is left out. Hence the
-            result is correct only if `Y` has abelian reduction.
+        In fact, the number we compute is the sum of the genera of the upper
+        components (i.e. the normalizations of the irreducible components of
+        `\bar{Y}`) and the number of loops of the component graph of `\bar{Y}`,
+        which is (number of double points) - (number of components) + 1.
 
         """
         if not hasattr(self, "_reduction_genus"):
@@ -290,10 +290,6 @@ class ReductionTree(SageObject):
             for Z in self.inertial_components():
                 reduction_genus += Z.reduction_genus() + Z.outdegree() - Z.component_degree()
             self._reduction_genus = reduction_genus
-
-            #sum([Z.reduction_genus() for Z in self.inertial_components()])
-            # for the moment, we only count the contribution of the components
-            # and dismiss the loops.
         return self._reduction_genus
 
 
@@ -521,8 +517,8 @@ class InertialComponent(SageObject):
                 else:
                     F = [L.absolute_polynomial().change_ring(K)]
             e = self.type_II_point().pseudovaluation_on_polynomial_ring().E()
-            print("F = ", F)
-            print("e = ", e)
+            # print("F = ", F)
+            # print("e = ", e)
             self._splitting_field = WeakPadicGaloisExtension(Kh, F, minimal_ramification=e)
         return self._splitting_field
 
@@ -594,11 +590,19 @@ class InertialComponent(SageObject):
         v0 = self.valuation()
         F0 = self.function_field()
         x0 = FXL(v0.lift(v0.residue_field().gen()))
+        k0 = F0.constant_base_field()
         lower_valuations = [xi.valuation() for xi in XL.points_from_inequality(f, s)]
         lower_components = []
         for v in lower_valuations:
             F1 = make_function_field(v.residue_field())
-            phi = F0.hom(F1(v.reduce(x0)))
+            # we need to find the correct inclusion of F0 into F1
+            if k0.is_prime_field():
+                phi = F0.hom(F1(v.reduce(x0)))
+            else:
+                k1 = F1.constant_base_field()
+                theta0 = FXL(v0.lift(k0.gen()))
+                psi = k0.hom([k1(F1(v.reduce(theta0)))])
+                phi = F0.hom(F1(v.reduce(x0)), psi)
             lower_components.append(LowerComponent(self, vL, v, phi))
         self._lower_components[u] = lower_components
         return lower_components
@@ -673,13 +677,6 @@ class InertialComponent(SageObject):
         splitting field. If `u\neq\infty` then it is assumed that `u` is a
         break in the ramification filtration of the splitting field, and then
         the corresponding subfield is used instead.
-
-        TODO:
-
-        At the moment, the output is correct only if field of constants of all
-        upper components is equal to the residue field of the valuation `v_L`.
-        In general we have to multiply the genus of a component with the degree
-        of the extension 'field of constants' over 'residue field of `v_L`'.
 
         """
         if u in self._reduction_genus.keys():
