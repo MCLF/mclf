@@ -37,9 +37,7 @@ Moreover, kinks of this function can only occur in points of type II.
 
 """
 
-from sage.structure.sage_object import SageObject
-from sage.misc.cachefunc import cached_method
-from sage.rings.infinity import Infinity
+from sage.all import SageObject, cached_method, Infinity
 from mclf.berkovich.berkovich_line import BerkovichLine
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
 

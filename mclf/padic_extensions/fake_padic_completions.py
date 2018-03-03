@@ -84,31 +84,9 @@ TO DO:
 #*****************************************************************************
 
 
-from sage.structure.sage_object import SageObject
-from sage.rings.integer_ring import IntegerRing
-from sage.rings.rational_field import RationalField
-from sage.rings.number_field.number_field import NumberField
-from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-from sage.rings.polynomial.polynomial_element import Polynomial
-from sage.rings.integer import Integer
-from sage.matrix.constructor import matrix
-from sage.matrix.special import zero_matrix, identity_matrix
-from sage.rings.finite_rings.integer_mod_ring import IntegerModRing
-from sage.rings.finite_rings.integer_mod import mod
-from sage.rings.infinity import Infinity
-from sage.functions.generalized import sgn
-from sage.functions.other import ceil, floor
+from sage.all import SageObject, ZZ, QQ, NumberField, PolynomialRing, Polynomial, Integer, matrix, zero_matrix, identity_matrix, IntegerModRing, mod, Infinity, sgn, ceil, floor, prod, lcm, vector, GF
 from sage.geometry.newton_polygon import NewtonPolygon
-from sage.misc.misc_c import prod
-from sage.arith.misc import lcm
-from sage.modules.free_module_element import vector
-from sage.rings.finite_rings.finite_field_constructor import GF
-from mac_lane import *
-
-
-ZZ = IntegerRing()
-QQ = RationalField()
-
+from sage.rings.valuation.limit_valuation import LimitValuation
 
 
 class FakepAdicCompletion(SageObject):
@@ -139,8 +117,8 @@ class FakepAdicCompletion(SageObject):
         if n > 1:
             piK = K0.gen()
             e = ZZ(1/vK(vK.uniformizer()))
-            f = vK.residue_field().degree()
-            assert e*f == n, "vK is not the unique extension of v_p to K"
+            F = vK.residue_field() # should be a finite field, therefore:
+            f = F.cardinality().log(F.characteristic()) # should be the absolute degree of F
             assert vK(piK) == 1/e, "the generator of K must be a uniformizer for vK"
             P = K0.polynomial()
             G = P(x+piK).shift(-1)
@@ -163,7 +141,7 @@ class FakepAdicCompletion(SageObject):
         assert n == e*f
         assert n == P.degree()
         self._number_field = K0
-        self._v_p = pAdicValuation(QQ, p)
+        self._v_p = QQ.valuation(p)
         self._valuation = vK
         self._p = p
         self._uniformizer = piK
@@ -286,7 +264,6 @@ class FakepAdicCompletion(SageObject):
     def is_Qp(self):
         r"""
         Return ``True`` if this is the padic-completion of the field of rational numbers.
-
         """
         return self._is_Qp
 
@@ -322,10 +299,10 @@ class FakepAdicCompletion(SageObject):
         into `L_0`.
 
         """
-        # print "entering extension with "
-        # print "K = ", self
-        # print "f = ", f
-        # print
+        # print("entering extension with ")
+        # print("K = ", self)
+        # print("f = ", f)
+        # print()
 
         K0 = self.number_field()
         assert K0.has_coerce_map_from(f.parent().base_ring())
@@ -346,6 +323,7 @@ class FakepAdicCompletion(SageObject):
             pix1 = pix.map_coefficients(lambda c:self.reduce(c, m))
             if v(pix1) == r:
                 break
+        assert m < 9, "m too small"
         # now pix1 is a polynomial over `K_0` which maps to a uniformizer for the
         # unique extension of vK to the relative extension L=K[x]/(f)/K
         g = self.characteristic_polynomial(f, pix1)
@@ -354,20 +332,30 @@ class FakepAdicCompletion(SageObject):
         g = g.squarefree_decomposition()[0][0]
         # now we compute the absolute characteristic polynomial of a root
         # of g
-        Pmod = self.characteristic_polynomial_mod(g, m + 5)
-        # m+5 is a purely heuristic choice; there should be a test whether
-        # the result is correct, or the choice should be made correctly and
-        # optimal from the start
 
-        # first we simply lift the coefficients of Pmod to ZZ, then we try to
-        # reduce them as much as possible (actually we don't do this any more)
-        P = Pmod.map_coefficients(lambda c:c.lift(), QQ)
-        N = vK(P[0]).ceil() + 1
-        n = P.degree()
-
-        L0 = NumberField(P, 'pi%s'%P.degree(), maximize_at_primes=[])
-        vL = pAdicValuation(QQ, self.p()).extension(L0)
-        return FakepAdicCompletion(L0, vL)
+        done = False
+        N = m+5
+        while not done:
+            Pmod = self.characteristic_polynomial_mod(g, N)
+            # this is very heuristic; there should be a conclusive test whether
+            # the result is correct, or the choice of the precision should be made correctly and
+            # optimal from the start
+            P = Pmod.map_coefficients(lambda c:c.lift(), QQ)
+            P = P.squarefree_decomposition()[0][0]
+            L0 = NumberField(P, 'pi%s'%P.degree())
+            V = pAdicValuation(QQ, self.p()).extensions(L0)
+            vL = V[0]
+            e = ZZ(1/vL(vL.uniformizer()))
+            f = vL.residue_field().degree()
+            if 1/e == r:
+                if len(V) == 1:
+                    return FakepAdicCompletion(L0, vL)
+                else:
+                    QQp = FakepAdicCompletion(QQ, self.base_valuation())
+                    g = QQp.approximate_irreducible_factor(P)
+                    return QQp.extension(g)
+            N = N + 5
+            # this is now very cumbersome and should we reworked at some point
 
 
     def ramified_extension(self, n, embedding=False):
@@ -447,6 +435,19 @@ class FakepAdicCompletion(SageObject):
         them until the end, because doing a tame extension is almost trivial.
         It is not clear to me whether a purely wild factor with inertia is better
         than a mixed unramified factor.
+
+        EXAMPLES::
+
+        The following example created an error in a previous version:
+
+            sage: from mclf import *
+            sage: v_2 = pAdicValuation(QQ, 2)
+            sage: Q2 = FakepAdicCompletion(QQ, v_2)
+            sage: R.<x> = QQ[]
+            sage: f = x^12 + 192*x^9 - 5352*x^6 + 33344*x^3 - 293568
+            sage: L = Q2.weak_splitting_field(f)
+            sage: L.ramification_degree()
+            4
 
         """
         if not isinstance(F, Polynomial):
@@ -640,7 +641,7 @@ class FakepAdicCompletion(SageObject):
         return self.number_field()(list(S**(-1)*v))
 
 
-    def base_change_matrix(self, integral_basis="standard", precision=5):
+    def base_change_matrix(self, integral_basis="standard", precision=20):
         r"""
         Return the base change matrix to an integral basis.
 
@@ -654,6 +655,10 @@ class FakepAdicCompletion(SageObject):
         An invertible `(n,n)`-matrix `S` over `\mathbb{Q}` with the following
         property: for an element `a` of `K_0`, the vector ``S*a.vector()``
         gives the representation of `a` as a linear combination of ``integral_basis``.
+
+        TODO:
+
+        * clarify the role of  ``precision`` in this function
 
         """
         if integral_basis == "standard":
@@ -676,6 +681,7 @@ class FakepAdicCompletion(SageObject):
         for i in range(n):
             for j in range(n):
                 T_reduced[i,j] = self.reduce_rational_number(T[i,j], precision)
+        assert T_reduced.is_invertible(), "T_reduced= %s\nmust be invertible; T = %s\nprecision = %s"%(T_reduced, T, precision)
         return T_reduced
 
 
@@ -1076,9 +1082,9 @@ class FakepAdicCompletion(SageObject):
                 for k in range(n):
                     for l in range(n):
                         if vK(B_ij[k,l]) < 0:
-                            print "B[i,j] = ", B[i,j]
-                            print "vK(..) = ", vK(B[i,j])
-                            print "B_ij[k,l] = ", B_ij[k,l]
+                            print("B[i,j] = ", B[i,j])
+                            print("vK(..) = ", vK(B[i,j]))
+                            print("B_ij[k,l] = ", B_ij[k,l])
                             raise ValueError
                         BB[i*n+k, j*n+l] = R(B_ij[k,l])
         return BB.charpoly()
@@ -1128,7 +1134,7 @@ class FakepAdicCompletion(SageObject):
                 if v.mu() < Infinity:
                     V = v.mac_lane_step(f, assume_squarefree=True, check=False)
                     if len(V) > 1:
-                        print "len(V) > 1"
+                        # print("len(V) > 1")
                         return None
                     v1 = V[0]
             # now v.phi().degree() = d, and either v1.phi().degree() > d
@@ -1141,13 +1147,13 @@ class FakepAdicCompletion(SageObject):
                         FakepAdicEmbedding(L, K)
                         # this can be very slow, but so far it is the only
                         # conclusive test I know
-                        # print "found subfield of degree %s and ramification degree %s"%(L.degree(), L.ramification_degree())
+                        # print("found subfield of degree %s and ramification degree %s"%(L.degree(), L.ramification_degree()))
                         return L
                     except AssertionError:
                         pass
-                        # print "no embedding into L!"
+                        # print("no embedding into L!")
             if v.mu() == Infinity:
-                print "v.mu() = Infinity"
+                # print("v.mu() = Infinity")
                 return None
             else:
                 v = v1  # we go to a larger degree
