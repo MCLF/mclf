@@ -1,4 +1,8 @@
 
+- find bugs in the following examples:
+- Y = Superell(x^4+x^3+2*x^2+2*x, v_2, 3), Y.compute_semistable_reduction()
+- Y = Superp(1+3*x^3+3*x^5, v_3, 3) , Y.conductor_exponent()
+
 - solve the problem that sometimes irreducible polynomials have roots
   inside and outside the unit disk (there is an ad hoc solution in superp, but
   we need something better)

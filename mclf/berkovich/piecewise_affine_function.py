@@ -5,9 +5,7 @@ r""" Piecewise affine functions on the positive real line.
 
 """
 
-from sage.structure.sage_object import SageObject
-from sage.misc.cachefunc import cached_method
-from sage.rings.infinity import Infinity
+from sage.all import SageObject, cached_method, Infinity
 
 
 class PiecewiseAffineFunction(SageObject):

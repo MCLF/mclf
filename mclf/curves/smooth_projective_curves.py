@@ -55,7 +55,7 @@ EXAMPLES::
     sage: FY.<y> = FX.extension(T^2+x^2*T+x^5+x^3)
     sage: Y = SmoothProjectiveCurve(FY)
     sage: Y
-    The smooth projective curve over Finite Field of size 2 with Function field in y defined by y^2 + x^2*y + x^5 + x^3.
+    the smooth projective curve with Function field in y defined by y^2 + x^2*y + x^5 + x^3
     sage: Y.genus()
     1
     sage: Y.zeta_function()
@@ -71,7 +71,7 @@ EXAMPLES::
     - the residue field of a point should be explicitly an extension of
       the constant base field.
     - treat the base curve `X` as a *curve*, not just as a function field
-    - realize morphisms between curves, in particular the canonical to `X`
+    - realize morphisms between curves, in particular the canonical map to `X`
 
 """
 
@@ -85,13 +85,7 @@ EXAMPLES::
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.structure.sage_object import SageObject
-from sage.rings.all import Infinity, ZZ, PolynomialRing
-from sage.misc.prandom import randint
-from sage.misc.misc_c import prod
-from sage.rings.power_series_ring import PowerSeriesRing
-from sage.misc.cachefunc import CachedFunction
-from mac_lane import *
+from sage.all import SageObject, Infinity, ZZ, PolynomialRing, randint, prod, PowerSeriesRing, CachedFunction
 
 
 class SmoothProjectiveCurve(SageObject):
@@ -120,6 +114,7 @@ class SmoothProjectiveCurve(SageObject):
 
     def __init__(self, F, k=None):
 
+        # print "creating curve with %s,\nconstant base field %s\n"%(F,k)
         self._function_field = F
 
         if k != None:
@@ -140,8 +135,7 @@ class SmoothProjectiveCurve(SageObject):
 
 
     def __repr__(self):
-        return "The smooth projective curve over %s with %s."\
-            %(self._constant_base_field, self._function_field)
+        return "the smooth projective curve with %s"%self.function_field()
 
 
     def constant_base_field(self):
@@ -197,8 +191,7 @@ class SmoothProjectiveCurve(SageObject):
             D = f.resultant(g)
         else:
             D = f.discriminant().numerator()
-        ret =  [FunctionFieldValuation(F0, g.monic()) for g, m in D.factor()]
-        return [FunctionFieldValuation(F0, g.monic()) for g, m in D.factor()]
+        return [F0.valuation(g.monic()) for g, m in D.factor()]
 
 
     def field_of_constants_degree(self):
@@ -289,7 +282,7 @@ class SmoothProjectiveCurve(SageObject):
 
         # F is an extension of a rational ff F0
         ret = [F0.gen(), F.gen()]     # the coordinates of the affine plane model
-        v0 = FunctionFieldValuation(F0, 1/F0.gen())
+        v0 = F0.valuation(~F0.gen())
         V = v0.extensions(F)          # list of points at infinity
         separate_points(ret, V)       # make sure they are separated
         V0 = self.singular_locus()
@@ -309,7 +302,7 @@ class SmoothProjectiveCurve(SageObject):
         F0 = self.rational_function_field()
         R = F0._ring
         f = R.random_element(degree=(1,3)).factor()[0][0](F0.gen())
-        v0 = FunctionFieldValuation(F0, f)
+        v0 = F0.valuation(f)
         V = v0.extensions(F)
         v = V[randint(0, len(V)-1)]
         return PointOnSmoothProjectiveCurve(self, v)
@@ -329,7 +322,7 @@ class SmoothProjectiveCurve(SageObject):
         is_rational = (F is F0)
         D = {}
         for g, m in f.norm().factor():
-            v0 = FunctionFieldValuation(F0, g)
+            v0 = F0.valuation(g)
             if is_rational:
                 P = PointOnSmoothProjectiveCurve(self, v0)
                 a = P.coordinates()
@@ -339,7 +332,7 @@ class SmoothProjectiveCurve(SageObject):
                     P = PointOnSmoothProjectiveCurve(self, v)
                     a = P.coordinates()
                     D[a] = (P, P.order(f))
-        v0 = FunctionFieldValuation(F0, F0.gen()**(-1))
+        v0 = F0.valuation(F0.gen()**(-1))
         if is_rational:
             P = PointOnSmoothProjectiveCurve(self, v0)
             a = P.coordinates()
@@ -523,7 +516,7 @@ class SmoothProjectiveCurve(SageObject):
 
         """
         if not self._is_separable:
-            raise Error, "Y is not separable, hence the ramification divisor is not defined"
+            raise Error("Y is not separable, hence the ramification divisor is not defined")
         if hasattr(self, "_ramification_divisor"):
             return self._ramification_divisor
 
@@ -535,8 +528,8 @@ class SmoothProjectiveCurve(SageObject):
         supp = []      # compute the support of R
         d = FY.gen().minimal_polynomial('T').discriminant()
         for f, m in d.factor():
-            supp += FunctionFieldValuation(FX, f).extensions(FY)
-        supp += FunctionFieldValuation(FX,1/FX.gen()).extensions(FY)
+            supp += FX.valuation(f).extensions(FY)
+        supp += FX.valuation(~FX.gen()).extensions(FY)
         for v in supp:
             P = PointOnSmoothProjectiveCurve(self, v)
             t = v.uniformizer()
@@ -623,7 +616,7 @@ class SmoothProjectiveCurve(SageObject):
         # count points
         N = [0]*(d+1)
         for g in polys:
-            v0 = FunctionFieldValuation(F0, g)
+            v0 = F0.valuation(g)
             for v in v0.extensions(F):
                 L = v.residue_field()
                 try:
@@ -633,7 +626,7 @@ class SmoothProjectiveCurve(SageObject):
                 k = ZZ(L.degree()/d0)
                 if k <= d:
                     N[k] += 1
-        v0 = FunctionFieldValuation(F0, 1/F0.gen())
+        v0 = F0.valuation(~F0.gen())
         # points at infinity
         for v in v0.extensions(F):
             L = v.residue_field()
@@ -722,9 +715,9 @@ class SmoothProjectiveCurve(SageObject):
         F = self._function_field
         F0 = F.base_field()
         if a[0] == Infinity:
-            v0 = FunctionFieldValuation(F0, 1/F0.gen())
+            v0 = F0.valuation(~F0.gen())
         else:
-            v0 = FunctionFieldValuation(F0, F0.gen()-a[0])
+            v0 = F0.valuation(F0.gen()-a[0])
         if F0 is F:
             return self.point(v0)
         V = v0.extensions(F)
@@ -880,6 +873,7 @@ def compute_value(v, f):
     """
 
     from sage.rings.infinity import Infinity
+    # print "entering *compute_value* with f = %s,\n v = %s.\n"%(f,v)
     if v(f) < 0:
         return Infinity
     else:
@@ -888,7 +882,7 @@ def compute_value(v, f):
 
 def separate_points(coordinate_functions, valuations):
     r"""
-    Add new coordinate functions to separate the points in V.
+    Add new coordinate functions to separate a given number of points.
 
     INPUT:
 
@@ -930,17 +924,61 @@ def separate_two_points(v1, v2):
     to ``v1`` and ``v2``.
 
     """
+    # first a simple ad hoc test
+    # this should always work if F is a rational function field
     f1 = v1.uniformizer()
     f2 = v2.uniformizer()
     test_elements = [f1, f2, f1/f2, f2/f1]
     for f in test_elements:
         if compute_value(v1, f) != compute_value(v2, f):
             return f
-    F = v1.domain()
-    while True:
-        f = F.random_element()
+    # we can now assume that F is a finite extension of a rational function field
+    # Then v1 is either induced from a (pseudo)-valuation w1 on a polynomial
+    # ring or from a function field valuation via an automorphism
+    # In the first case we use the explicit realization of w1 to construct an element g,
+    # or a sequence of elements g, such that v1(g) goes to infinity
+    w1 = v1._base_valuation
+    if hasattr(w1, "_approximation"):
+        # w1 is a limit valuation
+        # we try to approximate it
+        loops = 0
+        # 10 loops should be enough
+        while loops < 10:
+            w1._improve_approximation()
+            u1 = w1._approximation
+            g = v1._from_base_domain(u1.phi())
+            f = g/v2.element_with_valuation(v2(g))
+            if compute_value(v1, f) != compute_value(v2, f):
+                return f
+            loops += 1
+        raise ValueError
+    elif hasattr(w1, "_phi"):
+        # w1 is an inductive valuation and hence w1.phi is a polynomial
+        # of 'minimal degree with maximal valuation'
+        g = v1._from_base_domain(w1.phi())
+        f = g/v2.element_with_valuation(v2(g))
         if compute_value(v1, f) != compute_value(v2, f):
             return f
+    else:
+        # probably, v1 is induced from w1 by an isomorphism of function fields
+        w2 = v2._base_valuation
+        if w2.domain() == w1.domain():
+            f = separate_two_points(w1,w2)
+            return v1._from_base_domain(f)
+        elif w1.domain() == v2.domain():
+            return separate_two_points(w1,v2)
+    raise NotImplementedError
+
+
+def absolute_degree(K):
+    r"""
+    Return the absolute degree of a (finite) field.
+
+    """
+    assert K.is_finite(), "K must be finite!"
+    p = K.characteristic()
+    q = K.cardinality()
+    return q.log(p)
 
 
 def extension_degree(K, L, check=False):
@@ -971,11 +1009,11 @@ def extension_degree(K, L, check=False):
     try:
         n = K.absolute_degree()
     except (AttributeError, NotImplementedError):
-        n = K.degree()
+        n = absolute_degree(K)
     try:
         m = L.absolute_degree()
     except (AttributeError, NotImplementedError):
-        m = L.degree()
+        m = absolute_degree(L)
     assert n.divides(m), "K is not a subfield of L."
     return ZZ(m/n)
 

@@ -46,8 +46,7 @@ EXAMPLES::
 #*****************************************************************************
 
 
-from sage.structure.sage_object import SageObject
-from sage.graphs.graph import Graph
+from sage.all import SageObject, Graph
 from mclf.berkovich.berkovich_line import BerkovichLine
 
 
@@ -69,76 +68,83 @@ class BerkovichTree(SageObject):
     parent ``parent``.
     `T` may be empty (no root and no children), but if there are children
     then there must be root.
-    """
 
+    """
     def __init__(self, X, root=None, children=None, parent=None):
 
-        # print "calling BerkovichTree with root %s, children %s and
-        # parent %s"%(root, children, parent)
+        # print("calling BerkovichTree with root %s, children %s and
+        # parent %s"%(root, children, parent))
         self._root = root
         if children == None:
             self._children = []
         else:
             self._children = children
         if root == None and self._children != []:
-            raise ValueError, "tree with children must have a root"
+            raise ValueError("tree with children must have a root")
 
         self._parent = parent
         self._X = X
         assert all([self._X == T._X for T in self._children]), \
                         "children must live on the same Berkovich line as root"
 
-    def __repr__(self):
 
+    def __repr__(self):
         return "Berkovich tree with %s vertices"%len(self.vertices())
 
-    def is_empty(self):
 
+    def is_empty(self):
         return self._root == None
+
 
     def root(self):
         """ Return the root of the tree."""
-
         return self._root
+
+
+    def berkovich_line(self):
+        """ Return the Berkovich line underlying this tree."""
+        return self._X
+        
 
     def has_parent(self):
         """ Return True if self has a parent."""
-
         return not self._parent == None
+
 
     def parent(self):
         """ Return the parent of self."""
-
         return self._parent
+
 
     def make_parent(self, parent):
         """ add ``parent`` as parent of self."""
-
         self._parent = parent
+
 
     def children(self):
         """ Return the list of all children."""
-
         return self._children
+
 
     def is_leaf(self):
         """ Return True if self is a leaf.
-        """
 
+        """
         return self._root != None and self._children == []
 
 
     def vertices(self):
         r"""
         Return the list of all vertices.
-        """
 
+        """
         vertices = []
         if self._root != None:
             vertices.append(self._root)
         for T in self._children:
             vertices += T.vertices()
         return vertices
+
 
     def leaves(self):
         r"""
@@ -153,6 +159,7 @@ class BerkovichTree(SageObject):
                 leaves += T.leaves()
         return leaves
 
+
     def subtrees(self):
         r""" Return the list of all subtrees.
         """
@@ -163,6 +170,7 @@ class BerkovichTree(SageObject):
         for T in self.children():
             subtrees += T.subtrees()
         return subtrees
+
 
     def paths(self):
         r"""
@@ -182,6 +190,7 @@ class BerkovichTree(SageObject):
             path_list += T2.paths()
         return path_list
 
+
     def copy(self):
         r""" Return a copy of self."""
 
@@ -191,6 +200,7 @@ class BerkovichTree(SageObject):
             children.append(child.copy())
         T._children = children
         return T
+
 
     def add_point(self, xi):
         r"""
@@ -265,7 +275,7 @@ class BerkovichTree(SageObject):
         elif xi.is_leq(xi0):
             # xi is less than the root of T0
             # we have to make xi the root and append T0 as the only subtree
-            T_new = AffinoidTree(T0._X, xi, [T0], None)
+            T_new = BerkovichTree(T0._X, xi, [T0], None)
             T0.make_parent(T_new)
             return T_new, T_new
 
@@ -279,6 +289,7 @@ class BerkovichTree(SageObject):
             T0.make_parent(T_new)
             T_xi.make_parent(T_new)
             return T_new, T_xi
+
 
     def find_point(self, xi):
         r""" Find subtree with root ``xi``.
@@ -303,6 +314,22 @@ class BerkovichTree(SageObject):
             return None
 
 
+    def adjacent_vertices(self, xi0):
+        """
+        List all vertices of the tree adjacent to ``xi``.
+
+        """
+        T = self.find_point(xi0)
+        if T == None:
+            return []
+        ret = []
+        if T.has_parent():
+            ret.append(T.parent().root())
+        for child in T.children():
+            ret.append(child.root())
+        return ret
+
+
     def print_tree(self, depth=0):
         """ Print the vertices of the tree, with identation corresponding to depth.
 
@@ -312,7 +339,7 @@ class BerkovichTree(SageObject):
 
         if self._root == None:
             return
-        print "___"*depth, " ", self._root
+        print("___"*depth, " ", self._root)
         for T in self._children:
             T.print_tree(depth + 1)
 
@@ -425,8 +452,24 @@ class BerkovichTree(SageObject):
         We add the jumps of this function to `T`. Having done this for all `i`
         we obtain the permant completion `T_1` of `T`.
 
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: FX.<x> = FunctionField(QQ)
+            sage: v_2 = pAdicValuation(QQ, 2)
+            sage: X = BerkovichLine(FX, v_2)
+            sage: xi0 = X.point_from_discoid(x^4+2, 5)
+            sage: T = BerkovichTree(X, xi0)
+            sage: T.permanent_completion()
+            Berkovich tree with 3 vertices
+
         """
         T = self
+        xi0 = T.root()
+        X = xi0.berkovich_line()
+        if not xi0.is_gauss_point():
+            for xi in component_jumps(X.gauss_point(), xi0):
+                T, _ = T.add_point(xi)
         if len(T.children()) == 0:
             return T
         xi0 = T.root()
@@ -471,7 +514,7 @@ def component_jumps(xi0, xi1):
     if hasattr(v1, "phi"):
         phi = v1.phi()
     else:
-        phi = v1._G 
+        phi = v1._G
     assert v0(phi) < v1(phi), "xi0 is not an ancestor of xi1!"
     R = phi.parent()
     x = R.gen()
@@ -479,18 +522,21 @@ def component_jumps(xi0, xi1):
     T = S.gen()
     G = phi(x+T)
     NP = NewtonPolygon([(i, v1(G[i])) for i in range(G.degree()+1)])
-    print "phi = ", phi
-    print "G = ", G
-    print "NP = ", NP
+    # print("phi = ", phi)
+    # print("G = ", G)
+    # print("NP = ", NP)
     V = []
-    for s in NP.sides():
-        i, ai = s[0]
-        j, aj = s[1]
+    vertices =  NP.vertices()
+    for k in range(len(vertices)-1):
+        i, ai = vertices[k]
+        j, aj = vertices[k+1]
         a0 = aj - j*(ai-aj)/(i-j)
-        print "a0 = ", a0
+        # print("a0 = ", a0)
         V += valuations_from_inequality(vK, phi, a0, v0)
-    print "V = ", V
+    # print("V = ", V)
     if xi1.is_in_unit_disk():
-        return [X.point_from_polynomial_pseudovaluation(v) for v in V]
+        ret = [X.point_from_polynomial_pseudovaluation(v) for v in V]
     else:
-        return [X.point_from_polynomial_pseudovaluation(v, in_unit_disk=False) for v in V]
+        ret = [X.point_from_polynomial_pseudovaluation(v, in_unit_disk=False) for v in V]
+    return [xi for xi in ret if (xi0.is_leq(xi) and xi.is_leq(xi1))]
+    # the last 'if' is necessary if phi = v1._G above

@@ -39,10 +39,8 @@ polygon with slope `s` is moved to a segment of slope `0` with ordinate `0`.
 
 """
 
-from mac_lane import GaussValuation
+from sage.all import ZZ
 from sage.geometry.newton_polygon import NewtonPolygon
-from sage.rings.integer_ring import IntegerRing
-ZZ = IntegerRing()
 
 
 def slope_factors(f, vK, precision, reduce_function, slope_bound=0):
