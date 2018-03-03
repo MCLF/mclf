@@ -378,9 +378,9 @@ class Superp(SageObject):
             print
         print
         if reduction_tree.is_semistable():
-            print "We have computed the semistable reduction of the curve."
+            print("We have computed the semistable reduction of the curve.")
         else:
-            print "We failed to compute the semistable reduction of the curve."
+            print("We failed to compute the semistable reduction of the curve.")
             raise ValueError()
 
     def conductor_exponent(self):
