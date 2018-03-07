@@ -114,6 +114,7 @@ from sage.arith.misc import lcm
 from mac_lane import *
 from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
 from mclf.padic_extensions.fake_padic_extensions import FakepAdicExtension
+from mclf.padic_extensions.slope_factors import slope_factors
 
 ZZ = IntegerRing()
 QQ = RationalField()
@@ -374,7 +375,7 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         polygon has a single slope `s`. We omit the factor with slope `s=-1`.
 
         """
-        from mclf.padic_extensions.slope_factors import slope_factors
+        # from mclf.padic_extensions.slope_factors import slope_factors
 
         NP = self.ramification_polygon()
         slopes = NP.slopes(False)
