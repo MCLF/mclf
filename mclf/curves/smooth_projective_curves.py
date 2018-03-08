@@ -91,6 +91,7 @@ from sage.misc.prandom import randint
 from sage.misc.misc_c import prod
 from sage.rings.power_series_ring import PowerSeriesRing
 from sage.misc.cachefunc import CachedFunction
+from sage.arith.misc import lcm
 from mac_lane import *
 
 
@@ -189,7 +190,7 @@ class SmoothProjectiveCurve(SageObject):
         # this is the defining equation, as a polynomial over F0 = k(x)
         # the coefficients may not be integral; we have to multiply f by
         # the lcm of the denominators of the coefficients
-        c = prod([f[i].denominator() for i in range(f.degree()+1)])
+        c = lcm([f[i].denominator() for i in range(f.degree()+1)])
         f = c*f
         f = f.map_coefficients(lambda c:c.numerator(), F0._ring)
         y = f.parent().gen()
@@ -200,7 +201,9 @@ class SmoothProjectiveCurve(SageObject):
             g = f.derivative(x)
             D = f.resultant(g)
         else:
-            D = f.discriminant().numerator()
+            Dy = f.discriminant().numerator()
+            Dx = f.resultant(f.derivative(x))
+            D = Dx.gcd(Dy)
         ret =  [FunctionFieldValuation(F0, g.monic()) for g, m in D.factor()]
         return [FunctionFieldValuation(F0, g.monic()) for g, m in D.factor()]
 
