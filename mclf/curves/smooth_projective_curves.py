@@ -104,6 +104,7 @@ class SmoothProjectiveCurve(SageObject):
     - ``k`` -- a field which has a natural embedding into the constant
       base field of `F`, such that the constant base field is a finite
       extension of k (or ``None``).
+    - ``assume_regular`` -- a boolean (default: ``False``)
 
     OUTPUT:
 
@@ -118,7 +119,7 @@ class SmoothProjectiveCurve(SageObject):
     degree of the constant base field of `F` over `k`).
     """
 
-    def __init__(self, F, k=None):
+    def __init__(self, F, k=None, assume_regular=False):
 
         # print "creating curve with %s,\nconstant base field %s\n"%(F,k)
         self._function_field = F
@@ -136,7 +137,10 @@ class SmoothProjectiveCurve(SageObject):
             self._covering_degree = F.degree()
 
         self._coordinate_functions = self.coordinate_functions()
-        self._field_of_constants_degree = self.field_of_constants_degree()
+        if assume_regular:
+            self._field_of_constants_degree = ZZ(1)
+        else:
+            self._field_of_constants_degree = self.field_of_constants_degree()
         self.compute_separable_model()
 
 
@@ -210,6 +214,10 @@ class SmoothProjectiveCurve(SageObject):
         We use a probabilistic algorithms for computing the degree `[k_c:k]`.
         This works well over finite fields, but over number fields it often gives
         false results. Usually, this will result in a miscalculation of the genus.
+
+        TODO:
+
+        correct calculation also for number fields
 
         """
         if hasattr(self, "_field_of_constants_degree"):
