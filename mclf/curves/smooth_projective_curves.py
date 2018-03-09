@@ -64,6 +64,8 @@ EXAMPLES::
 
 .. TODO::
 
+    - implement `lazy coordinates` for improved speed
+
     - allow to specify the constant base field in a more flexible way
     - write more doctests !!
     - implement an algorithm for computing the field of constants
@@ -862,6 +864,13 @@ class PointOnSmoothProjectiveCurve(SageObject):
 
     def coordinates(self):
         r""" Return the coordinate tupel of the point.
+
+        NOTE:
+
+        for a curve over a number field and for a point whose residue field
+        is of high degree, this can be *very* slow.
+        It would be better to implement this function in a lazy way,
+        for instance as an iterator.
         """
 
         if not hasattr(self,"_coordinates"):
@@ -891,7 +900,7 @@ def compute_value(v, f):
     """
 
     from sage.rings.infinity import Infinity
-    # print "entering *compute_value* with f = %s,\n v = %s.\n"%(f,v)
+
     if v(f) < 0:
         return Infinity
     else:
