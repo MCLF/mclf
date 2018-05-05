@@ -246,7 +246,7 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
             # this is the Newton polygon of the ramification
             # polygon G
             jumps = []
-            for v1, v2 in NP.sides():
+            for v1, v2 in zip(NP.vertices(), NP.vertices()[1:]):
                 u = (v1[1]-v2[1])/(v2[0]-v1[0]) - 1  # jump = -slope - 1
                 if u == 0:                # G does not distinguish Gamma and Gamma_0
                     m = self.ramification_degree()
