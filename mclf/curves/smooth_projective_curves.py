@@ -87,14 +87,8 @@ EXAMPLES::
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.structure.sage_object import SageObject
-from sage.rings.all import Infinity, ZZ, PolynomialRing
-from sage.misc.prandom import randint
-from sage.misc.misc_c import prod
-from sage.rings.power_series_ring import PowerSeriesRing
-from sage.misc.cachefunc import CachedFunction
-from sage.arith.misc import lcm
-from mac_lane import *
+from sage.all import lcm, SageObject, Infinity, ZZ, PolynomialRing, randint, prod, PowerSeriesRing, CachedFunction
+
 
 
 class SmoothProjectiveCurve(SageObject):
@@ -206,8 +200,7 @@ class SmoothProjectiveCurve(SageObject):
             Dy = f.discriminant().numerator()
             Dx = f.resultant(f.derivative(x))
             D = Dx.gcd(Dy)
-        ret =  [FunctionFieldValuation(F0, g.monic()) for g, m in D.factor()]
-        return [FunctionFieldValuation(F0, g.monic()) for g, m in D.factor()]
+        return [F0.valuation(g.monic()) for g, m in D.factor()]
 
 
     def field_of_constants_degree(self):
@@ -302,7 +295,7 @@ class SmoothProjectiveCurve(SageObject):
 
         # F is an extension of a rational ff F0
         ret = [F0.gen(), F.gen()]     # the coordinates of the affine plane model
-        v0 = FunctionFieldValuation(F0, 1/F0.gen())
+        v0 = F0.valuation(~F0.gen())
         V = v0.extensions(F)          # list of points at infinity
         separate_points(ret, V)       # make sure they are separated
         V0 = self.singular_locus()
@@ -322,7 +315,7 @@ class SmoothProjectiveCurve(SageObject):
         F0 = self.rational_function_field()
         R = F0._ring
         f = R.random_element(degree=(1,3)).factor()[0][0](F0.gen())
-        v0 = FunctionFieldValuation(F0, f)
+        v0 = F0.valuation(f)
         V = v0.extensions(F)
         v = V[randint(0, len(V)-1)]
         return PointOnSmoothProjectiveCurve(self, v)
@@ -342,7 +335,7 @@ class SmoothProjectiveCurve(SageObject):
         is_rational = (F is F0)
         D = {}
         for g, m in f.norm().factor():
-            v0 = FunctionFieldValuation(F0, g)
+            v0 = F0.valuation(g)
             if is_rational:
                 P = PointOnSmoothProjectiveCurve(self, v0)
                 a = P.coordinates()
@@ -352,7 +345,7 @@ class SmoothProjectiveCurve(SageObject):
                     P = PointOnSmoothProjectiveCurve(self, v)
                     a = P.coordinates()
                     D[a] = (P, P.order(f))
-        v0 = FunctionFieldValuation(F0, F0.gen()**(-1))
+        v0 = F0.valuation(F0.gen()**(-1))
         if is_rational:
             P = PointOnSmoothProjectiveCurve(self, v0)
             a = P.coordinates()
@@ -536,7 +529,7 @@ class SmoothProjectiveCurve(SageObject):
 
         """
         if not self._is_separable:
-            raise Error, "Y is not separable, hence the ramification divisor is not defined"
+            raise Error("Y is not separable, hence the ramification divisor is not defined")
         if hasattr(self, "_ramification_divisor"):
             return self._ramification_divisor
 
@@ -548,8 +541,8 @@ class SmoothProjectiveCurve(SageObject):
         supp = []      # compute the support of R
         d = FY.gen().minimal_polynomial('T').discriminant()
         for f, m in d.factor():
-            supp += FunctionFieldValuation(FX, f).extensions(FY)
-        supp += FunctionFieldValuation(FX,1/FX.gen()).extensions(FY)
+            supp += FX.valuation(f).extensions(FY)
+        supp += FX.valuation(~FX.gen()).extensions(FY)
         for v in supp:
             P = PointOnSmoothProjectiveCurve(self, v)
             t = v.uniformizer()
@@ -636,7 +629,7 @@ class SmoothProjectiveCurve(SageObject):
         # count points
         N = [0]*(d+1)
         for g in polys:
-            v0 = FunctionFieldValuation(F0, g)
+            v0 = F0.valuation(g)
             for v in v0.extensions(F):
                 L = v.residue_field()
                 try:
@@ -646,7 +639,7 @@ class SmoothProjectiveCurve(SageObject):
                 k = ZZ(L.degree()/d0)
                 if k <= d:
                     N[k] += 1
-        v0 = FunctionFieldValuation(F0, 1/F0.gen())
+        v0 = F0.valuation(~F0.gen())
         # points at infinity
         for v in v0.extensions(F):
             L = v.residue_field()
@@ -735,9 +728,9 @@ class SmoothProjectiveCurve(SageObject):
         F = self._function_field
         F0 = F.base_field()
         if a[0] == Infinity:
-            v0 = FunctionFieldValuation(F0, 1/F0.gen())
+            v0 = F0.valuation(~F0.gen())
         else:
-            v0 = FunctionFieldValuation(F0, F0.gen()-a[0])
+            v0 = F0.valuation(F0.gen()-a[0])
         if F0 is F:
             return self.point(v0)
         V = v0.extensions(F)

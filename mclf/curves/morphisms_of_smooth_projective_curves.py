@@ -23,7 +23,7 @@ EXAMPLES::
     morphism from the smooth projective curve with Function field in y defined by y^2 - x^3 - 1
     to the smooth projective curve with Rational function field in x over Rational Field,
     determined by inclusion of function fields
-    sage: x0 = PointOnSmoothProjectiveCurve(X, FunctionFieldValuation(FX, x-1))
+    sage: x0 = PointOnSmoothProjectiveCurve(X, FX.valuation(x-1))
     sage: phi.fiber(x0)
     [Point on the smooth projective curve with Function field in y defined by y^2 - x^3 - 1 with coordinates (1, u1).]
 
@@ -41,10 +41,9 @@ EXAMPLES::
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.structure.sage_object import SageObject
-from sage.rings.all import Infinity, ZZ, PolynomialRing
+from sage.all import SageObject, Infinity, ZZ, PolynomialRing
 from mclf.curves.smooth_projective_curves import PointOnSmoothProjectiveCurve
-from mac_lane import *
+
 
 
 class MorphismOfSmoothProjectiveCurves(SageObject):
@@ -88,7 +87,7 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
         to the smooth projective curve with Rational function field in y over Rational Field,
         determined by inclusion of function fields
 
-        sage: P = PointOnSmoothProjectiveCurve(Y, FunctionFieldValuation(FY, y-2))
+        sage: P = PointOnSmoothProjectiveCurve(Y, FY.valuation(y-2))
         sage: psi.fiber(P)
         [Point on the smooth projective curve with Rational function field in x over Rational Field with coordinates (1,).,
          Point on the smooth projective curve with Rational function field in x over Rational Field with coordinates (-1,).]
@@ -150,13 +149,13 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
             phi = self._phi
             if v(FY.gen()) >= 0:
                 g = phi(v.uniformizer()).numerator()
-                extensions = [FunctionFieldValuation(FX, FX(h)) for h, m in g.factor()]
+                extensions = [FX.valuation(FX(h)) for h, m in g.factor()]
             else:
                 f = phi(FY.gen())
                 g = f.denominator()
-                extensions = [FunctionFieldValuation(FX, h) for h, m in g.factor()]
+                extensions = [FX.valuation(h) for h, m in g.factor()]
                 if f.numerator().degree() > g.degree():
-                    extensions.append(FunctionFieldValuation(FX,~FX.gen()))
+                    extensions.append(FX.valuation(FX,~FX.gen()))
             return [PointOnSmoothProjectiveCurve(X, w) for w in extensions]
 
 
