@@ -1,0 +1,23 @@
+version: 2
+
+test: &test
+  working_directory: /home/sage/mclf
+  steps:
+    - checkout
+    - run:
+        command: |
+          ln -s /home/sage/mclf/mclf /home/sage/sage/local/lib/python2.7/site-packages/
+          sage -tp --initial .
+
+jobs:
+  "sage-8.2rc4":
+    <<: *test
+    docker:
+      # TODO: pin to sagemath/sagemath:8.2 once that has been released for docker
+      - image: saraedum/sagemath:latest
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - sage-8.2rc4
