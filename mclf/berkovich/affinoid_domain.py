@@ -543,8 +543,6 @@ class AffinoidDomainOnBerkovichLine(SageObject):
 
 
     def compute_components(self):
-        # import pdb
-        # pdb.set_trace()
         T = self._T
         comp_list = []
         T.compute_connected_components(comp_list, [])
@@ -613,7 +611,7 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         for T1 in T.subtrees():
             xi = T1.root()
             if xi.type == "II" and T1.order() <= 2:
-                # we check whether xi is a boundary point 
+                # we check whether xi is a boundary point
                 is_boundary_point = (T1.has_parent() and not T1.parent().is_in_affinoid())
                 for child in T1.children():
                     is_boundary_point = is_boundary_point or not child.is_in_affinoid()
@@ -766,8 +764,6 @@ class ElementaryAffinoidOnBerkovichLine(AffinoidDomainOnBerkovichLine):
 
     """
     def __init__(self, boundary_list):
-        # import pdb
-        # pdb.set_trace()
         assert boundary_list != [], "the boundary list must not be empty!"
         # boundary = [ xi_list[0].boundary_point() for xi_list in boundary_list]
         X = boundary_list[0][0].X()
