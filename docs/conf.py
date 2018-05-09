@@ -334,3 +334,17 @@ epub_exclude_files = ['search.html']
 
 # If false, no index is generated.
 #epub_use_index = True
+
+# -- mock things from sage that we won't have on readthedocs --
+try:
+    import sage
+except ImportError:
+    from unittest.mock import MagicMock
+    
+    class Mock(MagicMock):
+        @classmethod
+        def __getattr__(cls, name):
+                return MagicMock()
+    
+    MOCK_MODULES = ['sage.all', 'sage.geometry.newton_polygon', 'sage.rings.valuation.limit_valuation']
+    sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)

@@ -50,20 +50,9 @@ TO DO:
 #*****************************************************************************
 
 
-from sage.structure.sage_object import SageObject
-from sage.rings.integer_ring import IntegerRing
-from sage.rings.rational_field import RationalField
-from sage.rings.number_field.number_field import NumberField
-from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-from sage.rings.polynomial.polynomial_element import Polynomial
-from sage.rings.infinity import Infinity
-from mac_lane import *
+from sage.all import SageObject, ZZ, QQ, NumberField, PolynomialRing, Polynomial, Infinity
 from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
-
-
-ZZ = IntegerRing()
-QQ = RationalField()
-
+from sage.rings.valuation.limit_valuation import MacLaneLimitValuation, LimitValuation
 
 
 class FakepAdicEmbedding(SageObject):

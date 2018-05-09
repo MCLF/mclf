@@ -96,27 +96,10 @@ TO DO:
 #*****************************************************************************
 
 
-from sage.structure.sage_object import SageObject
-from sage.rings.number_field.number_field import NumberField
-from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-from sage.rings.polynomial.polynomial_element import Polynomial
-from sage.rings.integer_ring import IntegerRing
-from sage.rings.rational_field import RationalField
-from sage.rings.finite_rings.integer_mod import mod
-from sage.misc.cachefunc import cached_method
-from sage.rings.infinity import Infinity
-from sage.functions.generalized import sgn
-from sage.functions.other import ceil
-from sage.misc.prandom import randint
+from sage.all import SageObject, NumberField, PolynomialRing, Polynomial, ZZ, QQ, mod, cached_method, Infinity, sgn, ceil, randint, prod, lcm
 from sage.geometry.newton_polygon import NewtonPolygon
-from sage.misc.misc_c import prod
-from sage.arith.misc import lcm
-from mac_lane import *
 from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
 from mclf.padic_extensions.fake_padic_extensions import FakepAdicExtension
-
-ZZ = IntegerRing()
-QQ = RationalField()
 
 
 class WeakPadicGaloisExtension(FakepAdicExtension):
@@ -263,7 +246,7 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
             # this is the Newton polygon of the ramification
             # polygon G
             jumps = []
-            for v1, v2 in NP.sides():
+            for v1, v2 in zip(NP.vertices(), NP.vertices()[1:]):
                 u = (v1[1]-v2[1])/(v2[0]-v1[0]) - 1  # jump = -slope - 1
                 if u == 0:                # G does not distinguish Gamma and Gamma_0
                     m = self.ramification_degree()

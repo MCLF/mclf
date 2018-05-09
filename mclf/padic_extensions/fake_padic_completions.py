@@ -84,31 +84,9 @@ TO DO:
 #*****************************************************************************
 
 
-from sage.structure.sage_object import SageObject
-from sage.rings.integer_ring import IntegerRing
-from sage.rings.rational_field import RationalField
-from sage.rings.number_field.number_field import NumberField
-from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-from sage.rings.polynomial.polynomial_element import Polynomial
-from sage.rings.integer import Integer
-from sage.matrix.constructor import matrix
-from sage.matrix.special import zero_matrix, identity_matrix
-from sage.rings.finite_rings.integer_mod_ring import IntegerModRing
-from sage.rings.finite_rings.integer_mod import mod
-from sage.rings.infinity import Infinity
-from sage.functions.generalized import sgn
-from sage.functions.other import ceil, floor
+from sage.all import SageObject, ZZ, QQ, NumberField, PolynomialRing, Polynomial, Integer, matrix, zero_matrix, identity_matrix, IntegerModRing, mod, Infinity, sgn, ceil, floor, prod, lcm, vector, GF
 from sage.geometry.newton_polygon import NewtonPolygon
-from sage.misc.misc_c import prod
-from sage.arith.misc import lcm
-from sage.modules.free_module_element import vector
-from sage.rings.finite_rings.finite_field_constructor import GF
-from mac_lane import *
-
-
-ZZ = IntegerRing()
-QQ = RationalField()
-
+from sage.rings.valuation.limit_valuation import LimitValuation
 
 
 class FakepAdicCompletion(SageObject):
@@ -163,7 +141,7 @@ class FakepAdicCompletion(SageObject):
         assert n == e*f
         assert n == P.degree()
         self._number_field = K0
-        self._v_p = pAdicValuation(QQ, p)
+        self._v_p = QQ.valuation(p)
         self._valuation = vK
         self._p = p
         self._uniformizer = piK
@@ -321,10 +299,10 @@ class FakepAdicCompletion(SageObject):
         into `L_0`.
 
         """
-        # print "entering extension with "
-        # print "K = ", self
-        # print "f = ", f
-        # print
+        # print("entering extension with ")
+        # print("K = ", self)
+        # print("f = ", f)
+        # print()
 
         K0 = self.number_field()
         assert K0.has_coerce_map_from(f.parent().base_ring())
@@ -354,6 +332,7 @@ class FakepAdicCompletion(SageObject):
         g = g.squarefree_decomposition()[0][0]
         # now we compute the absolute characteristic polynomial of a root
         # of g
+
         done = False
         N = m+5
         while not done:
@@ -1103,9 +1082,9 @@ class FakepAdicCompletion(SageObject):
                 for k in range(n):
                     for l in range(n):
                         if vK(B_ij[k,l]) < 0:
-                            print "B[i,j] = ", B[i,j]
-                            print "vK(..) = ", vK(B[i,j])
-                            print "B_ij[k,l] = ", B_ij[k,l]
+                            print("B[i,j] = ", B[i,j])
+                            print("vK(..) = ", vK(B[i,j]))
+                            print("B_ij[k,l] = ", B_ij[k,l])
                             raise ValueError
                         BB[i*n+k, j*n+l] = R(B_ij[k,l])
         return BB.charpoly()
@@ -1155,7 +1134,7 @@ class FakepAdicCompletion(SageObject):
                 if v.mu() < Infinity:
                     V = v.mac_lane_step(f, assume_squarefree=True, check=False)
                     if len(V) > 1:
-                        # print "len(V) > 1"
+                        # print("len(V) > 1")
                         return None
                     v1 = V[0]
             # now v.phi().degree() = d, and either v1.phi().degree() > d
@@ -1168,13 +1147,13 @@ class FakepAdicCompletion(SageObject):
                         FakepAdicEmbedding(L, K)
                         # this can be very slow, but so far it is the only
                         # conclusive test I know
-                        # print "found subfield of degree %s and ramification degree %s"%(L.degree(), L.ramification_degree())
+                        # print("found subfield of degree %s and ramification degree %s"%(L.degree(), L.ramification_degree()))
                         return L
                     except AssertionError:
                         pass
-                        # print "no embedding into L!"
+                        # print("no embedding into L!")
             if v.mu() == Infinity:
-                # print "v.mu() = Infinity"
+                # print("v.mu() = Infinity")
                 return None
             else:
                 v = v1  # we go to a larger degree

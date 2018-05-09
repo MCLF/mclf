@@ -49,13 +49,7 @@ TO DO:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.structure.sage_object import SageObject
-from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-from sage.rings.function_field.constructor import FunctionField
-from sage.misc.cachefunc import cached_method
-from sage.rings.infinity import Infinity
-from sage.functions.other import floor
-from mac_lane import *
+from sage.all import SageObject, PolynomialRing, FunctionField, cached_method, Infinity, floor
 from mclf.berkovich.berkovich_line import *
 from mclf.berkovich.affinoid_domain import *
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
@@ -156,7 +150,7 @@ class Superp(SageObject):
         phi, psi, f1 = v0.monic_integral_model(f)
         # now f1 = phi(f).monic()
         if f1 != f.monic():
-            print "We make the coordinate change (x --> %s) in order to work with an integral polynomial f"%phi(R.gen())
+            print("We make the coordinate change (x --> %s) in order to work with an integral polynomial f"%phi(R.gen()))
         self._f = f1
         a = phi(f).leading_coefficient()
         pi = vK.uniformizer()
@@ -355,38 +349,38 @@ class Superp(SageObject):
         computation and the result.
 
         """
-        print "We try to compute the semistable reduction of the"
-        print self
-        print "which has genus ", self.curve().genus()
-        print
-        print "First we compute the etale locus: "
-        print self.etale_locus()
+        print("We try to compute the semistable reduction of the")
+        print(self)
+        print("which has genus ", self.curve().genus())
+        print()
+        print("First we compute the etale locus: ")
+        print(self.etale_locus())
 
         reduction_tree = self.reduction_tree()
         inertial_components = reduction_tree.inertial_components()
         assert inertial_components != [], "no inertial components found! Something is wrong.."
         if len(inertial_components) > 1:
-            print "There are %s inertial components to consider: "%len(inertial_components)
+            print("There are %s inertial components to consider: "%len(inertial_components))
         else:
-            print "There is exactly one inertial component to consider:"
-        print
+            print("There is exactly one inertial component to consider:")
+        print()
         for Z in inertial_components:
-            print "inertial component corresponding to "
-            print Z.interior()
-            print "It splits over ", Z.splitting_field().extension_field()
-            print "into %s lower components."%len(Z.lower_components())
-            print "The upper components are: "
+            print("inertial component corresponding to ")
+            print(Z.interior())
+            print("It splits over ", Z.splitting_field().extension_field())
+            print("into %s lower components."%len(Z.lower_components()))
+            print("The upper components are: ")
             for W in Z.upper_components():
-                print W
+                print(W)
                 if W.field_of_constants_degree() > 1:
-                    print "   (note that this component is defined over an extension of degree %s over the residue field)"%W.field_of_constants_degree()
-            print "Contribution of this component to the reduction genus is ", Z.reduction_genus()
+                    print("   (note that this component is defined over an extension of degree %s over the residue field)"%W.field_of_constants_degree())
+            print("Contribution of this component to the reduction genus is ", Z.reduction_genus())
             print
         print
         if reduction_tree.is_semistable():
-            print "We have computed the semistable reduction of the curve."
+            print("We have computed the semistable reduction of the curve.")
         else:
-            print "We failed to compute the semistable reduction of the curve."
+            print("We failed to compute the semistable reduction of the curve.")
             raise ValueError()
 
     def conductor_exponent(self):

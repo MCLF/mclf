@@ -5,11 +5,7 @@ r""" Points of type V on the Berkovich line.
 """
 
 
-from sage.structure.sage_object import SageObject
-from sage.misc.cachefunc import cached_method
-from sage.rings.infinity import Infinity
-# from mclf import *
-from mac_lane import *
+from sage.all import SageObject, cached_method, Infinity
 from mclf.berkovich.berkovich_line import BerkovichLine
 
 
@@ -142,7 +138,7 @@ class TypeVPointOnBerkovichLine(SageObject):
                 # phi_pol is a key polynomial for v_0
                 self._phi_pol = phi_pol
                 phib = normalized_reduction(v0, phi_pol)
-                self._vb = FunctionFieldValuation(k_v, phib(k_v.gen()))
+                self._vb = k_v.valuation(phib(k_v.gen()))
                 phi = phi_pol(x)
                 self._phi = phi
                 self._s = xi0.v(phi)
@@ -153,7 +149,7 @@ class TypeVPointOnBerkovichLine(SageObject):
                 phi_pol = v0.equivalence_decomposition(v1.phi())[0][0]
                 self._phi_pol = phi_pol
                 phib = normalized_reduction(v0, phi_pol)
-                self._vb = FunctionFieldValuation(k_v, phib(k_v.gen()))
+                self._vb = k_v.valuation(phib(k_v.gen()))
                 phi = phi_pol(1/x)
                 self._phi = phi
                 self._s = xi0.v(phi)
@@ -164,7 +160,7 @@ class TypeVPointOnBerkovichLine(SageObject):
                 # properly contained in the standard closed unit disk.
                 # In particular, the residue class contains Infinity,
                 # and 0 lies in its complement.
-                self._vb = FunctionFieldValuation(k_v, 1/k_v.gen())
+                self._vb = k_v.valuation(1/k_v.gen())
                 phi_pol = v0.phi()
                 self._phi_pol = phi_pol
                 phi = 1/phi_pol(x)
@@ -174,7 +170,7 @@ class TypeVPointOnBerkovichLine(SageObject):
             else:
                 # now self represents an open discoid which properly contains
                 # the standard closed unit disk
-                self._vb = FunctionFieldValuation(k_v, 1/k_v.gen())
+                self._vb = k_v.valuation(1/k_v.gen())
                 phi_pol = v0.phi()
                 self._phi_pol = phi_pol
                 phi = 1/phi_pol(1/x)
