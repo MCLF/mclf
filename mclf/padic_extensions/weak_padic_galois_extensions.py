@@ -100,6 +100,7 @@ from sage.all import SageObject, NumberField, PolynomialRing, Polynomial, ZZ, QQ
 from sage.geometry.newton_polygon import NewtonPolygon
 from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
 from mclf.padic_extensions.fake_padic_extensions import FakepAdicExtension
+from mclf.padic_extensions.slope_factors import slope_factors
 
 
 class WeakPadicGaloisExtension(FakepAdicExtension):
@@ -357,7 +358,7 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         polygon has a single slope `s`. We omit the factor with slope `s=-1`.
 
         """
-        from mclf.padic_extensions.slope_factors import slope_factors
+        # from mclf.padic_extensions.slope_factors import slope_factors
 
         NP = self.ramification_polygon()
         slopes = NP.slopes(False)

@@ -64,6 +64,8 @@ EXAMPLES::
 
 .. TODO::
 
+    - implement `lazy coordinates` for improved speed
+
     - allow to specify the constant base field in a more flexible way
     - write more doctests !!
     - implement an algorithm for computing the field of constants
@@ -85,7 +87,8 @@ EXAMPLES::
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.all import SageObject, Infinity, ZZ, PolynomialRing, randint, prod, PowerSeriesRing, CachedFunction
+from sage.all import lcm, SageObject, Infinity, ZZ, PolynomialRing, randint, prod, PowerSeriesRing, CachedFunction
+
 
 
 class SmoothProjectiveCurve(SageObject):
@@ -98,6 +101,7 @@ class SmoothProjectiveCurve(SageObject):
     - ``k`` -- a field which has a natural embedding into the constant
       base field of `F`, such that the constant base field is a finite
       extension of k (or ``None``).
+    - ``assume_regular`` -- a boolean (default: ``False``)
 
     OUTPUT:
 
@@ -112,7 +116,7 @@ class SmoothProjectiveCurve(SageObject):
     degree of the constant base field of `F` over `k`).
     """
 
-    def __init__(self, F, k=None):
+    def __init__(self, F, k=None, assume_regular=False):
 
         # print "creating curve with %s,\nconstant base field %s\n"%(F,k)
         self._function_field = F
@@ -130,7 +134,10 @@ class SmoothProjectiveCurve(SageObject):
             self._covering_degree = F.degree()
 
         self._coordinate_functions = self.coordinate_functions()
-        self._field_of_constants_degree = self.field_of_constants_degree()
+        if assume_regular:
+            self._field_of_constants_degree = ZZ(1)
+        else:
+            self._field_of_constants_degree = self.field_of_constants_degree()
         self.compute_separable_model()
 
 
@@ -179,7 +186,7 @@ class SmoothProjectiveCurve(SageObject):
         # this is the defining equation, as a polynomial over F0 = k(x)
         # the coefficients may not be integral; we have to multiply f by
         # the lcm of the denominators of the coefficients
-        c = prod([f[i].denominator() for i in range(f.degree()+1)])
+        c = lcm([f[i].denominator() for i in range(f.degree()+1)])
         f = c*f
         f = f.map_coefficients(lambda c:c.numerator(), F0._ring)
         y = f.parent().gen()
@@ -190,7 +197,9 @@ class SmoothProjectiveCurve(SageObject):
             g = f.derivative(x)
             D = f.resultant(g)
         else:
-            D = f.discriminant().numerator()
+            Dy = f.discriminant().numerator()
+            Dx = f.resultant(f.derivative(x))
+            D = Dx.gcd(Dy)
         return [F0.valuation(g.monic()) for g, m in D.factor()]
 
 
@@ -203,6 +212,10 @@ class SmoothProjectiveCurve(SageObject):
         We use a probabilistic algorithms for computing the degree `[k_c:k]`.
         This works well over finite fields, but over number fields it often gives
         false results. Usually, this will result in a miscalculation of the genus.
+
+        TODO:
+
+        correct calculation also for number fields
 
         """
         if hasattr(self, "_field_of_constants_degree"):
@@ -844,6 +857,13 @@ class PointOnSmoothProjectiveCurve(SageObject):
 
     def coordinates(self):
         r""" Return the coordinate tupel of the point.
+
+        NOTE:
+
+        for a curve over a number field and for a point whose residue field
+        is of high degree, this can be *very* slow.
+        It would be better to implement this function in a lazy way,
+        for instance as an iterator.
         """
 
         if not hasattr(self,"_coordinates"):
@@ -873,7 +893,7 @@ def compute_value(v, f):
     """
 
     from sage.rings.infinity import Infinity
-    # print "entering *compute_value* with f = %s,\n v = %s.\n"%(f,v)
+
     if v(f) < 0:
         return Infinity
     else:
