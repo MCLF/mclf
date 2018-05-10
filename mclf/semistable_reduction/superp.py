@@ -311,8 +311,7 @@ class Superp(SageObject):
                 X_et = X_et.union(RationalDomainOnBerkovichLine(X, delta[i]))
                 X_et.simplify()
         X_et = X_et.intersection(ClosedUnitDisk(X))
-        # this is artificial
-        X_et.simplify()
+        X_et = X_et.minimal_representation()
         self._etale_locus = X_et
         return X_et
 
