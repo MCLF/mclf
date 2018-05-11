@@ -84,7 +84,7 @@ TO DO:
 #*****************************************************************************
 
 
-from sage.all import SageObject, ZZ, QQ, NumberField, PolynomialRing, Polynomial, Integer, matrix, zero_matrix, identity_matrix, IntegerModRing, mod, Infinity, sgn, ceil, floor, prod, lcm, vector, GF
+from sage.all import SageObject, ZZ, QQ, NumberField, GaussValuation, PolynomialRing, Polynomial, Integer, matrix, zero_matrix, identity_matrix, IntegerModRing, mod, Infinity, sgn, ceil, floor, prod, lcm, vector, GF
 from sage.geometry.newton_polygon import NewtonPolygon
 from sage.rings.valuation.limit_valuation import LimitValuation
 
