@@ -104,7 +104,7 @@ class BerkovichTree(SageObject):
     def berkovich_line(self):
         """ Return the Berkovich line underlying this tree."""
         return self._X
-        
+
 
     def has_parent(self):
         """ Return True if self has a parent."""
@@ -456,7 +456,7 @@ class BerkovichTree(SageObject):
 
             sage: from mclf import *
             sage: FX.<x> = FunctionField(QQ)
-            sage: v_2 = pAdicValuation(QQ, 2)
+            sage: v_2 = QQ.valuation(2)
             sage: X = BerkovichLine(FX, v_2)
             sage: xi0 = X.point_from_discoid(x^4+2, 5)
             sage: T = BerkovichTree(X, xi0)

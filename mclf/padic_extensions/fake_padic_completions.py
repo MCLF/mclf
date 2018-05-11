@@ -343,7 +343,7 @@ class FakepAdicCompletion(SageObject):
             P = Pmod.map_coefficients(lambda c:c.lift(), QQ)
             P = P.squarefree_decomposition()[0][0]
             L0 = NumberField(P, 'pi%s'%P.degree())
-            V = pAdicValuation(QQ, self.p()).extensions(L0)
+            V = QQ.valuation(self.p()).extensions(L0)
             vL = V[0]
             e = ZZ(1/vL(vL.uniformizer()))
             f = vL.residue_field().degree()
@@ -441,7 +441,7 @@ class FakepAdicCompletion(SageObject):
         The following example created an error in a previous version:
 
             sage: from mclf import *
-            sage: v_2 = pAdicValuation(QQ, 2)
+            sage: v_2 = QQ.valuation(2)
             sage: Q2 = FakepAdicCompletion(QQ, v_2)
             sage: R.<x> = QQ[]
             sage: f = x^12 + 192*x^9 - 5352*x^6 + 33344*x^3 - 293568

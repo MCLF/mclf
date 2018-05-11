@@ -75,7 +75,7 @@ class TypeVPointOnBerkovichLine(SageObject):
     ::
 
         sage: K = QQ
-        sage: vK = pAdicValuation(K, 2)
+        sage: vK = K.valuation(2)
         sage: F.<x> = FunctionField(K)
         sage: X = BerkovichLine(F, vK)
         sage: xi1 = X.point_from_discoid(x,1)
@@ -234,7 +234,7 @@ class TypeVPointOnBerkovichLine(SageObject):
 ::
 
             sage: K = QQ
-            sage: vK = pAdicValuation(K, 2)
+            sage: vK = K.valuation(2)
             sage: F.<x> = FunctionField(K)
             sage: X = BerkovichLine(F, vK)
             sage: xi1 = X.point_from_discoid(x,1)
@@ -386,7 +386,7 @@ class TypeVPointOnBerkovichLine(SageObject):
         ::
 
             sage: K = QQ
-            sage: vK = pAdicValuation(K, 2)
+            sage: vK = K.valuation(2)
             sage: F.<x> = FunctionField(K)
             sage: X = BerkovichLine(F, vK)
             sage: xi1 = X.point_from_discoid(x^2+2, 1)

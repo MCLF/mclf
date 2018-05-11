@@ -71,7 +71,7 @@ EXAMPLES:
 This example is from the "Database of Local Fields":  ::
 
     sage: K = QQ
-    sage: v_3 = pAdicValuation(K, 3)
+    sage: v_3 = K.valuation(3)
     sage: R.<x> = K[]
     sage: f = x^6+6*x^4+6*x^3+18
     sage: L = WeakPadicGaloisExtension(v_3, f)

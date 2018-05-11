@@ -92,7 +92,7 @@ class AffinoidTree(BerkovichTree):
     ::
 
         sage: K = QQ
-        sage: vK = pAdicValuation(K, 2)
+        sage: vK = K.valuation(2)
         sage: F.<x> = FunctionField(K)
         sage: X = BerkovichLine(F, vK)
         sage: xi0 = X.gauss_point()
@@ -426,7 +426,7 @@ class AffinoidTree(BerkovichTree):
         ::
 
             sage: K = QQ
-            sage: vK = pAdicValuation(K, 2)
+            sage: vK = K.valuation(2)
             sage: F.<x> = FunctionField(K)
             sage: X = BerkovichLine(F, vK)
             sage: xi0 = X.gauss_point()
@@ -481,7 +481,7 @@ class AffinoidDomainOnBerkovichLine(SageObject):
     ::
 
         sage: K = QQ
-        sage: vK = pAdicValuation(K, 2)
+        sage: vK = K.valuation(2)
         sage: F.<x> = FunctionField(K)
         sage: X = BerkovichLine(F, vK)
         sage: U1 = RationalDomainOnBerkovichLine(X, 2*(x^2+2)/(x+1))
@@ -659,7 +659,7 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         ::
 
             sage: K = QQ
-            sage: vK = pAdicValuation(K, 2)
+            sage: vK = K.valuation(2)
             sage: F.<x> = FunctionField(K)
             sage: X = BerkovichLine(F, vK)
             sage: U = RationalDomainOnBerkovichLine(X, 2/x/(x+1))
@@ -716,7 +716,7 @@ class ClosedUnitDisk(AffinoidDomainOnBerkovichLine):
     ::
 
         sage: K = QQ
-        sage: vK = pAdicValuation(K, 3)
+        sage: vK = K.valuation(3)
         sage: F.<x> = FunctionField(K)
         sage: X = BerkovichLine(F, vK)
         sage: ClosedUnitDisk(X)
@@ -822,7 +822,7 @@ class RationalDomainOnBerkovichLine(AffinoidDomainOnBerkovichLine):
     ::
 
         sage: K = QQ
-        sage: vK = pAdicValuation(K, 2)
+        sage: vK = K.valuation(2)
         sage: F.<x> = FunctionField(K)
         sage: X = BerkovichLine(F, vK)
         sage: RationalDomainOnBerkovichLine(X, (x^2+2)/x*(x+1)/2)

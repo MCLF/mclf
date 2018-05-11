@@ -304,7 +304,7 @@ class BerkovichLine(SageObject):
 
             sage: from mclf import *
             sage: F.<x> = FunctionField(QQ)
-            sage: v_2 = pAdicValuation(QQ, 2)
+            sage: v_2 = QQ.valuation(2)
             sage: X = BerkovichLine(F, v_2)
             sage: f = x^2 + 2
             sage: X.points_from_inequality(f, 3)
