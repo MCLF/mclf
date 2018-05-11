@@ -85,7 +85,10 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
         sage: psi
         morphism from the smooth projective curve with Rational function field in x over Rational Field
         to the smooth projective curve with Rational function field in y over Rational Field,
-        determined by inclusion of function fields
+        determined by Function Field morphism:
+        From: Rational function field in y over Rational Field
+        To:   Rational function field in x over Rational Field
+        Defn: y |--> x^2 + 1
 
         sage: P = PointOnSmoothProjectiveCurve(Y, FY.valuation(y-2))
         sage: psi.fiber(P)
