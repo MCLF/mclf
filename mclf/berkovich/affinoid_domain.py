@@ -91,8 +91,9 @@ class AffinoidTree(BerkovichTree):
     EXAMPLES:
     ::
 
+        sage: from mclf import *
         sage: K = QQ
-        sage: vK = pAdicValuation(K, 2)
+        sage: vK = K.valuation(2)
         sage: F.<x> = FunctionField(K)
         sage: X = BerkovichLine(F, vK)
         sage: xi0 = X.gauss_point()
@@ -112,7 +113,6 @@ class AffinoidTree(BerkovichTree):
     """
 
     def __init__(self, X, root=None, children=None, parent=None, is_in_affinoid=False):
-
         self._X = X
         if root == None:
             self._root = None
@@ -128,14 +128,14 @@ class AffinoidTree(BerkovichTree):
 
 
     def __repr__(self):
-
         return "Affinoid tree with %s vertices"%len(self.vertices())
+
 
     def _check_for_parents(self):
         r"""
         Check if parents are set correctly. For debugging only!
-        """
 
+        """
         T0 = self
         for T1 in T0.children():
             assert T1.parent() is T0
@@ -279,8 +279,8 @@ class AffinoidTree(BerkovichTree):
         To test this, we compute the image of xi under the retraction map
         onto the total space of T=self and check whether it lies on a vertex
         in U or on an edge connecting two vertices in U.
-        """
 
+        """
         xi1, T1, T2, is_vertex = self.position(xi)
         # xi1 is the image of xi under the retraction map onto the total
         # space of T=self. If is_vertex==True then xi1 is the root of T1.
@@ -426,8 +426,9 @@ class AffinoidTree(BerkovichTree):
         EXAMPLES:
         ::
 
+            sage: from mclf import *
             sage: K = QQ
-            sage: vK = pAdicValuation(K, 2)
+            sage: vK = K.valuation(2)
             sage: F.<x> = FunctionField(K)
             sage: X = BerkovichLine(F, vK)
             sage: xi0 = X.gauss_point()
@@ -481,8 +482,9 @@ class AffinoidDomainOnBerkovichLine(SageObject):
 
     ::
 
+        sage: from mclf import *
         sage: K = QQ
-        sage: vK = pAdicValuation(K, 2)
+        sage: vK = K.valuation(2)
         sage: F.<x> = FunctionField(K)
         sage: X = BerkovichLine(F, vK)
         sage: U1 = RationalDomainOnBerkovichLine(X, 2*(x^2+2)/(x+1))
@@ -557,7 +559,6 @@ class AffinoidDomainOnBerkovichLine(SageObject):
     def components(self):
         if not hasattr(self, "_comp_list"):
             self.compute_components()
-
         return self._components
 
 
@@ -591,8 +592,38 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         This only changes the internal representation by an "affinoid tree".
 
         """
-
         self._T = self._T.simplify()
+
+
+    def minimal_representation(self):
+        r""" Return a a normlized representation of this affinoid.
+
+        A representation of an affinoid `U` by an affinoid tree `T` is called
+        *minimal* if all vertices  of type II
+        are either boundary points of `U` or have order at least 3.
+        Furthermore, no vertex of type I lies in `U`.
+
+        """
+        components = self.components()
+        U = components[0]
+        for i in range(1,len(components)):
+            U = U.union(components[i])
+
+        # check whether U is minimal
+        T = U._T
+        for T1 in T.subtrees():
+            xi = T1.root()
+            if xi.type == "II" and T1.order() <= 2:
+                # we check whether xi is a boundary point
+                is_boundary_point = (T1.has_parent() and not T1.parent().is_in_affinoid())
+                for child in T1.children():
+                    is_boundary_point = is_boundary_point or not child.is_in_affinoid()
+                assert is_boundary_point, "affinoid tree is not minimal"
+            else:
+                if xi.type == "I":
+                    assert not T1.is_in_affinoid()
+
+        return U
 
 
     def union(self, V):
@@ -630,8 +661,9 @@ class AffinoidDomainOnBerkovichLine(SageObject):
 
         ::
 
+            sage: from mclf import *
             sage: K = QQ
-            sage: vK = pAdicValuation(K, 2)
+            sage: vK = K.valuation(2)
             sage: F.<x> = FunctionField(K)
             sage: X = BerkovichLine(F, vK)
             sage: U = RationalDomainOnBerkovichLine(X, 2/x/(x+1))
@@ -687,8 +719,9 @@ class ClosedUnitDisk(AffinoidDomainOnBerkovichLine):
     EXAMPLES:
     ::
 
+        sage: from mclf import *
         sage: K = QQ
-        sage: vK = pAdicValuation(K, 3)
+        sage: vK = K.valuation(3)
         sage: F.<x> = FunctionField(K)
         sage: X = BerkovichLine(F, vK)
         sage: ClosedUnitDisk(X)
@@ -793,8 +826,9 @@ class RationalDomainOnBerkovichLine(AffinoidDomainOnBerkovichLine):
     EXAMPLES:
     ::
 
+        sage: from mclf import *
         sage: K = QQ
-        sage: vK = pAdicValuation(K, 2)
+        sage: vK = K.valuation(2)
         sage: F.<x> = FunctionField(K)
         sage: X = BerkovichLine(F, vK)
         sage: RationalDomainOnBerkovichLine(X, (x^2+2)/x*(x+1)/2)

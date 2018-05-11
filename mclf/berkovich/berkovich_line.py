@@ -304,14 +304,14 @@ class BerkovichLine(SageObject):
 
             sage: from mclf import *
             sage: F.<x> = FunctionField(QQ)
-            sage: v_2 = pAdicValuation(QQ, 2)
+            sage: v_2 = QQ.valuation(2)
             sage: X = BerkovichLine(F, v_2)
             sage: f = x^2 + 2
             sage: X.points_from_inequality(f, 3)
             [Point of type II on Berkovich line, corresponding to v(x^2 + 2) >= 3]
-            sage: from mclf.padic_extensions.weak_padic_galois_extensions import WeakPadicGaloisExtension
-            sage: LL = WeakPadicGaloisExtension(v_2, f.numerator())
-            sage: L = LL.field()
+            sage: Q_2 = FakepAdicCompletion(QQ, v_2)
+            sage: LL = WeakPadicGaloisExtension(Q_2, f.numerator())
+            sage: L = LL.extension_field().number_field()
             sage: vL = LL.valuation()
             sage: FL.<x> = FunctionField(L)
             sage: XL = BerkovichLine(FL, vL)
