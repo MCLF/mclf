@@ -109,15 +109,15 @@ class Superp(SageObject):
 
     ::
 
+        sage: from mclf import *
         sage: K = QQ
-        sage: vK = pAdicValuation(K, 3)
+        sage: vK = K.valuation(3)
         sage: R.<x> = K[]
         sage: f = x^4 + x^2 + 1
         sage: Y = Superp(f, vK, 3)
         sage: Y
-        The superelliptic curve Y: y^3 = x^4 + x^2 + 1 over Rational Field with 3-adic valuation
-        sage: U_et = Y.compute_etale_locus()
-        sage: U_et
+        superelliptic curve Y: y^3 = x^4 + x^2 + 1 over Rational Field, with respect to 3-adic valuation
+        sage: Y.etale_locus()
         Affinoid with 3 components:
         Elementary affinoid defined by
         v(x) >= 3/4
@@ -231,17 +231,15 @@ class Superp(SageObject):
 
             sage: from mclf import *
             sage: K = QQ
-            sage: vK = pAdicValuation(K, 2)
+            sage: vK = K.valuation(2)
             sage: R.<x> = K[]
             sage: f = x^3 + x^2 + 1
             sage: Y = Superp(f, vK, 2)
             sage: Y
-            The superelliptic curve Y: y^2 = x^3 + x^2 + 1 over Rational Field with 2-adic valuation
-            sage: Y.compute_etale_locus()
-            Affinoid with 1 components:
+            superelliptic curve Y: y^2 = x^3 + x^2 + 1 over Rational Field, with respect to 2-adic valuation
+            sage: Y.etale_locus()
             Elementary affinoid defined by
             v(x^4 + 4/3*x^3 + 4*x + 4/3) >= 8/3
-
 
         We check Example 4.14 from [BouWe16]. The original equation is
         `y^2 = f(x) = 2x^3 + x^2 + 32`, and `f` is not monic, as required.
@@ -250,8 +248,7 @@ class Superp(SageObject):
 
             sage: f = x^3 + x^2 + 128
             sage: Y = Superp(f, vK, 2)
-            sage: Y.compute_etale_locus()
-            Affinoid with 1 components:
+            sage: Y.etale_locus()
             Elementary affinoid defined by
             v(1/x) >= -5/2
             v(x) >= 2

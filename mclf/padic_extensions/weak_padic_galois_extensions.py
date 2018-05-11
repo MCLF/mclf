@@ -70,11 +70,12 @@ EXAMPLES:
 
 This example is from the "Database of Local Fields":  ::
 
-    sage: K = QQ
-    sage: v_3 = pAdicValuation(K, 3)
-    sage: R.<x> = K[]
+    sage: from mclf import *
+    sage: v_3 = QQ.valuation(3)
+    sage: Q_3 = FakepAdicCompletion(QQ, v_3)
+    sage: R.<x> = QQ[]
     sage: f = x^6+6*x^4+6*x^3+18
-    sage: L = WeakPadicGaloisExtension(v_3, f)
+    sage: L = WeakPadicGaloisExtension(Q_3, f)
     sage: L.upper_jumps()
     [0, 1/2]
 
