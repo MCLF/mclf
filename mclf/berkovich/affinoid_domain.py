@@ -91,6 +91,7 @@ class AffinoidTree(BerkovichTree):
     EXAMPLES:
     ::
 
+        sage: from mclf import *
         sage: K = QQ
         sage: vK = K.valuation(2)
         sage: F.<x> = FunctionField(K)
@@ -425,6 +426,7 @@ class AffinoidTree(BerkovichTree):
         EXAMPLES:
         ::
 
+            sage: from mclf import *
             sage: K = QQ
             sage: vK = K.valuation(2)
             sage: F.<x> = FunctionField(K)
@@ -480,6 +482,7 @@ class AffinoidDomainOnBerkovichLine(SageObject):
 
     ::
 
+        sage: from mclf import *
         sage: K = QQ
         sage: vK = K.valuation(2)
         sage: F.<x> = FunctionField(K)
@@ -658,6 +661,7 @@ class AffinoidDomainOnBerkovichLine(SageObject):
 
         ::
 
+            sage: from mclf import *
             sage: K = QQ
             sage: vK = K.valuation(2)
             sage: F.<x> = FunctionField(K)
@@ -715,6 +719,7 @@ class ClosedUnitDisk(AffinoidDomainOnBerkovichLine):
     EXAMPLES:
     ::
 
+        sage: from mclf import *
         sage: K = QQ
         sage: vK = K.valuation(3)
         sage: F.<x> = FunctionField(K)
@@ -821,6 +826,7 @@ class RationalDomainOnBerkovichLine(AffinoidDomainOnBerkovichLine):
     EXAMPLES:
     ::
 
+        sage: from mclf import *
         sage: K = QQ
         sage: vK = K.valuation(2)
         sage: F.<x> = FunctionField(K)

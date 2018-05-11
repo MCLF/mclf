@@ -100,7 +100,7 @@ EXAMPLES::
 
     sage: from mclf import *
     sage: FX.<x> = FunctionField(QQ)
-    sage: v_2 = pAdicValuation(QQ, 2)
+    sage: v_2 = QQ.valuation(2)
     sage: X = BerkovichLine(FX, v_2)
     sage: T = BerkovichTree(X, X.gauss_point())
     sage: T, _ = T.add_point(X.infty())
@@ -108,11 +108,12 @@ EXAMPLES::
     sage: FY.<y> = FX.extension(y^2-x^3-1)
     sage: Y = SmoothProjectiveCurve(FY)
     sage: RT = ReductionTree(Y, v_2, T)
-    sage: RT.add_reduction_component(T.root())
-    sage: Z = RT.reduction_components()[0]
-    sage: Z
-    base component of reduction tree with interior Elementary affinoid defined by
-    v(x) >= 0
+    sage: RT
+    A reduction tree for  the smooth projective curve with Function field in y defined by y^2 - x^3 - 1, relative to 2-adic valuation
+    sage: RT.inertial_components()
+    [inertial component of reduction tree with interior Elementary affinoid defined by
+     v(x) >= 0
+     ]
 
 TODO:
 

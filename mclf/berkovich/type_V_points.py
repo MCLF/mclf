@@ -74,6 +74,7 @@ class TypeVPointOnBerkovichLine(SageObject):
 
     ::
 
+        sage: from mclf import *
         sage: K = QQ
         sage: vK = K.valuation(2)
         sage: F.<x> = FunctionField(K)
@@ -233,6 +234,7 @@ class TypeVPointOnBerkovichLine(SageObject):
 
 ::
 
+            sage: from mclf import *
             sage: K = QQ
             sage: vK = K.valuation(2)
             sage: F.<x> = FunctionField(K)
@@ -385,6 +387,7 @@ class TypeVPointOnBerkovichLine(SageObject):
 
         ::
 
+            sage: from mclf import *
             sage: K = QQ
             sage: vK = K.valuation(2)
             sage: F.<x> = FunctionField(K)
