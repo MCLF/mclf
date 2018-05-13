@@ -1,6 +1,1 @@
-
-.. toctree::
-
-.. automodule::
-   mclf.padic_extensions.fake_padic_completions
-   :members:
+.. automodule:: mclf.padic_extensions.fake_padic_completions

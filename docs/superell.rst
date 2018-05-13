@@ -1,6 +1,1 @@
-
-.. toctree::
-
-.. automodule::
-   mclf.semistable_reduction.superell
-   :members:
+.. automodule:: mclf.semistable_reduction.superell

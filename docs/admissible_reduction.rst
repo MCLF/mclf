@@ -1,6 +1,1 @@
-
-.. toctree::
-
-.. automodule::
-   mclf.semistable_reduction.admissible_reduction
-   :members:
+.. automodule:: mclf.semistable_reduction.admissible_reduction
