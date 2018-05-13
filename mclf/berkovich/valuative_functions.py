@@ -42,7 +42,6 @@ Berkovich line. Our main algorithms computes, from the input of a finite list
 of harmonic functions, a Berkovich tree `T` compatible with all elements of the
 list.
 
-"""
 AUTHORS:
 
 - Stefan Wewers (2017-02-13): initial version
@@ -51,7 +50,7 @@ AUTHORS:
 EXAMPLES::
 
 <Lots and lots of examples>
-
+"""
 
 #*****************************************************************************
 #       Copyright (C) 2017 Stefan Wewers <stefan.wewers@uni-ulm.de>
