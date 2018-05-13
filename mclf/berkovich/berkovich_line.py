@@ -583,7 +583,8 @@ class PointOnBerkovichLine(SageObject):
 
 
     def make_polynomial(self, f):
-        r""" Return the polynomial corresponding to ``f``.
+        r"""
+        Return the polynomial corresponding to ``f``.
 
         INPUT:
 
@@ -591,9 +592,13 @@ class PointOnBerkovichLine(SageObject):
 
         OUTPUT:
 
-        If ``f`` is an element of the function field `F=K(x)` the we return
-           - f as an element of `K[x]` if possible and ``self`` lies in the unit disk
-           - f(1/x) as an element of `K[x]` if possible and ``lies outside the unit disk
+        If ``f`` is an element of the function field `F=K(x)` then we return
+
+        - f as an element of `K[x]` if possible and ``self`` lies in the unit
+          disk
+        - f(1/x) as an element of `K[x]` if possible and ``self`` lies outside
+          the unit disk
+
         Otherwise an error is raised.
 
         This function is useful to converting elements of the function field to

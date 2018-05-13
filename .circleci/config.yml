@@ -15,9 +15,36 @@ jobs:
     docker:
       # TODO: pin to sagemath/sagemath:8.2 once that has been released for docker
       - image: saraedum/sagemath:latest
+  docbuild-sage:
+    docker:
+      # TODO: pin to sagemath/sagemath:latest once that has been released for docker
+      - image: saraedum/sagemath:latest
+    steps:
+      - checkout
+      - run:
+          command: |
+            sudo apt-get update && sudo apt-get install -y build-essential
+            cd docs
+            mkdir -p _static
+            sage -sh -c 'make html SPHINXOPTS="-W"'
+  docbuild-readthedocs:
+    docker:
+      - image: readthedocs/build
+    steps:
+      - checkout
+      - run:
+          command: |
+            pip install --user readthedocs-build
+            ~/.local/bin/rtd-build
+            # check that readthedocs produced something non-empty
+            (( $(du -s _readthedocs_build/mclf/html | cut -f1) > 1000 ))
 
 workflows:
   version: 2
   test:
     jobs:
       - sage-8.2rc4
+  doc:
+    jobs:
+      - docbuild-sage
+      - docbuild-readthedocs
