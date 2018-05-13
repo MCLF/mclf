@@ -346,5 +346,5 @@ except ImportError:
         def __getattr__(cls, name):
                 return MagicMock()
     
-    MOCK_MODULES = ['sage.all', 'sage.geometry.newton_polygon', 'sage.rings.valuation.limit_valuation']
+    MOCK_MODULES = ['sage', 'sage.all', 'sage.geometry.newton_polygon', 'sage.rings.valuation.limit_valuation', 'sage.rings.valuation.valuation']
     sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
