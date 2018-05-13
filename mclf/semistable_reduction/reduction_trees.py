@@ -47,8 +47,7 @@ is semistable and, if this is the case, to compute the semistable reduction of
 the curve `Y`.
 
 
-The inertial model
-------------------
+**The inertial model**
 
 The inertial model `\mathcal{X}_0` of `X` is determined by a *Berkovich tree*
 `T` on the analytic space `X^{an}` (the *Berkovich line* over `\hat{K}`, the
@@ -73,8 +72,7 @@ Recall that this means that the marked points specialize to the smooth points
 on the special fiber.
 
 
-Reduction components
---------------------
+**Reduction components**
 
 Let us fix an inertial component `Z_0`. The *interior* of `Z_0` is the affinoid
 subdomain of `X^{an}` consisting of all points which specialize to a point on

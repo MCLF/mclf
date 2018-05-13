@@ -131,7 +131,7 @@ class Superp(SageObject):
         For the time being, we need to make the following additional assumptions
         on `f`:
 
-        - of degree prime to `p`.
+        - `f` is of degree prime to `p`.
 
         This restrictions is preliminary and will be removed in a future version.
         Note that a superelliptic curve of degree `p` can be written in the required

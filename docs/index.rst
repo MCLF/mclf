@@ -8,8 +8,9 @@ Contents:
 
    curves
    berkovich
+   padic_extensions
    semistable_reduction
-   
+
 
 Indices and tables
 ==================
