@@ -81,34 +81,48 @@ class FakepAdicExtension(SageObject):
 
 
     def p(self):
+        """
+        Return the prime `p`.
+        """
         return self.base_field().p()
 
 
     def base_field(self):
+        """
+        Return the base field.
+        """
         return self._base_field
 
 
     def extension_field(self):
+        """
+        Return the extension field.
+        """
         return self._extension_field
 
 
     def valuation(self):
+        """ Return the valuation of the extension."""
         return self._extension_field.valuation()
 
 
     def normalized_valuation(self):
+        """ Return the normalized valuation."""
         return self._extension_field.normalized_valuation()
 
 
     def degree(self):
+        """ Return the degree of the extension."""
         return self._degree
 
 
     def ramification_degree(self):
+        """ Return the ramification degree of the extension."""
         return self._ramification_degree
 
 
     def inertia_degree(self):
+        """ Return the inertia degree of the extension."""
         return self._inertia_degree
 
 
@@ -138,7 +152,6 @@ class FakepAdicExtension(SageObject):
         `P` should be naturally equipped with
 
         """
-
         if not hasattr(self, "_polynomial"):
             K = self.base_field()
             L = self.extension_field()
@@ -177,7 +190,7 @@ class FakepAdicExtension(SageObject):
 
         Let `L/K` be the given extension of `p`-adic number fields. Then we are
         looking for a subextension `K \subset M \subset L` such that
-        `[M:K] = d`. If `alpha` is given exactly, then we demand that `\alpha\in M`.
+        `[M:K] = d`. If `\alpha` is given exactly, then we demand that `\alpha\in M`.
         If `\alpha` is given by an approximation `(\alpha_0,N)` then we demand
         that there exists an element `\alpha_1\in M` such that
 
