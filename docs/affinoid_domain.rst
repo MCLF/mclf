@@ -1,6 +1,1 @@
-
-.. toctree::
-
-.. automodule::
-   mclf.berkovich.affinoid_domain
-   :members:
+.. automodule:: mclf.berkovich.affinoid_domain

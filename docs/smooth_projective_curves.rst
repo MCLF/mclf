@@ -1,6 +1,1 @@
-
-.. toctree::
-
-.. automodule::
-   mclf.curves.smooth_projective_curves
-   :members:
+.. automodule:: mclf.curves.smooth_projective_curves

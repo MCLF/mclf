@@ -1,6 +1,1 @@
-
-.. toctree::
-
-.. automodule::
-   mclf.semistable_reduction.reduction_trees
-   :members:
+.. automodule:: mclf.semistable_reduction.reduction_trees

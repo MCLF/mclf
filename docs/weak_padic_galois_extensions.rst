@@ -1,6 +1,1 @@
-
-.. toctree::
-
-.. automodule::
-   mclf.padic_extensions.weak_padic_galois_extensions
-   :members:
+.. automodule:: mclf.padic_extensions.weak_padic_galois_extensions

@@ -1,6 +1,1 @@
-
-.. toctree::
-
-.. automodule::
-   mclf.berkovich.berkovich_line
-   :members:
+.. automodule:: mclf.berkovich.berkovich_line
