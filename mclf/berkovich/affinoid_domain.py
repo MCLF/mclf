@@ -77,7 +77,7 @@ class AffinoidTree(BerkovichTree):
     INPUT:
 
     - ``X`` -- a Berkovich line
-    - ``root`` -- a point on ``X``or None (default = None)
+    - ``root`` -- a point on ``X`` or None (default = None)
     - ``children`` -- a list of affinoid trees or None (default = None)
     - ``parent`` -- an affinoid tree or none (default = None)
     - ``is_in_affinoid`` -- a boolean or None (default = None)
@@ -88,8 +88,7 @@ class AffinoidTree(BerkovichTree):
     it has root, parent, children and the flag ``is_in_affinoid`` as given
     by the extra parameters.
 
-    EXAMPLES:
-    ::
+    EXAMPLES::
 
         sage: from mclf import *
         sage: K = QQ
@@ -423,8 +422,7 @@ class AffinoidTree(BerkovichTree):
         of the affinoid with a common boundary point. A *connected component*
         is a list of boundary lists.
 
-        EXAMPLES:
-        ::
+        EXAMPLES::
 
             sage: from mclf import *
             sage: K = QQ
@@ -478,9 +476,7 @@ class AffinoidDomainOnBerkovichLine(SageObject):
     r"""
     The class realizing affinoid domains on a Berkovich line.
 
-    EXAMPLES:
-
-    ::
+    EXAMPLES::
 
         sage: from mclf import *
         sage: K = QQ
@@ -657,9 +653,7 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         The latter means that ``xi1`` maps onto the irreducible components
         of the canonical reduction of `U` corresponding to ``xi0``.
 
-        EXAMPLES:
-
-        ::
+        EXAMPLES::
 
             sage: from mclf import *
             sage: K = QQ
@@ -716,8 +710,7 @@ class ClosedUnitDisk(AffinoidDomainOnBerkovichLine):
 
     OUTPUT: the closed unit disk inside ``X``
 
-    EXAMPLES:
-    ::
+    EXAMPLES::
 
         sage: from mclf import *
         sage: K = QQ
@@ -823,8 +816,7 @@ class RationalDomainOnBerkovichLine(AffinoidDomainOnBerkovichLine):
     v(f) >= 0.
 
 
-    EXAMPLES:
-    ::
+    EXAMPLES::
 
         sage: from mclf import *
         sage: K = QQ

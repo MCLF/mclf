@@ -346,7 +346,8 @@ class BerkovichTree(SageObject):
 
 
     def position(self, xi):
-        r""" Find the position of ``xi`` in the tree T=self.
+        r"""
+        Find the position of ``xi`` in the tree T=self.
 
         INPUT:
 
@@ -357,13 +358,14 @@ class BerkovichTree(SageObject):
         xi1, T1, T2, is_vertex,
 
         where
-        - xi1 is the image of xi under the retraction map onto the total
-          space of T
+
+        - xi1 is the image of xi under the retraction map onto the total space
+          of T
         - T1 is the smallest subtree of T whose total space contains xi1
-        - T2 is the child of T1 such that xi1 lies on the edge connecting
-          T1 and T2 (or is equal to T1 if xi1 is the root of T1)
-        - is_vertex is True if xi1 is a vertex of T (which is then the root
-           of T1) or False otherwise
+        - T2 is the child of T1 such that xi1 lies on the edge connecting T1
+          and T2 (or is equal to T1 if xi1 is the root of T1)
+        - is_vertex is True if xi1 is a vertex of T (which is then the root of
+          T1) or False otherwise
 
         """
 
