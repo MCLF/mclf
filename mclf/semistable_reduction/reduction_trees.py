@@ -53,6 +53,7 @@ The inertial model
 The inertial model `\mathcal{X}_0` of `X` is determined by a *Berkovich tree*
 `T` on the analytic space `X^{an}` (the *Berkovich line* over `\hat{K}`, the
 completion of `K` with respect to `v_K`). Thus,
+
 * the irreducible components of the special fiber of `\mathcal{X}_0` (called
   the *inertial components*) correspond to the vertices of `T` which are points
   of type II on `X^{an}`.
