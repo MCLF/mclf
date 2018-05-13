@@ -1,4 +1,3 @@
-
 r"""
 Smooth projective curves over a field.
 ======================================
