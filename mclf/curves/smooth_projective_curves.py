@@ -198,8 +198,12 @@ class SmoothProjectiveCurve(SageObject):
             D = f.resultant(g)
         else:
             Dy = f.discriminant().numerator()
-            Dx = f.resultant(f.derivative(x))
-            D = Dx.gcd(Dy)
+            fx = f.derivative(x)
+            if not fx.is_zero():
+                Dx = f.resultant(fx)
+                D = Dx.gcd(Dy)
+            else:
+                D =  Dy
         return [F0.valuation(g.monic()) for g, m in D.factor()]
 
 
