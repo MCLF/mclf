@@ -14,11 +14,13 @@ can work with 'exact' fields, e.g. number fields.
 
 There are only two kind of 'points' which are relevant for us and can be handled
 using the mac_lane infrastructure:
-    - Type I, algebraic: these are the points that come from a closed point
-      on the (algebraic) projective line over the completed base field.
-    - Type II: these are the points which correspond to discrete valuations
-      on the function field whose residue field is a function field over the
-      residue base field
+
+- Type I, algebraic: these are the points that come from a closed point on the
+  (algebraic) projective line over the completed base field.
+- Type II: these are the points which correspond to discrete valuations on the
+  function field whose residue field is a function field over the residue base
+  field
+
 For both these kind of points, the corresponding pseudovaluation on `F` are
 directly realizable inside the ``mac_lane`` infrastructure.
 
@@ -300,7 +302,7 @@ class BerkovichLine(SageObject):
             For the moment we have to assume that if `f=g(1/x)`, then all the
             roots of `g` have strictly positive valuations.
 
-        EXAMPLES:
+        EXAMPLES::
 
             sage: from mclf import *
             sage: F.<x> = FunctionField(QQ)
@@ -360,7 +362,7 @@ class BerkovichLine(SageObject):
         The smallest point between `\xi1` and `\xi2` where the valuation of `f`
         is zero.
 
-        NOTE::
+        NOTE:
 
         We are assuming for the moment that the function
 
@@ -581,7 +583,8 @@ class PointOnBerkovichLine(SageObject):
 
 
     def make_polynomial(self, f):
-        r""" Return the polynomial corresponding to ``f``.
+        r"""
+        Return the polynomial corresponding to ``f``.
 
         INPUT:
 
@@ -589,9 +592,13 @@ class PointOnBerkovichLine(SageObject):
 
         OUTPUT:
 
-        If ``f`` is an element of the function field `F=K(x)` the we return
-           - f as an element of `K[x]` if possible and ``self`` lies in the unit disk
-           - f(1/x) as an element of `K[x]` if possible and ``lies outside the unit disk
+        If ``f`` is an element of the function field `F=K(x)` then we return
+
+        - f as an element of `K[x]` if possible and ``self`` lies in the unit
+          disk
+        - f(1/x) as an element of `K[x]` if possible and ``self`` lies outside
+          the unit disk
+
         Otherwise an error is raised.
 
         This function is useful to converting elements of the function field to
@@ -1453,12 +1460,14 @@ def valuations_from_inequality(vK, f, s, v0=None):
 
 
 def equality_of_pseudo_valuations(v1, v2):
-    r""" Decide whether two pseudo-valuations are equal.
+    r"""
+    Decide whether two pseudo-valuations are equal.
 
     INPUT:
 
     - ``v1``, ``v2`` -- two pseudo-valuations on the same rational
                         function field `F=K(x)`
+
     OUTPUT:
 
     True if ``v1`` is equal to ``v2``, False otherwise.
