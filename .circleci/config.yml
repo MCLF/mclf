@@ -34,8 +34,11 @@ jobs:
       - checkout
       - run:
           command: |
+            curl https://beyondgrep.com/ack-2.22-single-file > /tmp/ack
+            chmod 0755 /tmp/ack
             pip install --user readthedocs-build
-            ~/.local/bin/rtd-build
+            # fail on warnings (we can to pass -W through to sphinx-build currently)
+            ~/.local/bin/rtd-build 2>&1 | /tmp/ack --passthru -v WARNING
             # check that readthedocs produced something non-empty
             (( $(du -s _readthedocs_build/mclf/html | cut -f1) > 1000 ))
 

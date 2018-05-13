@@ -45,18 +45,11 @@ TO DO:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.structure.sage_object import SageObject
-from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-from sage.rings.function_field.constructor import FunctionField
-from sage.misc.cachefunc import cached_method
-from sage.rings.infinity import Infinity
-from sage.functions.other import floor
+from sage.all import SageObject, PolynomialRing, FunctionField, cached_method, Infinity, floor
 from mclf.berkovich.berkovich_line import *
 from mclf.berkovich.affinoid_domain import *
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
 from mclf.semistable_reduction.reduction_trees import ReductionTree
-
-
 
 class AdmissibleReductionOfSmoothProjectiveCurve(SageObject):
     r"""
