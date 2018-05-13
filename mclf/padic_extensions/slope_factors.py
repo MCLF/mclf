@@ -39,7 +39,7 @@ polygon with slope `s` is moved to a segment of slope `0` with ordinate `0`.
 
 """
 
-from sage.all import ZZ
+from sage.all import ZZ, GaussValuation
 from sage.geometry.newton_polygon import NewtonPolygon
 
 

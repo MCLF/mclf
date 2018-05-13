@@ -51,7 +51,6 @@ from sage.rings.function_field.constructor import FunctionField
 from sage.misc.cachefunc import cached_method
 from sage.rings.infinity import Infinity
 from sage.functions.other import floor
-from mac_lane import *
 from mclf.berkovich.berkovich_line import *
 from mclf.berkovich.affinoid_domain import *
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
@@ -77,8 +76,8 @@ class AdmissibleReductionOfSmoothProjectiveCurve(SageObject):
     The method used to compute the semistable reduction in this particular case is
     explained in detail in
 
-    - [We17] I.I.Bouw and S. Wewers, *Computing `L`-functions and semistable
-      reduction of superelliptic *, Glasgow Math. J., 59(1)
+    - [We17] I.I.Bouw and S. Wewers, Computing `L`-functions and semistable
+      reduction of superelliptic, Glasgow Math. J., 59(1)
 
 
     EXAMPLES:
@@ -115,18 +114,22 @@ class AdmissibleReductionOfSmoothProjectiveCurve(SageObject):
 
 
     def original_model_of_curve(self):
+        """ Return the original model of the curves. """
         return self._original_model_of_curve
 
 
     def curve(self):
+        """ Return the curve. """
         return self._curve
 
 
     def reduction_tree(self):
+        """ Return the reduction tree. """
         return self._reduction_tree
 
 
     def is_semistable(self):
+        """ Check whether the reduction is semistable. """
         return self.reduction_tree().is_semistable()
 
 
@@ -148,5 +151,3 @@ class AdmissibleReductionOfSmoothProjectiveCurve(SageObject):
         """
 
         return [W for W in self.components() if W.genus() > 0]
-
-        

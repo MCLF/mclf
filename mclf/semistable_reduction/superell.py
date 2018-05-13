@@ -103,8 +103,8 @@ class Superell(SageObject):
     The method used to compute the semistable reduction in this particular case is
     explained in detail in
 
-    - [We17] I.I.Bouw and S. Wewers, *Computing `L`-functions and semistable
-      reduction of superelliptic *, Glasgow Math. J., 59(1)
+    - [We17] I.I.Bouw and S. Wewers, Computing `L`-functions and semistable
+      reduction of superelliptic, Glasgow Math. J., 59(1)
 
 
     EXAMPLES:
@@ -115,7 +115,7 @@ class Superell(SageObject):
         For the time being, we need to make the following additional assumptions
         on `f`:
 
-        - of degree prime to `n`.
+        - `f` is of degree prime to `n`.
 
         This restrictions is preliminary and will be removed in a future version.
         Note that a superelliptic curve of degree `n` can be written in the required
