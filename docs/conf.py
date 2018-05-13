@@ -343,7 +343,7 @@ try:
 except ImportError:
     from unittest.mock import MagicMock
 
-    class BaseClass: pass
+    class SageObject: pass
 
     class Infinity:
         def __repr__(self): return "∞"
@@ -358,7 +358,7 @@ except ImportError:
             if name == "SageObject":
                 # Mock SageObject differently. Sphinx refuses to document
                 # things that inherit from a mock.
-                return BaseClass
+                return SageObject
             if name == "Infinity":
                 return Infinity()
             return ReprMock()
