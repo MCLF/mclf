@@ -91,8 +91,9 @@ class AdmissibleModel(SemistableModel):
         self._original_model_of_curve = Y
         self._base_valuation = vK
 
-        # we compute the ramification locus and, if it is not contained in the
+        # we compute the branch locus and, if it is not contained in the
         # standard unit disk, we change the model of Y
+        # actually, this should be done with a call Y.branch_locus()
         FY = Y.function_field()
         FX = Y.rational_function_field()
         F = FY.polynomial()
