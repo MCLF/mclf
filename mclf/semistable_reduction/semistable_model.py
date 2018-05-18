@@ -141,8 +141,7 @@ from mclf.berkovich.berkovich_line import *
 from mclf.berkovich.affinoid_domain import *
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
 from mclf.semistable_reduction.reduction_trees import ReductionTree
-
-
+from mclf.curves.superelliptic_curves import SuperellipticCurve
 
 
 class SemistableModel(SageObject):
@@ -157,9 +156,9 @@ class SemistableModel(SageObject):
     - ``Y`` -- a smooth projective curve
     - ``vK`` -- a discrete valuation on the base field `K` of `Y`
 
-    This class should be overridden by child classes which represent special
-    curves for which an algorithm for computing the semistable reduction has
-    been implemented.
+    Instantiation of this class actually creates an instant of a suitable subclass,
+    which represent the kind of curve for which an algorithm for computing the
+    semistable reduction has been implemented.
 
 
     EXAMPLES::
@@ -170,19 +169,17 @@ class SemistableModel(SageObject):
         sage: R.<y> = FX[]
         sage: FY.<y> = FX.extension(y^3 - y^2 + x^4 + x + 1)
         sage: Y = SmoothProjectiveCurve(FY)
-
-    Calling this base class directly is not implemented. ::
-
-        sage: YY = SemistableModel(Y, v_5) # not implemented
-
-        Traceback (most recent call last):
-        ...
-        NotImplementedError:
+        sage: YY = SemistableModel(Y, v_5)
 
     The degree of `Y` as a cover of the projective line is `4`, which is prime
-    to `p=5`. Hence `Y` has admissible reduction. ::
+    to `p=5`. Hence `Y` has admissible reduction and we have created an instance
+    of the class ``AdmissibleModel``. ::
 
-        sage: YY = AdmissibleModel(Y, v_5)
+        sage: isinstance(YY, AdmissibleModel)
+        True
+
+    Actually, `Y` has good reduction at `p=5`. ::
+
         sage: YY.is_semistable()
         True
         sage: YY.components_of_positive_genus()
@@ -190,7 +187,22 @@ class SemistableModel(SageObject):
 
     """
     def __init__(self, Y, vK):
-        raise NotImplementedError
+
+        from mclf.semistable_reduction.admissible_reduction import AdmissibleModel
+        from mclf.semistable_reduction.superp_models import SuperpModel
+
+        p = vK.residue_field().characteristic()
+        if isinstance(Y, SuperellipticCurve) and Y.covering_degree() == p:
+            # we create an instance of ``SuperpModel``
+            self.__class__ = SuperpModel
+            SuperpModel.__init__(self, Y, vK)
+        elif p==0 or p.gcd(Y.covering_degree()) == 1:
+            # we create an instance of ``AdmissibleModel``
+            self.__class__ = AdmissibleModel
+            AdmissibleModel.__init__(self, Y, vK)
+        else:
+            raise NotImplementedError
+
 
     def curve(self):
         """
