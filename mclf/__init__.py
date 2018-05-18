@@ -15,3 +15,4 @@ from .padic_extensions.fake_padic_embeddings import *
 from .semistable_reduction.reduction_trees import *
 from .semistable_reduction.admissible_reduction import *
 from .semistable_reduction.semistable_model import *
+from .curves.superelliptic_curves import *
