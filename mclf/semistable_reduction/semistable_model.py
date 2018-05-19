@@ -101,8 +101,10 @@ at the primes `p=2,3`:  ::
     sage: from mclf import *
     sage: v_2 = QQ.valuation(2)
     sage: R.<x> = QQ[]
-    sage: Y2 = Superell(x^4-1, v_2, 3)
-    sage: Y2
+    sage: Y = SuperellipticCurve(x^4-1, 3)
+    sage: Y
+    superelliptic curve y^3 = x^4 - 1 over Rational Field
+    sage: Y2 = SemistableModel(Y, v_2)
     sage: Y2.is_semistable()
     True
 
@@ -110,6 +112,7 @@ The stable reduction of `Y` at `p=2` has four components, one of genus `0` and
 three of genus `1`. ::
 
     sage: [Z.genus() for Z in Y2.components()]
+    [0, 1, 1, 1]
     sage: Y2.components_of_positive_genus()
     [the smooth projective curve with Function field in y defined by y^3 + x^4 + x^2,
      the smooth projective curve with Function field in y defined by y^3 + x^2 + x,
@@ -117,12 +120,13 @@ three of genus `1`. ::
     sage: Y2.conductor_exponent()
     6
     sage: v_3 = QQ.valuation(3)
-    sage: Y3 = Superp(x^4-1, v_3, 3)
-    sage: Y3
+    sage: Y3 = SemistableModel(Y, v_3)
     sage: Y3.is_semistable()
+    True
     sage: Y3.components_of_positive_genus()
+    [the smooth projective curve with Function field in y defined by y^3 + y + 2*x^4]
     sage: Y3.conductor_exponent()
-
+    6
 
 """
 
