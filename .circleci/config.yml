@@ -10,15 +10,17 @@ test: &test
           sage -tp --initial .
 
 jobs:
-  "sage-8.2rc4":
+  "sage-8.2":
     <<: *test
     docker:
-      # TODO: pin to sagemath/sagemath:8.2 once that has been released for docker
-      - image: saraedum/sagemath:latest
+      - image: sagemath/sagemath:8.2
+  "sage-8.3.beta0":
+    <<: *test
+    docker:
+      - image: sagemath/sagemath:8.3.beta0
   docbuild-sage:
     docker:
-      # TODO: pin to sagemath/sagemath:latest once that has been released for docker
-      - image: saraedum/sagemath:latest
+      - image: sagemath/sagemath:latest
     steps:
       - checkout
       - run:
@@ -46,7 +48,9 @@ workflows:
   version: 2
   test:
     jobs:
-      - sage-8.2rc4
+      # When adding a new stable release of Sage here, make sure to also upgrade the Dockerfile
+      - sage-8.2
+      - sage-8.3.beta0
   doc:
     jobs:
       - docbuild-sage
