@@ -5,14 +5,14 @@ Superelliptic curves
 A *superelliptic curve* is a smooth projective curve over a field `K` which
 is given generically by an equation of the form
 
-..MATH::
+.. MATH::
 
     Y:\; y^n = f(x),
 
 where `n\geq 2` and `f\in K[x]` is  a polynomial over `K`, of degree at least
 `2` (and of degree at least `3` if `n=2`). Let
 
-..MATH::
+.. MATH::
 
     f = c\cdot \prod_i f_i^{m_i}
 
@@ -82,7 +82,7 @@ class SuperellipticCurve(SmoothProjectiveCurve):
 
     the smooth projective curve `Y` over `K` given generically by the equation
 
-    ..MATH::
+    .. MATH::
 
         Y:\; y^n = f(x).
 

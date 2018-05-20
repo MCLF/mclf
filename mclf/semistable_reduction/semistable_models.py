@@ -12,7 +12,7 @@ information on `Y` from this.
 Let us define what we mean by 'semistable reduction' and by 'computing'.
 By the famous result of Deligne and Mumford there exists a finite, separable
 field extension `L/K`,  an extension `v_L` of `v_K` to `L` (whose valuation ring
-we call `\OO_L`) and an `\OO_L`-model `\mathcal{Y}` of `Y_L` whose special fiber
+we call `\mathcal{O}_L`) and an `\mathcal{O}_L`-model `\mathcal{Y}` of `Y_L` whose special fiber
 `\bar{Y}:=\mathcal{Y}_s` is reduced and has at most ordinary double points as
 singularities. We call `\mathcal{Y}` a semistabel model and `\bar{Y}` a semistable
 reduction of `Y`.
@@ -50,15 +50,17 @@ curve `Y` is given as a finite separable cover
 
 where `X=\mathbb{P}^1_K` is the projective line over `K`. There are two main
 cases that we can handle:
+
 - the order of the monodromy group of `\phi` (i.e. the Galois group of its
   Galois closure) is prime to the residue characteristic of the valuation `v_K`.
 - `\phi` is a Kummer cover of degree `p`, where `p` is the (positive) residue
   characteristic of `v_K`
+
 In the first case, the method of *admissible reduction* is available. In the
 second case, the results of
 
-    - [We17] S. Wewers, *Semistable reduction of superelliptic curves of degree p*, \
-      preprint, 2017.
+    [We17] S. Wewers, *Semistable reduction of superelliptic curves of degree p*, \
+    preprint, 2017.
 
 tell us what to do. In both cases, there exists a normal `\mathcal{O}_K`-model
 `\mathcal{X}_0` of `X=\mathbb{P}^1_K` (the *inertial model*) whose normalization
@@ -164,6 +166,7 @@ class SemistableModel(SageObject):
     which represents the kind of curve for which an algorithm for computing the
     semistable reduction has been implemented. At the moment, there are two such
     subclasses:
+
     - If the degree of `Y` as a cover of the projective line is prime to the
       residue characteristic of `v_K` then we invoke the subclass ``AdmissibleModel``.
       Note that this may not work: we can only guarantee that `Y` has admissible

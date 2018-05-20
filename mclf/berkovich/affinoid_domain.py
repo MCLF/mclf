@@ -9,7 +9,7 @@ line** over `K`.
 In this file we realize a Sage class which allows us to create and work with
 strictly affinoid subdomains of `X^{an}`.
 
-Let `T` be a Berkovich tree in `X^{an}` and let `r:T-->X^{an}` denote the
+Let `T` be a Berkovich tree in `X^{an}` and let `r:T\to X^{an}` denote the
 canonical retraction map. Let `S` be a nonempty proper subset of `V(T)`.
 We define `\bar{S}` as the union of `S` and of all edges connecting two points
 of `S`. Then the inverse image `U:=r^{-1}(\bar{S})` is an affinoid subdomain of
