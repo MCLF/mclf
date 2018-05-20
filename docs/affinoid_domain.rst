@@ -1,6 +1,3 @@
+:github_url: https://github.com/MCLF/mclf/blob/master/mclf/berkovich/affinoid_domain.py
 
-.. toctree::
-
-.. automodule::
-   mclf.berkovich.affinoid_domain
-   :members:
+.. automodule:: mclf.berkovich.affinoid_domain

@@ -45,18 +45,12 @@ TO DO:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.structure.sage_object import SageObject
-from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
-from sage.rings.function_field.constructor import FunctionField
-from sage.misc.cachefunc import cached_method
-from sage.rings.infinity import Infinity
-from sage.functions.other import floor
+from sage.all import SageObject, PolynomialRing, FunctionField, cached_method, Infinity, floor
 from mclf.berkovich.berkovich_line import *
 from mclf.berkovich.affinoid_domain import *
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
 from mclf.semistable_reduction.reduction_trees import ReductionTree
 from mclf.semistable_reduction.semistable_model import SemistableModel
-
 
 
 class AdmissibleModel(SemistableModel):
@@ -74,7 +68,6 @@ class AdmissibleModel(SemistableModel):
     This object has various functionalities to compute the semistable reduction
     of `Y` relative to `v_K`, and some arithmetic invariants associated to it
     (for instance the "exponent of conductor" of `Y` with respect to `v_K`).
-
 
 
 
@@ -113,8 +106,8 @@ class AdmissibleModel(SemistableModel):
 
 
     def original_model_of_curve(self):
-        """
-        Return the original model of the curve.
-
-        """
+        """ Return the original model of the curves. """
         return self._original_model_of_curve
+
+
+   

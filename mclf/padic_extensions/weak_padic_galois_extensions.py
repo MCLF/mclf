@@ -42,10 +42,10 @@ of a `p`-adic Galois extension corresponding to the higher ramification
 subgroups.
 
 For `u\geq 0` we let `L^{sh,u}` denote the subfield of `L^{sh}/K^{sh}`
-corresponding to the `u`th filtration step of the Galois group of
+corresponding to the `u` th filtration step of the Galois group of
 `L^{sh}/K^{sh}`. Then the completion of `L^{sh,u}` agrees with the maximal
 unramified extension of the subextension `\hat{L}^u` of the Galois closure
-`\hat{L}/\hat{K}` corresponding to the `u`th ramification step. Moreover,
+`\hat{L}/\hat{K}` corresponding to the `u` th ramification step. Moreover,
 there exists a finite extensions `L^u/K`, together with an extension `v_{L^u}`
 of `v_K` to `L^u` such that
 
@@ -103,7 +103,6 @@ from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
 from mclf.padic_extensions.fake_padic_extensions import FakepAdicExtension
 from mclf.padic_extensions.slope_factors import slope_factors
 
-
 class WeakPadicGaloisExtension(FakepAdicExtension):
     r"""
     Return the weak p-adic splitting field of a polynomial.
@@ -124,8 +123,8 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
     and ``minimal ramification`` has to be prime to `p`.
 
     """
-    def __init__(self, K, F, minimal_ramification=ZZ(1)):
-
+    def __init__(self, K, F, minimal_ramification=1):
+        minimal_ramification = ZZ(minimal_ramification)
         # print "entering WeakPadicGaloisExtension with"
         # print "F = %s"%F
         # if F is a polynomial, replace it by the list of its irreducible factors
@@ -426,7 +425,7 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         Return the ramification subfield corresponding to a given lower jump.
 
         Here a nonnegative integer `u \geq 0` is called a *lower jump* for the
-        weak `p`-adic Galois extension `L/K`  if `u`is a jump in the filtration
+        weak `p`-adic Galois extension `L/K`  if `u` is a jump in the filtration
         `(G_u)_{u\geq 0}` of the Galois group `G = Gal(L^{nr}/K^{nr})` of the
         induced extension `L^{nr}/K^{nr}`. This is equivalent to the following
         condition: there exists an element `g\in G`, such that
