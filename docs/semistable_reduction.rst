@@ -2,7 +2,7 @@ Semistable reduction of curves
 ==============================
 
 .. toctree::
-    reduction_trees
-    superp
-    superell
+    semistable_models
     admissible_reduction
+    superp_models
+    reduction_trees
