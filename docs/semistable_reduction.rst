@@ -6,3 +6,5 @@ Semistable reduction of curves
     admissible_reduction
     superp_models
     reduction_trees
+    superell
+    superp

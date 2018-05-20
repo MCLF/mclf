@@ -12,7 +12,7 @@ information on `Y` from this.
 Let us define what we mean by 'semistable reduction' and by 'computing'.
 By the famous result of Deligne and Mumford there exists a finite, separable
 field extension `L/K`,  an extension `v_L` of `v_K` to `L` (whose valuation ring
-we call `\OO_L`) and an `\OO_L`-model `\mathcal{Y}` of `Y_L` whose special fiber
+we call `\mathcal{O}_L`) and an `\mathcal{O}_L`-model `\mathcal{Y}` of `Y_L` whose special fiber
 `\bar{Y}:=\mathcal{Y}_s` is reduced and has at most ordinary double points as
 singularities. We call `\mathcal{Y}` a semistabel model and `\bar{Y}` a semistable
 reduction of `Y`.
@@ -44,29 +44,26 @@ semistable reduction of an arbitrary curve `Y`, but only a set of methods which
 can be applied for certain classes of curves. We always assume that the
 curve `Y` is given as a finite separable cover
 
-.. MATH::
+.. math::
 
-      \phi: Y \to X,
+   \phi: Y \to X,
 
 where `X=\mathbb{P}^1_K` is the projective line over `K`. There are two main
 cases that we can handle:
+
 - the order of the monodromy group of `\phi` (i.e. the Galois group of its
   Galois closure) is prime to the residue characteristic of the valuation `v_K`.
 - `\phi` is a Kummer cover of degree `p`, where `p` is the (positive) residue
   characteristic of `v_K`
+
 In the first case, the method of *admissible reduction* is available. In the
-second case, the results of
-
-    - [We17] S. Wewers, *Semistable reduction of superelliptic curves of degree p*, \
-      preprint, 2017.
-
-tell us what to do. In both cases, there exists a normal `\mathcal{O}_K`-model
-`\mathcal{X}_0` of `X=\mathbb{P}^1_K` (the *inertial model*) whose normalization
-in the function field of `Y_L` is a semistable model, for a sufficiently large
-finite extension `L/K`. Once the right inertial model is defined, the method for
-computing the semistable model `\mathcal{Y}` and its special fiber `\bar{Y}` are
-independent of the particular case (these computations are done within the Sage
-class ``ReductionTree``).
+second case, the results of [We17]_ tell us what to do. In both cases, there
+exists a normal `\mathcal{O}_K`-model `\mathcal{X}_0` of `X=\mathbb{P}^1_K`
+(the *inertial model*) whose normalization in the function field of `Y_L` is a
+semistable model, for a sufficiently large finite extension `L/K`. Once the
+right inertial model is defined, the method for computing the semistable model
+`\mathcal{Y}` and its special fiber `\bar{Y}` are independent of the particular
+case (these computations are done within the Sage class ``ReductionTree``).
 
 In this module we define a base class ``SemistableModel``. An object in this class
 is initialized by a pair `(Y,v_K)` , where `Y` is a smooth projective curve over
@@ -74,7 +71,8 @@ a field `K` and `v_K`  is a discrete valuation on `K`. The class provides access
 to functions which compute and extract information from the semistable reduction
 of `Y` with respect to `v_K`.
 
-
+.. [We17] S. Wewers, *Semistable reduction of superelliptic curves of degree p*, \
+   preprint, 2017.
 
 .. NOTE::
 
@@ -164,6 +162,7 @@ class SemistableModel(SageObject):
     which represents the kind of curve for which an algorithm for computing the
     semistable reduction has been implemented. At the moment, there are two such
     subclasses:
+
     - If the degree of `Y` as a cover of the projective line is prime to the
       residue characteristic of `v_K` then we invoke the subclass ``AdmissibleModel``.
       Note that this may not work: we can only guarantee that `Y` has admissible
@@ -172,7 +171,6 @@ class SemistableModel(SageObject):
     - If `Y` is a superelliptic curve of degree `p`, where `p` is the residue
       characteristic of `v_K` and `K` has characteristic `0` then the subclass
       ``SuperpModel`` is invoked.
-
 
     EXAMPLES::
 
@@ -186,12 +184,12 @@ class SemistableModel(SageObject):
 
     The degree of `Y` as a cover of the projective line is `4`, which is strictly
     less than `p=5`. Hence `Y` has admissible reduction and we have created an instance
-    of the class ``AdmissibleModel``. ::
+    of the class ``AdmissibleModel``::
 
         sage: isinstance(YY, AdmissibleModel)
         True
 
-    Actually, `Y` has good reduction at `p=5`. ::
+    Actually, `Y` has good reduction at `p=5`::
 
         sage: YY.is_semistable()
         True

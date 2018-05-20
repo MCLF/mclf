@@ -1,6 +1,3 @@
+:github_url: https://github.com/MCLF/mclf/blob/master/mclf/semistable_reduction/superp_models.py
 
-.. toctree::
-
-.. automodule::
-   mclf.semistable_reduction.superp_models
-   :members:
+.. automodule:: mclf.semistable_reduction.superp_models
