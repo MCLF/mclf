@@ -1,6 +1,3 @@
+:github_url: https://github.com/MCLF/mclf/blob/master/mclf/curves/superelliptic_curves.py
 
-.. toctree::
-
-.. automodule::
-   mclf.curves.superelliptic_curves
-   :members:
+.. automodule:: mclf.curves.superelliptic_curves
