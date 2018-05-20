@@ -13,3 +13,8 @@ from .padic_extensions.weak_padic_galois_extensions import *
 from .padic_extensions.fake_padic_completions import *
 from .padic_extensions.fake_padic_embeddings import *
 from .semistable_reduction.reduction_trees import *
+from .semistable_reduction.admissible_reduction import *
+from .semistable_reduction.semistable_model import *
+from .curves.superelliptic_curves import *
+from .semistable_reduction.admissible_reduction import *
+from .semistable_reduction.superp_models import *
