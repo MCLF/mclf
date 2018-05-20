@@ -30,7 +30,6 @@ EXAMPLES::
 
 """
 
-
 #*****************************************************************************
 #       Copyright (C) 2018 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #

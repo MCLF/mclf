@@ -1,6 +1,3 @@
+:github_url: https://github.com/MCLF/mclf/blob/master/mclf/semistable_reduction/superell.py
 
-.. toctree::
-
-.. automodule::
-   mclf.semistable_reduction.superell
-   :members:
+.. automodule:: mclf.semistable_reduction.superell

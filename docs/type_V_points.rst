@@ -1,6 +1,3 @@
+:github_url: https://github.com/MCLF/mclf/blob/master/mclf/berkovich/type_V_points.py
 
-.. toctree::
-
-.. automodule::
-   mclf.berkovich.type_V_points
-   :members:
+.. automodule:: mclf.berkovich.type_V_points

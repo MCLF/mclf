@@ -336,15 +336,34 @@ epub_exclude_files = ['search.html']
 #epub_use_index = True
 
 # -- mock things from sage that we won't have on readthedocs --
+autodoc_default_flags = ["members", "show-inheritance"]
+
 try:
     import sage
 except ImportError:
     from unittest.mock import MagicMock
-    
+
+    class SageObject: pass
+
+    class Infinity:
+        def __repr__(self): return "∞"
+
+    class ReprMock(MagicMock):
+        def __repr__(self):
+            raise NotImplemented("Do not use mocked objects, i.e., things coming from Sage as default arguments. Caching in Sage might produce surprising side effects, and it breaks printing of these things in the generated readthedocs documentation.")
+
     class Mock(MagicMock):
         @classmethod
         def __getattr__(cls, name):
-                return MagicMock()
-    
-    MOCK_MODULES = ['sage', 'sage.all', 'sage.geometry.newton_polygon', 'sage.rings.valuation.limit_valuation', 'sage.rings.valuation.valuation']
-    sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+            if name == "SageObject":
+                # Mock SageObject differently. Sphinx refuses to document
+                # things that inherit from a mock.
+                return SageObject
+            if name == "Infinity":
+                return Infinity()
+            return ReprMock()
+
+    MOCK_MODULES = ['sage.all', 'sage.geometry.newton_polygon']
+    # import works differently than "from … import". Therefore we need to mock all parent modules for monkey.py
+    MONKEY_MOCK_MODULES = ['sage', 'sage.rings', 'sage.rings.valuation', 'sage.rings.valuation.valuation', 'sage.rings.valuation.limit_valuation']
+    sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES + MONKEY_MOCK_MODULES)

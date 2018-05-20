@@ -1,6 +1,3 @@
+:github_url: https://github.com/MCLF/mclf/blob/master/mclf/berkovich/berkovich_trees.py
 
-.. toctree::
-
-.. automodule::
-   mclf.berkovich.berkovich_trees
-   :members:
+.. automodule:: mclf.berkovich.berkovich_trees

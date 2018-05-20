@@ -1,6 +1,3 @@
+:github_url: https://github.com/MCLF/mclf/blob/master/mclf/padic_extensions/fake_padic_extensions.py
 
-.. toctree::
-
-.. automodule::
-   mclf.padic_extensions.fake_padic_extensions
-   :members:
+.. automodule:: mclf.padic_extensions.fake_padic_extensions

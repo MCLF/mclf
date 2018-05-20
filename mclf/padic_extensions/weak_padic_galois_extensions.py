@@ -103,7 +103,6 @@ from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
 from mclf.padic_extensions.fake_padic_extensions import FakepAdicExtension
 from mclf.padic_extensions.slope_factors import slope_factors
 
-
 class WeakPadicGaloisExtension(FakepAdicExtension):
     r"""
     Return the weak p-adic splitting field of a polynomial.
@@ -124,8 +123,8 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
     and ``minimal ramification`` has to be prime to `p`.
 
     """
-    def __init__(self, K, F, minimal_ramification=ZZ(1)):
-
+    def __init__(self, K, F, minimal_ramification=1):
+        minimal_ramification = ZZ(minimal_ramification)
         # print "entering WeakPadicGaloisExtension with"
         # print "F = %s"%F
         # if F is a polynomial, replace it by the list of its irreducible factors
