@@ -1,7 +1,7 @@
 # MCLF
 
 [![Documentation Status](https://readthedocs.org/projects/mclf/badge/)](http://mclf.readthedocs.io/?badge=latest)
-[![CircleCI](https://circleci.com/gh/MCLF/mclf.svg?style=svg)](https://circleci.com/gh/MCLF/mclf)
+[![CircleCI](https://circleci.com/gh/MCLF/mclf/tree/master.svg?style=svg)](https://circleci.com/gh/MCLF/mclf/tree/master)
 
 ### A Sage toolbox for computing with *M*odels of *C*urves over *L*ocal *F*ields
 
@@ -88,3 +88,7 @@ the conductor exponent at p=3:
 sage: Y.conductor_exponent()
 6
 ```
+
+#### Experimental Changes
+
+We also have an unstable [develop](https://github.com/MCLF/mclf/tree/develop) version with the latest experimental features and bugs that you can try out by clicking on [![Launch on mybinder.org](https://camo.githubusercontent.com/d57df63fab21897847014ebaec3e7f5f48951ad2/68747470733a2f2f626574612e6d7962696e6465722e6f72672f62616467652e737667)](https://mybinder.org/v2/gh/mclf/MCLF/develop?filepath=example.ipynb), note that this version currently [![CircleCI](https://circleci.com/gh/MCLF/mclf/tree/develop.svg?style=svg)](https://circleci.com/gh/MCLF/mclf/tree/develop) our own test suite.
