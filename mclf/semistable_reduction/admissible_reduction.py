@@ -55,7 +55,7 @@ from mclf.berkovich.berkovich_line import *
 from mclf.berkovich.affinoid_domain import *
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
 from mclf.semistable_reduction.reduction_trees import ReductionTree
-from mclf.semistable_reduction.semistable_model import SemistableModel
+from mclf.semistable_reduction.semistable_models import SemistableModel
 
 
 
