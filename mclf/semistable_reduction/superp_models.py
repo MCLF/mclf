@@ -1,10 +1,9 @@
 r"""
-Semistable reduction of superelliptic curves of degree `p`
+Semistable models of superelliptic curves of degree `p`
 ==========================================================
 
 Let `K` be a field of characteritic zero and `v_K` a discrete valuation on `K`
-whose residue field is finite of characteristic `p>0`. For the time being, we
-assume that `K` is a number field.
+whose residue field is finite of characteristic `p>0`.
 
 Let `f\in K[x]` be a polynomial over `K` which is not a `p`-th power and whose
 radical has degree at least three. We consider the smooth projective  curve
@@ -14,12 +13,56 @@ radical has degree at least three. We consider the smooth projective  curve
 
            Y: y^p = f(x).
 
-Our goal is to compute the semistable reduction of `Y` and to extract
-nontrivial arithmetic information on `Y` from this.
+So `Y` is a *superelliptic curve* of degree `p`.
 
-More precisely, ...
+In this module we define a class ``SuperpModel`` which represents a semistable
+model of a superelliptic curve `Y` of degree `p`, with respect to a `p`-adic
+valuation on the base field `K` of `Y`.
 
+The method to define and compute a semistable model in this particular case is
+taken from
 
+- [We17] S. Wewers, *Semistable reduction of superelliptic curves of degree p*, \
+  preprint, 2017.
+
+The key notion is the **etale locus**.
+
+The superelliptic curve `Y` is, by definition, a cyclic cover
+
+.. MATH::
+
+                  \phi: Y \to X
+
+of degree `p` of the projective line `X` over the base field `K`.
+We consider `X` and `Y` as analytic spaces over the completion of `K`
+at the base valuation `v_K`. Let
+
+.. MATH::
+
+              \bar{\phi}: \bar{Y} \to \bar{X}
+
+denote the *semistable reduction* of the cover `Y\to X`.
+The **etale locus** is an affinoid subdomain `X^{et}` of `X`
+consisting of those points which specialize to a point on `\bar{X}`
+above which the map `\bar{\phi}` is etale.
+
+While the affinoid `X^{et}` is determined by the semistable reduction
+of the cover `\phi`, conversely `X^{et}` contains a lot of information
+on the semistable reduction. The main result of [We17]
+gives an explicit description of the affinoid `X^{et}` as a union
+of rational domains defined by rational functions which can be
+easily computed in terms of the polynomial `f` defining `Y`.
+
+Once the etale locus `X^{et}` is computed, we can define an *inertial model*
+`\mathcal{X}_0` of `X`. A semistable model `mathcal{Y}` of `Y` can then be
+obtained as the normalization of `\mathcal{X}_0` inside `Y_L`, for a sufficiently
+large finite extension `L/K`.
+
+The class ``SuperpModel`` is a subclass of the class ``SemistableModel`` and can
+be instantiated via its parent. All methods to extract information about the
+semistable reduction of `Y` are simply inherited from ``SemistableModel``. The
+subclass itself only defines the methods to compute the etale locus and to create
+the corresponding inertail model.
 
 
 AUTHORS:
@@ -29,8 +72,33 @@ AUTHORS:
 
 EXAMPLES::
 
-<Lots and lots of examples>
-
+    sage: from mclf import *
+    sage: R.<x> = QQ[]
+    sage: f = x^4 + x^2 + 1
+    sage: Y = SuperellipticCurve(f, 3)
+    sage: Y
+    superelliptic curve y^3 = x^4 + x^2 + 1 over Rational Field
+    sage: v_3 = QQ.valuation(3)
+    sage: YY = SuperpModel(Y, v_3)
+    sage: YY
+    semistable model of superelliptic curve Y: y^3 = x^4 + x^2 + 1 over Rational Field, with respect to 3-adic valuation
+    sage: YY.etale_locus()
+    Affinoid with 3 components:
+    Elementary affinoid defined by
+    v(x) >= 3/4
+    Elementary affinoid defined by
+    v(x + 7) >= 5/4
+    Elementary affinoid defined by
+    v(x + 2) >= 5/4
+    sage: YY.is_semistable()
+    True
+    sage: YY.components()
+    [the smooth projective curve with Function field in y defined by y^3 + 2*x^4 + 2*x^2 + 2,
+     the smooth projective curve with Function field in y defined by y^3 + y + 2*x^2,
+     the smooth projective curve with Function field in y defined by y^3 + y + 2*x^2,
+     the smooth projective curve with Function field in y defined by y^3 + y + 2*x^2]
+    sage: YY.conductor_exponent()
+    12
 
 TO DO:
 
@@ -40,7 +108,7 @@ TO DO:
 """
 
 #*****************************************************************************
-#       Copyright (C) 2017 Stefan Wewers <stefan.wewers@uni-ulm.de>
+#       Copyright (C) 2017-2018 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -62,86 +130,36 @@ from mclf.curves.superelliptic_curves import SuperellipticCurve
 
 class SuperpModel(SemistableModel):
     r"""
-    Return the superelliptic curve of degree ``p`` defined by ``f``,
-    relative to the `p`-adic valuation ``vK``.
-
-    A "superelliptic curve" `Y` over a field `K` is a smooth projective curve
-    over `K` defined generically by an equation of the form
-
-    .. MATH::
-
-              y^n = f(x),
-
-    where `f` is a nonconstant polynomial over `K` in `x`.
-
-    - the gcd of `n` and the multiplicities of the irreducible factors of `f`  is one,
-    - the exponent `n` is invertible in `K`.
-
-    We call `n` the "degree" of the superelliptic curve `Y`. Formulated more
-    geometrically, a superelliptic curve of degree `n` is a smooth projective
-    curve together with a cyclic cover `Y\to X:=\mathbb{P}_K^1` of degree `n`.
-
-    Here we assume that the degree is a prime `p`. Moreover, we fix a `p`-adic
-    valuation `v_K` on `K` (i.e. a discrete valuation with residue
-    characteristic `p`). Note that this implies that `K` has characteristic zero.
-
-    The goal is to compute the semistable reduction of `Y` relative to `v_K`,
-    and some arithmetic invariants associated to it (for instance the "exponent
-    of conductor" of `Y` with respect to `v_K`). The method to compute the
-    semistable reduction in this particular case is explained in detail in
-
-    - [We17] S. Wewers, *Semistable reduction of superelliptic curves of degree p*, \
-      preprint, 2017.
+    Return a semistable model of a superelliptic curve of degree `p`.
 
     INPUT:
 
-    - ``f`` -- a nonconstant poylnomial over a field `K`
+    - ``Y`` -- a superelliptic curve over a field `K`
     - ``vK`` -- a discrete valuation on `K`
-    - ``p`` -- a prime number
 
-    Here the residue characteristic of ``vK`` must be equal to the prime ``p``.
-    Moreover, ``f`` must be of degree prime to ``p``.
+    The field `K` must be of characteristic `0` and the residue characteristic
+    of ``vK`` must be a prime `p` which is equal to the covering degree of `Y`.
 
-    OUTPUT: the object representing the superelliptic curve
+    OUTPUT: the object representing a semistable model of `Y`.
 
-    .. MATH::
-
-           Y: y^p = f(x).
-
-    EXAMPLES:
-
-    ::
-
-        sage: from mclf import *
-        sage: K = QQ
-        sage: vK = K.valuation(3)
-        sage: R.<x> = K[]
-        sage: f = x^4 + x^2 + 1
-        sage: Y = Superp(f, vK, 3)
-        sage: Y
-        superelliptic curve Y: y^3 = x^4 + x^2 + 1 over Rational Field, with respect to 3-adic valuation
-        sage: Y.etale_locus()
-        Affinoid with 3 components:
-        Elementary affinoid defined by
-        v(x) >= 3/4
-        Elementary affinoid defined by
-        v(x + 7) >= 5/4
-        Elementary affinoid defined by
-        v(x + 2) >= 5/4
 
     .. NOTE::
 
         For the time being, we need to make the following additional assumptions
-        on `f`:
+        on the curve `Y`:
 
-        - of degree prime to `p`.
+        - the polynomial `f` which is part of the defining equation
+          `y^p = f(x)` is of degree prime to `p`.
 
         This restrictions is preliminary and will be removed in a future version.
         Note that a superelliptic curve of degree `p` can be written in the required
         form if and only if the map `Y\to X` has a `K`-rational branch point.
 
-    """
 
+    EXAMPLES:
+
+
+    """
     def __init__(self, Y, vK):
 
         p = vK.residue_field().characteristic()
@@ -188,54 +206,27 @@ class SuperpModel(SemistableModel):
                         self._a*self._f, self._vK.domain(), self._vK)
 
 
-
     def etale_locus(self):
         r"""
         Return the etale locus of the cover `Y\to X`.
 
-        The superelliptic curve `Y` is, by definition, a cyclic cover
-
-        .. MATH::
-
-                   \phi: Y \to X
-
-        of degree `p` of the projective line `X` over the base field `K`.
-        We consider `X` and `Y` as analytic spaces over the completion of `K`
-        at the base valuation `v_K`. Let
-
-        .. MATH::
-
-              \bar{\phi}: \bar{Y} \to \bar{X}
-
-        denote the *semistable reduction* of the cover `Y\to X`.
-        The **etale locus** is an affinoid subdomain `X^{et}` of `X`
-        consisting of those points which specialize to a point on `\bar{X}`
-        above which the map `\bar{\phi}` is etale.
-
-        While the affinoid `X^{et}` is determined by the semistable reduction
-        of the cover `\phi`, conversely `X^{et}` contains a lot of information
-        on the semistable reduction. The main result of
-
-        - [We17]: *Semistable reduction of superelliptic curves of degree p*, \
-          preprint, 2017
-
-        gives an explicit description of the affinoid `X^{et}` as a union
-        of rational domains defined by rational functions which can be
-        easily computed in terms of the polynomial `f` defining `Y`.
+        OUTPUT: the etal locus, an affinoid subdomain of the Berkovich line
+        `X` (the analytic space associated to the projektive line over the
+        completion of the base field `K` with respect to the valuation `v_K`).
 
         EXAMPLES:
 
         ::
 
             sage: from mclf import *
-            sage: K = QQ
-            sage: vK = K.valuation(2)
-            sage: R.<x> = K[]
+            sage: v_2 = QQ.valuation(2)
+            sage: R.<x> = QQ[]
             sage: f = x^3 + x^2 + 1
-            sage: Y = Superp(f, vK, 2)
+            sage: Y = SuperellipticCurve(f, 2)
             sage: Y
-            superelliptic curve Y: y^2 = x^3 + x^2 + 1 over Rational Field, with respect to 2-adic valuation
-            sage: Y.etale_locus()
+            superelliptic curve y^2 = x^3 + x^2 + 1 over Rational Field
+            sage: YY = SuperpModel(Y, v_2)
+            sage: YY.etale_locus()
             Elementary affinoid defined by
             v(x^4 + 4/3*x^3 + 4*x + 4/3) >= 8/3
 
@@ -245,8 +236,9 @@ class SuperpModel(SemistableModel):
         new equation is `y^2 = x^3 + x^2 + 128`: ::
 
             sage: f = x^3 + x^2 + 128
-            sage: Y = Superp(f, vK, 2)
-            sage: Y.etale_locus()
+            sage: Y = SuperellipticCurve(f, 2)
+            sage: YY = SuperpModel(Y, v_2)
+            sage: YY.etale_locus()
             Elementary affinoid defined by
             v(1/x) >= -5/2
             v(x) >= 2
@@ -259,7 +251,6 @@ class SuperpModel(SemistableModel):
         result is that the etale locus is contained in the closed unit disk.
 
         """
-
         if hasattr(self, "_etale_locus"):
             return self._etale_locus
 
@@ -377,19 +368,13 @@ class SuperpModel(SemistableModel):
             print("We failed to compute the semistable reduction of the curve.")
             raise ValueError()
 
-    def conductor_exponent(self):
-        r"""
-        Return the conductor exponent at p of this superelliptic curve.
-
-        """
-        return self.reduction_tree().reduction_conductor()
 
 
+"""
 
+                    ## auxiliary functions ##
 
-
-#-----------------------------------------------------------------------
-
+"""
 
 
 

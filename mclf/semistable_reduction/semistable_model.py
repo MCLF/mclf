@@ -161,8 +161,17 @@ class SemistableModel(SageObject):
     - ``vK`` -- a discrete valuation on the base field `K` of `Y`
 
     Instantiation of this class actually creates an instant of a suitable subclass,
-    which represent the kind of curve for which an algorithm for computing the
-    semistable reduction has been implemented.
+    which represents the kind of curve for which an algorithm for computing the
+    semistable reduction has been implemented. At the moment, there are two such
+    subclasses:
+    - If the degree of `Y` as a cover of the projective line is prime to the
+      residue characteristic of `v_K` then we invoke the subclass ``AdmissibleModel``.
+      Note that this may not work: we can only guarantee that `Y` has admissible
+      reduction if the order of the Galois group of the cover `Y\to X=\mathbb{P}^1_K`
+      is prime to the residue characteristic.
+    - If `Y` is a superelliptic curve of degree `p`, where `p` is the residue
+      characteristic of `v_K` and `K` has characteristic `0` then the subclass
+      ``SuperpModel`` is invoked.
 
 
     EXAMPLES::
@@ -175,8 +184,8 @@ class SemistableModel(SageObject):
         sage: Y = SmoothProjectiveCurve(FY)
         sage: YY = SemistableModel(Y, v_5)
 
-    The degree of `Y` as a cover of the projective line is `4`, which is prime
-    to `p=5`. Hence `Y` has admissible reduction and we have created an instance
+    The degree of `Y` as a cover of the projective line is `4`, which is strictly
+    less than `p=5`. Hence `Y` has admissible reduction and we have created an instance
     of the class ``AdmissibleModel``. ::
 
         sage: isinstance(YY, AdmissibleModel)
@@ -196,7 +205,8 @@ class SemistableModel(SageObject):
         from mclf.semistable_reduction.superp_models import SuperpModel
 
         p = vK.residue_field().characteristic()
-        if isinstance(Y, SuperellipticCurve) and Y.covering_degree() == p:
+        q = vK.domain().characteristic()
+        if q==0 and isinstance(Y, SuperellipticCurve) and Y.covering_degree() == p:
             # we create an instance of ``SuperpModel``
             self.__class__ = SuperpModel
             SuperpModel.__init__(self, Y, vK)
