@@ -54,7 +54,7 @@ of rational domains defined by rational functions which can be
 easily computed in terms of the polynomial `f` defining `Y`.
 
 Once the etale locus `X^{et}` is computed, we can define an *inertial model*
-`\mathcal{X}_0` of `X`. A semistable model `mathcal{Y}` of `Y` can then be
+`\mathcal{X}_0` of `X`. A semistable model `\mathcal{Y}` of `Y` can then be
 obtained as the normalization of `\mathcal{X}_0` inside `Y_L`, for a sufficiently
 large finite extension `L/K`.
 
@@ -371,9 +371,8 @@ class SuperpModel(SemistableModel):
 
 
 """
-
-                    ## auxiliary functions ##
-
+auxiliary functions
+-------------------
 """
 
 

@@ -21,9 +21,6 @@ using the mac_lane infrastructure:
   function field whose residue field is a function field over the residue base
   field
 
-For both these kind of points, the corresponding pseudovaluation on `F` are
-directly realizable inside the ``mac_lane`` infrastructure.
-
 If `v_\xi(x)\geq 0` we say that `\xi` lies *in the unit disk*. Then the
 restriction of `v_\xi` to `K[x]` is a discrete pseudo-valuation which can be
 realized either as an inductive valuation, or as a limit valuation.
@@ -34,7 +31,7 @@ of `v_\xi` to the polynomial ring `K[x^{-1}]` (internally, we use the ring
 
 By a result of Berkovich, the topological space `X^{an}` is a *simply connected
 quasi-polyhedron*. Among other things this means that for any two points
-`\xi_1,\xi2\in X^{an}` there exists a unique closed subset
+`\xi_1,\xi_2\in X^{an}` there exists a unique closed subset
 
 .. MATH::      [\xi_1,\xi_2]\subset X^{an}
 
@@ -853,7 +850,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         ``True`` if self is less or equal to ``xi`` (w.r.t. the natural
         partial order on `X` for which the Gauss pont is the smallest element).
         Since self is a point of type I and hence maximal, this is never true
-        unless `xi` is equal to self.
+        unless ``xi`` is equal to self.
 
         """
         return self.is_equal(xi)

@@ -169,7 +169,7 @@ class FakepAdicEmbedding(SageObject):
         `N` is larger or equal to ``precision``. Otherwise the internal precision
         of `\phi` is used (which only guarantees that `\phi` is uniquely determined).
 
-        The element `alpha` in `K` may also be given by a ...
+        The element `\alpha` in `K` may also be given by a ...
 
         """
 

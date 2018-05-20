@@ -208,20 +208,18 @@ class BerkovichTree(SageObject):
 
         INPUT:
 
-        - xi -- A point of type I or II on X
+        - ``xi`` -- A point of type I or II on X
 
-        OUTPUT:
+        OUTPUT: `T_1`, `T_2`, where
 
-        T1, T2, where
+        - `T_1` is the tree obtained from `T_0`=self after inserting `\xi` as a vertex.
+        - `T_2` is the subtree of `T_1` with root `\xi`
 
-        - T1 is the tree obtained from T0=self after inserting xi as a vertex.
-        - T2 is the subtree of T1 with root xi
+        If `T_0` has a parent, then the root of `T_0` must be less than `\xi`.
+        Therefore, the parent of `T_1` will be the original parent of `T_0`.
 
-        If T0 has a parent, then the root of T0 must be less than xi.
-        Therefore, the parent of T1 will be the original parent of T0.
-
-        Note that this command may change the tree T0!  For instance, xi may
-        become the root of T1 and then T0 has T1 as new parent.
+        Note that this command may change the tree `T_0`!  For instance, `\xi` may
+        become the root of `T_1` and then `T_0` has `T_1` as new parent.
         """
 
         T0 = self
@@ -316,7 +314,7 @@ class BerkovichTree(SageObject):
 
     def adjacent_vertices(self, xi0):
         """
-        List all vertices of the tree adjacent to ``xi``.
+        List all vertices of the tree adjacent to a given vertex.
 
         """
         T = self.find_point(xi0)

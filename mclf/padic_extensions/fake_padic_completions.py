@@ -275,7 +275,7 @@ class FakepAdicCompletion(SageObject):
 
         INPUT:
 
-        - ``f`` -- a monic univariate polynomial over the number field `K0`
+        - ``f`` -- a monic univariate polynomial over the number field `K_0`
           underlying this p-adic extension `K`, which is irreducible over `K`.
         - ``embedding`` -- a boolean (default: ``False``)
 
