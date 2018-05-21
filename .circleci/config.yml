@@ -1,23 +1,49 @@
 version: 2
 
-test: &test
-  working_directory: /home/sage/mclf
-  steps:
-    - checkout
-    - run:
-        command: |
-          ln -s /home/sage/mclf/mclf /home/sage/sage/local/lib/python2.7/site-packages/
-          sage -tp --initial .
-
 jobs:
-  "sage-8.2":
+  test: &test
+    working_directory: /home/sage/mclf
+    docker:
+      - image: sagemath/sagemath:latest
+    steps:
+      - checkout
+      - run:
+          name: sage -tp --initial .
+          command: |
+            ln -s /home/sage/mclf/mclf /home/sage/sage/local/lib/python2.7/site-packages/
+            sage -tp --initial .
+  "test-sage-8.2":
     <<: *test
     docker:
       - image: sagemath/sagemath:8.2
-  "sage-8.3.beta0":
+  "test-sage-8.3.beta2":
     <<: *test
     docker:
-      - image: sagemath/sagemath:8.3.beta0
+      - image: sagemath/sagemath:8.3.beta2
+  coverage:
+    working_directory: /home/sage/mclf
+    docker:
+      # TODO: Use an official image, once #24655 has been merged (the current images is missing SSL support for pip.)
+      - image: registry.gitlab.com/sagemath/dev/trac/sagemath:u-saraedum-24655
+    steps:
+      - checkout
+      - run:
+          name: test coverage
+          command: |
+            set +x
+            # Run coverage test
+            cp .circleci/coverage.sitecustomize.py /home/sage/sage/local/lib/python2.7/site-packages/sitecustomize.py
+            export COVERAGE_PROCESS_START=`pwd`/.coveragerc
+            sage -pip install coverage
+            ln -s /home/sage/mclf/mclf /home/sage/sage/local/lib/python2.7/site-packages/
+            sage -sh -c 'coverage run /home/sage/sage/src/bin/sage-runtests -p --initial .'
+            sage -sh -c 'coverage combine'
+            sage -sh -c 'coverage report'
+            # Report to coveralls.io
+            sudo apt update
+            sudo apt install -y git
+            sage -pip install coveralls
+            sage -sh -c 'coveralls'
   docbuild-sage:
     docker:
       - image: sagemath/sagemath:latest
@@ -50,9 +76,8 @@ workflows:
   test:
     jobs:
       # When adding a new stable release of Sage here, make sure to also upgrade the Dockerfile
-      - sage-8.2
-      - sage-8.3.beta0
-  doc:
-    jobs:
+      - test-sage-8.2
+      - test-sage-8.3.beta2
+      - coverage
       - docbuild-sage
       - docbuild-readthedocs
