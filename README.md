@@ -13,9 +13,15 @@ You need at least [Sage 8.2](http://www.sagemath.org/) for the following example
 
 Let Y be a smooth projective curve over a field K and let vK be a discrete valuation on K.
 The principal goal is to compute  the *semistable reduction* of Y with respect to vK.
-This means that we want to know a finite Galois extension L/K, an extension vL of
-vK to L, and the special fiber of an integral semistable model of Y_L over the valuation
-ring of vL.  At the moment we can do this only in certain special cases, which should
+This means that we want to know
+
+* a finite Galois extension L/K,
+* an extension vL of vK to L,
+* the special fiber of an integral semistable model of Y_L over the valuation
+  ring of vL, and
+* the action of the decomposition group of vL on the special fiber.
+
+At the moment we can do this only in certain special cases, which should
 nevertheless be useful. Let us do an example:
 
 The package can be loaded with
@@ -86,7 +92,7 @@ For the mathematical background see
  > S. Wewers and I.I. Bouw, lecture notes for a minicourse at ICERM
  >
  > S. Wewers, Semistable reduction of superelliptic curves of degree p, preprint, 2017
- 
+
 
 #### Experimental Changes
 
