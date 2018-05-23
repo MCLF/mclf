@@ -6,10 +6,8 @@
 ### A Sage toolbox for computing with **M**odels of **C**urves over **L**ocal **F**ields
 
 This is still a rather immature version of our toolbox. Nevertheless, you can use
-it to compute the stable reduction at primes of bad reduction, for a large class
-of curves over the rationals.
-
-You need at least [Sage 8.2](http://www.sagemath.org/) for the following examples to work. If you can not install Sage on your local machine, you can also click [![Launch on mybinder.org](https://camo.githubusercontent.com/d57df63fab21897847014ebaec3e7f5f48951ad2/68747470733a2f2f626574612e6d7962696e6465722e6f72672f62616467652e737667)](https://mybinder.org/v2/gh/mclf/MCLF/master?filepath=example.ipynb) to try this in an interactive Jupyter notebook.
+it to compute, for a large class
+of curves over the rationals, the stable reduction at primes of bad reduction.
 
 Let Y be a smooth projective curve over a field K and let vK be a discrete valuation on K.
 The principal goal is to compute  the *semistable reduction* of Y with respect to vK.
@@ -17,12 +15,14 @@ This means that we want to know
 
 * a finite Galois extension L/K,
 * an extension vL of vK to L,
-* the special fiber of an integral semistable model of Y_L over the valuation
+* the special fiber of an integral semistable model of Y over the valuation
   ring of vL, and
-* the action of the decomposition group of vL on the special fiber.
+* the action of the decomposition group of vL on that special fiber.
 
 At the moment we can do this only in certain special cases, which should
-nevertheless be useful. Let us do an example:
+nevertheless be useful.
+
+You need at least [Sage 8.2](http://www.sagemath.org/) for the following examples to work. If you can not install Sage on your local machine, you can also click [![Launch on mybinder.org](https://camo.githubusercontent.com/d57df63fab21897847014ebaec3e7f5f48951ad2/68747470733a2f2f626574612e6d7962696e6465722e6f72672f62616467652e737667)](https://mybinder.org/v2/gh/mclf/MCLF/master?filepath=example.ipynb) to try this in an interactive Jupyter notebook.
 
 The package can be loaded with
 ```
@@ -33,19 +33,19 @@ We create a Picard curve over the rational number field.
 sage: R.<x> = QQ[]
 sage: Y = SuperellipticCurve(x^4-1, 3)
 sage: Y
-superelliptic curve y^3 = x^4 + 1 over Rational Field
+superelliptic curve y^3 = x^4 - 1 over Rational Field
 ```
 In general, the class `SuperellipticCurve` allows you to create a superelliptic curve of the form y<sup>n</sup> = f(x),
 for a polynomial f over an arbitrary field K. But you can also define any smooth projective curve Y with given
 function field.
 
 We define the 2-adic valuation on the rational field. Then we are able to create an
-object which represents a semistable model of the curve Y with respect to the 2-adic
+object of the class `SemistableModel` which represents a semistable model of the curve Y with respect to the 2-adic
 valuation.
 ```
 sage: v_2 = QQ.valuation(2)
 sage: Y2 = SemistableModel(Y, v_2)
-sage: Y2.is_semistable()
+sage: Y2.is_semistable() # this may take a while
 True
 ```
 The stable reduction of Y at p=2 has four components, one of genus 0 and
@@ -83,16 +83,16 @@ For more details on the functionality and the restrictions of the toolbox, see t
 [Documentation](http://mclf.readthedocs.io/en/latest/).
 For the mathematical background see
 
- > J. Rüth, Models of Curves and Valuations, PhD thesis, Ulm University, 2014
- >
- > I.I. Bouw, S. Wewers, Computing L-Functions and semistable reduction of superellipic curves,
- > Glasgow Math. J., 59(1), 2017, 77-108
- >
- > [Semistable reduction of curves and computation of bad Euler factors of L-functions](http://www.uni-ulm.de/fileadmin/website_uni_ulm/mawi.inst.100/mitarbeiter/wewers/course_notes.pdf),
- > S. Wewers and I.I. Bouw, lecture notes for a minicourse at ICERM
- >
- > S. Wewers, Semistable reduction of superelliptic curves of degree p, preprint, 2017
+* J. Rüth, [Models of Curves and Valuations](https://oparu.uni-ulm.de/xmlui/handle/123456789/3302), PhD thesis, Ulm University, 2014
+* I.I. Bouw, S. Wewers, [Computing L-Functions and semistable reduction of superellipic curves](https://arxiv.org/abs/1211.4459?context=math.AG),
+  Glasgow Math. J., 59(1), 2017, 77-108
+* I.I. Bouw, S. Wewers,[Semistable reduction of curves and computation of bad Euler factors of L-functions](http://www.uni-ulm.de/fileadmin/website_uni_ulm/mawi.inst.100/mitarbeiter/wewers/course_notes.pdf),
+   lecture notes for a minicourse at ICERM
+* S. Wewers, Semistable reduction of superelliptic curves of degree p, preprint, 2017
 
+#### Known bugs and issues
+
+See our [issues list](https://github.com/MCLF/mclf/issues), and tell us of any bugs or ommissions that are not covered there.
 
 #### Experimental Changes
 
