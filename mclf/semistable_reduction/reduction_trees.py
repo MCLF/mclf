@@ -302,15 +302,11 @@ class ReductionTree(SageObject):
         ``ReductionTree``. If the reduction is semistable, then the result is
         the conductor of `Y`.
 
-        .. Note::
-
-            For the moment we only count the contribution of the reduction
-            component, and the contribution of the loops is left out. Hence our
-            result is only correct if the curve `Y` has abelian reduction.
-
+        TODO: Write better documentation.
+        
         """
         if not hasattr(self, "_reduction_conductor"):
-            self._reduction_conductor = sum([Z.reduction_conductor() for Z in self.inertial_components()])
+            self._reduction_conductor = 1 + sum([Z.reduction_conductor() for Z in self.inertial_components()])
             # for the moment, we only count the contribution of the components
             # and dismiss the loops.
         return self._reduction_conductor
@@ -703,29 +699,45 @@ class InertialComponent(SageObject):
         r"""
         Return the contribution of this inertial component to the conductor exponent.
 
+        OUTPUT: an integer `f_Z` (where `Z` is this inertial component).
+
+        The conductor exponent `f_Y` of the curve `Y` can be written in the form
+
+        .. MATH::
+
+                f_Y = 1 + \sum_Z f_Z
+
+        where `Z` runs over all inertial components of the reduction tree and
+        `f_Z` is an integer, called the *contribution* of `Z` to the conductor
+        exponent.
+
+        TODO: Write better documentation.
+
         """
         if not hasattr(self, "_reduction_conductor"):
             L = self.splitting_field()
             n = L.ramification_degree()
             ramification_filtration = L.ramification_filtration()
             if len(ramification_filtration) == 0:
-                self._reduction_conductor = ZZ(0)
-                return ZZ(0)
+                # this inertial components split over the base field
+                self._reduction_conductor = self.outdegree() - self.component_degree()
+                return self._reduction_conductor
 
-            delta_list = []
-            for u, m_u in ramification_filtration:
-                L_u = L.ramification_subfield(u)
-                g_u = self.reduction_genus(u)
-                delta_list.append((u, m_u, g_u))
             g = self.reduction_genus()
-            g_0 = delta_list[0][2]
-            epsilon = 2*(g - g_0)
-            u, m_u, g_u = delta_list[0]
-            delta = m_u/n*2*(g - g_u)*u
-            for i in range(1,len(delta_list)):
-                u, m_u, g_u = delta_list[i]
-                v = delta_list[i-1][0]
-                delta += m_u/n*2*(g - g_u)*(u - v)
+            h = self.outdegree() - self.component_degree()
+            u_0 = ramification_filtration[0][0]
+            m_0 = ramification_filtration[0][1]
+            g_0 = self.reduction_genus(u_0)
+            h_0 = self.outdegree(u_0) - self.component_degree(u_0)
+            epsilon = 2*(g - g_0) + 2*h - h_0
+            delta = m_0/n*2*(g + h - g_0 - h_0)*u_0
+            for i in range(1,len(ramification_filtration)):
+                u = ramification_filtration[i][0]
+                m_u = ramification_filtration[i][1]
+                g_u = self.reduction_genus(u)
+                h_u = self.outdegree(u) - self.component_degree(u)
+                v = ramification_filtration[i-1][0]
+                delta += m_u/n*2*(g + h - g_u -h_u)*(u - v)
             self._reduction_conductor = epsilon + delta
 
         return self._reduction_conductor
