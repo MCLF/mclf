@@ -181,7 +181,9 @@ class SemistableModel(SageObject):
         sage: FY.<y> = FX.extension(y^3 - y^2 + x^4 + x + 1)
         sage: Y = SmoothProjectiveCurve(FY)
         sage: YY = SemistableModel(Y, v_5)
-
+        sage: YY
+        semistable model of the smooth projective curve with Function field in y defined by y^3 - y^2 + x^4 + x + 1, with respect to 5-adic valuation
+        
     The degree of `Y` as a cover of the projective line is `4`, which is strictly
     less than `p=5`. Hence `Y` has admissible reduction and we have created an instance
     of the class ``AdmissibleModel``::
@@ -216,12 +218,16 @@ class SemistableModel(SageObject):
             raise NotImplementedError
 
 
+    def __repr__(self):
+        return "semistable model of %s, with respect to %s"%(self.curve(), self.base_valuation())
+
+
     def curve(self):
         """
         Return the curve.
 
         """
-        return self._Y
+        return self._curve
 
 
     def base_field(self):
@@ -229,7 +235,7 @@ class SemistableModel(SageObject):
         Return the base field of this curve.
 
         """
-        self._Y.base_field()
+        self.curve().base_field()
 
 
     def base_valuation(self):
@@ -237,7 +243,7 @@ class SemistableModel(SageObject):
         Return the valuation on the base field of the curve.
 
         """
-        return self._vK
+        return self._base_valuation
 
 
     def reduction_tree(self):
