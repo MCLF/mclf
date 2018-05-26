@@ -4,11 +4,24 @@
 [![CircleCI](https://circleci.com/gh/MCLF/mclf/tree/master.svg?style=svg)](https://circleci.com/gh/MCLF/mclf/tree/master)
 [![Coverage Status](https://coveralls.io/repos/github/MCLF/mclf/badge.svg?branch=master)](https://coveralls.io/github/MCLF/mclf?branch=master)
 
-### A Sage toolbox for computing with *M*odels of *C*urves over *L*ocal *F*ields
+### A Sage toolbox for computing with **M**odels of **C**urves over **L**ocal **F**ields
 
-This is a very preliminary version. At the moment it is only possible to compute
-the semistable reduction of superelliptic curves of degree p over Q<sub>p</sub> and the
-exponent of conductor at p, under some restrictions (see an example below).
+This is still a rather immature version of our toolbox. Nevertheless, you can use
+it to compute, for a large class
+of curves over the rationals, the stable reduction at primes of bad reduction.
+
+Let Y be a smooth projective curve over a field K and let vK be a discrete valuation on K.
+The principal goal is to compute  the *semistable reduction* of Y with respect to vK.
+This means that we want to know
+
+* a finite Galois extension L/K,
+* an extension vL of vK to L,
+* the special fiber of an integral semistable model of Y over the valuation
+  ring of vL, and
+* the action of the decomposition group of vL on that special fiber.
+
+At the moment we can do this only in certain special cases, which should
+nevertheless be useful.
 
 You need at least [Sage 8.2](http://www.sagemath.org/) for the following examples to work. If you can not install Sage on your local machine, you can also click [![Launch on mybinder.org](https://camo.githubusercontent.com/d57df63fab21897847014ebaec3e7f5f48951ad2/68747470733a2f2f626574612e6d7962696e6465722e6f72672f62616467652e737667)](https://mybinder.org/v2/gh/mclf/MCLF/master?filepath=example.ipynb) to try this in an interactive Jupyter notebook.
 
@@ -16,79 +29,71 @@ The package can be loaded with
 ```
 from mclf import *
 ```
-
-Let us do an example: a Picard curve over the rational number field, relative to the 3-adic valuation.      
+We create a Picard curve over the rational number field.      
 ```
-sage: K = QQ
-sage: v_3 = K.valuation(3)
-sage: R.<x> = K[]
-sage: Y = Superp(x^4+1, v_3, 3)
+sage: R.<x> = QQ[]
+sage: Y = SuperellipticCurve(x^4-1, 3)
 sage: Y
-superelliptic curve Y: y^3 = x^4 + 1 over Rational Field, with respect to 3-adic valuation
+superelliptic curve y^3 = x^4 - 1 over Rational Field
 ```
-In general, the class `Superp` allows you to create a superelliptic curve of the form y<sup>p</sup> = f(x),
-for a polynomial f over a number field K and a prime p. We also have to specify a discrete valuation on K with
-residue characteristic p. The class should then provide access to  a variety of functions which allows you to compute
-the semistable reduction of the curve and analyze it. For instance, it is possible to compute the
-conductor exponent at the chosen p-adic valuation.
+In general, the class `SuperellipticCurve` allows you to create a superelliptic curve of the form y<sup>n</sup> = f(x),
+for a polynomial f over an arbitrary field K. But you can also define any smooth projective curve Y with given
+function field.
 
-The mathematical background will soon appear in
-
- > S. Wewers, Semistable reduction of superelliptic curves of degree p, preprint, 2017
-
-A rough sketch and some examples can already be found in
-
- > [Semistable reduction of curves and computation of bad Euler factors of L-functions](http://www.uni-ulm.de/fileadmin/website_uni_ulm/mawi.inst.100/mitarbeiter/wewers/course_notes.pdf),
- > S. Wewers and I.I. Bouw, lecture notes for a minicourse at ICERM
-
-For the time being, our implementation only works under certain restrictions on the
-superelliptic curve Y: y<sup>p</sup> = f(x)
-
-- the base field has to be the field of rational numbers
-- the degree of the polynomial f has to prime to p (we can always bring any superelliptic curve
-  of degree p into this form as long as there is at least one rational branch point),
-- the Jacobian of Y has potentially good reduction at p.   
-
-These restrictions should disappear soon.
-
-In the explicit example from above, we get:
+We define the 2-adic valuation on the rational field. Then we are able to create an
+object of the class `SemistableModel` which represents a semistable model of the curve Y with respect to the 2-adic
+valuation.
 ```
-sage: Y.compute_semistable_reduction()
-We try to compute the semistable reduction of the
-superelliptic curve Y: y^3 = x^4 + 1 over Rational Field, with respect to 3-adic valuation
-which has genus  3
-
-First we compute the etale locus:
-Affinoid with 1 components:
-Elementary affinoid defined by
-v(x) >= 3/8
-
-There is exactly one reduction component to consider:
-
-
-Reduction component corresponding to
-Elementary affinoid defined by
-v(x) >= 3/8
-
-It splits over  3-adic completion of Number Field in pi8 with defining polynomial x^8 - 3
-into 1 lower components.
-The upper components are:
-The smooth projective curve over Finite Field of size 3 with Function field in y defined by y^3 + y + 2*x^4.
-Contribution of this component to the reduction genus is  3
-
-
-The curve has abelian reduction, since the total reduction genus
-is equal to the genus of the generic fiber.
+sage: v_2 = QQ.valuation(2)
+sage: Y2 = SemistableModel(Y, v_2)
+sage: Y2.is_semistable() # this may take a while
+True
 ```
-This result shows that the curve `Y` has potentially good reduction over a tame extension of the `3`-adic numbers of ramification index `8`. The reduction is the
-curve over the finite field with 3 elements, given by the equation y^3 + y +2x^4 = 0.
-
-Now we can also compute
-the conductor exponent at p=3:
+The stable reduction of Y at p=2 has four components, one of genus 0 and
+three of genus 1.
 ```
-sage: Y.conductor_exponent()
+sage: [Z.genus() for Z in Y2.components()]
+[0, 1, 1, 1]
+sage: Y2.components_of_positive_genus()
+[the smooth projective curve with Function field in y defined by y^3 + x^4 + x^2,
+ the smooth projective curve with Function field in y defined by y^3 + x^2 + x,
+ the smooth projective curve with Function field in y defined by y^3 + x^2 + x + 1]
+```
+We can also extract some arithmetic information on the curve Y from the stable reduction.
+For instance, we can compute the *conductor exponent* of Y at p=2:
+```
+sage: Y2.conductor_exponent()
 6
 ```
+Now let us compute the semistable reduction of Y at p=3:
+```
+sage: v_3 = QQ.valuation(3)
+sage: Y3 = SemistableModel(Y, v_3)
+sage: Y3.is_semistable()
+True
+sage: Y3.components_of_positive_genus()
+[the smooth projective curve with Function field in y defined by y^3 + y + 2*x^4]
+```
+We see that Y has potentially good reduction at p=3. The conductor exponent is:
+```
+sage: Y3.conductor_exponent()
+6
+```
+
+For more details on the functionality and the restrictions of the toolbox, see the
+[Documentation](http://mclf.readthedocs.io/en/latest/).
+For the mathematical background see
+
+* J. Rüth, [Models of Curves and Valuations](https://oparu.uni-ulm.de/xmlui/handle/123456789/3302), PhD thesis, Ulm University, 2014
+* I.I. Bouw, S. Wewers, [Computing L-Functions and semistable reduction of superellipic curves](https://arxiv.org/abs/1211.4459?context=math.AG),
+  Glasgow Math. J., 59(1), 2017, 77-108
+* I.I. Bouw, S. Wewers,[Semistable reduction of curves and computation of bad Euler factors of L-functions](http://www.uni-ulm.de/fileadmin/website_uni_ulm/mawi.inst.100/mitarbeiter/wewers/course_notes.pdf),
+   lecture notes for a minicourse at ICERM
+* S. Wewers, Semistable reduction of superelliptic curves of degree p, preprint, 2017
+
+#### Known bugs and issues
+
+See our [issues list](https://github.com/MCLF/mclf/issues), and tell us of any bugs or ommissions that are not covered there.
 
 #### Experimental Changes
 

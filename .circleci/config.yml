@@ -23,7 +23,7 @@ jobs:
   coverage:
     working_directory: /home/sage/mclf
     docker:
-      # TODO: Use an official image, once #24655 has been merged (the current images is missing SSL support for pip.)
+      - image: sagemath/sagemath:8.2
       - image: registry.gitlab.com/sagemath/dev/trac/sagemath:u-saraedum-24655
     steps:
       - checkout
