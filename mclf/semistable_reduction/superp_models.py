@@ -171,7 +171,7 @@ class SuperpModel(SemistableModel):
         assert p == vK.residue_field().characteristic(), "the exponent p must be the residue characteristic of vK"
         assert not p.divides(f.degree()), "the degree of f must be prime to p"
         self._p = p
-        self._vK = vK
+        self._base_valuation = vK
         v0 = GaussValuation(R, vK)
         phi, psi, f1 = v0.monic_integral_model(f)
         # now f1 = phi(f).monic()
@@ -190,20 +190,20 @@ class SuperpModel(SemistableModel):
             self._FX = FX
             self._FY = FY
             Y = SmoothProjectiveCurve(FY)
-            self._Y = Y
+            self._curve = Y
         else:
             self._f = f.monic()
             self._a = vK.domain().one()
             self._FY = Y.function_field()
             self._FX = Y.rational_function_field()
-            self._Y = Y
+            self._curve = Y
         X = BerkovichLine(self._FX, vK)
         self._X = X
 
 
     def __repr__(self):
         return "semistable model of superelliptic curve Y: y^%s = %s over %s, with respect to %s"%(self._p,
-                        self._a*self._f, self._vK.domain(), self._vK)
+                        self._a*self._f, self.base_valuation().domain(), self.base_valuation())
 
 
     def etale_locus(self):
@@ -273,7 +273,7 @@ class SuperpModel(SemistableModel):
             a.append(a[i-1].derivative()/i)
         a = [a[i]/f for i in range(n+1)]
 
-        pi = self._vK.uniformizer()
+        pi = self.base_valuation().uniformizer()
         delta = [ c[pl]**(p-1) * pi**(-p) ]
         delta += [ c[pl]**(i*(p-1)) * a[i]**(-pl*(p-1)) * pi**(-i*p)
                    for i in range(1, n+1) ]
@@ -290,7 +290,7 @@ class SuperpModel(SemistableModel):
                 # if delta[i] is constant, it must not be integral
                 # otherwise we add the whole Berkovich line which is
                 # not an affinoid
-                assert self._vK(delta[i]) < 0, "this is not an affinoid"
+                assert self.base_valuation()(delta[i]) < 0, "this is not an affinoid"
                 # if vK(delta[i]) >= 0 then we add the empty set, i.e
                 # we do nothing
             else:

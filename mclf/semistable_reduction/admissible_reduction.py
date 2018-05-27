@@ -105,9 +105,10 @@ class AdmissibleModel(SemistableModel):
         self._reduction_tree = reduction_tree
 
 
+    def __repr__(self):
+        return "semistable model of %s, with respect to %s"%(self.curve(), self.base_valuation())
+
+
     def original_model_of_curve(self):
         """ Return the original model of the curves. """
         return self._original_model_of_curve
-
-
-   
