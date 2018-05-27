@@ -116,8 +116,8 @@ EXAMPLES::
 
 TODO:
 
-* test the method InertialComponent.outdegree
-* complete the computaton of the true reduction genus and the conductor exponent
+* better documentation
+* more doctests
 
 """
 
@@ -284,6 +284,21 @@ class ReductionTree(SageObject):
         `\bar{Y}`) and the number of loops of the component graph of `\bar{Y}`,
         which is (number of double points) - (number of components) + 1.
 
+        EXAMPLES:
+
+        We test that the arithmetic genus of a totally degenerate curve is computed correctly::
+
+            sage: from mclf import *
+            sage: R.<x> = QQ[]
+            sage: v_3 = QQ.valuation(3)
+            sage: f = (x^2 - 3)*(x^2 + 3)*(x^3 - 3)
+            sage: Y = SuperellipticCurve(f, 2)
+            sage: Y.genus()
+            3
+            sage: Y3 = SemistableModel(Y, v_3)
+            sage: Y3.reduction_tree().reduction_genus()
+            3
+
         """
         if not hasattr(self, "_reduction_genus"):
             reduction_genus = 1
@@ -303,12 +318,23 @@ class ReductionTree(SageObject):
         the conductor of `Y`.
 
         TODO: Write better documentation.
-        
+
+        EXAMPLES:
+
+        We check that the conductor exponent takes the component graph into account as well::
+
+            sage: from mclf import *
+            sage: R.<x> = QQ[]
+            sage: Y = SuperellipticCurve(x^3 + x^2 + 3, 2)
+            sage: Y3 = SemistableModel(Y, QQ.valuation(3))
+            sage: Y3.is_semistable()
+            True
+            sage: Y3.conductor_exponent() # indirect doctest
+            1
+
         """
         if not hasattr(self, "_reduction_conductor"):
             self._reduction_conductor = 1 + sum([Z.reduction_conductor() for Z in self.inertial_components()])
-            # for the moment, we only count the contribution of the components
-            # and dismiss the loops.
         return self._reduction_conductor
 
 
