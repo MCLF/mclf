@@ -8,10 +8,10 @@ jobs:
     steps:
       - checkout
       - run:
-          name: sage -tp --initial .
+          name: sage -tp
           command: |
-            ln -s /home/sage/mclf/mclf /home/sage/sage/local/lib/python2.7/site-packages/
-            sage -tp --initial .
+            sage -python setup.py install
+            sage -tp --initial mclf docs
   "test-sage-8.2":
     <<: *test
     docker:
@@ -24,19 +24,18 @@ jobs:
     working_directory: /home/sage/mclf
     docker:
       - image: sagemath/sagemath:8.2
-      - image: registry.gitlab.com/sagemath/dev/trac/sagemath:u-saraedum-24655
     steps:
       - checkout
       - run:
           name: test coverage
           command: |
-            set +x
+            set -x
             # Run coverage test
             cp .circleci/coverage.sitecustomize.py /home/sage/sage/local/lib/python2.7/site-packages/sitecustomize.py
             export COVERAGE_PROCESS_START=`pwd`/.coveragerc
             sage -pip install coverage
             ln -s /home/sage/mclf/mclf /home/sage/sage/local/lib/python2.7/site-packages/
-            sage -sh -c 'coverage run /home/sage/sage/src/bin/sage-runtests -p --initial .'
+            sage -sh -c 'coverage run /home/sage/sage/src/bin/sage-runtests -p --initial docs mclf'
             sage -sh -c 'coverage combine'
             sage -sh -c 'coverage report'
             # Report to coveralls.io
@@ -70,14 +69,69 @@ jobs:
             ! grep WARNING /tmp/rdt.log > /dev/null
             # check that readthedocs produced something non-empty
             (( $(du -s _readthedocs_build/mclf/html | cut -f1) > 1000 ))
+  benchmark:
+    docker:
+      - image: sagemath/sagemath:8.2
+    steps:
+      - checkout
+      - run:
+          name: run benchmark
+          command: |
+            # There is an obvious security issue in this script that CircleCI
+            # seems to refuse to fix. The options are to disable pull requests
+            # or leave it in. Worst case somebody who's bored could push crap
+            # to the mclf-asv repository. I guess we can live with that.
+            set -x
+            sage -python setup.py install
+
+            sage -pip install asv
+
+            sudo apt update
+            sudo apt install -y git
+            git config --global user.name 'CircleCI Benchmark'
+            git config --global user.email 'benchmark@circleci.invalid'
+            git config --global push.default simple
+
+            mkdir -p ~/.ssh
+            ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+            set +x
+            echo $MCLF_ASV_SECRET_KEY | base64 -d > ~/.ssh/id_rsa
+            chmod 400 ~/.ssh/id_rsa
+            set -x
+
+            # Clone mclf-asv with performance data of previous runs
+            git clone git@github.com:MCLF/mclf-asv.git .asv/results
+            # Install sage-asv plugin
+            # TODO: move the python module into Sage
+            pushd .circleci/sage-asv
+            sage -python setup.py install
+            popd
+            # Run benchmarks
+            cp .circleci/asv-machine.json ~/.asv-machine.json
+            sage -sh -c 'asv run --machine=circleci --python=python'
+            # Commit and store benchmark results in the mclf-asv repository
+            pushd .asv/results
+            git add .
+            git commit -m 'Added benchmark run'
+            unset SSH_AUTH_SOCK
+            git push origin
+            popd
+            # Publish benchmark results to github pages
+            sage -sh -c 'asv gh-pages --no-push'
+            git push git@github.com:MCLF/mclf-asv.git gh-pages:gh-pages -f
 
 workflows:
   version: 2
   test:
     jobs:
-      # When adding a new stable release of Sage here, make sure to also upgrade the Dockerfile
-      - test-sage-8.2
-      - test-sage-8.3.beta2
-      - coverage
-      - docbuild-sage
-      - docbuild-readthedocs
+       # When adding a new stable release of Sage here, make sure to also upgrade the Dockerfile
+       - test-sage-8.2
+       - test-sage-8.3.beta2
+       - coverage
+       - docbuild-sage
+       - docbuild-readthedocs
+       - benchmark:
+           filters:
+             branches:
+               only:
+               - master
