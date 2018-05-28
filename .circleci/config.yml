@@ -52,7 +52,7 @@ jobs:
           name: pyflakes
           command: |
             pip install pyflakes
-            pyflakes mclf
+            find mclf -name '*.py' -not -name '__init__.py' | xargs pyflakes
   docbuild-sage:
     docker:
       - image: sagemath/sagemath:latest
