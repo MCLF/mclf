@@ -1,6 +1,6 @@
 r"""
-The Berkovich projective line over a discretely valued field.
-=============================================================
+The Berkovich projective line over a discretely valued field
+============================================================
 
 Let `K` be a field and `v_K` a discrete valuation on `K`. Let `F=K(x)`
 be a rational function field over `K`. We consider `F` as the function

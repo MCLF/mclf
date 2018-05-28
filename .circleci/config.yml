@@ -10,6 +10,7 @@ jobs:
       - run:
           name: sage -tp
           command: |
+            sage -pip install patchy
             sage -python setup.py install
             sage -tp --initial mclf docs
   "test-sage-8.2":
@@ -33,7 +34,7 @@ jobs:
             # Run coverage test
             cp .circleci/coverage.sitecustomize.py /home/sage/sage/local/lib/python2.7/site-packages/sitecustomize.py
             export COVERAGE_PROCESS_START=`pwd`/.coveragerc
-            sage -pip install coverage
+            sage -pip install coverage patchy
             ln -s /home/sage/mclf/mclf /home/sage/sage/local/lib/python2.7/site-packages/
             sage -sh -c 'coverage run /home/sage/sage/src/bin/sage-runtests -p --initial docs mclf'
             sage -sh -c 'coverage combine'
@@ -82,6 +83,7 @@ jobs:
             # or leave it in. Worst case somebody who's bored could push crap
             # to the mclf-asv repository. I guess we can live with that.
             set -x
+            sage -pip install patchy
             sage -python setup.py install
 
             sage -pip install asv
