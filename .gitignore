@@ -2,8 +2,8 @@
 *.pyc
 
 # ignore directories which do not contain mclf code
-
 mac_lane/
 notes/
 old_stuff/
 test/
+build/
