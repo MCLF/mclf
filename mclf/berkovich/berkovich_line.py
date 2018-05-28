@@ -1281,17 +1281,17 @@ def normalized_reduction(v, f):
     m = abs(r.denominator())
     v1 = v._base_valuation
     if hasattr(v1, 'equivalence_unit'):
-        fl = v.reduce(f^m*F(v1.equivalence_unit(-m*r))).factor()
+        fl = v.reduce(f**m*F(v1.equivalence_unit(-m*r))).factor()
         if len(fl)>0:
-            return fl[0][0]^sgn(fl[0][1])
+            return fl[0][0]**sgn(fl[0][1])
         else:
             return 1/v.residue_field().gen()
     else:
         v1 = v1._base_valuation
         g = v1.equivalence_unit(-m*r)(1/x)
-        fb = v.reduce(f^m*F(g)).factor()
+        fb = v.reduce(f**m*F(g)).factor()
         if len(fb) > 0:
-            return fb[0][0]^sgn(fb[0][1])
+            return fb[0][0]**sgn(fb[0][1])
         else:
             return 1/v.residue_field().gen()
 
