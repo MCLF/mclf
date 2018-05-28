@@ -86,7 +86,7 @@ EXAMPLES::
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.all import lcm, SageObject, Infinity, ZZ, PolynomialRing, randint, prod, PowerSeriesRing, CachedFunction
+from sage.all import lcm, SageObject, Infinity, ZZ, PolynomialRing, randint, PowerSeriesRing
 
 
 
@@ -223,7 +223,6 @@ class SmoothProjectiveCurve(SageObject):
         """
         if hasattr(self, "_field_of_constants_degree"):
             return self._field_of_constants_degree
-        F = self._function_field
         if self.is_separable():
             test_points = [P[0] for P in self.ramification_divisor().values()]
         else:
@@ -476,7 +475,6 @@ class SmoothProjectiveCurve(SageObject):
           Note that `q` is a power of the characteristic of `k`.
 
         """
-        from sage.functions.other import floor
         F = self.function_field()
         p = F.characteristic()
         if p == 0:
@@ -532,7 +530,7 @@ class SmoothProjectiveCurve(SageObject):
 
         """
         if not self._is_separable:
-            raise Error("Y is not separable, hence the ramification divisor is not defined")
+            raise Exception("Y is not separable, hence the ramification divisor is not defined")
         if hasattr(self, "_ramification_divisor"):
             return self._ramification_divisor
 

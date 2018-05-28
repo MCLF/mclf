@@ -62,7 +62,7 @@ EXAMPLES::
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.all import SageObject, cached_method, Infinity
+from sage.all import SageObject
 
 
 class ValuativeFunction(SageObject):

@@ -14,10 +14,7 @@ r""" Points of type V on the Berkovich line.
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.all import SageObject, cached_method, Infinity
-from mclf.berkovich.berkovich_line import BerkovichLine
-
-
+from sage.all import SageObject, Infinity
 
 
 class TypeVPointOnBerkovichLine(SageObject):

@@ -68,9 +68,8 @@ TO DO:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.all import SageObject, PolynomialRing, FunctionField, GaussValuation, cached_method, Infinity, floor
-from mclf.berkovich.berkovich_line import *
-from mclf.berkovich.affinoid_domain import *
+from sage.all import SageObject, PolynomialRing, FunctionField, GaussValuation
+from mclf.berkovich.berkovich_line import BerkovichTree, BerkovichLine
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
 from mclf.semistable_reduction.reduction_trees import ReductionTree
 

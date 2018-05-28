@@ -47,10 +47,8 @@ Moreover, kinks of this function can only occur in points of type II.
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.all import SageObject, cached_method, Infinity
-from mclf.berkovich.berkovich_line import BerkovichLine
+from sage.all import SageObject, Infinity
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
-
 
 
 class AscendingBerkovichPath(SageObject):
@@ -85,22 +83,22 @@ class AscendingBerkovichPath(SageObject):
         v0 = xi0.pseudovaluation_on_polynomial_ring()
         if not self._is_inductive:
             xi1 = xi1.approximation(xi0)
-        print "xi1 = ", xi1
+        print("xi1 = %s"%(xi1,))
         vr = xi1.pseudovaluation_on_polynomial_ring()
-        print "vr = ", vr
+        print("vr = %s"%(vr,))
         w = vr.augmentation_chain()[::-1]
-        print "w = ", w
+        print("w = %s"%(w,))
         # this is 'reverse' augmentation chain of vr; the Gauss val. is the first entry
         r = len(w)
-        print "r = ", r
+        print("r = %s"%(r,))
         # we want to find the index i such that w[i]<=v0<w[i+1]
         i = 0
         while w[i+1] <= v0:
             i += 1
-        print "i = ", i
+        print("i = %s"%(i,))
         aug_list = [(v0, w[i+1].phi(), w[i+1](w[i+1].phi()))]
         for j in range(i+1, r-1):
-            print "j =", j
+            print("j = %s"%(j,))
             aug_list.append((w[j], w[j+1].phi(), w[j+1](w[j+1].phi())))
         self._aug_list = aug_list
         self._phi = aug_list[-1][1]
@@ -262,7 +260,6 @@ class AscendingBerkovichPath(SageObject):
 def augmentation_list(xi0, xi1):
 
     assert xi0.is_leq(xi1)
-    aug_list = []
     phi1, s1, in_unit_disk = xi1.discoid_representation(xi0)
 
 

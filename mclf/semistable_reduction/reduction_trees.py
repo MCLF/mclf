@@ -132,9 +132,8 @@ TODO:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.all import ZZ, QQ, NumberField, FunctionField, SageObject
-from mclf.berkovich.berkovich_line import *
-from mclf.berkovich.berkovich_trees import BerkovichTree
+from sage.all import ZZ, QQ, FunctionField, SageObject, Infinity
+from mclf.berkovich.berkovich_line import BerkovichLine
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
 from mclf.berkovich.affinoid_domain import ElementaryAffinoidOnBerkovichLine
 from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion

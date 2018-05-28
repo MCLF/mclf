@@ -97,7 +97,7 @@ TO DO:
 #*****************************************************************************
 
 
-from sage.all import SageObject, NumberField, PolynomialRing, Polynomial, ZZ, QQ, mod, cached_method, Infinity, sgn, ceil, randint, prod, lcm
+from sage.all import PolynomialRing, Polynomial, ZZ, QQ, prod
 from sage.geometry.newton_polygon import NewtonPolygon
 from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
 from mclf.padic_extensions.fake_padic_extensions import FakepAdicExtension
@@ -243,7 +243,6 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
             self._lower_jumps = []
         else:
             NP = self.ramification_polygon()
-            f = self.inertia_degree()
             # this is the Newton polygon of the ramification
             # polygon G
             jumps = []
@@ -359,9 +358,6 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
 
         """
         # from mclf.padic_extensions.slope_factors import slope_factors
-
-        NP = self.ramification_polygon()
-        slopes = NP.slopes(False)
         G = self.ramification_polynomial()
         R = G.parent()
         L = self.extension_field()

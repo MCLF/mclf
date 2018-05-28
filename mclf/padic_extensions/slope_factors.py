@@ -87,9 +87,7 @@ def slope_factors(f, vK, precision, reduce_function, slope_bound=0):
     assert f.is_monic(), "f must be monic"
     NP = NewtonPolygon([(i,vK(f[i])) for i in range(f.degree()+1)])
     slopes = NP.slopes(False)
-    vertices = NP.vertices()
     assert all( s <= 0 for s in slopes), "f must be integral"
-    pi = vK.uniformizer()
     F = {}
     for i in range(len(slopes)):
         s = slopes[i]
@@ -148,7 +146,6 @@ def factor_with_slope_zero(f, vK, N, reduce_function):
 
     """
     R = f.parent()
-    x = R.gen()
     pi = vK.uniformizer()
     v0 = GaussValuation(R, vK)
     Kb = vK.residue_field()
@@ -196,7 +193,6 @@ def pol_linear_combination(f, g, h):
     and such that `deg(a) < deg(h)`.
 
     """
-    R = f.parent()
     d, A, B = g.xgcd(h)
     # now 1 = d = A*g + B*h
     C, a = (f*A).quo_rem(h)

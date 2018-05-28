@@ -45,10 +45,7 @@ EXAMPLES::
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-
 from sage.all import SageObject, Graph
-from mclf.berkovich.berkovich_line import BerkovichLine
-
 
 
 class BerkovichTree(SageObject):
@@ -193,7 +190,7 @@ class BerkovichTree(SageObject):
 
     def copy(self):
         r""" Return a copy of self."""
-
+        from copy import copy
         T = copy(self)
         children = []
         for child in self.children():
