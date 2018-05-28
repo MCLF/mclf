@@ -40,7 +40,7 @@ class Monkey(AbstractMonkey):
          else:
         """)
 
-        patchy.patch(sage.rings.function_field.function_field_valuation.DiscreteFunctionFieldValuation_base.extension, r"""
+        patchy.patch(sage.rings.function_field.function_field_valuation.DiscreteFunctionFieldValuation_base.extensions, r"""
 @@ -544,7 +554,7 @@ class DiscreteFunctionFieldValuation_base(DiscreteValuation):
                      if type(y_to_u) == RingHomomorphism_im_gens and type(u_to_y) == RingHomomorphism_im_gens:
                          return [L.valuation((w, L.hom([M(y_to_u(y_to_u.domain().gen()))]), M.hom([L(u_to_y(u_to_y.domain().gen()))]))) for w in H_extensions]
