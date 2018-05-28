@@ -10,6 +10,10 @@ jobs:
       - run:
           name: sage -tp
           command: |
+            # Remove these two lines after the upgrade to 8.3.beta3
+            sudo apt update
+            sudo apt install -y openssl
+
             sage -pip install patchy
             sage -python setup.py install
             sage -tp --initial mclf docs
