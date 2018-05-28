@@ -1,4 +1,4 @@
-import monkey
+from .monkey import *
 
 from .curves.smooth_projective_curves import *
 from .curves.morphisms_of_smooth_projective_curves import *
