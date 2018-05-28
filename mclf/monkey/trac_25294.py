@@ -10,7 +10,7 @@
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from util import AbstractMonkey
+from .util import AbstractMonkey
 
 class Monkey(AbstractMonkey):
     _trac = "https://trac.sagemath.org/ticket/25294"

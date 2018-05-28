@@ -1,1 +1,1 @@
-from trac_25294 import *
+from .trac_25294 import *
