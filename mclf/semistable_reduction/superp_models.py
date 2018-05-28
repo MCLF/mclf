@@ -118,8 +118,9 @@ TO DO:
 #*****************************************************************************
 
 from sage.all import PolynomialRing, FunctionField, floor, GaussValuation
-from mclf.berkovich.berkovich_line import BerkovichTree, BerkovichLine
-from mclf.affinoid_domain import RationalDomainOnBerkovichLine, ClosedUnitDisk
+from mclf.berkovich.berkovich_line import BerkovichLine
+from mclf.berkovich.berkovich_trees import BerkovichTree
+from mclf.berkovich.affinoid_domain import RationalDomainOnBerkovichLine, ClosedUnitDisk
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
 from mclf.curves.superelliptic_curves import SuperellipticCurve
 from mclf.semistable_reduction.reduction_trees import ReductionTree

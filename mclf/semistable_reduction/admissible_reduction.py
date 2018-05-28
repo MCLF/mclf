@@ -45,7 +45,8 @@ TO DO:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from mclf.berkovich.berkovich_line import BerkovichLine, BerkovichTree
+from mclf.berkovich.berkovich_line import BerkovichLine
+from mclf.berkovich.berkovich_trees import BerkovichTree
 from mclf.semistable_reduction.reduction_trees import ReductionTree
 from mclf.semistable_reduction.semistable_models import SemistableModel
 
