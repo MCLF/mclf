@@ -43,6 +43,16 @@ jobs:
             sudo apt install -y git
             sage -pip install coveralls
             sage -sh -c 'coveralls'
+  pyflakes:
+    docker:
+      - image: python:latest
+    steps:
+      - checkout
+      - run:
+          name: pyflakes
+          command: |
+            pip install pyflakes
+            pyflakes mclf
   docbuild-sage:
     docker:
       - image: sagemath/sagemath:latest
@@ -127,6 +137,7 @@ workflows:
        # When adding a new stable release of Sage here, make sure to also upgrade the Dockerfile
        - test-sage-8.2
        - test-sage-8.3.beta2
+       - pyflakes
        - coverage
        - docbuild-sage
        - docbuild-readthedocs
