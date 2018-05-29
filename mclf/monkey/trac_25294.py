@@ -16,10 +16,10 @@ class Monkey(AbstractMonkey):
     _trac = "https://trac.sagemath.org/ticket/25294"
 
     def _test(self):
-        import sage.all
-        K = sage.all.FunctionField(sage.all.QQ, 'x')
+        from sage.all import FunctionField, QQ, PolynomialRing
+        K = FunctionField(QQ, 'x')
         x = K.gen()
-        R = sage.all.PolynomialRing(K, 'y')
+        R = PolynomialRing(K, 'y')
         y = R.gen()
         L = K.extension(y**3 - 1/x**3*y + 2/x**4, 'y')
         v = K.valuation(x)
