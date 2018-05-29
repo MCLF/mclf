@@ -96,7 +96,7 @@ TO DO:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.all import SageObject, PolynomialRing, cached_method, Infinity, sgn, GaussValuation
+from sage.all import SageObject, PolynomialRing, Infinity, sgn, GaussValuation
 from sage.rings.valuation.limit_valuation import LimitValuation
 from sage.geometry.newton_polygon import NewtonPolygon
 
@@ -633,7 +633,6 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
 
         self._X = X
         F = X._F
-        K = F.constant_base_field()
         x = F.gen()
         assert v.is_discrete_pseudo_valuation()
         assert not v.is_discrete_valuation()
@@ -988,8 +987,6 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
     def __init__(self, X, v):
         self._X = X
         F = X._F
-        K = X._K
-        vK = X._vK
 
         # to do: test v
         assert v.domain() is F
@@ -1251,7 +1248,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
             s2 = s0 + 1
         else:
             s2 = (s0+s1)/2
-        xi2 = X.point_from_discoid(phi, s2, in_unit_disk)
+        xi2 = xi1._X.point_from_discoid(phi, s2, in_unit_disk)
         assert xi0.is_leq(xi2) and not xi0.is_equal(xi2), "xi0 is not less than xi2!"
         assert xi2.is_leq(xi1) and not xi2.is_equal(xi1), "xi2 is not less than xi1!"
         return xi2
@@ -1278,25 +1275,23 @@ def normalized_reduction(v, f):
     a nonzero element fb in the residue field of v ???
     Precise definition needed!
     """
-
     F = v.domain()
-    R = F._ring
     x = F.gen()
     r = v(f)
     m = abs(r.denominator())
     v1 = v._base_valuation
     if hasattr(v1, 'equivalence_unit'):
-        fl = v.reduce(f^m*F(v1.equivalence_unit(-m*r))).factor()
+        fl = v.reduce(f**m*F(v1.equivalence_unit(-m*r))).factor()
         if len(fl)>0:
-            return fl[0][0]^sign(fl[0][1])
+            return fl[0][0]**sgn(fl[0][1])
         else:
             return 1/v.residue_field().gen()
     else:
         v1 = v1._base_valuation
         g = v1.equivalence_unit(-m*r)(1/x)
-        fb = v.reduce(f^m*F(g)).factor()
+        fb = v.reduce(f**m*F(g)).factor()
         if len(fb) > 0:
-            return fb[0][0]^sign(fb[0][1])
+            return fb[0][0]**sgn(fb[0][1])
         else:
             return 1/v.residue_field().gen()
 

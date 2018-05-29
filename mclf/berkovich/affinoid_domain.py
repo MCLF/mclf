@@ -61,8 +61,6 @@ TO DO:
 
 
 from sage.all import SageObject, Infinity
-from mclf.berkovich.berkovich_line import BerkovichLine, TypeIPointOnBerkovichLine,\
-                                          TypeIIPointOnBerkovichLine
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
 from mclf.berkovich.berkovich_trees import BerkovichTree
 

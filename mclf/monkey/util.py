@@ -79,6 +79,7 @@ class AbstractMonkey:
         """
         try:
             import patchy
+            patchy; # silence pyflakes "imported but not used"
         except Exception:
             if not self.is_fixed():
                 import warnings

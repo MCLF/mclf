@@ -49,9 +49,10 @@ TO DO:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.all import SageObject, PolynomialRing, FunctionField, cached_method, Infinity, floor
-from mclf.berkovich.berkovich_line import *
-from mclf.berkovich.affinoid_domain import *
+from sage.all import SageObject, PolynomialRing, FunctionField, floor, GaussValuation
+from mclf.berkovich.berkovich_line import BerkovichLine
+from mclf.berkovich.berkovich_trees import BerkovichTree
+from mclf.berkovich.affinoid_domain import RationalDomainOnBerkovichLine, ClosedUnitDisk
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
 from mclf.semistable_reduction.reduction_trees import ReductionTree
 
@@ -274,7 +275,6 @@ class Superp(SageObject):
         H, G = p_approximation_generic(f,p)
         # b = [FX(H[i]) for i in range(n+1)]
         c = [FX(G[k]) for k in range(n+1)]
-        d =[c[k]*f**k for k in range(n+1)]
         pl = 1
         while pl <= m:
             pl = pl*p
@@ -418,7 +418,6 @@ def p_approximation(f,p):
     """
 
     R = f.parent()
-    K = R.base_ring()
     x = R.gen()
     n = f.degree()
     r = floor(n/p)
