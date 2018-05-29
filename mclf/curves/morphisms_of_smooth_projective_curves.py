@@ -40,9 +40,8 @@ EXAMPLES::
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.all import SageObject, Infinity, ZZ, PolynomialRing
+from sage.all import SageObject
 from mclf.curves.smooth_projective_curves import PointOnSmoothProjectiveCurve
-
 
 
 class MorphismOfSmoothProjectiveCurves(SageObject):

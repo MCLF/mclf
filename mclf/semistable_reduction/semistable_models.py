@@ -138,11 +138,7 @@ three of genus `1`. ::
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.all import SageObject, PolynomialRing, FunctionField, GaussValuation, cached_method, Infinity, floor
-from mclf.berkovich.berkovich_line import *
-from mclf.berkovich.affinoid_domain import *
-from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
-from mclf.semistable_reduction.reduction_trees import ReductionTree
+from sage.all import SageObject
 from mclf.curves.superelliptic_curves import SuperellipticCurve
 
 

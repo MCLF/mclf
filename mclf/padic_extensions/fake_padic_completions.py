@@ -84,7 +84,7 @@ TO DO:
 #*****************************************************************************
 
 
-from sage.all import SageObject, ZZ, QQ, NumberField, GaussValuation, PolynomialRing, Polynomial, Integer, matrix, zero_matrix, identity_matrix, IntegerModRing, mod, Infinity, sgn, ceil, floor, prod, lcm, vector, GF
+from sage.all import SageObject, ZZ, QQ, NumberField, GaussValuation, PolynomialRing, Polynomial, Integer, matrix, IntegerModRing, mod, Infinity, prod, lcm, vector, GF
 from sage.geometry.newton_polygon import NewtonPolygon
 from sage.rings.valuation.limit_valuation import LimitValuation
 
@@ -307,8 +307,6 @@ class FakepAdicCompletion(SageObject):
         K0 = self.number_field()
         assert K0.has_coerce_map_from(f.parent().base_ring())
         f = f.change_ring(K0)
-        R = f.parent()
-        x = R.gen()
 
         vK = self.valuation()
         if embedding:
@@ -374,7 +372,6 @@ class FakepAdicCompletion(SageObject):
         pair `(L,\phi)` is returned, where `\phi:K\to L` is the canonical embedding.
 
         """
-        K0 = self.number_field()
         P = self.polynomial()
         x = P.parent().gen()
         if self.is_Qp():
@@ -458,7 +455,6 @@ class FakepAdicCompletion(SageObject):
         assert F.parent().base_ring() == QQ, "For the time being, F has to be defined over QQ"
         if F.is_constant():
             return K
-        p = K.p()
         first_step = True
         while True:
             g = K.approximate_irreducible_factor(F)
@@ -705,7 +701,6 @@ class FakepAdicCompletion(SageObject):
             if m == 1:
                 return [QQ.one()]
 
-            N = precision
             p = self.p()
             fb = GF(p**m, 'zeta').polynomial()
             f = fb.change_ring(self.number_field())
@@ -784,7 +779,6 @@ class FakepAdicCompletion(SageObject):
         """
         R = f.parent()
         x = R.gen()
-        p = self.p()
         assert R.base_ring() == self.number_field(), "f must be defined over K"
         # first we see if we can normalize f such that the unique slope of the
         # Newton polygon is >-1 and <=0.
@@ -917,7 +911,6 @@ class FakepAdicCompletion(SageObject):
         K = self.number_field()
         assert K.has_coerce_map_from(f.parent().base_ring())
         f = f.change_ring(K)
-        n = f.degree()
         vK = self.valuation()
         V = vK.mac_lane_approximants(f, assume_squarefree=True, require_maximal_degree=True)
         if only_ramified_factors:
@@ -1059,7 +1052,6 @@ class FakepAdicCompletion(SageObject):
         the absolute characteristic polynomial of a root of `f`, modulo `p^N`.
 
         """
-        from sage.combinat.cartesian_product import CartesianProduct_iters
         # construct the rational representation of a(formal) root alpha of f
         m = f.degree()
         K = self.number_field()

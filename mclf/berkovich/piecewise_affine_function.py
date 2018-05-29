@@ -15,7 +15,7 @@ r""" Piecewise affine functions on the positive real line.
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.all import SageObject, cached_method, Infinity
+from sage.all import SageObject, Infinity
 
 
 class PiecewiseAffineFunction(SageObject):

@@ -10,10 +10,6 @@ jobs:
       - run:
           name: sage -tp
           command: |
-            # Remove these two lines after the upgrade to 8.3.beta3
-            sudo apt update
-            sudo apt install -y openssl
-
             sage -pip install patchy
             sage -python setup.py install
             sage -tp --initial mclf docs
@@ -21,10 +17,10 @@ jobs:
     <<: *test
     docker:
       - image: sagemath/sagemath:8.2
-  "test-sage-8.3.beta2":
+  "test-sage-8.3.beta3":
     <<: *test
     docker:
-      - image: sagemath/sagemath:8.3.beta2
+      - image: sagemath/sagemath:8.3.beta3
   coverage:
     working_directory: /home/sage/mclf
     docker:
@@ -48,6 +44,16 @@ jobs:
             sudo apt install -y git
             sage -pip install coveralls
             sage -sh -c 'coveralls'
+  pyflakes:
+    docker:
+      - image: python:latest
+    steps:
+      - checkout
+      - run:
+          name: pyflakes
+          command: |
+            pip install pyflakes
+            find mclf -name '*.py' -not -name '__init__.py' | xargs pyflakes
   docbuild-sage:
     docker:
       - image: sagemath/sagemath:latest
@@ -132,7 +138,8 @@ workflows:
     jobs:
        # When adding a new stable release of Sage here, make sure to also upgrade the Dockerfile
        - test-sage-8.2
-       - test-sage-8.3.beta2
+       - test-sage-8.3.beta3
+       - pyflakes
        - coverage
        - docbuild-sage
        - docbuild-readthedocs

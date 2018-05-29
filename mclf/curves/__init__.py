@@ -1,3 +1,2 @@
-
 from .smooth_projective_curves import SmoothProjectiveCurve, PointOnSmoothProjectiveCurve
 from .morphisms_of_smooth_projective_curves import MorphismOfSmoothProjectiveCurves

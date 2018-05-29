@@ -49,9 +49,7 @@ TO DO:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-
-from sage.all import SageObject, ZZ, QQ, NumberField, PolynomialRing, Polynomial, Infinity, GaussValuation
-from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
+from sage.all import SageObject, PolynomialRing, Infinity, GaussValuation
 from sage.rings.valuation.limit_valuation import MacLaneLimitValuation, LimitValuation
 
 

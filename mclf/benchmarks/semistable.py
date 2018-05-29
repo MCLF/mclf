@@ -1,5 +1,5 @@
-from sage.all import *
-from mclf import *
+from sage.all import QQ, PolynomialRing
+from mclf import SuperellipticCurve, SemistableModel
 
 class PicardCurve:
     r"""

@@ -26,13 +26,7 @@ TO DO:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-
-from sage.all import SageObject, ZZ, QQ, NumberField, PolynomialRing, Polynomial, Integer, matrix, zero_matrix, identity_matrix, IntegerModRing, mod, Infinity, sgn, ceil, floor, prod, lcm, vector
-from sage.geometry.newton_polygon import NewtonPolygon
-  
-
-
-#------------------------------------------------------------------------------
+from sage.all import SageObject
 
 
 class ElementOfFakepAdicCompletion(SageObject):

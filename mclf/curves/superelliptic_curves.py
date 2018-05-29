@@ -64,7 +64,7 @@ EXAMPLES::
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.all import lcm, SageObject, Infinity, ZZ, gcd, FunctionField, PolynomialRing
+from sage.all import ZZ, gcd, FunctionField, PolynomialRing
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
 
 
