@@ -12,7 +12,7 @@ jobs:
           command: |
             sage -pip install patchy
             sage -python setup.py install
-            sage -tp --initial mclf docs
+            sage -tp --long --initial mclf docs
   "test-sage-8.2":
     <<: *test
     docker:
@@ -36,7 +36,7 @@ jobs:
             export COVERAGE_PROCESS_START=`pwd`/.coveragerc
             sage -pip install coverage patchy
             ln -s /home/sage/mclf/mclf /home/sage/sage/local/lib/python2.7/site-packages/
-            sage -sh -c 'coverage run /home/sage/sage/src/bin/sage-runtests -p --initial docs mclf'
+            sage -sh -c 'coverage run /home/sage/sage/src/bin/sage-runtests -p --long --initial docs mclf'
             sage -sh -c 'coverage combine'
             sage -sh -c 'coverage report'
             # Report to coveralls.io
