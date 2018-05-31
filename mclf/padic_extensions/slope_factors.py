@@ -46,7 +46,7 @@ polygon with slope `s` is moved to a segment of slope `0` with ordinate `0`.
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
-#                  http://www.gnu.org/licenses/
+#                  https://www.gnu.org/licenses/
 #*****************************************************************************
 
 from sage.all import ZZ, GaussValuation
