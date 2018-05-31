@@ -1,9 +1,9 @@
 # MCLF
 
-[![Documentation Status](https://readthedocs.org/projects/mclf/badge/)](http://mclf.readthedocs.io/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/mclf/badge/)](https://mclf.readthedocs.io/?badge=latest)
 [![CircleCI](https://circleci.com/gh/MCLF/mclf/tree/master.svg?style=svg)](https://circleci.com/gh/MCLF/mclf/tree/master)
 [![Coverage Status](https://coveralls.io/repos/github/MCLF/mclf/badge.svg?branch=master)](https://coveralls.io/github/MCLF/mclf?branch=master)
-[![asv](http://img.shields.io/badge/benchmarked%20by-asv-green.svg?style=flat)](https://mclf.github.io/mclf-asv)
+[![asv](https://img.shields.io/badge/benchmarked%20by-asv-green.svg?style=flat)](https://mclf.github.io/mclf-asv)
 
 ### A Sage toolbox for computing with **M**odels of **C**urves over **L**ocal **F**ields
 
@@ -24,11 +24,15 @@ This means that we want to know
 At the moment we can do this only in certain special cases, which should
 nevertheless be useful.
 
-You need at least [Sage 8.2](http://www.sagemath.org/) for the following examples to work. If you can not install Sage on your local machine, you can also click [![Launch on mybinder.org](https://camo.githubusercontent.com/d57df63fab21897847014ebaec3e7f5f48951ad2/68747470733a2f2f626574612e6d7962696e6465722e6f72672f62616467652e737667)](https://mybinder.org/v2/gh/mclf/MCLF/master?filepath=example.ipynb) to try this in an interactive Jupyter notebook.
+You need at least [Sage 8.2](https://www.sagemath.org/) for the following
+examples to work.
+If you can not install Sage on your local machine, you can also click
+[![Launch on mybinder.org](https://camo.githubusercontent.com/d57df63fab21897847014ebaec3e7f5f48951ad2/68747470733a2f2f626574612e6d7962696e6465722e6f72672f62616467652e737667)](https://mybinder.org/v2/gh/mclf/MCLF/master?filepath=example.ipynb)
+to try this in an interactive Jupyter notebook.
 
 The package can be loaded with
 ```
-from mclf import *
+sage: from mclf import *
 ```
 We create a Picard curve over the rational number field.      
 ```
@@ -82,13 +86,13 @@ sage: Y3.conductor_exponent()
 ```
 
 For more details on the functionality and the restrictions of the toolbox, see the
-[Documentation](http://mclf.readthedocs.io/en/latest/).
+[Documentation](https://mclf.readthedocs.io/en/latest/).
 For the mathematical background see
 
 * J. Rüth, [Models of Curves and Valuations](https://oparu.uni-ulm.de/xmlui/handle/123456789/3302), PhD thesis, Ulm University, 2014
 * I.I. Bouw, S. Wewers, [Computing L-Functions and semistable reduction of superellipic curves](https://arxiv.org/abs/1211.4459?context=math.AG),
   Glasgow Math. J., 59(1), 2017, 77-108
-* I.I. Bouw, S. Wewers,[Semistable reduction of curves and computation of bad Euler factors of L-functions](http://www.uni-ulm.de/fileadmin/website_uni_ulm/mawi.inst.100/mitarbeiter/wewers/course_notes.pdf),
+* I.I. Bouw, S. Wewers,[Semistable reduction of curves and computation of bad Euler factors of L-functions](https://www.uni-ulm.de/fileadmin/website_uni_ulm/mawi.inst.100/mitarbeiter/wewers/course_notes.pdf),
    lecture notes for a minicourse at ICERM
 * S. Wewers, Semistable reduction of superelliptic curves of degree p, preprint, 2017
 
