@@ -97,7 +97,7 @@ class AffinoidTree(BerkovichTree):
         sage: xi1 = X.point_from_discoid(x^2+2, 3/2)
         sage: xi2 = X.point_from_discoid(x^4+2, 3/2)
         sage: xi3 = X.point_from_discoid(x^2+x+1, 1)
-        sage: xi4 = X.point_from_discoid(x^2+2, 2, False)
+        sage: xi4 = X.point_from_discoid(x^2+2, 1)
 
         sage: U1 = AffinoidTree(X)
         sage: U1 = U1.add_points([xi0], [xi1, xi3])
@@ -430,7 +430,7 @@ class AffinoidTree(BerkovichTree):
             sage: xi0 = X.gauss_point()
             sage: xi1 = X.point_from_discoid(x+1, 1)
             sage: xi2 = X.point_from_discoid(x+1, 2)
-            sage: xi3 = X.point_from_discoid(2+x, 1, in_unit_disk=False)
+            sage: xi3 = X.point_from_discoid(1/x, 1)
 
             sage: U = AffinoidTree(X)
             sage: U = U.add_points([xi0, xi2], [xi1, xi3])
@@ -672,6 +672,8 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         U = self
         T = U._T
         X = U.berkovich_line()
+        F = X.function_field()
+        x = F.gen()
         T0 = T.find_point(xi0)
         assert T0 != None and T0._is_in_affinoid, "xi0 is not a boundary point"
         v0 = xi0.pseudovaluation_on_polynomial_ring()
@@ -685,7 +687,10 @@ class AffinoidDomainOnBerkovichLine(SageObject):
                 psi = psi * Rb(psi1.numerator())
         phib = irreducible_polynomial_prime_to(psi)
         phi = v0.lift_to_key(phib)
-        xi1 = X.point_from_discoid(phi, Infinity, xi0.is_in_unit_disk())
+        if xi0.is_in_unit_disk():
+            xi1 = X.point_from_discoid(phi, Infinity)
+        else:
+            xi1 = X.point_from_discoid(phi(1/x)*x^phi.degree())
         assert U.is_contained_in(xi1), "error: xi1 is not contained in U"
         return xi1
 

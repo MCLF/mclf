@@ -337,7 +337,10 @@ class BerkovichLine(SageObject):
             s1 = s + vK(c)*f0.degree() - vK(f.numerator().leading_coefficient()) \
                 + vK(f.denominator())
             v1 = valuation_from_discoid(vK, f0, s1)
-            xi = TypeIIPointOnBerkovichLine(X, (v1, x/c))
+            if s1 == Infinity:
+                xi = TypeIPointOnBerkovichLine(X, (v1, x/c))
+            else:
+                xi = TypeIIPointOnBerkovichLine(X, (v1, x/c))
         else:
             assert f == 1/x, "f must be either a polynomial, or 1/x"
             assert s > 0, "if f=1/x then s must be positive"
@@ -589,6 +592,7 @@ class BerkovichLine(SageObject):
         assert f.denominator().is_one(), "f must be a polynomial"
         f = f.numerator()
         assert f.is_irreducible(), "f is not irreducible"
+        assert f.degree() > 0, "f must be nonconstant"
         R = f.parent()
         vK = self.base_valuation()
         v0 = GaussValuation(R, vK)
@@ -620,6 +624,11 @@ class BerkovichLine(SageObject):
                 V = vK.mac_lane_approximants(f, require_incomparability=True, required_precision=1)
                 if len(V)>1:
                     V = [LimitValuation(v, f) for v in V]
+                else:
+                    v = V[0]
+                    while v(f) < Infinity:
+                        v = v.mac_lane_step(f)[0]
+                    V = [v]
                 D = [(TypeIPointOnBerkovichLine(self, (v, x/c)), e) for v in V]
             else:
                 D = []
@@ -891,7 +900,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         else:
             # xi is a limit point
             g = self.pseudovaluation_on_polynomial_ring()._G
-            g = g(self.inverse_parameter()))
+            g = g(self.inverse_parameter())
         # in both cases, g=0 is a monic irreducible equation for xi
         assert self.v(g) == Infinity
         return g

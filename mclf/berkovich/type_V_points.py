@@ -100,7 +100,7 @@ class TypeVPointOnBerkovichLine(SageObject):
     ::
 
         sage: xi0 = X.gauss_point()
-        sage: xi3 = X.point_from_discoid(x+2, 2, in_unit_disk=False)
+        sage: xi3 = X.point_from_discoid(2*x+1, 2)
         sage: eta = TypeVPointOnBerkovichLine(xi0, xi3)
         sage: eta
         Point of type V given by residue class v(1/x) > 0
@@ -113,23 +113,23 @@ class TypeVPointOnBerkovichLine(SageObject):
         sage: eta.is_in_residue_class(xi3)
         True
 
-        sage: xi4 = X.point_from_discoid(x+2, 3, in_unit_disk=False)
+        sage: xi4 = X.point_from_discoid(2*x+1, 4)
         sage: TypeVPointOnBerkovichLine(xi3, xi4)
-        Point of type V given by residue class v((2*x + 1)/x) > 2
+        Point of type V given by residue class v((2*x + 1)/x) > 3
         sage: TypeVPointOnBerkovichLine(xi4, xi3)
-        Point of type V given by residue class v(x/(2*x + 1)) > -3
+        Point of type V given by residue class v(x/(2*x + 1)) > -5
 
     """
 
     def __init__(self, xi0, xi1):
 
-        X = xi0._X
-        x = X._F.gen()
+        X = xi0.berkovich_line()
+        x = X.function_field().gen()
         self._X = X
         assert xi0.type() == "II", "xi0 must be a point of type II"
         assert not xi0.is_equal(xi1), "xi0 and xi1 must be distinct"
         self._xi0 = xi0
-        self._v = xi0._v
+        self._v = xi0.valuation()
         v0 = xi0.pseudovaluation_on_polynomial_ring()
         k_v = v0.residue_field()
         if not xi1.is_inductive():
@@ -206,11 +206,21 @@ class TypeVPointOnBerkovichLine(SageObject):
         Return some point inside the residue class corresponding to the point.
         """
 
+        from mclf.berkovich.berkovich_line import valuation_from_discoid
+        X = self.X()
+        F = X.function_field()
+        x = F.gen()
+        vK = X.base_valuation()
+
         phi, s = self.open_discoid()
         if self._type == "contained_in_unit_disk":
-            xi = self.X().point_from_discoid(self._phi_pol, Infinity)
+            v0 = valuation_from_discoid(vK, self._phi_pol, Infinity)
+            xi = self.X().point_from_pseudovaluation(F.valuation(v0))
         elif self._type == "disjoint_from_unit_disk":
-            xi = self.X().point_from_discoid(self._phi_pol, Infinity, False)
+            v0 = valuation_from_discoid(vK, self._phi_pol, Infinity)
+            v = F.valuation(v0)
+            v = F.valuation((v, F.hom(1/x), F.hom(1/x)))
+            xi = self.X().point_from_pseudovaluation(v)
         elif self._type == "overlaps_with_unit_disk":
             xi = self.X().infty()
         else:
