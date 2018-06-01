@@ -53,12 +53,13 @@ A point `\xi` of type II has a *discoid representation* as follows. If
 
 .. MATH::    D_\xi = \{ \xi_1 \mid v_{\xi_1}(f) \geq s\},
 
-where `f` is a polynomial in `x` or in `x^{-1}`, irreducible over
-`\hat{\bar{K}}` and `s` is a nonnegativ rational number.
-The pair `(f,s)` determines `\xi`, but this representation is not unique.
+where `f` is a polynomial in `x`, irreducible over
+`\hat{\bar{K}}` (or `f= 1/x`) and `s` is a rational number.
+The pair `(f,s)` determines `\xi`, but this representation is not unique. We call
+`(f, s)` a *discoid representation* of `\xi`.
 
-Note that we can simply extend the discoid representation to points of type I
-by allowing `s` to take the value `\infty`.
+Note that we can simply extend the discoid representation to certain points of
+type I by allowing `s` to take the value `\infty`.
 
 AUTHORS:
 
@@ -67,8 +68,61 @@ AUTHORS:
 
 EXAMPLES::
 
-<Lots and lots of examples>
+    sage: from mclf import *
+    sage: v_2 = QQ.valuation(2)
+    sage: F.<x> = FunctionField(QQ)
+    sage: X = BerkovichLine(F, v_2)
+    sage: X
+    Berkovich line with function field Rational function field in x over Rational Field with 2-adic valuation
 
+We define a point of type II via its discoid.::
+
+    sage: xi1 = X.point_from_discoid(x^3 + 2, 3)
+    sage: xi1
+    Point of type II on Berkovich line, corresponding to v(x^3 + 2) >= 3
+
+If the affinoid `v(f)\geq s` is not irreducible, an error is raised.::
+
+    sage: X.point_from_discoid(x^2-1, 2)
+    Traceback (most recent call last):
+    ...
+    AssertionError: D is not a discoid
+
+We can similarly define points which do not lie on the unit disk.::
+
+    sage: xi2 = X.point_from_discoid(4*x+1, 1)
+    sage: xi2
+    Point of type II on Berkovich line, corresponding to v(4*x + 1) >= 1
+
+The infimum of a point inside and a point outside the unit disk must be the
+Gauss point, corresponding to the unit disk.::
+
+    sage: xi1.infimum(xi2)
+    Point of type II on Berkovich line, corresponding to v(x) >= 0
+    sage: X.gauss_point()
+    Point of type II on Berkovich line, corresponding to v(x) >= 0
+
+Some points of type I are *limit points*, i.e. they can only be approximated
+by points of type II. For instance, the zeroes of a polynomial which is
+irreducible over the ground field `\mathbb{Q}`, but not over its completion
+`\mathbb{Q}_2`.::
+
+    sage: f = 2*x^2 + x + 1
+    sage: f.factor()
+    (2) * (x^2 + 1/2*x + 1/2)
+    
+    sage: D = X.divisor(f)
+    sage: D
+    [(Point of type I on Berkovich space approximated by v(2*x + 1) >= 1, 1),
+     (Point of type I on Berkovich space approximated by v(x + 1) >= 1, 1),
+     (The point at infinity on the Berkovich line, -2)]
+    sage: xi = D[0][0]
+    sage: xi.equation()
+    4*x^2 + 2*x + 2
+
+Note that the point `\xi` lies outside and its Galois conjugate point lies inside
+of the unit disk. This shows that issue #39 has been fixed (at least as far as
+the module ``berkovich_line`` is concerned).
 
 TO DO:
 
@@ -150,6 +204,10 @@ class BerkovichLine(SageObject):
     def make_polynomial(self, f, in_unit_disk=True):
         r""" Turn ``f`` into a polynomial.
 
+        .. NOTE::
+
+            This function is now obsolete
+
         INPUT:
 
         - ``f`` -- an element of `F=K(x)` or of `K[x]`
@@ -179,6 +237,16 @@ class BerkovichLine(SageObject):
     def infty(self):
         r"""
         Return the point `\infty`.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: v_2 = QQ.valuation(2)
+            sage: F.<x> = FunctionField(QQ)
+            sage: X = BerkovichLine(F, v_2)
+            sage: X.infty()
+            The point at infinity on the Berkovich line
+
         """
 
         R = self._F._ring
@@ -194,15 +262,28 @@ class BerkovichLine(SageObject):
         Return the Gauss point of self.
 
         The Gauss point is the type-II-point corresponding to the Gauss
-        valuation on `K[x]`.
-        """
+        valuation on `K[x]`. Its discoid is the unit disk.
 
-        v0 = GaussValuation(self._F._ring, self._vK)
-        v0 = self._F.valuation(v0)
-        return TypeIIPointOnBerkovichLine(self, v0)
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: v_2 = QQ.valuation(2)
+            sage: F.<x> = FunctionField(QQ)
+            sage: X = BerkovichLine(F, v_2)
+            sage: X.gauss_point()
+            Point of type II on Berkovich line, corresponding to v(x) >= 0
+
+        """
+        x = self.function_field().gen()
+        return self.point_from_discoid(x, 0)
+
 
     def point_from_polynomial_pseudovaluation(self, v, in_unit_disk=True):
         r""" Return the point corresponding to a pseudo-valuation on a poylnomial ring.
+
+        .. NOTE::
+
+            This function is now obsolete
 
         INPUT:
 
@@ -289,7 +370,6 @@ class BerkovichLine(SageObject):
                 c *= pi
             s1 = s + vK(c)*f0.degree() - vK(f.numerator().leading_coefficient()) \
                 + vK(f.denominator())
-            print "f = %s, s= %s, s1 = %s "%(f, s, s1)
             v1 = valuation_from_discoid(vK, f0, s1)
             xi = TypeIIPointOnBerkovichLine(X, (v1, x/c))
         else:
@@ -300,22 +380,14 @@ class BerkovichLine(SageObject):
         assert xi.v(f) == s
         return xi
 
-        """
-        phi = self.make_polynomial(phi)
-        F = self.function_field()
-        x = F.gen()
-        v = valuation_from_discoid(self._vK, phi, s)
-        v = F.valuation(v)
-        if not in_unit_disk and s>0:
-            assert v(x) > 0, "The point does lie in the unit disk"
-            v = F.valuation((v, F.hom([1/x]), F.hom([1/x])))
-        return self.point_from_pseudovaluation(v)
-        """
-
 
     def points_from_inequality(self, f, s):
         r"""
         Return the boundary points of the affinoid given an inequality.
+
+        ..NOTE::
+
+            This function should be removed.
 
         INPUT:
 
@@ -403,6 +475,10 @@ class BerkovichLine(SageObject):
              v \mapsto v(f)
 
         is affine (i.e. has no kinks) on the interval `[\xi_1,\xi_2]`.
+
+        .. TODO::
+
+             Write doctest!
 
         """
 
@@ -498,10 +574,12 @@ class BerkovichLine(SageObject):
             sage: from mclf import *
             sage: F.<x> = FunctionField(QQ)
             sage: v_2 = QQ.valuation(2)
-            sage: X = BerkovicLine(F, v_2)
+            sage: X = BerkovichLine(F, v_2)
             sage: f = 2*x^2 + x + 1
             sage: D = X.prime_divisor(f)
             sage: D
+            [(Point of type I on Berkovich space approximated by v(2*x + 1) >= 1, 1),
+             (Point of type I on Berkovich space approximated by v(x + 1) >= 1, 1)]
 
         """
 
@@ -781,20 +859,13 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         F = self.berkovich_line().function_field()
         if self.is_inductive():
             g, s = self.discoid()
-            if not self.is_in_unit_disk():
-                if not g.numerator().is_one():
-                    # xi is not in the unit disk, and is not infty
-                    g = g.numerator().monic()
-                else:
-                    # xi is infty
-                    g = 1/F.gen()
-            # now g=0 is a monic irreducible equation for xi
+            assert s == Infinity
         else:
             # xi is a limit point
             g = self.pseudovaluation_on_polynomial_ring()._G
-            if not self.is_in_unit_disk():
-                g = g.reverse().monic()
-        # in both cases, g=0 is a mnic irreducible equation for xi
+            g = g(inverse_generator(self.parameter()))
+        # in both cases, g=0 is a monic irreducible equation for xi
+        assert self.v(g) == Infinity
         return g
 
 
@@ -892,7 +963,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             sage: from mclf import *
             sage: v_2 = QQ.valuation(2)
             sage: F.<x> = FunctionField(QQ)
-            sage. X = BerkovichLine(F, v_2)
+            sage: X = BerkovichLine(F, v_2)
 
         We test whether we can distinguish three Galois conjugate points::
 
@@ -932,8 +1003,8 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             # this doesn't work, because the may be equal as points but have been created
             # at different moment.
             xi0a = self.approximation()
-            xia = xi.approximation(x0a)
-            return xi0a.is_leq()
+            xia = xi.approximation(xi0a)
+            return xi0a.is_leq(xia)
 
 
     def is_leq(self, xi):
@@ -1012,18 +1083,45 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             sage: v_2 = QQ.valuation(2)
             sage: F.<x> = FunctionField(QQ)
             sage: X = BerkovichLine(F, v_2)
-            sage:
+            sage: D = X.divisor(4*x^4+x^3+x^2+2*x+8)
+            sage: for i in range(len(D)):
+            ....:     for j in range(i, len(D)):
+            ....:         xi1 = D[i][0]
+            ....:         xi2 = D[j][0]
+            ....:         xi3 = xi1.infimum(xi2)
+            ....:         assert xi3.is_leq(xi1)
+            ....:         assert xi3.is_leq(xi2)
 
         """
+        X = self.berkovich_line()
+        x = X.function_field().gen()
+        xi1 = self
         if xi2.type() == "II":
-            return xi2.infimum(self)
-        if self.is_leq(xi2):
-            return self
-        if xi2.is_leq(self):
+            return xi2.infimum(xi1)
+        if xi1.is_leq(xi2):
+            return xi1
+        if xi2.is_leq(xi1):
             return xi2
 
         # now both points are of type I and uncomparable;
         # the infimum must be of type II
+        # we replace them by approximations which are incomparable
+        xi1 = xi1.approximation(xi2)
+        xi2 = xi2.approximation(xi1)
+        assert xi1.is_incomparable(xi2)
+
+        if xi1.is_in_unit_disk() != xi2.is_in_unit_disk():
+            return X.gauss_point()
+
+        # now the point lie both inside or outside the unit disk
+        f1, s1 = xi1.discoid()
+        f2, s2 = xi2.discoid()
+        if f1 == 1/x:
+            return X.point_from_discoid(f1, xi2.v(f1))
+        else:
+            return X.point_from_discoid(f2, xi1.v(f2))
+
+        """
         if self.is_in_unit_disk() and xi2.is_in_unit_disk():
             v1 = self._v._base_valuation
             v2 = xi2._v._base_valuation
@@ -1072,7 +1170,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
 
 
         return self._X.gauss_point()
-
+        """
 
 #----------------------------------------------------------------------------
 
@@ -1131,7 +1229,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         # create a standard discoid representation for v
         is_in_unit_disk = (v(x)>=0)
         if is_in_unit_disk:
-            f = v0.phi()(y).numerator().monic()
+            f = v0.phi()(z).numerator().monic()
             s = v(f(x))
             v0 = valuation_from_discoid(vK, f, s)
             v = F.valuation(v0)
@@ -1377,6 +1475,24 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         The infimum of self and `\xi_2` (w.r.t. to the natural partial ordering).
         Unless `\xi_2=\infty` or self is equal to `\xi_2`,
         the result is a point of type II.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: v_2 = QQ.valuation(2)
+            sage: F.<x> = FunctionField(QQ)
+            sage: X = BerkovichLine(F, v_2)
+            sage: xi = [X.point_from_discoid(x^2+2, 3)]
+            sage: xi.append(X.point_from_discoid(x, 2))
+            sage: xi.append(X.point_from_discoid(2*x+1, 3))
+            sage: xi.append(X.infty())
+            sage: for i in range(4):
+            ....:     for j in range(i, 4):
+            ....:         xi1 = xi[i]
+            ....:         xi2 = xi[j]
+            ....:         xi3 = xi1.infimum(xi2)
+            ....:         assert xi3.is_leq(xi1)
+            ....:         assert xi3.is_leq(xi2)
 
         """
         X = self.berkovich_line()
