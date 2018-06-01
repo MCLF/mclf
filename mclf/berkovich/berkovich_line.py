@@ -150,7 +150,7 @@ TO DO:
 #                  http://www.gnu.org/licenses/
 #*****************************************************************************
 
-from sage.all import SageObject, PolynomialRing, Infinity, sgn, GaussValuation, ZZ
+from sage.all import SageObject, Infinity, sgn, GaussValuation, ZZ
 from sage.rings.valuation.limit_valuation import LimitValuation
 from sage.geometry.newton_polygon import NewtonPolygon
 
@@ -516,7 +516,6 @@ class BerkovichLine(SageObject):
             v2 = xi2.pseudovaluation_on_polynomial_ring()
             phi = v2.phi()
             s1 = v1(phi)
-            s2 = v2(phi)
             eta = TypeVPointOnBerkovichLine(xi1, xi2)
             m = eta.derivative(f)
             n = eta.derivative(phi(1/x))
@@ -701,6 +700,43 @@ class PointOnBerkovichLine(SageObject):
         return not self.is_leq(xi) or not xi.is_leq(self)
 
 
+    def parameter(self):
+        r""" Return the parameter of the polynomial ring on which ``self`` is defined.
+
+        The point ``self`` corresponds to a discrete pseudo-valuation
+        `v` which is the extension of a pseudo-valuation `v_0` on `K[y]`,
+        where `y` is the *parameter* in question.
+
+        """
+        return self._y
+
+
+    def inverse_parameter(self):
+        r""" Return the inverse parameter of the polynomial ring on which ``self`` is defined.
+
+        Let `\phi:F\to F` be the automorphism of the function field `F=K(x)` such
+        that `Y:=\phi(x)` is the *parameter* used to define ``self``.
+        Then the inverse parameter is `z:=\phi^{-1}(x)`.
+
+        """
+        if not hasattr(self, "_z"):
+            from sage.matrix.constructor import matrix
+            y = self.parameter()
+            F = y.parent()
+            x = F.gen()
+            K = F.constant_field()
+            num = y.numerator()
+            denom = y.denominator()
+            A = matrix(K, 2, 2, [num[1], num[0], denom[1], denom[0]])
+            assert A.is_invertible(), "y is not a generator!"
+            B = A.inverse()
+            z = (B[0,0]*x + B[0,1])/(B[1,0]*x + B[1,1])
+            assert F.hom(y)(z) == x
+            self._z = z
+            return z
+        else:
+            return self._z
+
 
 #-----------------------------------------------------------------------------
 
@@ -841,28 +877,6 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         return self._v0
 
 
-    def parameter(self):
-        r""" Return the parameter of the polynomial ring on which ``self`` is defined.
-
-        The type-I-point ``self`` corresponds to a discrete pseudo-valuation
-        `v` which is the extension of a pseudo-valuation `v_0` on `K[y]`,
-        where `y` is the *parameter* in question.
-
-        """
-        return self._y
-
-
-    def inverse_parameter(self):
-        r""" Return the inverse parameter of the polynomial ring on which ``self`` is defined.
-
-        Let `\phi:F\to F` be the automorphism of the function field `F=K(x)` such
-        that `Y:=\phi(x)` is the *parameter* used to define ``self``.
-        Then the inverse parameter is `z:=\phi^{-1}(x)`.
-
-        """
-        return inverse_parameter(self.parameter())
-
-
     def equation(self):
         r""" Return an equation for the Galois orbit of this point.
 
@@ -871,14 +885,13 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         `1/x`, and such that `v_\xi(f)=\infty`.
 
         """
-        F = self.berkovich_line().function_field()
         if self.is_inductive():
             g, s = self.discoid()
             assert s == Infinity
         else:
             # xi is a limit point
             g = self.pseudovaluation_on_polynomial_ring()._G
-            g = g(inverse_generator(self.parameter()))
+            g = g(self.inverse_parameter()))
         # in both cases, g=0 is a monic irreducible equation for xi
         assert self.v(g) == Infinity
         return g
@@ -1516,7 +1529,6 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         xi0 = self
         X = xi0.berkovich_line()
         assert xi0.is_leq(xi1) and not xi0.is_equal(xi1), "xi1 must be strictly larger than self"
-        in_unit_disk = xi1.is_in_unit_disk()
         f1, s1 = xi1.discoid()
         s0 = xi0.v(f1)
         assert s0 < s1, "strange: s0>=s1, but xi0 < xi1"
