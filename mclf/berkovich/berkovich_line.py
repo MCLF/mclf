@@ -110,7 +110,7 @@ irreducible over the ground field `\mathbb{Q}`, but not over its completion
     sage: f = 2*x^2 + x + 1
     sage: f.factor()
     (2) * (x^2 + 1/2*x + 1/2)
-    
+
     sage: D = X.divisor(f)
     sage: D
     [(Point of type I on Berkovich space approximated by v(2*x + 1) >= 1, 1),
@@ -189,49 +189,20 @@ class BerkovichLine(SageObject):
 
         return self._F.constant_base_field()
 
+
     def base_valuation(self):
 
         return self._vK
+
 
     def function_field(self):
 
         return self._F
 
+
     def polynomial_ring(self):
 
-        return PolynomialRing(self.constant_base_field(), self.function_field().variable_name())
-
-    def make_polynomial(self, f, in_unit_disk=True):
-        r""" Turn ``f`` into a polynomial.
-
-        .. NOTE::
-
-            This function is now obsolete
-
-        INPUT:
-
-        - ``f`` -- an element of `F=K(x)` or of `K[x]`
-        - ``in_unit_disk`` -- boolean
-
-        OUTPUT:
-
-        Either `f` of `f(1/x)`, considered as a polynomial in `K[x]`,
-        and depending on whether ``in_unit_disk`` is true or false.
-        """
-
-        R = self.polynomial_ring()
-        if f.parent() is R:
-            return f
-        F = self.function_field()
-        x = F.gen()
-        if in_unit_disk:
-            # return R(f)
-            assert f.denominator().is_one(), "f is not a polynomial in x"
-            return f.numerator()
-        else:
-            f = F.hom([1/x])(f)
-            assert f.denominator().is_one(), "f is not a polynomial in x"
-            return f.numerator()
+        return self.function_field()._ring
 
 
     def infty(self):
@@ -278,31 +249,26 @@ class BerkovichLine(SageObject):
         return self.point_from_discoid(x, 0)
 
 
-    def point_from_polynomial_pseudovaluation(self, v, in_unit_disk=True):
-        r""" Return the point corresponding to a pseudo-valuation on a poylnomial ring.
-
-        .. NOTE::
-
-            This function is now obsolete
+    def point_from_pseudovaluation_on_polynomial_ring(self, v0, parameter=None):
+        r""" Return the point corresponding to a pseudo-valuation on a polynomial ring.
 
         INPUT:
 
-        - ``v`` -- a discrete pseudo-valuation on the polynomial ring `K[x]`,
-                extending the base valuation `v_K`
-        - ``in_unit_disk`` (default=True) -- boolean
+        - ``v0`` -- a discrete pseudo-valuation on a polynomial ring over the
+                base field `K`, extending the base valuation `v_K`
+        - ``parameter`` -- a parameter for the function field (default: ``None``)
 
         OUTPUT:
 
-        The point on the unit disk corresponding to ``v`` (if ``in_unit_disk``
-        is true), or the point on the inverse unit disk corresponding to ``v``.
-        """
+        The point on this Berkovich line corresponding to ``v0``, with respect
+        to ``parameter``. If ``parameter`` is not given, we assume that it is
+        the standard parameter `x`.
 
-        F = self.function_field()
-        x = F.gen()
-        v = F.valuation(v)
-        if not in_unit_disk:
-            v = F.valuation((v, F.hom([1/x]), F.hom([1/x])))
-        return self.point_from_pseudovaluation(v)
+        """
+        if v0.is_discrete_valuation():
+            return TypeIIPointOnBerkovichLine(self, (v0, parameter))
+        else:
+            return TypeIPointOnBerkovichLine(self, (v0, parameter))
 
 
     def point_from_pseudovaluation(self, v):
@@ -383,15 +349,11 @@ class BerkovichLine(SageObject):
 
     def points_from_inequality(self, f, s):
         r"""
-        Return the boundary points of the affinoid given an inequality.
-
-        ..NOTE::
-
-            This function should be removed.
+        Return the boundary points of the affinoid given by a polynomial inequality.
 
         INPUT:
 
-        - ``f`` -- a monic and integral polynomial in `x` or in `1/x`
+        - ``f`` -- a nonconstant polynomial in `x` or in `1/x`
         - ``s`` -- a nonnegative rational number, or `\infty`
 
         OUTPUT:
@@ -401,54 +363,63 @@ class BerkovichLine(SageObject):
         of finitely many discoids (or of finitely many algebraic points if
         `s=\infty`).
 
-        .. NOTE::
-
-            For the moment we have to assume that if `f=g(1/x)`, then all the
-            roots of `g` have strictly positive valuations.
-
         EXAMPLES::
 
             sage: from mclf import *
             sage: F.<x> = FunctionField(QQ)
             sage: v_2 = QQ.valuation(2)
             sage: X = BerkovichLine(F, v_2)
-            sage: f = x^2 + 2
-            sage: X.points_from_inequality(f, 3)
-            [Point of type II on Berkovich line, corresponding to v(x^2 + 2) >= 3]
-            sage: Q_2 = FakepAdicCompletion(QQ, v_2)
-            sage: LL = WeakPadicGaloisExtension(Q_2, f.numerator())
-            sage: L = LL.extension_field().number_field()
-            sage: vL = LL.valuation()
-            sage: FL.<x> = FunctionField(L)
-            sage: XL = BerkovichLine(FL, vL)
-            sage: f = FL(f)
-            sage: XL.points_from_inequality(f, 3)
-            [Point of type II on Berkovich line, corresponding to v(x + pi2) >= 3/2]
-            sage: XL.points_from_inequality(f, 4)
-            [Point of type II on Berkovich line, corresponding to v(x + pi2) >= 5/2,
-            Point of type II on Berkovich line, corresponding to v(x + 7*pi2) >= 5/2]
+            sage: X.points_from_inequality((x^2-1)*(2*x-1), 4)
+            [Point of type II on Berkovich line, corresponding to v(x + 1) >= 3,
+             Point of type II on Berkovich line, corresponding to v(x + 7) >= 3,
+             Point of type II on Berkovich line, corresponding to v(-2*x + 1) >= 6]
+            sage: X.points_from_inequality(2*x^(-2)+x^(-1)+4, 5)
+            [Point of type II on Berkovich line, corresponding to v(4*x + 1) >= 3,
+             Point of type II on Berkovich line, corresponding to v(x + 2/57) >= 7]
+            sage: X.points_from_inequality(2*x^(-2)+x^(-1)+4, Infinity)
+            [Point of type I on Berkovich space approximated by v(4*x + 1) >= 3,
+             Point of type I on Berkovich space approximated by v(x + 2) >= 4]
 
         """
         vK = self.base_valuation()
+        pi = vK.uniformizer()
         F = self.function_field()
         x = F.gen()
+        if s == Infinity:
+            # we return the divisor of zeroes of f
+            D = self.divisor(f)
+            return [xi for xi, m in D if m>0]
         if f.denominator().is_one():
             # f is a polynomial in x
-            f = f.numerator()
-            V = valuations_from_inequality(vK, f, s)
-            V = [F.valuation(v) for v in V]
-            return [self.point_from_pseudovaluation(v) for v in V]
+            # by scaling we find a monic integral version of f
+            f0 = f.numerator().monic()
+            v0 = GaussValuation(f0.parent(), vK)
+            c = vK.domain().one()
+            while v0(f0) < 0:
+                f0 = f0(x/pi).numerator().monic()
+                c *= pi
+            s0 = s + vK(c)*f0.degree() - vK(f.numerator().leading_coefficient()) \
+                + vK(f.denominator())
+            V = valuations_from_inequality(vK, f0, s0)
+            ret = [TypeIIPointOnBerkovichLine(self, (v0, x/c)) for v0 in V]
+            assert all([xi.v(f)==s for xi in ret])
+            return ret
         else:
             # f should now be a polynomial in 1/x
-            f = F.hom([1/x])(f)
-            assert f.denominator().is_one(), 'f is not a polynomial in x or 1/x'
-            g = f.numerator()
-            assert all( [ vK(g[i]) > 0 for i in range(g.degree())]), \
-                "the roots of g must have negative valuation"
-            V = valuations_from_inequality(vK, g, s)
-            V = [F.valuation(v) for v in V]
-            V = [F.valuation((v, F.hom([~x]), F.hom([~x]))) for v in V]
-            return [self.point_from_pseudovaluation(v) for v in V]
+            f1 = F.hom([1/x])(f)
+            assert f1.denominator().is_one(), 'f is not a polynomial in x or 1/x'
+            f0 = f1.numerator().monic()
+            v0 = GaussValuation(f0.parent(), vK)
+            c = vK.domain().one()
+            while v0(f0) < 0:
+                f0 = f0(x/pi).numerator().monic()
+                c *= pi
+            s0 = s + vK(c)*f0.degree() - vK(f1.numerator().leading_coefficient()) \
+                + vK(f1.denominator())
+            V = valuations_from_inequality(vK, f0, s0)
+            ret = [TypeIIPointOnBerkovichLine(self, (v0, c/x)) for v0 in V]
+            assert all([xi.v(f)==s for xi in ret])
+            return ret
 
 
     def find_zero(self, xi1, xi2, f):
@@ -476,13 +447,37 @@ class BerkovichLine(SageObject):
 
         is affine (i.e. has no kinks) on the interval `[\xi_1,\xi_2]`.
 
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: v_2 = QQ.valuation(2)
+            sage: F.<x> = FunctionField(QQ)
+            sage: X = BerkovichLine(F, v_2)
+            sage: xi1 = X.gauss_point()
+            sage: xi2 = X.point_from_discoid(x^4+2*x^2+2, 10)
+            sage: X.find_zero(xi1, xi2, (x^4+2*x^2+2)/4)
+            Point of type II on Berkovich line, corresponding to v(x^4 + 2*x^2 + 2) >= 2
+
+            sage: xi3 = X.point_from_discoid(4*x^4+2*x^2+1, 10)
+            sage: f = 2*x^3
+            sage: xi1.v(f), xi3.v(f)
+            (1, -1/2)
+            sage: X.find_zero(xi1, xi3, f)
+            Point of type II on Berkovich line, corresponding to v(1/x) >= 1/3
+
+
         .. TODO::
 
-             Write doctest!
+             Remove the assumption on the kinks.
 
         """
 
         from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
+
+        X = self
+        F = X.function_field()
+        x = F.gen()
 
         assert xi1.is_leq(xi2) and not xi2.is_leq(xi1), \
             "xi1 must be strictly smaller than xi2"
@@ -497,32 +492,38 @@ class BerkovichLine(SageObject):
         # in case xi2 is a limit point, we have to make sure that its
         # discoid representation is sufficiently precise to get the sign
         # of xi2.v(f) right:
-        xi2_approx = xi2.approximation()
-        count = 0
-        while sgn(xi2_approx.v(f)) != sgn(h2) and count < 100:
-            xi2_approx = xi2.improved_approximation()
-            count += 1
-        assert count < 100, "could not find sufficient approximation!"
+        if xi2.is_limit_point():
+            xi2_approx = xi2.approximation()
+            count = 0
+            while sgn(xi2_approx.v(f)) != sgn(h2) and count < 100:
+                xi2_approx = xi2.improved_approximation()
+                count += 1
+            assert count < 100, "could not find sufficient approximation!"
 
-        phi, s2 = xi2.discoid()
-        s1 = xi1.v(phi)
-        # we are looking for t, s1 < t < s2, such that f has zero valuation
-        # at the point xi_t: v(phi) >= t.
-        eta = TypeVPointOnBerkovichLine(xi1, xi2)
-        m = eta.derivative(f)
-        n = eta.derivative(phi)
-        # now the function t |--> v_t(f) has slope m/n
-        t = s1 - n*h1/m
         if xi2.is_in_unit_disk():
-            xi3 = xi1._X.point_from_discoid(phi, t)
+            phi, s2 = xi2.discoid()
+            s1 = xi1.v(phi)
+            # we are looking for t, s1 < t < s2, such that f has zero valuation
+            # at the point xi_t: v(phi) >= t.
+            eta = TypeVPointOnBerkovichLine(xi1, xi2)
+            m = eta.derivative(f)
+            n = eta.derivative(phi)
+            # now the function t |--> v_t(f) has slope m/n
+            t = s1 - n*h1/m
+            xi3 = X.point_from_discoid(phi, t)
         else:
-            # phi should be a monic polynomial in 1/x
-            x = self.function_field().gen()
-            phit= self._F.hom([1/x])(phi)
-            phi1 = phit.numerator()
-            assert phit.denominator().is_one()
-            xi3 = xi1._X.point_from_discoid(phi1, t, in_unit_disk=False)
-        assert xi3.v(f) ==0, "got the wrong point xi3!"
+            v1 = xi1.pseudovaluation_on_polynomial_ring()
+            v2 = xi2.pseudovaluation_on_polynomial_ring()
+            phi = v2.phi()
+            s1 = v1(phi)
+            s2 = v2(phi)
+            eta = TypeVPointOnBerkovichLine(xi1, xi2)
+            m = eta.derivative(f)
+            n = eta.derivative(phi(1/x))
+            t = s1 - n*h1/m
+            v3 = valuation_from_discoid(self.base_valuation(), phi, t)
+            xi3 = TypeIIPointOnBerkovichLine(self, (v3, 1/x))
+        assert xi3.v(f) == 0
         return xi3
 
 
@@ -649,8 +650,8 @@ class PointOnBerkovichLine(SageObject):
 
     The set `X^{an}` has a canonical partial ordering in which the Gauss point
     is the smallest elements. All point of type I are maximal elements.
-    """
 
+    """
     def __init__(self):
         pass   # Initialization depends on the type
 
@@ -713,17 +714,20 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
     INPUT:
 
     - ``X`` -- a Berkovich projective line over a valued field `K`
-    - ``v0`` -- an infinite discrete pseudo-valuation on a polynomial ring `K[x]`
-    - ``y`` -- an element of the function field of ``X`` which is a generator
+    - ``v`` -- an infinite discrete pseudovaluation on the function field `F=K(x)`
 
     OUTPUT: a point of type I on ``X``
 
     Here the point `\xi` on `X` corresponds to the discrete pseudo-valuation `v` on
-    the function field `F=K(x)` whose restriction to the polynomial ring `K[y]`
+    the function field `F=K(x)`.
+
+    Alternatively, ``v`` can be a pair `(v_0,y)`, where `v_0` is an infinite
+    discrete pseudo-valuation on a polynomial ring over `K` and `y` is a generator
+    of the function field `F`. Then `v` is the infinite discrete pseudo-valuation
+    of `F` whose restriction to the subring ring `K[y]`
     is equal to `v_0`.
 
     """
-
     def __init__(self, X, v):
 
         self._X = X
@@ -846,6 +850,17 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
 
         """
         return self._y
+
+
+    def inverse_parameter(self):
+        r""" Return the inverse parameter of the polynomial ring on which ``self`` is defined.
+
+        Let `\phi:F\to F` be the automorphism of the function field `F=K(x)` such
+        that `Y:=\phi(x)` is the *parameter* used to define ``self``.
+        Then the inverse parameter is `z:=\phi^{-1}(x)`.
+
+        """
+        return inverse_parameter(self.parameter())
 
 
     def equation(self):
@@ -1121,56 +1136,6 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         else:
             return X.point_from_discoid(f2, xi1.v(f2))
 
-        """
-        if self.is_in_unit_disk() and xi2.is_in_unit_disk():
-            v1 = self._v._base_valuation
-            v2 = xi2._v._base_valuation
-            R = v1.domain()
-            assert v2.domain() is R
-
-            # we have to find an approximation of v1 which is incomparable to v2
-            if hasattr(v1, "_approximation"):
-                w1 = v1._approximation
-            else:
-                w1 = v1
-            if hasattr(v2, "_approximation"):
-                w2 = v2._approximation
-            else:
-                w2 = v2
-            # the current approximations should work, because we have tested
-            # whether v1 <= v2 and v2 <= v1!
-            assert w1(w1.phi()) > w2(w1.phi()), "bad approximation: w1 <= w2"
-            assert w2(w2.phi()) > w1(w2.phi()), "bad approximation: w2 <= w1"
-            w3 = mac_lane_infimum(w1, w2)
-            v3 = self._X._F.valuation(w3)
-            return TypeIIPointOnBerkovichLine(self._X, v3)
-        if (not self.is_in_unit_disk()) and (not xi2.is_in_unit_disk()):
-            v1 = self.pseudovaluation_on_polynomial_ring()
-            v2 = xi2.pseudovaluation_on_polynomial_ring()
-            R = v1.domain()
-            assert v2.domain() is R
-            # we have to find an approximation of v1 which is incomparable to v2
-            if hasattr(v1, "_approximation"):
-                w1 = v1._approximation
-            else:
-                w1 = v1
-            if hasattr(v2, "_approximation"):
-                w2 = v2._approximation
-            else:
-                w2 = v2
-            # the current approximations should work, because we have tested
-            # whether v1 == v2!
-            w3 = mac_lane_infimum(w1, w2)
-            F = self._X._F
-            x = F.gen()
-            v3 = F.valuation(w3)
-            v3 = F.valuation((v3, F.hom([1/x]), F.hom([1/x])))
-            assert v3.is_discrete_valuation()
-            return TypeIIPointOnBerkovichLine(self._X, v3)
-
-
-        return self._X.gauss_point()
-        """
 
 #----------------------------------------------------------------------------
 
@@ -1423,7 +1388,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
             if phi[0] == 0:
                 f = 1/x
             else:
-                f = phi(1/x).numerator()
+                f = phi(1/x).numerator()(x)
             s = xi.v(f)
             return f, s
 
@@ -1515,52 +1480,51 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
             return X.point_from_discoid(f2, xi1.v(f2))
 
 
-        """
-        if self.is_in_unit_disk() and xi2.is_in_unit_disk():
-            v1 = self.pseudovaluation_on_polynomial_ring()
-            v2 = xi2.pseudovaluation_on_polynomial_ring()
-            v3 = mac_lane_infimum(v1, v2)
-            v3 = self.function_field().valuation(v3)
-            return TypeIIPointOnBerkovichLine(self.berkovich_line(), v3)
-        if (not self.is_in_unit_disk()) and (not xi2.is_in_unit_disk()):
-            v1 = self.pseudovaluation_on_polynomial_ring()
-            v2 = xi2.pseudovaluation_on_polynomial_ring()
-            v3 = mac_lane_infimum(v1, v2)
-            F = self._X._F
-            x = F.gen()
-            v3 = F.valuation(v3)
-            v3 = F.valuation((v3, F.hom([1/x]), F.hom([1/x])))
-            return TypeIIPointOnBerkovichLine(self._X, v3)
-        return self._X.gauss_point()
-        """
-
     def point_in_between(self, xi1):
         r"""
         Return a point in between ``self`` and ``xi1``.
 
         INPUT:
 
-        - ``xi1`` -- a point which is strictly smaller than ``self``
+        - ``xi1`` -- a point which is strictly larger than ``self``
 
         OUTPUT: a point which lies strictly between ``self`` and ``xi1``
 
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: v_2 = QQ.valuation(2)
+            sage: F.<x> = FunctionField(QQ)
+            sage: X = BerkovichLine(F, v_2)
+            sage: xi0 = X.gauss_point()
+            sage: xi1 = X.point_from_discoid(x,1)
+            sage: xi2 = X.point_from_discoid(x^2 - 8, 4)
+            sage: xi3 = X.point_from_discoid(2*x-1, 2)
+            sage: xi4 = X.infty()
+            sage: xi0.point_in_between(xi1)
+            Point of type II on Berkovich line, corresponding to v(x) >= 1/2
+            sage: xi0.point_in_between(xi2)
+            Point of type II on Berkovich line, corresponding to v(x) >= 1
+            sage: xi0.point_in_between(xi3)
+            Point of type II on Berkovich line, corresponding to v(-2*x + 1) >= 1
+            sage: xi0.point_in_between(xi4)
+            Point of type II on Berkovich line, corresponding to v(1/x) >= 1
+            sage: xi1.point_in_between(xi2)
+            Point of type II on Berkovich line, corresponding to v(x) >= 3/2
+
         """
         xi0 = self
-        assert xi0.is_leq(xi1) and not xi0.is_equal(xi1), "xi1 must be strictly smaller than self"
+        X = xi0.berkovich_line()
+        assert xi0.is_leq(xi1) and not xi0.is_equal(xi1), "xi1 must be strictly larger than self"
         in_unit_disk = xi1.is_in_unit_disk()
-        v0 = self.pseudovaluation_on_polynomial_ring()
-        v1 = xi1.pseudovaluation_on_polynomial_ring()
-        if hasattr(v1, "_approximation"):
-            v1 = v1._approximation
-        phi = v1.phi()
-        s0 = v0(phi)
-        s1 = v1(phi)
+        f1, s1 = xi1.discoid()
+        s0 = xi0.v(f1)
         assert s0 < s1, "strange: s0>=s1, but xi0 < xi1"
         if s1 == Infinity:
             s2 = s0 + 1
         else:
             s2 = (s0+s1)/2
-        xi2 = xi1._X.point_from_discoid(phi, s2, in_unit_disk)
+        xi2 = X.point_from_discoid(f1, s2)
         assert xi0.is_leq(xi2) and not xi0.is_equal(xi2), "xi0 is not less than xi2!"
         assert xi2.is_leq(xi1) and not xi2.is_equal(xi1), "xi2 is not less than xi1!"
         return xi2
@@ -1569,74 +1533,8 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
 
 #-------------------------------------------------------------------------
 
-#               auxiliary functions
-
-
-
-# is this still used?
-def normalized_reduction(v, f):
-    """ Return the normalized reduction of f with respect to v.
-
-    INPUT:
-
-    - v -- type II valuation on a rational function field F = K(x)
-    - f -- a strongly irreducible polynom in K[x], or 1/x
-
-    OUTPUT:
-
-    a nonzero element fb in the residue field of v ???
-    Precise definition needed!
-    """
-    F = v.domain()
-    x = F.gen()
-    r = v(f)
-    m = abs(r.denominator())
-    v1 = v._base_valuation
-    if hasattr(v1, 'equivalence_unit'):
-        fl = v.reduce(f**m*F(v1.equivalence_unit(-m*r))).factor()
-        if len(fl)>0:
-            return fl[0][0]**sgn(fl[0][1])
-        else:
-            return 1/v.residue_field().gen()
-    else:
-        v1 = v1._base_valuation
-        g = v1.equivalence_unit(-m*r)(1/x)
-        fb = v.reduce(f**m*F(g)).factor()
-        if len(fb) > 0:
-            return fb[0][0]**sgn(fb[0][1])
-        else:
-            return 1/v.residue_field().gen()
-
-
-def mac_lane_infimum(v1, v2):
-    r"""
-    Return the infimum of `v_1` and `v_2`.
-
-    INPUT:
-
-    -``v1``, ``v2`` -- MacLane valuations on `K[x]``
-
-    OUTPUT:
-
-    on the set of all MacLane valuations on `K[x]`.
-    """
-    R = v1.domain()
-    assert v2.domain() is R
-    if v1.is_gauss_valuation():
-        return v1
-    V = v1.augmentation_chain()
-    for i in range(1,len(V)):
-        v0 = V[i]
-        phi1 = V[i-1].phi()
-        s = v2(phi1)
-        assert v0.is_key(phi1)
-        if v0(phi1) < s:
-            return v0.augmentation(phi1,s)
-        if v0(phi1) == s:
-            return v0
-    # now v0 should be the Gauss valuation
-    assert v0.is_gauss_valuation()
-    return v0
+#                        auxiliary functions
+#                        ===================
 
 
 def valuation_from_discoid(vK, f, s):
@@ -1763,59 +1661,6 @@ def valuations_from_inequality(vK, f, s, v0=None):
                     ret.append(v)
         V = V_new
     return ret
-
-
-def equality_of_pseudo_valuations(v1, v2):
-    r"""
-    Decide whether two pseudo-valuations are equal.
-
-    INPUT:
-
-    - ``v1``, ``v2`` -- two pseudo-valuations on the same rational
-                        function field `F=K(x)`
-
-    OUTPUT:
-
-    True if ``v1`` is equal to ``v2``, False otherwise.
-
-    We actually assume that the restriction of ``v1`` and ``v2`` to the
-    constant base field are equal.
-
-    """
-
-    F = v1.domain()
-    assert F is v2.domain()
-    if v1(F.gen()) != v2(F.gen()):
-        return False
-    # now v1, v2 should both be inside or outside the unit disk
-    w1 = v1._base_valuation
-    w2 = v2._base_valuation
-    # w1, w2 are valuations on K[x]
-    # we check whether w1==w2
-    if w1.is_discrete_valuation():
-        if w2.is_discrete_valuation():
-            return w1 <= w2 and w2 <= w1
-        else:
-           return False
-    else:
-        if w2.is_discrete_valuation():
-            return False
-    # now w1 and w2 are both infinite valuations
-    if hasattr(w1, "_approximation"):
-        if hasattr(w2, "_approximation"):
-            # now w1 and w2 are both limit valuations
-            if w1(w2._G) < Infinity or w2(w1._G) < Infinity:
-                return False
-            wa2 = w2._approximation
-            wa1 = w1._approximation
-            return w1(wa2.phi()) >= wa2(wa2.phi()) and w2(wa1.phi()) >= wa1(wa1.phi())
-        else:
-            return w2(w1._G) == Infinity
-    else:
-        if hasattr(w2, "_approximation"):
-            return w1(w2._G) == Infinity
-        else:
-            return w1(w2.phi()) == Infinity
 
 
 def is_generator(y):

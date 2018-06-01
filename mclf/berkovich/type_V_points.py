@@ -412,7 +412,7 @@ class TypeVPointOnBerkovichLine(SageObject):
 
         eta = self
         X = eta._X
-        F = X._F
+        F = X.function_field()
         x = F.gen()
         xi_g = X.gauss_point()
         assert f.parent() is F, "f must lie in the function field of X"
