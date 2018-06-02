@@ -20,7 +20,6 @@ class Monkey(AbstractMonkey):
         R = PolynomialRing(QQ, 'x')
         x = R.gen()
         K = NumberField(x**6 + 126*x**3 + 126, 'pi')
-        pi = K.gen()
         v = K.valuation(2)
         R = PolynomialRing(K, 'x')
         x = R.gen()
