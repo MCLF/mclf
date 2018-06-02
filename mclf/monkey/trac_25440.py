@@ -40,7 +40,12 @@ class Monkey(AbstractMonkey):
         # symptom fix.
         import patchy
         import sage.rings.valuation.augmented_valuation
-        patchy.patch(sage.rings.valuation.augmented_valuation.NonFinalAugmentedValuation._residue_field_generator.f, r"""
+        patchy.patch(sage.rings.valuation.augmented_valuation.NonFinalAugmentedValuation._residue_field_generator.f, r'''
+@@ -1318,4 +1318,3 @@ class NonFinalAugmentedValuation(AugmentedValuation_base, NonFinalInductiveValua
+-@cached_method
+ def _residue_field_generator(self):
+     r"""
+     Return a root of :meth:`psi` in :meth:`residue_ring`.
 @@ -1340,7 +1340,7 @@ class NonFinalAugmentedValuation(AugmentedValuation_base, NonFinalInductiveValua
          ret = self.residue_ring().base().gen()
  
@@ -48,6 +53,6 @@ class Monkey(AbstractMonkey):
 -    assert self.psi()(ret).is_zero()
 +    assert (ret.is_one() and self.psi().degree() == 1 and self.psi()[0] == -ret) or self.psi()(ret).is_zero()
      return ret
-        """)
+        ''')
 
 Monkey().patch()
