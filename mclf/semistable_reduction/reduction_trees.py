@@ -1081,7 +1081,7 @@ def simplify_wrt_valuation(v, a, N):
         return simplify_function_field_element_wrt_valuation(v, a, N)
     elif hasattr(v, "augmentation_chain"):
         return simplify_polynomial_wrt_inductive_valuation(v, a, N)
-    elif hasattr(K, "defining_polynomial") and not a in QQ:
+    elif hasattr(R, "defining_polynomial") and not a in QQ:
         return simplify_number_field_element_wrt_valuation(v, a, N)
     elif a in QQ:
         return simplify_rational_number_wrt_valuation(v, a, N)
@@ -1096,9 +1096,10 @@ def simplify_rational_number_wrt_valuation(v, a, N):
     if n > N:
         return QQ.zero()
     p = v.p()
-    if max([a.numerator().abs(), a.denominator().abs()]) <= p^N:
+    if max([a.numerator().abs(), a.denominator().abs()]) <= p**N:
         return a
         # we don't want to make things worse
+    from sage.all import floor, Qp
     N1 = floor(N+1+max(0,-n))
     b = Qp(p, N1)(a)
     n = b.valuation()
@@ -1121,7 +1122,7 @@ def simplify_number_field_element_wrt_valuation(v, a, N):
     f = K(a).polynomial()
     assert a == f(alpha)
     A = [simplify_rational_number_wrt_valuation(v_p, f[i], N - i*r) for i in range(f.degree()+1)]
-    b = sum([A[i]*alpha^i for i in range(len(A))])
+    b = sum([A[i]*alpha**i for i in range(len(A))])
     assert v(a-b)>N
     return b
 
@@ -1218,6 +1219,7 @@ def mac_lane_approximants_experimental(v, G):
 
     """
     R = G.parent()
+    from sage.all import GaussValuation
     w0 = GaussValuation(R, v)
     n = G.degree()
     V = [w0]
