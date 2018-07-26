@@ -24,8 +24,9 @@ class PicardCurve:
 
 class JSMCurve:
     r"""
-    A test case that Jan Steffen Müller came up with and that caused trouble at
-    some point.
+    A test case that Jan Steffen Müller communicated to us and that caused trouble at
+    some point. It is a smooth plane quartic known as the 'exceptional modular curve
+    of level ``S_4``.
 
     TESTS::
 
