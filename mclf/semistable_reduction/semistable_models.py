@@ -153,6 +153,7 @@ class SemistableModel(SageObject):
 
     - ``Y`` -- a smooth projective curve
     - ``vK`` -- a discrete valuation on the base field `K` of `Y`
+    - ``check`` -- a boolean (default: ``True``)
 
     Instantiation of this class actually creates an instant of a suitable subclass,
     which represents the kind of curve for which an algorithm for computing the
@@ -167,6 +168,8 @@ class SemistableModel(SageObject):
     - If `Y` is a superelliptic curve of degree `p`, where `p` is the residue
       characteristic of `v_K` and `K` has characteristic `0` then the subclass
       ``SuperpModel`` is invoked.
+    - if none of the above holds, then we either raise a NotImplementedError
+      (if ``check=True``) or we create an ``AdmissibleModel`` (if ``check=False``)
 
     EXAMPLES::
 
@@ -179,7 +182,7 @@ class SemistableModel(SageObject):
         sage: YY = SemistableModel(Y, v_5)
         sage: YY
         semistable model of the smooth projective curve with Function field in y defined by y^3 - y^2 + x^4 + x + 1, with respect to 5-adic valuation
-        
+
     The degree of `Y` as a cover of the projective line is `4`, which is strictly
     less than `p=5`. Hence `Y` has admissible reduction and we have created an instance
     of the class ``AdmissibleModel``::
@@ -195,7 +198,7 @@ class SemistableModel(SageObject):
         [the smooth projective curve with Function field in y defined by y^3 + 4*y^2 + x^4 + x + 1]
 
     """
-    def __init__(self, Y, vK):
+    def __init__(self, Y, vK, check=True):
 
         from mclf.semistable_reduction.admissible_reduction import AdmissibleModel
         from mclf.semistable_reduction.superp_models import SuperpModel
@@ -206,7 +209,7 @@ class SemistableModel(SageObject):
             # we create an instance of ``SuperpModel``
             self.__class__ = SuperpModel
             SuperpModel.__init__(self, Y, vK)
-        elif p==0 or p.gcd(Y.covering_degree()) == 1:
+        elif p==0 or p.gcd(Y.covering_degree()) == 1 or not check:
             # we create an instance of ``AdmissibleModel``
             self.__class__ = AdmissibleModel
             AdmissibleModel.__init__(self, Y, vK)

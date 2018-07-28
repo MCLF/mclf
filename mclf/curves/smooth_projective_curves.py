@@ -224,7 +224,7 @@ class SmoothProjectiveCurve(SageObject):
         if hasattr(self, "_field_of_constants_degree"):
             return self._field_of_constants_degree
         if self.is_separable():
-            test_points = [P[0] for P in self.ramification_divisor().values()]
+            test_points = [P[0] for P in self.ramification_divisor()]
         else:
             test_points = []
         if test_points == []:
@@ -330,33 +330,31 @@ class SmoothProjectiveCurve(SageObject):
 
         - ``f`` -- a nonzero element of the function field of ``self``
 
-        OUTPUT:  the principal divisor `D =(f)`.
+        OUTPUT:  the principal divisor `D =(f)`. This is a list of pairs `(P, m)`,
+        where `P` is a point and `m` is an integer.
+
         """
         F = self._function_field
         F0 = F.base_field()
         is_rational = (F is F0)
-        D = {}
+        D = []
         for g, m in f.norm().factor():
             v0 = F0.valuation(g)
             if is_rational:
                 P = PointOnSmoothProjectiveCurve(self, v0)
-                a = P.coordinates()
-                D[a] = (P, P.order(f))
+                D.append((P, P.order(f)))
             else:
                 for v in v0.extensions(F):
                     P = PointOnSmoothProjectiveCurve(self, v)
-                    a = P.coordinates()
-                    D[a] = (P, P.order(f))
+                    D.append((P, P.order(f)))
         v0 = F0.valuation(F0.gen()**(-1))
         if is_rational:
             P = PointOnSmoothProjectiveCurve(self, v0)
-            a = P.coordinates()
-            D[a] = (P, P.order(f))
+            D.append((P, P.order(f)))
         else:
             for v in v0.extensions(F):
                 P = PointOnSmoothProjectiveCurve(self, v)
-                a = P.coordinates()
-                D[a] = (P, P.order(f))
+                D.append((P, P.order(f)))
         assert self.degree(D) == 0, "Something is wrong: the degree of (f) is not zero!"
         return D
 
@@ -388,7 +386,7 @@ class SmoothProjectiveCurve(SageObject):
         field of constants of the curve.
         """
         deg = ZZ.zero()
-        for P, m in D.values():
+        for P, m in D:
             deg += m*P.degree()
         return deg
 
@@ -536,7 +534,7 @@ class SmoothProjectiveCurve(SageObject):
 
         FY = self._function_field
         FX = FY.base_field()
-        R = {}
+        R = []
         if FX is FY:
             return R   # the cover is trivial, hence R=0
         supp = []      # compute the support of R
@@ -557,7 +555,7 @@ class SmoothProjectiveCurve(SageObject):
                 der = dx
             Fx = F.map_coefficients(der)(t)
             m = P.order(Ft) - P.order(Fx)
-            R[P._coordinates] = (P, m)
+            R.append((P, m))
         self._ramification_divisor = R
         return R
 
@@ -783,11 +781,10 @@ class PointOnSmoothProjectiveCurve(SageObject):
     def __init__(self, X, v):
         self._curve = X
         self._valuation = v/v(v.uniformizer())
-        self._coordinates = self.coordinates()
 
 
     def __repr__(self):
-        return "Point on %s with coordinates %s."%(self._curve, self._coordinates)
+        return "Point on %s with coordinates %s."%(self._curve, self.coordinates())
 
 
     def curve(self):
