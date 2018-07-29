@@ -63,8 +63,6 @@ EXAMPLES::
 
 .. TODO::
 
-    - implement `lazy coordinates` for improved speed
-
     - allow to specify the constant base field in a more flexible way
     - write more doctests !!
     - implement an algorithm for computing the field of constants
@@ -117,7 +115,6 @@ class SmoothProjectiveCurve(SageObject):
 
     def __init__(self, F, k=None, assume_regular=False):
 
-        # print "creating curve with %s,\nconstant base field %s\n"%(F,k)
         self._function_field = F
 
         if k != None:
@@ -206,19 +203,76 @@ class SmoothProjectiveCurve(SageObject):
         return [F0.valuation(g.monic()) for g, m in D.factor()]
 
 
+    def field_of_constants(self):
+        r""" Return the field of constants of this curve.
+
+        If `F` is the function field of the curve and `k` the constant base field,
+        then the *field of constants* is the algebraic closure of `k` in `F`.
+
+        For the moment, this is implemented only if the constant base field
+        is a finite field.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: F.<x> = FunctionField(GF(2))
+            sage: R.<y> = F[]
+            sage: G = (y+x)^4 + (y + x) + 1
+            sage: F1.<y> = F.extension(G)
+            sage: Y1 = SmoothProjectiveCurve(F1)
+            sage: Y1.field_of_constants()
+            Finite Field in z4 of size 2^4
+            
+        """
+        if hasattr(self, "_field_of_constants"):
+            return self._field_of_constants
+        F = self.function_field()
+        if F.degree() == 1:
+            self._field_of_constants = ZZ(1)
+            return ZZ(1)
+        else:
+            G = F.polynomial().monic()
+            self._field_of_constants = field_of_constant_degree_of_polynomial(G, return_field=True)
+            return self._field_of_constants
+
+
     def field_of_constants_degree(self):
         r""" Return the degree of the field of constants over the constant base field.
 
         If `F` is the function field of the curve and `k` the constant base field,
         then the *field of constants* `k_c` is the algebraic closure of `k` in `F`.
 
-        We use a probabilistic algorithms for computing the degree `[k_c:k]`.
-        This works well over finite fields, but over number fields it often gives
-        false results. Usually, this will result in a miscalculation of the genus.
+        If `k` is a finite field then we actually compute the field of constants,
+        and the result is provably correct. If `k` is a number field, then we use
+        a heuristic method: we find at least `10` different primes of `k` for which
+        the reduction of the defining equation remains irreducible, and then we
+        apply the method for finite fields to the reduced equation. The result
+        is very likely the true degree of the field of constants, and if the
+        result is equal to `1` then it is provably correct.
 
-        TODO:
+        EXAMPLES::
 
-        correct calculation also for number fields
+            sage: from mclf import *
+            sage: k = GF(2)
+            sage: F.<x> = FunctionField(k)
+            sage: R.<y> = F[]
+            sage: G = (y+x)^4 + (y+x) + 1
+            sage: F1.<y> = F.extension(G)
+            sage: Y1 = SmoothProjectiveCurve(F1)
+            sage: Y1.field_of_constants_degree()
+            4
+            sage: F.<x> = FunctionField(QQ)
+            sage: R.<y> = F[]
+            sage: G = y^4 + x*y + 1
+            sage: F2.<y> = F.extension(G)
+            sage: Y2 = SmoothProjectiveCurve(F2)
+            sage: Y2.field_of_constants_degree()
+            1
+
+
+        ..TODO::
+
+        implement a deterministic algorithm for number fields
 
         """
         if hasattr(self, "_field_of_constants_degree"):
@@ -229,28 +283,6 @@ class SmoothProjectiveCurve(SageObject):
         else:
             G = F.polynomial().monic()
             return field_of_constant_degree_of_polynomial(G)
-
-        """
-        this code is obsolete:
-
-        if self.is_separable():
-            test_points = [P[0] for P in self.ramification_divisor()]
-        else:
-            test_points = []
-        if test_points == []:
-           test_points = [self.random_point()]
-        P = test_points.pop()
-        n = P.absolute_degree()
-        for P in test_points:
-            n = n.gcd(P.absolute_degree())
-        count = 0
-        while n>1 and count < 10:
-            P = self.random_point()
-            n = n.gcd(P.absolute_degree())
-            count += 1
-        self._field_of_constants_degree = n
-        return self._field_of_constants_degree
-        """
 
 
     def covering_degree(self):
@@ -1073,15 +1105,17 @@ def sum_of_divisors(D1, D2):
     return D1
 
 
-def field_of_constant_degree_of_polynomial(G):
+def field_of_constant_degree_of_polynomial(G, return_field=False):
     r""" Return the degree of the field of constants of a polynomial.
 
     INPUT:
 
     - ``G`` -- an irreducible monic polynomial over a rational function field
+    - ``return_field`` -- a boolean (default:`False`)
 
     OUTPUT: the degree of the field of constants of the function field defined
-    by ``G``
+    by ``G``. If ``return_field`` is ``True`` then the actual field of constants
+    is returned. This is currently implemented for finite fields only.
 
     This is a helper function for ``SmoothProjectiveCurve.field_of_constants_degree``.
 
@@ -1089,6 +1123,7 @@ def field_of_constant_degree_of_polynomial(G):
 
     from sage.rings.function_field.function_field import RationalFunctionField
     from sage.rings.function_field.constructor import FunctionField
+    from sage.rings.number_field.number_field import NumberFields
     from sage.arith.misc import primes
     from mclf.semistable_reduction.reduction_trees import make_function_field
     F = G.base_ring()
@@ -1111,10 +1146,16 @@ def field_of_constant_degree_of_polynomial(G):
                     n = G.degree()
                 else:                    # G is irreducible over K1
                     break                # we try the next prime
-        return d
-    else:      # we assume that K is a number field
+        if return_field:
+            return K
+        else:
+            return d
+
+    elif K in NumberFields():
         from sage.rings.integer_ring import ZZ
         from sage.rings.all import GaussValuation
+        if return_field:
+            raise NotImplementedError('Computation of constant base field for number fields is not yet implemented.')
         d = n
         count = 0
         for p in K.primes_of_bounded_norm_iter(ZZ(1000)):
@@ -1132,3 +1173,5 @@ def field_of_constant_degree_of_polynomial(G):
             if d == 1 or count > 10:
                 break
         return d
+    else:
+        raise NotImplementedError('Constant base field has to be finite or a number field.')
