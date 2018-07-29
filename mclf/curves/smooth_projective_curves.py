@@ -271,9 +271,9 @@ class SmoothProjectiveCurve(SageObject):
             1
 
 
-        ..TODO::
+        .. TODO::
 
-        implement a deterministic algorithm for number fields
+            - implement a deterministic algorithm for number fields
 
         """
         if hasattr(self, "_field_of_constants_degree"):
