@@ -223,6 +223,16 @@ class SmoothProjectiveCurve(SageObject):
         """
         if hasattr(self, "_field_of_constants_degree"):
             return self._field_of_constants_degree
+        F = self.function_field()
+        if F.degree() == 1:
+            return ZZ(1)
+        else:
+            G = F.polynomial().monic()
+            return field_of_constant_degree_of_polynomial(G)
+
+        """
+        this code is obsolete:
+
         if self.is_separable():
             test_points = [P[0] for P in self.ramification_divisor()]
         else:
@@ -240,6 +250,7 @@ class SmoothProjectiveCurve(SageObject):
             count += 1
         self._field_of_constants_degree = n
         return self._field_of_constants_degree
+        """
 
 
     def covering_degree(self):
@@ -1060,3 +1071,64 @@ def sum_of_divisors(D1, D2):
         else:
             D1[a] = D2[a]
     return D1
+
+
+def field_of_constant_degree_of_polynomial(G):
+    r""" Return the degree of the field of constants of a polynomial.
+
+    INPUT:
+
+    - ``G`` -- an irreducible monic polynomial over a rational function field
+
+    OUTPUT: the degree of the field of constants of the function field defined
+    by ``G``
+
+    This is a helper function for ``SmoothProjectiveCurve.field_of_constants_degree``.
+
+    """
+
+    from sage.rings.function_field.function_field import RationalFunctionField
+    from sage.rings.function_field.constructor import FunctionField
+    from sage.arith.misc import primes
+    from mclf.semistable_reduction.reduction_trees import make_function_field
+    F = G.base_ring()
+    assert isinstance(F, RationalFunctionField)
+    K = F.constant_base_field()
+    R = F._ring   # the polynomial ring underlying F
+    n = G.degree()
+    if K.is_finite():
+        d = 1    # will be the degree of the field of constants at the end
+        for p in primes(2,n):
+            while p <= n:
+                K1 = K.extension(p)
+                F1 = FunctionField(K1, F.variable_name())
+                G1 = G.change_ring(F1)
+                G2 = G1.factor()[0][0]   # the first irreducible factor of G1
+                if G2.degree() < n:      # G becomes reducible over K1
+                    d = d*p              # we replace G by G2 and adapt
+                    K = K1               # the values of n, d, K, G
+                    G = G2
+                    n = G.degree()
+                else:                    # G is irreducible over K1
+                    break                # we try the next prime
+        return d
+    else:      # we assume that K is a number field
+        from sage.rings.integer_ring import ZZ
+        from sage.rings.all import GaussValuation
+        d = n
+        count = 0
+        for p in K.primes_of_bounded_norm_iter(ZZ(1000)):
+            vp = K.valuation(p)
+            v0 = F.valuation(GaussValuation(R, vp))
+            v = GaussValuation(G.parent(), v0)
+            if v(G) == 0:
+                Gb = v.reduce(G)
+                Fb = make_function_field(Gb.base_ring())
+                Gb = Gb.change_ring(Fb)
+                if Gb.is_irreducible():
+                    dp = field_of_constant_degree_of_polynomial(Gb)
+                    d = d.gcd(dp)
+                    count += 1
+            if d == 1 or count > 10:
+                break
+        return d
