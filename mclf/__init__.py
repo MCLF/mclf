@@ -15,3 +15,4 @@ from .semistable_reduction.semistable_models import *
 from .curves.superelliptic_curves import *
 from .semistable_reduction.admissible_reduction import *
 from .semistable_reduction.superp_models import *
+from .curves.picard_curves import *
