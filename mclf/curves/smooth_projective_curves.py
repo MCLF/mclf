@@ -1191,7 +1191,7 @@ def field_of_constant_degree_of_polynomial(G, return_field=False):
         from sage.rings.integer_ring import ZZ
         from sage.rings.all import GaussValuation
         if return_field:
-            raise NotImplementedError('Computation of constant base field for number fields is not yet implemented.')
+            raise NotImplementedError('Computation of field of constants for number fields is not yet implemented.')
         d = n
         count = 0
         for p in K.primes_of_bounded_norm_iter(ZZ(1000)):
