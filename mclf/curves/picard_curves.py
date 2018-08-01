@@ -47,7 +47,6 @@ EXAMPLES::
 #*****************************************************************************
 
 from sage.all import ZZ, gcd, FunctionField, PolynomialRing
-from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
 from mclf.curves.superelliptic_curves import SuperellipticCurve
 
 
