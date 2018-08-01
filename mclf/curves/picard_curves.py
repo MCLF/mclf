@@ -24,6 +24,11 @@ AUTHORS:
 
 EXAMPLES::
 
+    sage: from mclf import *
+    sage: R.<x> = QQ[]
+    sage: Y = PicardCurve(x^4-1)
+    sage: Y
+    Picard curve y^3 = x^4 - 1 over Rational Field
 
 
 .. TODO::
