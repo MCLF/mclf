@@ -269,6 +269,14 @@ class SmoothProjectiveCurve(SageObject):
             sage: Y2 = SmoothProjectiveCurve(F2)
             sage: Y2.field_of_constants_degree()
             1
+            sage: R.<y> = F[]
+            sage: G = (y+x)^3 + (y+x) + 1
+            sage: F3.<y> = F.extension(G)
+            sage: Y3 = SmoothProjectiveCurve(F3)
+            sage: Y3.field_of_constants_degree()
+            3
+            sage: Y3.genus()
+            0
 
 
         .. TODO::
@@ -1169,7 +1177,7 @@ def field_of_constant_degree_of_polynomial(G, return_field=False):
     n = G.degree()
     if K.is_finite():
         d = 1    # will be the degree of the field of constants at the end
-        for p in primes(2,n):
+        for p in primes(2,n+1):
             while p <= n:
                 K1 = K.extension(p)
                 F1 = FunctionField(K1, F.variable_name())
@@ -1186,7 +1194,6 @@ def field_of_constant_degree_of_polynomial(G, return_field=False):
             return K
         else:
             return d
-
     elif K in NumberFields():
         from sage.rings.integer_ring import ZZ
         from sage.rings.all import GaussValuation
