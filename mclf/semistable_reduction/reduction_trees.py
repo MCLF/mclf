@@ -897,8 +897,7 @@ class LowerComponent(ReductionComponent):
         v = self.valuation()
         FY = self.reduction_tree().curve().function_field()
         FYL = base_change_of_function_field(FY, self.base_field())
-        upper_valuations = [FYL.valuation(w)
-            for w in v.mac_lane_approximants(FYL.polynomial(), require_incomparability=True)]
+        upper_valuations = [FYL.valuation(w) for w in mac_lane_approximants_experimental(v, FYL.polynomial())]
         return [UpperComponent(self, w) for w in upper_valuations]
 
 
@@ -1043,3 +1042,198 @@ def make_function_field(k):
     else:
         # it seems that k is simply a rational function field
         return FunctionField(k.base_ring(), k.variable_name())
+
+
+#-------------------------------------------------------------------------------
+
+#                       simplifying valuations
+#                       ======================
+
+#                           (experimental)
+
+
+
+
+def simplify_wrt_valuation(v, a, N):
+    """ Return an approximation of a with respect to v which is 'simpler'.
+
+    INPUT:
+
+    - ``v`` -- a discrete valuation on a ring 'R'
+    - ``a`` -- an element of `R`
+    - ``N`` -- a positive rational number
+
+    OUTPUT: an element `b` in `R` such that `v(a-b) > N`, and such that
+    `b` is (hopefully) 'simpler' than `a`.
+
+    This function is supposed to be applied to valuations `v` on a rational
+    function field `F=K(x)` over a number field `K` which extend a `p`-adic
+    valuation on `K`. The method used is to break this problem down first to
+    the inductive valuation on the polynomial ring 'K[x]' from which `v` is
+    induced and then further down to the number field `K` and finally to
+    `\mathbb{Q}`.
+
+    """
+    if N is Infinity:
+        return a
+    R = v.domain()
+    assert R.has_coerce_map_from(a.parent()), "R = %s, a=%s from %s"%(R, a, a.parent())
+    a = R(a)
+    if hasattr(R, "constant_base_field"):
+        return simplify_function_field_element_wrt_valuation(v, a, N)
+    elif hasattr(v, "augmentation_chain"):
+        return simplify_polynomial_wrt_inductive_valuation(v, a, N)
+    elif hasattr(R, "defining_polynomial") and not a in QQ:
+        return simplify_number_field_element_wrt_valuation(v, a, N)
+    elif a in QQ:
+        return simplify_rational_number_wrt_valuation(v, a, N)
+    else:
+        raise NotImplementedError
+
+
+def simplify_rational_number_wrt_valuation(v, a, N):
+    a = QQ(a)
+    n = v(a)
+    if n > N:
+        return QQ.zero()
+    p = v.p()
+    if max([a.numerator().abs(), a.denominator().abs()]) <= p**N:
+        return a
+        # we don't want to make things worse
+    from sage.all import floor, Qp
+    N1 = floor(N+1+max(0,-n))
+    b = Qp(p, N1)(a)
+    n = b.valuation()
+    if n < 0:
+        b = ZZ(p**(-n)*b)*p**n
+    else:
+        b = ZZ(b)
+    assert v(a-b) > N, "b is not good enough: a = %s, b= %s, N = %s"%(a,b,N)
+    return b
+
+
+def simplify_number_field_element_wrt_valuation(v, a, N):
+
+    if v(a) > N:
+        return a.domain().zero()
+    v_p = v.restriction(QQ)
+    K = v.domain()
+    alpha = K.gen()
+    r = v(alpha)
+    f = K(a).polynomial()
+    assert a == f(alpha)
+    A = [simplify_rational_number_wrt_valuation(v_p, f[i], N - i*r) for i in range(f.degree()+1)]
+    b = sum([A[i]*alpha**i for i in range(len(A))])
+    assert v(a-b)>N
+    return b
+
+
+def simplify_polynomial_wrt_inductive_valuation(v, f, N, degree_bound=None):
+
+    R = v.domain()
+    if v(f) > N:
+        return R.zero()
+    K = R.base_ring()
+    vK = v.restriction(K)
+    f = R(f)
+
+    aug_chain = v.augmentation_chain()
+    if len(aug_chain) == 1:
+        # v is the Gauss valuation
+        # we simplify all coefficients of f
+        return R([simplify_wrt_valuation(vK, f[i], N) for i in range(f.degree()+1)])
+    # now v is inductively defined, v = [v0, v(phi)=lambda]
+    phi = v.phi()
+    r = v(phi)
+    v0 = aug_chain[1]
+    # we simplify the coefficients of the phi-adic expansion of f
+    c = list(v.coefficients(f))
+    assert f == sum([c[i]*phi**i for i in range(len(c))])
+    c = [simplify_wrt_valuation(v0, c[i], N - i*r) for i in range(len(c))]
+    g = sum([c[i]*phi**i for i in range(len(c))])
+    assert v(f-g) > N
+    return g
+
+
+def simplify_function_field_element_wrt_valuation(v, f, N):
+
+    F = v.domain()
+    v0 = v._base_valuation
+    # we assume that v is induced from a valuation on K[x], where x is the
+    # standard generator of F
+    g = f.numerator()
+    n = v0(g)
+    h = f.denominator()
+    m = v0(h)
+    g0 = simplify_polynomial_wrt_inductive_valuation(v0, g, N+m)
+    h0 = simplify_polynomial_wrt_inductive_valuation(v0, h, max(m+1, N-n+2*m))
+    f0 = F(g0)/F(h0)
+    assert v(f-f0) > N
+    return f0
+
+
+def simplify_inductive_valuation(v):
+    """ Return a simplified version of this valuation.
+
+    INPUT:
+
+    - ``v`` -- an inductive valuation on a polynomial ring `K[x]`
+
+    OUTPUT: another inductive valuation `v_1` on `K[x]` which is equal to
+    `v` but hopefully has a simpler presentation.
+
+    We write `v = [v0, v(\phi)=r]``. Then `v_1:=[v0, v_1(\phi_1)] = v`
+    if `\phi_1` is a monic integral polynomial of the same degree as `\phi`
+    such that
+
+    .. MATH::
+
+                v(\phi-\phi_1) > r.
+
+    We compute `phi_1` by applying the function ``simplify_wrt_valuation``
+    with input `(v_0, \phi, r)`.
+
+    """
+    phi = v.phi()
+    r = v(phi)
+    v0 = v.augmentation_chain()[1]
+    phi1 = simplify_wrt_valuation(v0, phi, r)
+    assert v0.is_key(phi1)
+    return v0.augmentation(phi1, r)
+
+
+def mac_lane_approximants_experimental(v, G):
+    """ Return the MacLane approximants of G wrt v.
+
+    INPUT:
+
+    - ``v`` - a discrete valuation on a field `K`
+    - ``G`` - a monic, `v`-integral and square-free polynomial over `K`
+
+    OUTPUT: a complete list of all MacLane approximants of `G` with respect
+    to `v`. This is a list of inductive pseudo-valuations `w` on `K[x]` which
+    restrict to `v`, and which are in one-to-one correspondence with the
+    extensions of `v` to the ring `L:=K[x]/(G)`.
+
+    More precisely, either `w(G)=\infty`, in which case `w` directly defines
+    a discrete valuation on `L`, or else ``LimitValuation(w, G)`` has this property.
+
+    """
+    R = G.parent()
+    from sage.all import GaussValuation
+    w0 = GaussValuation(R, v)
+    n = G.degree()
+    V = [w0]
+    while True:
+        V_new = []
+        for w in V:
+            if w(G) == Infinity:
+                V_new.append(w)
+            else:
+                W = w.mac_lane_step(G)
+                W = [simplify_inductive_valuation(w) for w in W]
+                V_new += W
+        if sum([w.E()*w.F() for w in V_new]) < n:
+            V = V_new
+        else:
+            return V_new
