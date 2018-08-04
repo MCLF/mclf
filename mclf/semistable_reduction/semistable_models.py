@@ -229,17 +229,17 @@ class SemistableModel(SageObject):
         return self._curve
 
 
-    def base_field(self):
+    def constant_base_field(self):
         """
-        Return the base field of this curve.
+        Return the constant base field of this curve.
 
         """
-        self.curve().base_field()
+        return self.curve().constant_base_field()
 
 
     def base_valuation(self):
         """
-        Return the valuation on the base field of the curve.
+        Return the valuation on the constant base field of the curve.
 
         """
         return self._base_valuation
