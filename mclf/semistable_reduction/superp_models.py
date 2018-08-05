@@ -100,6 +100,22 @@ EXAMPLES::
     sage: YY.conductor_exponent()
     12
 
+We check that issues #39 and #40 have been fixed: ::
+
+    sage: v_2 = QQ.valuation(2)
+    sage: f =  x^5 - 5*x^4 + 3*x^3 - 3*x^2 + 4*x - 1
+    sage: Y = SuperellipticCurve(f, 2)
+    sage: Y2 = SemistableModel(Y, v_2)
+    sage: Y2.etale_locus()
+    Affinoid with 2 components:
+    Elementary affinoid defined by
+    v(x + 1) >= 2/3
+    Elementary affinoid defined by
+    v(x^4 + 4*x^2 + 4*x + 4) >= 8/3
+    sage: Y2.is_semistable()
+    True
+
+
 TO DO:
 
 - more doctests
@@ -239,7 +255,8 @@ class SuperpModel(SemistableModel):
             sage: YY.etale_locus()
             Elementary affinoid defined by
             v(1/x) >= -5/2
-            v(x) >= 2
+            v(x + 4) >= 2
+
 
     .. NOTE::
 

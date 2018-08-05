@@ -32,9 +32,6 @@ class JSMCurve:
 
         sage: import mclf.benchmarks.semistable
         sage: mclf.benchmarks.semistable.JSMCurve().time_is_semistable()
-        doctest:warning
-        ...
-        UserWarning: ...
         True
 
     """

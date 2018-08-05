@@ -897,8 +897,7 @@ class LowerComponent(ReductionComponent):
         v = self.valuation()
         FY = self.reduction_tree().curve().function_field()
         FYL = base_change_of_function_field(FY, self.base_field())
-        upper_valuations = [FYL.valuation(w)
-            for w in v.mac_lane_approximants(FYL.polynomial(), require_incomparability=True)]
+        upper_valuations = [FYL.valuation(w) for w in v.mac_lane_approximants(FYL.polynomial(), require_incomparability=True)]
         return [UpperComponent(self, w) for w in upper_valuations]
 
 

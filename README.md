@@ -4,12 +4,13 @@
 [![CircleCI](https://circleci.com/gh/MCLF/mclf/tree/master.svg?style=svg)](https://circleci.com/gh/MCLF/mclf/tree/master)
 [![Coverage Status](https://coveralls.io/repos/github/MCLF/mclf/badge.svg?branch=master)](https://coveralls.io/github/MCLF/mclf?branch=master)
 [![asv](https://img.shields.io/badge/benchmarked%20by-asv-green.svg?style=flat)](https://mclf.github.io/mclf-asv)
+[![PyPI](https://img.shields.io/pypi/v/nine.svg)](https://pypi.org/project/mclf/)
 
 ### A Sage toolbox for computing with **M**odels of **C**urves over **L**ocal **F**ields
 
-This is still a rather immature version of our toolbox. Nevertheless, you can use
-it to compute, for a large class
-of curves over the rationals, the stable reduction at primes of bad reduction.
+This is still a rather immature version of our toolbox. Nevertheless, you can
+use it to compute, for a large class of curves over the rationals, the stable
+reduction at primes of bad reduction.
 
 Let Y be a smooth projective curve over a field K and let vK be a discrete valuation on K.
 The principal goal is to compute  the *semistable reduction* of Y with respect to vK.
@@ -24,11 +25,12 @@ This means that we want to know
 At the moment we can do this only in certain special cases, which should
 nevertheless be useful.
 
-You need at least [Sage 8.2](https://www.sagemath.org/) for the following
-examples to work.
+If you have at least [Sage 8.2](https://www.sagemath.org/) you can install this
+package with `sage -pip install --user mclf`.
+
 If you can not install Sage on your local machine, you can also click
 [![Launch on mybinder.org](https://camo.githubusercontent.com/d57df63fab21897847014ebaec3e7f5f48951ad2/68747470733a2f2f626574612e6d7962696e6465722e6f72672f62616467652e737667)](https://mybinder.org/v2/gh/mclf/MCLF/master?filepath=example.ipynb)
-to try this in an interactive Jupyter notebook.
+to run an interactive Jupyter notebook with mclf preinstalled.
 
 The package can be loaded with
 ```
@@ -102,4 +104,12 @@ See our [issues list](https://github.com/MCLF/mclf/issues), and tell us of any b
 
 #### Experimental Changes
 
-We also have an unstable [develop](https://github.com/MCLF/mclf/tree/develop) version with the latest experimental features and bugs that you can try out by clicking on [![Launch on mybinder.org](https://camo.githubusercontent.com/d57df63fab21897847014ebaec3e7f5f48951ad2/68747470733a2f2f626574612e6d7962696e6465722e6f72672f62616467652e737667)](https://mybinder.org/v2/gh/mclf/MCLF/develop?filepath=example.ipynb), note that this version currently [![CircleCI](https://circleci.com/gh/MCLF/mclf/tree/develop.svg?style=svg)](https://circleci.com/gh/MCLF/mclf/tree/develop) our own test suite.
+We also have an unstable [experimental](https://github.com/MCLF/mclf/tree/experimental) version with the latest experimental features and bugs that you can try out by clicking on [![Launch on mybinder.org](https://camo.githubusercontent.com/d57df63fab21897847014ebaec3e7f5f48951ad2/68747470733a2f2f626574612e6d7962696e6465722e6f72672f62616467652e737667)](https://mybinder.org/v2/gh/mclf/MCLF/experimental?filepath=example.ipynb), note that this version currently [![CircleCI](https://circleci.com/gh/MCLF/mclf/tree/experimental.svg?style=svg)](https://circleci.com/gh/MCLF/mclf/tree/experimental) our own test suite.
+
+#### Development workflow
+
+Most development happens on feature branches against the `master` branch. The
+`master` branch is considered stable and usually we create a new release and
+upload it to PyPI whenever there is something merged into `master`. We
+sometimes collect a number of experimental changes on the `experimental`
+branch.
