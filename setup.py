@@ -13,8 +13,7 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=find_packages(include=['mclf*']),
-    install_requires=['patchy', 'henselization==0.0.0'],
-    dependency_links=['https://github.com/MCLF/henselization/tarball/master#egg=henselization-0.0.0']
+    install_requires=['patchy'],
     classifiers=(
         "Development Status :: 4 - Beta",
         "Intended Audience :: Science/Research",
