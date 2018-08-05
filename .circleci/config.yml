@@ -17,14 +17,14 @@ jobs:
     <<: *test
     docker:
       - image: sagemath/sagemath:8.2
-  "test-sage-8.3.beta3":
+  "test-sage-8.3":
     <<: *test
     docker:
-      - image: sagemath/sagemath:8.3.beta3
+      - image: sagemath/sagemath:8.3
   coverage:
     working_directory: /home/sage/mclf
     docker:
-      - image: sagemath/sagemath:8.2
+      - image: sagemath/sagemath:8.3
     steps:
       - checkout
       - run:
@@ -138,7 +138,7 @@ workflows:
     jobs:
        # When adding a new stable release of Sage here, make sure to also upgrade the Dockerfile
        - test-sage-8.2
-       - test-sage-8.3.beta3
+       - test-sage-8.3
        - pyflakes
        - coverage
        - docbuild-sage
