@@ -1074,8 +1074,6 @@ def simplify_wrt_valuation(v, a, N):
     `\mathbb{Q}`.
 
     """
-    if N is Infinity:
-        return a
     R = v.domain()
     assert R.has_coerce_map_from(a.parent()), "R = %s, a=%s from %s"%(R, a, a.parent())
     a = R(a)
@@ -1092,6 +1090,7 @@ def simplify_wrt_valuation(v, a, N):
 
 
 def simplify_rational_number_wrt_valuation(v, a, N):
+
     a = QQ(a)
     n = v(a)
     if n > N:
