@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="mclf",
-    version="1.0.0",
+    version="1.0.1",
     author="Stefan Wewers, Julian Rüth",
     author_email="stefan.wewers@uni-ulm.de",
     description="A Sage toolbox for computing with Models of Curves over Local Fields",
