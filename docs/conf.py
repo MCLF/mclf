@@ -339,7 +339,7 @@ epub_exclude_files = ['search.html']
 autodoc_default_flags = ["members", "show-inheritance"]
 
 try:
-    import sage
+    import sage.all
 except ImportError:
     from unittest.mock import MagicMock
 
