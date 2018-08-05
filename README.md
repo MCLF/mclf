@@ -7,9 +7,9 @@
 
 ### A Sage toolbox for computing with **M**odels of **C**urves over **L**ocal **F**ields
 
-This is still a rather immature version of our toolbox. Nevertheless, you can use
-it to compute, for a large class
-of curves over the rationals, the stable reduction at primes of bad reduction.
+This is still a rather immature version of our toolbox. Nevertheless, you can
+use it to compute, for a large class of curves over the rationals, the stable
+reduction at primes of bad reduction.
 
 Let Y be a smooth projective curve over a field K and let vK be a discrete valuation on K.
 The principal goal is to compute  the *semistable reduction* of Y with respect to vK.
@@ -24,11 +24,12 @@ This means that we want to know
 At the moment we can do this only in certain special cases, which should
 nevertheless be useful.
 
-You need at least [Sage 8.2](https://www.sagemath.org/) for the following
-examples to work.
+If you have at least [Sage 8.2](https://www.sagemath.org/) you can install this
+package with `sage -pip install -user mclf`.
+
 If you can not install Sage on your local machine, you can also click
 [![Launch on mybinder.org](https://camo.githubusercontent.com/d57df63fab21897847014ebaec3e7f5f48951ad2/68747470733a2f2f626574612e6d7962696e6465722e6f72672f62616467652e737667)](https://mybinder.org/v2/gh/mclf/MCLF/master?filepath=example.ipynb)
-to try this in an interactive Jupyter notebook.
+to run an interactive Jupyter notebook with mclf preinstalled.
 
 The package can be loaded with
 ```
