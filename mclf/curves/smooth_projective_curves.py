@@ -18,7 +18,8 @@ the corresponding valuations on `F_X`, and no smooth projective model of `X` is
 actually computed. However, we do compute a list of 'coordinate functions'
 `x_1,..,x_n` which separate all points, meaning that the closure of the rational
 map from `X` to projective space of dimension `n` is injective. Then a (closed)
-point `x` on `X` can also be represented by the tupel `(f_1(x),..,f_n(x))`.
+point `x` on `X` can also be represented by the tupel `(f_1(x),..,f_n(x))`. This
+is useful to test for equality of points.
 
 A function field in Sage is always realized as a simple separable extension of a
 rational function field. Geometrically, this means that the curve `X` is implicitly
@@ -36,8 +37,9 @@ constants then it becomes absolute irreducible.
 It would be interesting to have an efficient algorithm for computing the field
 of constants, but it seems that this has not been implemented in Sage yet.
 To compute the genus of `X` it is necessary to know at least the degree `[k_c:k]`.
-We have implemented a probabilistic algorithm for computing the degree `[k_c:k]`
-(if `k` is finite, this determines `k_c` uniquely).
+If `k` is a finite field, it is actually easy to compute `k_c`. If `k` is a
+number field we use a probabilistic algorithm for computing the degree `[k_c:k]`,
+by reducing the curve modulo several small primes.
 
 
 AUTHORS:
@@ -63,12 +65,10 @@ EXAMPLES::
 
 .. TODO::
 
-    - implement `lazy coordinates` for improved speed
-
     - allow to specify the constant base field in a more flexible way
     - write more doctests !!
-    - implement an algorithm for computing the field of constants
-      (and not just the degree)
+    - implement a general and deterministic algorithm for computing the field of
+      constants (and not just the degree)
     - the residue field of a point should be explicitly an extension of
       the constant base field.
     - treat the base curve `X` as a *curve*, not just as a function field
@@ -87,7 +87,6 @@ EXAMPLES::
 #*****************************************************************************
 
 from sage.all import lcm, SageObject, Infinity, ZZ, PolynomialRing, randint, PowerSeriesRing
-
 
 
 class SmoothProjectiveCurve(SageObject):
@@ -117,7 +116,6 @@ class SmoothProjectiveCurve(SageObject):
 
     def __init__(self, F, k=None, assume_regular=False):
 
-        # print "creating curve with %s,\nconstant base field %s\n"%(F,k)
         self._function_field = F
 
         if k != None:
@@ -206,40 +204,94 @@ class SmoothProjectiveCurve(SageObject):
         return [F0.valuation(g.monic()) for g, m in D.factor()]
 
 
+    def field_of_constants(self):
+        r""" Return the field of constants of this curve.
+
+        If `F` is the function field of the curve and `k` the constant base field,
+        then the *field of constants* is the algebraic closure of `k` in `F`.
+
+        For the moment, this is implemented only if the constant base field
+        is a finite field.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: F.<x> = FunctionField(GF(2))
+            sage: R.<y> = F[]
+            sage: G = (y+x)^4 + (y + x) + 1
+            sage: F1.<y> = F.extension(G)
+            sage: Y1 = SmoothProjectiveCurve(F1)
+            sage: Y1.field_of_constants()
+            Finite Field in z4 of size 2^4
+
+        """
+        if hasattr(self, "_field_of_constants"):
+            return self._field_of_constants
+        F = self.function_field()
+        if F.degree() == 1:
+            self._field_of_constants = ZZ(1)
+            return ZZ(1)
+        else:
+            G = F.polynomial().monic()
+            self._field_of_constants = field_of_constant_degree_of_polynomial(G, return_field=True)
+            return self._field_of_constants
+
+
     def field_of_constants_degree(self):
         r""" Return the degree of the field of constants over the constant base field.
 
         If `F` is the function field of the curve and `k` the constant base field,
         then the *field of constants* `k_c` is the algebraic closure of `k` in `F`.
 
-        We use a probabilistic algorithms for computing the degree `[k_c:k]`.
-        This works well over finite fields, but over number fields it often gives
-        false results. Usually, this will result in a miscalculation of the genus.
+        If `k` is a finite field then we actually compute the field of constants,
+        and the result is provably correct. If `k` is a number field, then we use
+        a heuristic method: we find at least `10` different primes of `k` for which
+        the reduction of the defining equation remains irreducible, and then we
+        apply the method for finite fields to the reduced equation. The result
+        is very likely the true degree of the field of constants, and if the
+        result is equal to `1` then it is provably correct.
 
-        TODO:
+        EXAMPLES::
 
-        correct calculation also for number fields
+            sage: from mclf import *
+            sage: k = GF(2)
+            sage: F.<x> = FunctionField(k)
+            sage: R.<y> = F[]
+            sage: G = (y+x)^4 + (y+x) + 1
+            sage: F1.<y> = F.extension(G)
+            sage: Y1 = SmoothProjectiveCurve(F1)
+            sage: Y1.field_of_constants_degree()
+            4
+            sage: F.<x> = FunctionField(QQ)
+            sage: R.<y> = F[]
+            sage: G = y^4 + x*y + 1
+            sage: F2.<y> = F.extension(G)
+            sage: Y2 = SmoothProjectiveCurve(F2)
+            sage: Y2.field_of_constants_degree()
+            1
+            sage: R.<y> = F[]
+            sage: G = (y+x)^3 + (y+x) + 1
+            sage: F3.<y> = F.extension(G)
+            sage: Y3 = SmoothProjectiveCurve(F3)
+            sage: Y3.field_of_constants_degree()
+            3
+            sage: Y3.genus()
+            0
+
+
+        .. TODO::
+
+            - implement a deterministic algorithm for number fields
 
         """
         if hasattr(self, "_field_of_constants_degree"):
             return self._field_of_constants_degree
-        if self.is_separable():
-            test_points = [P[0] for P in self.ramification_divisor().values()]
+        F = self.function_field()
+        if F.degree() == 1:
+            return ZZ(1)
         else:
-            test_points = []
-        if test_points == []:
-           test_points = [self.random_point()]
-        P = test_points.pop()
-        n = P.absolute_degree()
-        for P in test_points:
-            n = n.gcd(P.absolute_degree())
-        count = 0
-        while n>1 and count < 10:
-            P = self.random_point()
-            n = n.gcd(P.absolute_degree())
-            count += 1
-        self._field_of_constants_degree = n
-        return self._field_of_constants_degree
+            G = F.polynomial().monic()
+            return field_of_constant_degree_of_polynomial(G)
 
 
     def covering_degree(self):
@@ -330,33 +382,31 @@ class SmoothProjectiveCurve(SageObject):
 
         - ``f`` -- a nonzero element of the function field of ``self``
 
-        OUTPUT:  the principal divisor `D =(f)`.
+        OUTPUT:  the principal divisor `D =(f)`. This is a list of pairs `(P, m)`,
+        where `P` is a point and `m` is an integer.
+
         """
         F = self._function_field
         F0 = F.base_field()
         is_rational = (F is F0)
-        D = {}
+        D = []
         for g, m in f.norm().factor():
             v0 = F0.valuation(g)
             if is_rational:
                 P = PointOnSmoothProjectiveCurve(self, v0)
-                a = P.coordinates()
-                D[a] = (P, P.order(f))
+                D.append((P, P.order(f)))
             else:
                 for v in v0.extensions(F):
                     P = PointOnSmoothProjectiveCurve(self, v)
-                    a = P.coordinates()
-                    D[a] = (P, P.order(f))
+                    D.append((P, P.order(f)))
         v0 = F0.valuation(F0.gen()**(-1))
         if is_rational:
             P = PointOnSmoothProjectiveCurve(self, v0)
-            a = P.coordinates()
-            D[a] = (P, P.order(f))
+            D.append((P, P.order(f)))
         else:
             for v in v0.extensions(F):
                 P = PointOnSmoothProjectiveCurve(self, v)
-                a = P.coordinates()
-                D[a] = (P, P.order(f))
+                D.append((P, P.order(f)))
         assert self.degree(D) == 0, "Something is wrong: the degree of (f) is not zero!"
         return D
 
@@ -388,7 +438,7 @@ class SmoothProjectiveCurve(SageObject):
         field of constants of the curve.
         """
         deg = ZZ.zero()
-        for P, m in D.values():
+        for P, m in D:
             deg += m*P.degree()
         return deg
 
@@ -536,12 +586,12 @@ class SmoothProjectiveCurve(SageObject):
 
         FY = self._function_field
         FX = FY.base_field()
-        R = {}
+        R = []
         if FX is FY:
             return R   # the cover is trivial, hence R=0
         supp = []      # compute the support of R
-        d = FY.gen().minimal_polynomial('T').discriminant()
-        for f, m in d.factor():
+        D = FY.polynomial().discriminant()
+        for f, m in D.factor():
             supp += FX.valuation(f).extensions(FY)
         supp += FX.valuation(~FX.gen()).extensions(FY)
         for v in supp:
@@ -557,7 +607,7 @@ class SmoothProjectiveCurve(SageObject):
                 der = dx
             Fx = F.map_coefficients(der)(t)
             m = P.order(Ft) - P.order(Fx)
-            R[P._coordinates] = (P, m)
+            R.append((P, m))
         self._ramification_divisor = R
         return R
 
@@ -576,20 +626,58 @@ class SmoothProjectiveCurve(SageObject):
 
         - Hartshorne, *Algebraic Geometry*, Corollary IV.2.4
 
+        If the constant base field is finite, we compute the degree of the
+        'ramification divisor'. If it is not, we assume that the characteristic
+        is zero, and we use the 'tame' Riemann Hurwitz Formula.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: F0.<x> = FunctionField(GF(2))
+            sage: R.<T> = F0[]
+            sage: G = T^2 + T + x^3 + x + 1
+            sage: F.<y> = F0.extension(G)
+            sage: Y = SmoothProjectiveCurve(F)
+            sage: Y.genus()
+            1
+            sage: G = T^2 + x^3 + x + 1
+            sage: F.<y> = F0.extension(G)
+            sage: Y = SmoothProjectiveCurve(F)
+            sage: Y.genus()
+            0
+
         """
         if hasattr(self,"_genus"):
             return self._genus
         if not self._is_separable:
-            return self.separable_model().genus()
-
-        FY = self._function_field
-        if FY.base_field() is FY:
+            self._genus = self.separable_model().genus()
+            return self._genus
+        FY = self.function_field()
+        FX = self.rational_function_field()
+        if FX is FY:
             return 0
         n = self.covering_degree()/self.field_of_constants_degree()
-        r = self.degree(self.ramification_divisor())
-        g = ZZ(-n + r/2 +1)
+
+        if self.constant_base_field().is_finite():
+            r = self.degree(self.ramification_divisor())
+                   # if k is finite, we can't use the 'tame' RHF
+        else:      # if k has characteristic zero, we use the RHF
+            G = FY.polynomial()
+            V = [(FX.valuation(1/FX.gen()), 1)]
+            D = G.discriminant()
+            for f, m in D.factor():
+                V.append((FX.valuation(f), f.numerator().degree()))
+            r = 0
+            for v, d in V:
+                v = v/v(v.uniformizer())
+                W = v.extensions(FY)
+                for w in W:
+                    e, f = e_f_of_valuation(w)
+                    r += d*f*(e-1)
+
+        g = ZZ(-n + r/2 + 1)
         self._genus = g
-        return g
+        return self._genus
 
 
     def count_points(self, d):
@@ -783,11 +871,10 @@ class PointOnSmoothProjectiveCurve(SageObject):
     def __init__(self, X, v):
         self._curve = X
         self._valuation = v/v(v.uniformizer())
-        self._coordinates = self.coordinates()
 
 
     def __repr__(self):
-        return "Point on %s with coordinates %s."%(self._curve, self._coordinates)
+        return "Point on %s with coordinates %s."%(self._curve, self.coordinates())
 
 
     def curve(self):
@@ -1020,8 +1107,6 @@ def extension_degree(K, L, check=False):
 
     """
 
-    # assert K.is_finite(), "K must be finite."
-    # assert L.is_finite(), "L must be finite."
     assert K.characteristic() == L.characteristic(), "K and L must have the same characteristic."
     if hasattr(K, "absolute_extension"):
         K = K.absolute_extension()[2]
@@ -1063,3 +1148,91 @@ def sum_of_divisors(D1, D2):
         else:
             D1[a] = D2[a]
     return D1
+
+
+def field_of_constant_degree_of_polynomial(G, return_field=False):
+    r""" Return the degree of the field of constants of a polynomial.
+
+    INPUT:
+
+    - ``G`` -- an irreducible monic polynomial over a rational function field
+    - ``return_field`` -- a boolean (default:`False`)
+
+    OUTPUT: the degree of the field of constants of the function field defined
+    by ``G``. If ``return_field`` is ``True`` then the actual field of constants
+    is returned. This is currently implemented for finite fields only.
+
+    This is a helper function for ``SmoothProjectiveCurve.field_of_constants_degree``.
+
+    """
+    from sage.rings.function_field.function_field import RationalFunctionField
+    from sage.rings.function_field.constructor import FunctionField
+    from sage.rings.number_field.number_field import NumberFields
+    from sage.arith.misc import primes
+    from mclf.semistable_reduction.reduction_trees import make_function_field
+    F = G.base_ring()
+    assert isinstance(F, RationalFunctionField)
+    K = F.constant_base_field()
+    R = F._ring   # the polynomial ring underlying F
+    n = G.degree()
+    if K.is_finite():
+        d = 1    # will be the degree of the field of constants at the end
+        for p in primes(2,n+1):
+            while p <= n:
+                K1 = K.extension(p)
+                F1 = FunctionField(K1, F.variable_name())
+                G1 = G.change_ring(F1)
+                G2 = G1.factor()[0][0]   # the first irreducible factor of G1
+                if G2.degree() < n:      # G becomes reducible over K1
+                    d = d*p              # we replace G by G2 and adapt
+                    K = K1               # the values of n, d, K, G
+                    G = G2
+                    n = G.degree()
+                else:                    # G is irreducible over K1
+                    break                # we try the next prime
+        if return_field:
+            return K
+        else:
+            return d
+    elif K in NumberFields():
+        from sage.rings.integer_ring import ZZ
+        from sage.rings.all import GaussValuation
+        if return_field:
+            raise NotImplementedError('Computation of field of constants for number fields is not yet implemented.')
+        d = n
+        count = 0
+        for p in K.primes_of_bounded_norm_iter(ZZ(1000)):
+            vp = K.valuation(p)
+            v0 = F.valuation(GaussValuation(R, vp))
+            v = GaussValuation(G.parent(), v0)
+            if v(G) == 0:
+                Gb = v.reduce(G)
+                Fb = make_function_field(Gb.base_ring())
+                Gb = Gb.change_ring(Fb)
+                if Gb.is_irreducible():
+                    dp = field_of_constant_degree_of_polynomial(Gb)
+                    d = d.gcd(dp)
+                    count += 1
+            if d == 1 or count > 10:
+                break
+        return d
+    else:
+        raise NotImplementedError('Constant base field has to be finite or a number field.')
+
+
+def e_f_of_valuation(v):
+    r""" Return the ramification index of this valuation.
+
+    INPUT:
+
+    - ``v`` -- a function field valuation on an extension of a rational function field
+
+    OUTPUT: the ramification index of `v` over the base field
+
+    """
+    from sage.rings.polynomial.polynomial_ring import PolynomialRing_field
+    while not isinstance(v.domain(), PolynomialRing_field):
+        v = v._base_valuation
+    if hasattr(v, "_approximation"):
+        v = v._approximation
+    return (v.E(), v.F())
