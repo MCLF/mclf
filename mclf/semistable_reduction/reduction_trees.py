@@ -1086,7 +1086,7 @@ def simplify_wrt_valuation(v, a, N):
     elif a in QQ:
         return simplify_rational_number_wrt_valuation(v, a, N)
     else:
-        raise NotImplementedError
+        raise NotimplementedError
 
 
 def simplify_rational_number_wrt_valuation(v, a, N):
