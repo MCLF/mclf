@@ -105,3 +105,11 @@ See our [issues list](https://github.com/MCLF/mclf/issues), and tell us of any b
 #### Experimental Changes
 
 We also have an unstable [experimental](https://github.com/MCLF/mclf/tree/experimental) version with the latest experimental features and bugs that you can try out by clicking on [![Launch on mybinder.org](https://camo.githubusercontent.com/d57df63fab21897847014ebaec3e7f5f48951ad2/68747470733a2f2f626574612e6d7962696e6465722e6f72672f62616467652e737667)](https://mybinder.org/v2/gh/mclf/MCLF/experimental?filepath=example.ipynb), note that this version currently [![CircleCI](https://circleci.com/gh/MCLF/mclf/tree/experimental.svg?style=svg)](https://circleci.com/gh/MCLF/mclf/tree/experimental) our own test suite.
+
+#### Development workflow
+
+Most development happens on feature branches against the `master` branch. The
+`master` branch is considered stable and usually we create a new release and
+upload it to PyPI whenever there is something merged into `master`. We
+sometimes collect a number of experimental changes on the `experimental`
+branch.
