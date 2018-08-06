@@ -7,7 +7,7 @@ be a rational function field over `K`. We consider `F` as the function
 field of the projective line `X:=\mathbb{P}_K^1` over `K`. Let `X^{an}` denote the
 `(K,v_K)`-analytic space associated to `X`. Then a point `\xi` on
 `X^{an}` may be identified with a (real valued) pseudo-valuation
-`v_\xi` on `F` extending `v_K`.
+`v_{\xi}` on `F`.
 
 Note that we do not assume `K` to be complete with respect to `v_K`. Hence we
 can work with 'exact' fields, e.g. number fields.
@@ -315,6 +315,15 @@ class BerkovichLine(SageObject):
 
         For the latter condition it is sufficient that  `f` is monic, integral and
         irreducible over `\hat{K}`.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: F.<x> = FunctionField(QQ)
+            sage: v2 = QQ.valuation(2)
+            sage: X = BerkovichLine(F, v2)
+            sage: X.point_from_discoid(2*x+1, Infinity)
+            Point of type I on Berkovich line given by x + 1/2 = 0
 
         """
 
@@ -1098,7 +1107,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             return 1/x, Infinity
         else:
             v0 = self.pseudovaluation_on_polynomial_ring()
-            y = self.parameter()
+            y = self.inverse_parameter()
             f = v0.phi()(y).numerator().monic()(x)
             return f, Infinity
 
