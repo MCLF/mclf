@@ -7,7 +7,7 @@ be a rational function field over `K`. We consider `F` as the function
 field of the projective line `X:=\mathbb{P}_K^1` over `K`. Let `X^{an}` denote the
 `(K,v_K)`-analytic space associated to `X`. Then a point `\xi` on
 `X^{an}` may be identified with a (real valued) pseudo-valuation
-`v_\xi` on `F` extending `v_K`.
+`v_{\xi}` on `F`.
 
 Note that we do not assume `K` to be complete with respect to `v_K`. Hence we
 can work with 'exact' fields, e.g. number fields.
@@ -316,6 +316,32 @@ class BerkovichLine(SageObject):
         For the latter condition it is sufficient that  `f` is monic, integral and
         irreducible over `\hat{K}`.
 
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: F.<x> = FunctionField(QQ)
+            sage: v2 = QQ.valuation(2)
+            sage: X = BerkovichLine(F, v2)
+            sage: X.point_from_discoid(x^2 + 1, 3)
+            Point of type II on Berkovich line, corresponding to v(x^2 + 1) >= 3
+
+        If `s=\infty` then we get a point of type I (a 'degenerate discoid'): ::
+
+            sage: X.point_from_discoid(x^2 + 1, Infinity)
+            Point of type I on Berkovich line given by x^2 + 1 = 0
+
+        If `D` is reducible, it is not a discoid, and an error is raised: ::
+
+            sage: X.point_from_discoid(x^2-1, 2)
+            Traceback (most recent call last):
+            ...
+            AssertionError: D is not a discoid
+
+        We can define point outside the unit disk as well: ::
+
+            sage: X.point_from_discoid(2*x+1, Infinity)
+            Point of type I on Berkovich line given by x + 1/2 = 0
+
         """
 
         assert s > -Infinity
@@ -329,6 +355,7 @@ class BerkovichLine(SageObject):
         if f.denominator().degree()==0:
             # f is a polynomial in x
             f0 = f.numerator().monic()
+            assert not f0.is_constant(), "f must not be constant."
             v0 = GaussValuation(f0.parent(), vK)
             c = vK.domain().one()
             while v0(f0) < 0:
@@ -345,7 +372,10 @@ class BerkovichLine(SageObject):
             assert f == 1/x, "f must be either a polynomial, or 1/x"
             assert s > 0, "if f=1/x then s must be positive"
             v0 = GaussValuation(F._ring, vK).augmentation(F._ring.gen(), s)
-            xi = TypeIIPointOnBerkovichLine(X, (v0, 1/x))
+            if s == Infinity:
+                xi = TypeIPointOnBerkovichLine(X, (v0, 1/x))
+            else:
+                xi = TypeIIPointOnBerkovichLine(X, (v0, 1/x))
         assert xi.v(f) == s
         return xi
 
@@ -1098,7 +1128,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             return 1/x, Infinity
         else:
             v0 = self.pseudovaluation_on_polynomial_ring()
-            y = self.parameter()
+            y = self.inverse_parameter()
             f = v0.phi()(y).numerator().monic()(x)
             return f, Infinity
 

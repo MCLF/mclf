@@ -433,9 +433,9 @@ class FakepAdicCompletion(SageObject):
         It is not clear to me whether a purely wild factor with inertia is better
         than a mixed unramified factor.
 
-        EXAMPLES::
+        EXAMPLES:
 
-            The following example created an error in a previous version:
+        The following example created an error in a previous version ::
 
             sage: from mclf import *
             sage: v_2 = QQ.valuation(2)
@@ -446,6 +446,11 @@ class FakepAdicCompletion(SageObject):
             sage: L.ramification_degree()
             4
 
+        Check that non-integral polynomials are allowed as well ::
+
+            sage: Q2.weak_splitting_field(2*x^2 + 1)
+            2-adic completion of Number Field in pi2 with defining polynomial x^2 + 2
+
         """
         if not isinstance(F, Polynomial):
             F = prod(F).radical()
@@ -455,6 +460,8 @@ class FakepAdicCompletion(SageObject):
         assert F.parent().base_ring() == QQ, "For the time being, F has to be defined over QQ"
         if F.is_constant():
             return K
+        v0 = GaussValuation(F.parent(), self.valuation())
+        F = v0.monic_integral_model(F)[0](F).monic()
         first_step = True
         while True:
             g = K.approximate_irreducible_factor(F)
