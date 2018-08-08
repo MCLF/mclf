@@ -157,7 +157,12 @@ def factor_with_slope_zero(f, vK, N, reduce_function):
     qb = q.map_coefficients(lambda c:vK.reduce(c), Kb)
     assert qb != 0
     m = v0(r0)
-    r = r0*pi**(-m)
+    try:
+        r = r0*pi**(-m)
+    except:
+        print "r0 = ", r0, r0.parent()
+        print "m = ", m, m.parent()
+        print "pi = ", pi, pi.parent()    
 
     while m <= N:
         # we have f = q*g + pi^m*r
