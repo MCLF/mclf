@@ -322,6 +322,23 @@ class BerkovichLine(SageObject):
             sage: F.<x> = FunctionField(QQ)
             sage: v2 = QQ.valuation(2)
             sage: X = BerkovichLine(F, v2)
+            sage: X.point_from_discoid(x^2 + 1, 3)
+            Point of type II on Berkovich line, corresponding to v(x^2 + 1) >= 3
+
+        If `s=\infty` then we get a point of type I (a 'degenerate discoid'): ::
+
+            sage: X.point_from_discoid(x^2 + 1, Infinity)
+            Point of type I on Berkovich line given by x^2 + 1 = 0
+
+        If `D` is reducible, it is not a discoid, and an error is raised: ::
+
+            sage: X.point_from_discoid(x^2-1, 2)
+            Traceback (most recent call last):
+            ...
+            AssertionError: D is not a discoid
+
+        We can define point outside the unit disk as well: ::
+
             sage: X.point_from_discoid(2*x+1, Infinity)
             Point of type I on Berkovich line given by x + 1/2 = 0
 
