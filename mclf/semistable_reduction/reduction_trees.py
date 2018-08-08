@@ -894,10 +894,32 @@ class LowerComponent(ReductionComponent):
         Return the list of all upper components lying above this lower component.
 
         """
+        from sage.geometry.newton_polygon import NewtonPolygon
+        from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
         v = self.valuation()
         FY = self.reduction_tree().curve().function_field()
         FYL = base_change_of_function_field(FY, self.base_field())
-        upper_valuations = [FYL.valuation(w) for w in v.mac_lane_approximants(FYL.polynomial(), require_incomparability=True)]
+        G = FYL.polynomial()
+        np = NewtonPolygon([(i,v(G[i])) for i in range(G.degree() + 1)])
+        r = np.slopes()[-1]
+        if r <= 0:      # G is integral w.r.t. v
+            upper_valuations = [FYL.valuation(w)
+                for w in v.mac_lane_approximants(FYL.polynomial(), require_incomparability=True)]
+        else:           # G is not integral
+            vK = self.reduction_tree().base_valuation()
+            pi = vK.uniformizer()
+            k = QQ(r/v(pi)).ceil()
+            FXL = FYL.rational_function_field()
+            R1 = PolynomialRing(FXL, 'y1')
+            y1 = R1.gen()
+            G1 = G(pi**(-k)*y1).monic()
+            assert all([v(c) >= 0 for c in G1.coefficients()]), "new G is not integral!"
+            FYL1 = FXL.extension(G1, 'y1')
+            y1 = FYL1.gen()
+            V = v.mac_lane_approximants(G1, require_incomparability=True)
+            V = [FYL1.valuation(w) for w in V]
+            upper_valuations = [FYL.valuation((w,
+                    FYL.hom(y1/pi**k), FYL1.hom(pi**k*FYL.gen()))) for w in V]
         return [UpperComponent(self, w) for w in upper_valuations]
 
 
@@ -907,7 +929,8 @@ class LowerComponent(ReductionComponent):
 
         """
         # we hope that this works by the natural inclusion of function fields:
-        return MorphismOfSmoothProjectiveCurves(self.curve(), self.inertial_component().curve(), self._phi)
+        return MorphismOfSmoothProjectiveCurves(self.curve(),
+                self.inertial_component().curve(), self._phi)
 
 
     def fiber_degree_in_upper_components(self, P):
