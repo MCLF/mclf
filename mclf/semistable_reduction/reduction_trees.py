@@ -893,33 +893,60 @@ class LowerComponent(ReductionComponent):
         r"""
         Return the list of all upper components lying above this lower component.
 
+        This lower component corresponds to a discrete valuation `v` on a rational
+        function field `L(x)` extending the valuation `v_L`, where `L/K` is some
+        finite extension of the base field `K`. The upper components correspond
+        to the extensions of v to the function field of `Y_L` (which is a finite
+        extension of `L(x)`).
+
+        Since the computation of all extensions of a nonstandard valuation on a
+        function field to a finite extension is not yet part of Sage, we have
+        to appeal to the MacLane algorithm ourselves.
+
+        EXAMPLES:
+
+        This example shows that extending valuations also works if the equation
+        is not integral wrt the valuation v ::
+
+            sage: from mclf import *
+            sage: R.<x> = QQ[]
+            sage: Y = SuperellipticCurve(5*x^3 + 1, 2)
+            sage: Y2 = SemistableModel(Y, QQ.valuation(5))
+            sage: Y2.is_semistable()  # indirect doctest
+            True
+
         """
         from sage.geometry.newton_polygon import NewtonPolygon
         from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
         v = self.valuation()
         FY = self.reduction_tree().curve().function_field()
         FYL = base_change_of_function_field(FY, self.base_field())
+        FXL = FYL.rational_function_field()
+        assert v.domain() == FXL
         G = FYL.polynomial()
+        # now FYL = FXL(y| G(y) = 0)
+
+        # we first have to make G integral with respect to v
         np = NewtonPolygon([(i,v(G[i])) for i in range(G.degree() + 1)])
-        r = np.slopes()[-1]
+        r = np.slopes()[-1]   # the largest slope
         if r <= 0:      # G is integral w.r.t. v
             upper_valuations = [FYL.valuation(w)
                 for w in v.mac_lane_approximants(FYL.polynomial(), require_incomparability=True)]
         else:           # G is not integral
             vK = self.reduction_tree().base_valuation()
-            pi = vK.uniformizer()
-            k = QQ(r/v(pi)).ceil()
-            FXL = FYL.rational_function_field()
-            R1 = PolynomialRing(FXL, 'y1')
+            pi = vK.uniformizer()           # we construct a function field FYL1
+            k = QQ(r/v(pi)).ceil()          # isomorphic to FYL, but with
+            R1 = PolynomialRing(FXL, 'y1')  # integral equation G_1
             y1 = R1.gen()
             G1 = G(pi**(-k)*y1).monic()
             assert all([v(c) >= 0 for c in G1.coefficients()]), "new G is not integral!"
             FYL1 = FXL.extension(G1, 'y1')
             y1 = FYL1.gen()
             V = v.mac_lane_approximants(G1, require_incomparability=True)
-            V = [FYL1.valuation(w) for w in V]
+            V = [FYL1.valuation(w) for w in V]   # the extensions of v to FYL1
             upper_valuations = [FYL.valuation((w,
                     FYL.hom(y1/pi**k), FYL1.hom(pi**k*FYL.gen()))) for w in V]
+                                                 # made into valuations on FYL
         return [UpperComponent(self, w) for w in upper_valuations]
 
 
