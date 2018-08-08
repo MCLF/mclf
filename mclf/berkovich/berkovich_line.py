@@ -338,6 +338,7 @@ class BerkovichLine(SageObject):
         if f.denominator().degree()==0:
             # f is a polynomial in x
             f0 = f.numerator().monic()
+            assert not f0.is_constant(), "f must not be constant."
             v0 = GaussValuation(f0.parent(), vK)
             c = vK.domain().one()
             while v0(f0) < 0:
@@ -354,7 +355,10 @@ class BerkovichLine(SageObject):
             assert f == 1/x, "f must be either a polynomial, or 1/x"
             assert s > 0, "if f=1/x then s must be positive"
             v0 = GaussValuation(F._ring, vK).augmentation(F._ring.gen(), s)
-            xi = TypeIIPointOnBerkovichLine(X, (v0, 1/x))
+            if s == Infinity:
+                xi = TypeIPointOnBerkovichLine(X, (v0, 1/x))
+            else:
+                xi = TypeIIPointOnBerkovichLine(X, (v0, 1/x))
         assert xi.v(f) == s
         return xi
 

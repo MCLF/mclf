@@ -690,7 +690,10 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         if xi0.is_in_unit_disk():
             xi1 = X.point_from_discoid(phi, Infinity)
         else:
-            xi1 = X.point_from_discoid(phi(1/x)*x**phi.degree(), Infinity)
+            if phi == x:
+                xi1 = X.point_from_discoid(1/x, Infinity)
+            else:
+                xi1 = X.point_from_discoid(phi(1/x)*x**phi.degree(), Infinity)
         assert U.is_contained_in(xi1), "error: xi1 is not contained in U"
         return xi1
 
