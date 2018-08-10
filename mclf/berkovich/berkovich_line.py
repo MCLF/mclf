@@ -1829,11 +1829,6 @@ def valuation_from_discoid(vK, f, s):
         a = [v1(c) for c in v.coefficients(f)]
         t = max([(s-a[i])/i for i in range(1,len(a)) ])
         v = v1.augmentation(v.phi(), t)
-        if not v(f)==s:
-            print "f = ", f
-            print "f = s", s
-            print "v = ", v
-            print
         assert v(f) == s
         if v(v.phi()[0]) >= v(v.phi()):
             # the discoid D_v contains 0;
