@@ -58,8 +58,16 @@ where `f` is a polynomial in `x`, irreducible over
 The pair `(f,s)` determines `\xi`, but this representation is not unique. We call
 `(f, s)` a *discoid representation* of `\xi`.
 
-Note that we can simply extend the discoid representation to certain points of
-type I by allowing `s` to take the value `\infty`.
+Conversely, if `D\subset X^{an}` is a *discoid*, i.e. an irreducible affinoid
+subdomain which becomes a union of closed disks over a finite extension of `K`,
+then there exists a unique boundary point `\xi` of `D`. We have `D=D_\xi` if
+and only if `D` is a *standard discoid*, i.e. it is either contained in or
+disjoint from the closed unit disk.
+
+Note that we can simply extend the discoid representation to points of
+type I by allowing `s` to take the value `\infty`. Then `D_\xi = \{\xi\}`
+for a point `\xi` of type I.
+
 
 AUTHORS:
 
@@ -86,7 +94,7 @@ If the affinoid `v(f)\geq s` is not irreducible, an error is raised.::
     sage: X.point_from_discoid(x^2-1, 2)
     Traceback (most recent call last):
     ...
-    AssertionError: D is not a discoid
+    AssertionError: D defined by f=x^2 - 1 and s=2 is not a discoid
 
 We can similarly define points which do not lie on the unit disk.::
 
@@ -121,8 +129,7 @@ irreducible over the ground field `\mathbb{Q}`, but not over its completion
     4*x^2 + 2*x + 2
 
 Note that the point `\xi` lies outside and its Galois conjugate point lies inside
-of the unit disk. This shows that issue #39 has been fixed (at least as far as
-the module ``berkovich_line`` is concerned).
+of the unit disk. This shows that issue #39 has been fixed.
 
 TO DO:
 
@@ -131,9 +138,6 @@ TO DO:
   exponents.
 
 - use more cached functions; this may improve speed
-
-- more systematic (and explicitly defined) relation between points and their
-  discoid representation
 
 - more doctests!
 
@@ -255,7 +259,7 @@ class BerkovichLine(SageObject):
         INPUT:
 
         - ``v0`` -- a discrete pseudo-valuation on a polynomial ring over the
-                base field `K`, extending the base valuation `v_K`
+          base field `K`, extending the base valuation `v_K`
         - ``parameter`` -- a parameter for the function field (default: ``None``)
 
         OUTPUT:
@@ -263,6 +267,17 @@ class BerkovichLine(SageObject):
         The point on this Berkovich line corresponding to ``v0``, with respect
         to ``parameter``. If ``parameter`` is not given, we assume that it is
         the standard parameter `x`.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: from sage.all import GaussValuation
+            sage: F.<x> = FunctionField(QQ)
+            sage: v2 = QQ.valuation(2)
+            sage: X = BerkovichLine(F, v2)
+            sage: v0 = GaussValuation(F._ring, v2)
+            sage: X.point_from_pseudovaluation_on_polynomial_ring(v0, 2*x)
+            Point of type II on Berkovich line, corresponding to v(x) >= 1
 
         """
         if v0.is_discrete_valuation():
@@ -284,8 +299,29 @@ class BerkovichLine(SageObject):
 
         The point `\xi` on the Berkovich line `X` =``self`` corresponding to
         the pseudo valuation ``v`` on the function field of `X`.
+
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: v_2 = QQ.valuation(2)
+            sage: F.<x> = FunctionField(QQ)
+            sage: X = BerkovichLine(F, v_2)
+            sage: v = F.valuation(x)
+            sage: X.point_from_pseudovaluation(v)
+            Traceback (most recent call last):
+            ...
+            AssertionError: v is not an extension of the base valuation
+
+            sage: v = F.valuation(GaussValuation(F._ring, v_2))
+            sage: X.point_from_pseudovaluation(v)
+            Point of type II on Berkovich line, corresponding to v(x) >= 0
+
         """
 
+        vK = self.base_valuation()
+        pi = vK.uniformizer()
+        assert v(pi) == vK(pi), "v is not an extension of the base valuation"
         if v.is_discrete_valuation():
             return TypeIIPointOnBerkovichLine(self, v)
         else:
@@ -309,12 +345,12 @@ class BerkovichLine(SageObject):
             D := \{ \xi \mid v_\xi(f) \geq s \}.
 
         Here it is *assumed* that `D` defined as above is a (possibly degenerate)
-        diskoid (in particular: irreducible), and that it is either contained in
-        or disjoint from the unit disk. If this is not the case,
-        an error is raised.
+        diskoid. Under the above conditions on `f` and `s` this is equivalent
+        to `D` being irreducible.
 
-        For the latter condition it is sufficient that  `f` is monic, integral and
-        irreducible over `\hat{K}`.
+        It is *not* assumed that `D` is a standard discoid, i.e. either contained
+        in or disjoint from the unit disk.
+
 
         EXAMPLES::
 
@@ -335,12 +371,19 @@ class BerkovichLine(SageObject):
             sage: X.point_from_discoid(x^2-1, 2)
             Traceback (most recent call last):
             ...
-            AssertionError: D is not a discoid
+            AssertionError: D defined by f=x^2 - 1 and s=2 is not a discoid
 
         We can define point outside the unit disk as well: ::
 
             sage: X.point_from_discoid(2*x+1, Infinity)
             Point of type I on Berkovich line given by x + 1/2 = 0
+
+        We can enter a discoid `D` which strictly contains the unit disk. Note
+        that the standard representation `D_\xi` of the resulting point
+        (the boundary point of `D`) is different from `D`: ::
+
+            sage: X.point_from_discoid(2*x^2+1, 0)
+            Point of type II on Berkovich line, corresponding to v(1/x) >= 1/2
 
         """
 
@@ -348,34 +391,68 @@ class BerkovichLine(SageObject):
         X = self
         F = X.function_field()
         f = F(f)
+        R = F._ring
         x = F.gen()
         vK = X.base_valuation()
         pi = vK.uniformizer()
+        v0 = GaussValuation(R, vK)
+        # we create a pair (v0, y) where y is a parameter for F, v0 a
+        # discrete pseudovaluation on K[y] such that the extension of v
+        # to F corresponds to the point we want to construct.
 
         if f.denominator().degree()==0:
             # f is a polynomial in x
-            f0 = f.numerator().monic()
-            assert not f0.is_constant(), "f must not be constant."
-            v0 = GaussValuation(f0.parent(), vK)
-            c = vK.domain().one()
-            while v0(f0) < 0:
-                f0 = f0(x/pi).numerator().monic()
-                c *= pi
-            s1 = s + vK(c)*f0.degree() - vK(f.numerator().leading_coefficient()) \
-                + vK(f.denominator())
-            v1 = valuation_from_discoid(vK, f0, s1)
-            if s1 == Infinity:
-                xi = TypeIPointOnBerkovichLine(X, (v1, x/c))
+            # we find a 'normalized' polynomial f1, s1 >=0 and a parameter
+            # y for F such that v(f) >= s iff v(f1(y)) >= s1
+            # then v0 can be defined as the inductive valuation on K[y]
+            # characterized by v0(f1(y)) = s1
+            from sage.all import ceil
+            from sage.geometry.newton_polygon import NewtonPolygon
+            f = R(f)
+            np = NewtonPolygon([(i, vK(f[i])) for i in range(f.degree()+1)])
+            d, t = np.vertices()[-1]
+            # d = degree of f
+            # t = valuation of leading coefficient
+            assert d > 0, "f must not be constant."
+
+            if vK(f[0]) >= s:
+                # D contains the point x=0
+                s1 = max([(s-vK(f[i]))/i for i in range(1,d+1)])
+                if s1 >= 0:
+                    # D is contained in the unit disk
+                    f1 = R(x)
+                    y = x
+                else:
+                    # D strictyl contains the unit disk; we replace it
+                    # by the complementary discoid
+                    f1 = R(x)
+                    s1 = -s1
+                    y = 1/x
+            elif all([l <= 0 for l in np.slopes()]):
+                # all slopes of f are nonpositive, so f = c*f1
+                # with f1 monic and integral
+                f1 = f.monic()
+                s1 = s - t
+                y = x
             else:
-                xi = TypeIIPointOnBerkovichLine(X, (v1, x/c))
+                # f has some positive slopes
+                r = ceil(np.slopes()[-1]/vK(pi))
+                f1 = f(R.gen()/pi**r).monic()
+                s1 = s + r*vK(pi)*f.degree() - vK(f.leading_coefficient())
+                y = x/pi**r
+            assert s1 >= 0, "D defined by f=%s and s=%s is not a discoid"%(f, s)
+            # this shouldn't happen anymore
+            v0 = valuation_from_discoid(vK, f1, s1)
         else:
             assert f == 1/x, "f must be either a polynomial, or 1/x"
             assert s > 0, "if f=1/x then s must be positive"
             v0 = GaussValuation(F._ring, vK).augmentation(F._ring.gen(), s)
-            if s == Infinity:
-                xi = TypeIPointOnBerkovichLine(X, (v0, 1/x))
-            else:
-                xi = TypeIIPointOnBerkovichLine(X, (v0, 1/x))
+            y = 1/x
+
+        if s == Infinity:
+            xi = TypeIPointOnBerkovichLine(X, (v0, y))
+        else:
+            xi = TypeIIPointOnBerkovichLine(X, (v0, y))
         assert xi.v(f) == s
         return xi
 
@@ -532,7 +609,8 @@ class BerkovichLine(SageObject):
                 xi2_approx = xi2.improved_approximation()
                 count += 1
             assert count < 100, "could not find sufficient approximation!"
-
+            xi2 = xi2.approximation()  # it is now ok to replace xi2 by an
+                                       # approximation
         if xi2.is_in_unit_disk():
             phi, s2 = xi2.discoid()
             s1 = xi1.v(phi)
@@ -547,6 +625,7 @@ class BerkovichLine(SageObject):
         else:
             v1 = xi1.pseudovaluation_on_polynomial_ring()
             v2 = xi2.pseudovaluation_on_polynomial_ring()
+            assert hasattr(v2, "phi"), "xi2 = %s, v2 = %s"%(xi2, v2)
             phi = v2.phi()
             s1 = v1(phi)
             eta = TypeVPointOnBerkovichLine(xi1, xi2)
@@ -571,6 +650,17 @@ class BerkovichLine(SageObject):
 
         the divisor of `f`, as a list of pairs `(\xi, m)`, where `\xi` is
         a point of type I and m is the multiplicity of `\xi`.
+
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: v_2 = QQ.valuation(2)
+            sage: F.<x> = FunctionField(QQ)
+            sage: X = BerkovichLine(F, v_2)
+            sage: X.divisor(x^2+1)
+            [(Point of type I on Berkovich line given by x^2 + 1 = 0, 1),
+             (The point at infinity on the Berkovich line, -2)]
 
         """
         F = f.factor()
@@ -638,6 +728,11 @@ class BerkovichLine(SageObject):
                 V = vK.mac_lane_approximants(f, require_incomparability=True, required_precision=1)
                 if len(V) > 1:
                     V = [LimitValuation(v, f) for v in V]
+                else:
+                    v = V[0]
+                    while v(f) < Infinity:
+                        v = v.mac_lane_step(f)[0]
+                    V =[v]
                 D = [(TypeIPointOnBerkovichLine(self, (v, 1/x)), e) for v in V]
             else:
                 D = []
@@ -757,6 +852,30 @@ class PointOnBerkovichLine(SageObject):
         that `Y:=\phi(x)` is the *parameter* used to define ``self``.
         Then the inverse parameter is `z:=\phi^{-1}(x)`.
 
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: from sage.all import GaussValuation
+            sage: F.<x> = FunctionField(QQ)
+            sage: v_2 = QQ.valuation(2)
+            sage: X = BerkovichLine(F, v_2)
+            sage: v0 = GaussValuation(F._ring, v_2)
+            sage: xi = X.point_from_pseudovaluation_on_polynomial_ring(v0, x/2)
+            sage: xi
+            Point of type II on Berkovich line, corresponding to v(1/x) >= 1
+            sage: xi.parameter()
+            1/x
+            sage: xi.inverse_parameter()
+            1/x
+
+        At the moment, only parameters y of the form c*x or 1/x are allowed. ::
+
+            sage: y = (2*x-1)/(x+2)
+            sage: xi = X.point_from_pseudovaluation_on_polynomial_ring(v0, y)
+            Traceback (most recent call last):
+            ...
+            AssertionError: y must be c*x or 1/x
+
         """
         if not hasattr(self, "_z"):
             from sage.matrix.constructor import matrix
@@ -813,7 +932,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             assert len(v)==2
             v0, y = v
             assert v0.is_discrete_pseudo_valuation()
-            assert not v0.is_discrete_valuation()
+            assert not v0.is_discrete_valuation(), "v0 = %s; on %s"%(v0, v0.domain())
             # if v were a true valuation, it would correspond to a type II point
             assert y in F, "y must be an element of F"
             assert is_generator(y), "y must be a generator of the function field"
@@ -880,7 +999,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         INPUT:
 
         - ``f`` -- an element of the function field `K(x)`
-                   (or of the polynomial ring `K[x]`).
+          (or of the polynomial ring `K[x]`).
 
         OUTPUT:
 
@@ -889,7 +1008,6 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         """
         F = self.function_field()
         return self._v(F(f))
-
 
     def pseudovaluation(self):
         r"""
@@ -1180,13 +1298,23 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         if xi1.is_in_unit_disk() != xi2.is_in_unit_disk():
             return X.gauss_point()
 
-        # now the point lie both inside or outside the unit disk
+        # now the points lie both inside or outside the unit disk
         f1, s1 = xi1.discoid()
         f2, s2 = xi2.discoid()
-        if f1 == 1/x:
-            return X.point_from_discoid(f1, xi2.v(f1))
+        if not xi1.is_in_unit_disk():
+            # both xi1 and xi2 lie outside the unit disk
+            t1 = xi1.v(1/x)
+            t2 = xi2.v(1/x)
+            if t1 != t2:
+                # the infimum is smaller than infty
+                xi0 = X.point_from_discoid(1/x, min(t1, t2))
+            else:
+                xi0 = X.point_from_discoid(f2, xi1.v(f2))
         else:
-            return X.point_from_discoid(f2, xi1.v(f2))
+            xi0 = X.point_from_discoid(f2, xi1.v(f2))
+        # test this!
+        assert xi0.is_leq(xi1) and xi0.is_leq(xi2), "xi0 = %s, xi1 = %s, xi2 = %s"%(xi0, xi1, xi2)
+        return xi0
 
 
 #----------------------------------------------------------------------------
@@ -1211,6 +1339,11 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
     corresponding to the valuation `v` on the function field `F=K(x)` which pulls
     back to `v_0` via the inclusion `K[x]\to F` that sends `x` to `y`.
 
+    NOTE:
+
+        At the moment, we only allow the generators `y` of the form `cx`
+        or `1/x`.
+
     """
     def __init__(self, X, v):
         self._X = X
@@ -1219,16 +1352,18 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         vK = X.base_valuation()
 
         if isinstance(v, tuple):
-            # instaed of v we have gotten a pair (v0, y); we need to create v
+            # instead of v we have gotten a pair (v0, y); we need to create v
             assert len(v)==2
             v0, y = v
             assert v0.is_discrete_valuation()
             # if v were a not true valuation, it would correspond to a type I point
             assert y in F, "y must be an element of F"
             assert is_generator(y), "y must be a generator of the function field"
+            assert y.numerator().degree()==0 or y.denominator().degree()==0, "y must be c*x or 1/x"
             z = inverse_generator(y)
             v = F.valuation(v0)
-            v = F.valuation((v, F.hom(y), F.hom(z)))
+            if y != x:
+                v = F.valuation((v, F.hom(y), F.hom(z)))
         else:
             # create a pair (v0, y) from y
             assert v.domain() is F, "the domain of v is not the function field of X"
@@ -1242,8 +1377,10 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
                 y = x
                 z = x
                 v0 = v._base_valuation
+        # now v = F.valuation(v0, y)
 
-        # create a standard discoid representation for v
+        # create the standard representation for v, i.e. v is the extension
+        # of v1 from K[y], where y=x or y=1/x
         is_in_unit_disk = (v(x)>=0)
         if is_in_unit_disk:
             f = v0.phi()(z).numerator().monic()
@@ -1367,11 +1504,8 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         r""" Return the pseudo-valuation on the polynomial ring 'K[y]'
         corresponding to ``self``, where `y` is either `x` or `1/x` depending
         on whether self lies in the standard closed unit disk or not.
+
         """
-        # if self.is_in_unit_disk() or self.is_gauss_point():
-        #     return self._v._base_valuation
-        # else:
-        #    return self._v._base_valuation._base_valuation
         return self._v1
 
 
@@ -1391,6 +1525,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
     def approximation(self):
         r""" Return an approximation of ``self``.
         For a point of type II, ``self`` is already an approximation of itself.
+
         """
         return self
 
@@ -1405,13 +1540,13 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
 
     def discoid(self, certified_point=None):
         r"""
-        Return a representation of the discoid of which ``self`` is the
-        unique boundary point.
+        Return a representation of the discoid of which this type II point
+        is the unique boundary point.
 
         INPUT:
 
         - ``certified_point`` (default=None) -- this argument is not used
-           for type-II-points
+          for type-II-points
 
         OUTPUT:
 
@@ -1422,8 +1557,31 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
 
         Then ``self`` is the unique boundary point of `D`, and if, moreover,
         ``self`` is not the Gauss point then `D` contains precisely the points
-        `\xi` which are greater or equal to ``self``. If ``self`` is the Gauss
-        point then `D` is the standard closed unit disk, `f=x` and `s=0`.
+        `\xi` which are greater or equal to ``self``.
+
+        The representation `(f,s)` is normalized as follows:
+
+        - if this point lies in the closed unit disk then `f` is monic and
+          integral, and `s\geq 0`. We either have `(f,s)=(x,0)` (if this point
+          is the Gauss point and `D` the closed unit disk) or `s>0`.
+        - if this point is not in the closed unit disk then `s>0`, and `f` is
+          either integral with constant term `1` and only strictly positive slopes,
+          or `f=1/x`. In the first case, `D` does not contain the point at infinity,
+          in the second case it does. In both cases, `D` is disjoint from the
+          closed unit disk.
+
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: F.<x> = FunctionField(QQ)
+            sage: v_2 = QQ.valuation(2)
+            sage: X = BerkovichLine(F, v_2)
+            sage: X.gauss_point().discoid()
+            (x, 0)
+            sage: X.infty().discoid()
+            (1/x, +Infinity)
+
 
         """
         xi = self
@@ -1435,6 +1593,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         if self.is_in_unit_disk():
             f = phi(x)
             s = xi.v(f)
+            assert s > 0, 's must be positive: s=%s, f= %s, xi = %s'%(s,f,xi)
             return f, s
         else:
             if phi[0] == 0:
@@ -1442,6 +1601,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
             else:
                 f = phi(1/x).numerator()(x)
             s = xi.v(f)
+            assert s > 0, 's must be positive: s=%s, f = %s, v = %s'%(s,f, xi.valuation())
             return f, s
 
 
@@ -1526,10 +1686,19 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         # now the point lie both inside or outside the unit disk
         f1, s1 = xi1.discoid()
         f2, s2 = xi2.discoid()
-        if f1 == 1/x:
-            return X.point_from_discoid(f1, xi2.v(f1))
+        if not xi1.is_in_unit_disk():
+            # both xi1 and xi2 lie outside the unit disk
+            t1 = xi1.v(1/x)
+            t2 = xi2.v(1/x)
+            if t1 != t2:
+                xi0 = X.point_from_discoid(1/x, min(t1, t2))
+            else:
+                xi0 = X.point_from_discoid(f2, xi1.v(f2))
         else:
-            return X.point_from_discoid(f2, xi1.v(f2))
+            xi0 = X.point_from_discoid(f2, xi1.v(f2))
+        # test this!
+        assert xi0.is_leq(xi1) and xi0.is_leq(xi2), "xi0 = %s, xi1 = %s, xi2 = %s"%(xi0, xi1, xi2)
+        return xi0
 
 
     def point_in_between(self, xi1):
@@ -1605,41 +1774,71 @@ def valuation_from_discoid(vK, f, s):
     and `v` is its unique boundary point.
 
     If `D` is not irreducible, an error is raised.
-    """
 
+
+    EXAMPLES:
+
+    An example that created an error in a previous version: ::
+
+        sage: from mclf import *
+        sage: R.<x> = QQ[]
+        sage: v_2 = QQ.valuation(2)
+        sage: f =  x^6 - 8030/3241*x^5 + 24468979*x^4 + 14420644*x^3 + 24136511*x^2 + 5386/1505*x + 3981/5297
+        sage: valuation_from_discoid(v_2, f, 76/15)
+        [ Gauss valuation induced by 2-adic valuation, v(x + 1) = 2/3, v(x^3 + 3*x^2 + 3*x + 5) = 38/15 ]
+
+
+    """
     R = f.parent()
     K = R.base_ring()
     assert K is vK.domain()
     v0 = GaussValuation(R, vK)
     assert f.is_monic()
-    assert v0(f) >= 0
+    assert v0(f) >= 0, "f = %s, s = %s"%(f, s)
     assert s >= 0, "f = %s, s = %s"%(f, s)
     v = v0
     while v(f) < s:
         V = v.mac_lane_step(f)
-        assert len(V) == 1, "D is not a discoid"
+        assert len(V) == 1, "D defined by f=%s and s=%s is not a discoid"%(f, s)
         v = V[0]
     if v(f) == s:
+        if v(v.phi()[0]) >= v(v.phi()):
+            # the discoid D_v contains 0;
+            # we must replace v by v = [v0, v(x) = ..]
+            r = v(R.gen())
+            if r > 0:
+                v = v0.augmentation(R.gen(), r)
+            else:
+                v = v0
         return v
     else:
         # now v is an inductive valuation such that v(f) > s
-        for v0 in v.augmentation_chain():
-            if v0(f) <= s:
+        for v1 in v.augmentation_chain():
+            if v1(f) <= s:
                 break
             else:
-                v = v0
-        if v0(f) == s:
+                v = v1
+        if v1(f) == s:
             return v0
-        # now v0 is an inductive valuation such that v0(f) < s,
-        # and v is an augmentation of v0 such that v(f) > s.
+        # now v1 is an inductive valuation such that v1(f) < s,
+        # and v is an augmentation of v1 such that v(f) > s.
         # We test this:
-        assert v0(f) < s
+        assert v1(f) < s
         assert v(f) > s
-        assert v._base_valuation == v0
-        a = [v0(c) for c in v.coefficients(f)]
+        assert v._base_valuation == v1
+        a = [v1(c) for c in v.coefficients(f)]
         t = max([(s-a[i])/i for i in range(1,len(a)) ])
-        v = v0.augmentation(v.phi(), t)
+        v = v1.augmentation(v.phi(), t)
+        if not v(f)==s:
+            print "f = ", f
+            print "f = s", s
+            print "v = ", v
+            print
         assert v(f) == s
+        if v(v.phi()[0]) >= v(v.phi()):
+            # the discoid D_v contains 0;
+            # we must replace v by v = [v0, v(x) = ..]
+            v = v0.augmentation(R.gen(), v(R.gen()))
         return v
 
 
