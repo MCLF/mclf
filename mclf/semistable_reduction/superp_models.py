@@ -255,7 +255,7 @@ class SuperpModel(SemistableModel):
             sage: YY.etale_locus()
             Elementary affinoid defined by
             v(1/x) >= -5/2
-            v(x + 4) >= 2
+            v(x) >= 2
 
 
     .. NOTE::
