@@ -3,10 +3,12 @@ from setuptools import setup, find_packages
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
+with open("version", "r") as fh:
+    version = fh.read().strip()
 
 setup(
     name="mclf",
-    version="1.0.2",
+    version=version,
     author="Stefan Wewers, Julian Rüth",
     author_email="stefan.wewers@uni-ulm.de",
     description="A Sage toolbox for computing with Models of Curves over Local Fields",

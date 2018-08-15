@@ -4,7 +4,7 @@
 [![CircleCI](https://circleci.com/gh/MCLF/mclf/tree/master.svg?style=svg)](https://circleci.com/gh/MCLF/mclf/tree/master)
 [![Coverage Status](https://coveralls.io/repos/github/MCLF/mclf/badge.svg?branch=master)](https://coveralls.io/github/MCLF/mclf?branch=master)
 [![asv](https://img.shields.io/badge/benchmarked%20by-asv-green.svg?style=flat)](https://mclf.github.io/mclf-asv)
-[![PyPI](https://img.shields.io/pypi/v/nine.svg)](https://pypi.org/project/mclf/)
+[![PyPI](https://img.shields.io/pypi/v/mclf.svg)](https://pypi.org/project/mclf/)
 
 ### A Sage toolbox for computing with **M**odels of **C**urves over **L**ocal **F**ields
 
