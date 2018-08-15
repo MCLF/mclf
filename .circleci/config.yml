@@ -75,9 +75,9 @@ jobs:
             set -exo pipefail
             pip install --user readthedocs-build
             mkdir -p docs/_static
-            ~/.local/bin/rtd-build 2>&1 | tee /tmp/rdt.log
+            ~/.local/bin/rtd-build 2>&1 | tee /tmp/rtd.log
             # fail on warnings
-            ! grep WARNING /tmp/rdt.log > /dev/null
+            grep WARNING /tmp/rtd.log && false
             # check that readthedocs produced something non-empty
             (( $(du -s _readthedocs_build/mclf/html | cut -f1) > 1000 ))
   benchmark:
