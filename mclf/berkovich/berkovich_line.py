@@ -583,7 +583,7 @@ class BerkovichLine(SageObject):
         return D
 
 
-    def prime_divisor(self, f, e=ZZ(1)):
+    def prime_divisor(self, f, e=1):
         r"""
         Return the divisor of zeroes of an irreducible polynomial.
 
@@ -615,7 +615,7 @@ class BerkovichLine(SageObject):
              (Point of type I on Berkovich space approximated by v(x + 1) >= 1, 1)]
 
         """
-
+        e = ZZ(e)
         F = self._F
         x = F.gen()
         assert f.parent() is F, "f must lie in the function field of X"
