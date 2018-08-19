@@ -187,7 +187,6 @@ class TypeVPointOnBerkovichLine(SageObject):
                 phi_pol = v0.equivalence_decomposition(v1.phi())[0][0]
                 # phi_pol is a key polynomial for v_0
                 self._phi_pol = phi_pol
-                phib = normalized_reduction(v0, phi_pol)
                 phi = phi_pol(x)
                 self._phi = phi
                 self._s = xi0.v(phi)
@@ -197,7 +196,6 @@ class TypeVPointOnBerkovichLine(SageObject):
                 # of the closed unit disk
                 phi_pol = v0.equivalence_decomposition(v1.phi())[0][0]
                 self._phi_pol = phi_pol
-                phib = normalized_reduction(v0, phi_pol)
                 phi = phi_pol(1/x)
                 self._phi = phi
                 self._s = xi0.v(phi)
@@ -224,7 +222,7 @@ class TypeVPointOnBerkovichLine(SageObject):
                 self._s = xi0.v(phi)
                 self._type = "contains_unit_disk"
         # we test that the discoid representation is correct.
-        assert not self.is_in_residue_class(xi0), "xi1 must not lie in the residue class!"
+        assert self._v(self._phi)==self._s, "xi1 must not lie in the residue class!"
         assert self.is_in_residue_class(xi1), "xi2 must lie in the residue class!"
 
 
@@ -560,28 +558,3 @@ class TypeVPointOnBerkovichLine(SageObject):
         return v.effective_degree(f)
 
 #--------------------------------------------------------------------------
-
-def normalized_reduction(v, f):
-    r""" Return the normalized reduction of ``f`` with respect to ``v``.
-
-    INPUT:
-
-    - ``v`` -- an inductive valuation on `K[x]`
-    - ``f`` -- an element of `K[x]`
-
-    OUTPUT:
-
-    The normalized reduction of ``f`` with respect to ``v``, defined as follows:
-    let `g\in K[x]` be an equivalence unit for ``v`` such that `v(g)=-v(f)`.
-    Then the *normalized reduction* is defined as the image of `fg` in the residue
-    ring of `v`. The result is only well defined up to multiplication with
-    a constant.
-    THIS IS NOT WELL DEFINED: IN GENERAL, `g` AS ABOVE DOES NOT EXIST!
-    """
-
-    r = v(f)
-    m = abs(r.denominator())
-    fb = v.reduce(f**m*v.equivalence_unit(-m*r))
-    Fb = fb.factor()
-    fb = Fb[0][0]
-    return fb
