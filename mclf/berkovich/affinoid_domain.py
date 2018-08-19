@@ -668,6 +668,26 @@ class AffinoidDomainOnBerkovichLine(SageObject):
             sage: U.point_close_to_boundary(xi0)
             Point of type I on Berkovich line given by x + 2 = 0
 
+        At the moment, our choice of point close to the boundary is not
+        optimal, as the following example shows: ::
+
+            sage: U = RationalDomainOnBerkovichLine(X, 2/(x^2+x+1))
+            sage: U
+            Affinoid with 1 components:
+            Elementary affinoid defined by
+            v(1/(x^2 + x + 1)) >= -1
+
+            sage: xi0 = U.boundary()[0]
+            sage: U.point_close_to_boundary(xi0)
+            Point of type I on Berkovich line given by x^2 + 3*x + 1 = 0
+
+        The point at infinity is also inside U and 'close to the boundary',
+        and has smaller degree than the point produced above.
+
+        .. TODO::
+
+            Use a better strategie to find a point of minimal degree.
+
         """
         U = self
         T = U._T
@@ -676,6 +696,8 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         x = F.gen()
         T0 = T.find_point(xi0)
         assert T0 != None and T0._is_in_affinoid, "xi0 is not a boundary point"
+        # we only look for point of type I which are larger than xi0
+        # but it may be possibleto find other points with smaller degree
         v0 = xi0.pseudovaluation_on_polynomial_ring()
         Rb = v0.residue_ring()
         psi = Rb.one()
@@ -683,8 +705,8 @@ class AffinoidDomainOnBerkovichLine(SageObject):
             if not T1._is_in_affinoid:
                 eta1 = TypeVPointOnBerkovichLine(xi0, T1.root())
                 psi1 = eta1.minor_valuation().uniformizer()
-                assert psi1.denominator().is_one(), "psi1 is not a polynomial"
-                psi = psi * Rb(psi1.numerator())
+                if psi1.denominator().is_one():
+                    psi = psi * Rb(psi1.numerator())
         phib = irreducible_polynomial_prime_to(psi)
         phi = v0.lift_to_key(phib)
         if xi0.is_in_unit_disk():
@@ -696,7 +718,6 @@ class AffinoidDomainOnBerkovichLine(SageObject):
                 xi1 = X.point_from_discoid(phi(1/x)*x**phi.degree(), Infinity)
         assert U.is_contained_in(xi1), "error: xi1 is not contained in U"
         return xi1
-
 
 
 class ClosedUnitDisk(AffinoidDomainOnBerkovichLine):
