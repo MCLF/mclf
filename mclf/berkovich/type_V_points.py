@@ -1,9 +1,62 @@
 r""" Points of type V on the Berkovich line.
 ============================================
 
+Let `X^{an}` be a Berkovich line over a discretely valued field `K`.
+A "point" `\eta` of type V on `X^{an}` corresponds to a
+pair `(v,\bar{v})`, where `v` is a type-II-valuation and `\bar{v}` is a
+function field valuation on the residue field of `v`.  We call `v` the
+"major valuation" and `\bar{v}` the "minor valuation" associated to `\eta`.
+
+Note that `\eta` is not, properly speaking, a point on the analytic space
+`X^{an}`, but rather a point on the adic space `X^{ad}`.
+
+Equivalent ways to describe `\eta` are:
+
+- the rank-2-valuation given as the composition of `v` and `\bar{v}`
+- a "residue class" on `X^{an}`; more precisely, `\eta` corresponds to
+  a connected component of `X^{an}-\{\xi\}`, where `\xi` is the
+  type-II-point corresponding to `v` (and then `\xi` is the unique boundary
+  point of the residue class)
+- an "open discoid": more precise, a pair `(\phi,s)`, where `\phi` is
+  a rational function such that the open discoid
+
+  .. MATH::
+
+         D = \{ v \mid v(\phi) > s \}
+
+  is the residue class corresponding to `\eta`. Moreover, either `\phi`
+  of `1/\phi` is a monic, integral and irreducible polynomial in `x`
+  or in `1/x`.
+- a "tangent vector" on `X^{an}`; more precisely a group homomorphism
+
+  .. MATH::
+
+      \partial: K(x)^* \to \mathbb{Z}
+
+with the following properties: let `(\phi,s)` be the discoid representation
+of `\eta`. We define, for `t\geq s`, the valuation `v_t` as the valuation
+corresponding to the boundary point of the open discoid `v(\phi)>t`. Then
+`\partial(f)` is the right derivative at `t=s` of the function
+
+.. MATH::
+
+    t \mapsto v_t(f).
+
+
+The most convenient way to determine a point of type V is as follows. Let
+`\xi_1` be a point of type II and `\xi_2` be of type I or II, distinct from
+`\xi_1`. Then
+
+.. MATH::
+
+        \eta = \eta(\xi_1,\xi_2)
+
+is the point of type V corresponding to the connected component of
+`X-\{\xi_1\}` containing `\xi_2`. We call `\eta` the *direction*
+from `\xi_1` towards `\xi_2`.
+
 
 """
-
 #*****************************************************************************
 #       Copyright (C) 2017 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
@@ -21,48 +74,9 @@ class TypeVPointOnBerkovichLine(SageObject):
     r"""
     A point of type V on the Berkovich line.
 
-    A "point" `\eta` of type V on the Berkovich line `X^{an}` corresponds to a
-    pair `(v,\bar{v})`, where `v` is a type-II-valuation and `\bar{v}` is a
-    function field valuation on the residue field of `v`.  We call `v` the
-    "major valuation" and `\bar{v}` the "minor valuation" associated to `\eta`.
-
-    Note that `\eta` is not, properly speaking, a point on the analytic space
-    `X^{an}`, but rather a point on the adic space `X^{ad}`.
-
-    Equivalent ways to describe `\eta` are:
-
-    - the rank-2-valuation given as the composition of `v` and `\bar{v}`
-    - a "residue class" on `X^{an}`; more precisely, `\eta` corresponds to
-      a connected component of `X^{an}-\{\xi\}`, where `\xi` is the
-      type-II-point corresponding to `v` (and then `\xi` is the unique boundary
-      point of the residue class)
-    - an "open discoid": more precise, a pair `(\phi,s)`, where `\phi` is
-      a rational function such that the open discoid
-
-      .. MATH::
-
-             D = \{ v \mid v(\phi) > s \}
-
-      is the residue class corresponding to `\eta`. Moreover, either `\phi`
-      of `1/\phi` is a monic, integral and irreducible polynomial in `x`
-      or in `1/x`.
-    - a "tangent vector" on `X^{an}`; more precisely a group homomorphism
-
-      .. MATH::
-
-          \partial: K(x)^* \to \mathbb{Z}
-
-    with the following properties: let `(\phi,s)` be the discoid representation
-    of `\eta`. We define, for `t\geq s`, the valuation `v_t` as the valuation
-    corresponding to the boundary point of the open discoid `v(\phi)>t`. Then
-    `\partial(f)` is the right derivative at `t=s` of the function
-
-    .. MATH::
-
-        t \mapsto v_t(f).
 
     Let `\xi_1` be a point of type II, and `\xi_2` a point of type I or II.
-    Then we can define the point of type V `\eta:=d(\xi_1,\xi_2)` as the unique
+    Then we can define the point of type V `\eta:=\eta(\xi_1,\xi_2)` as the unique
     residue class with boundary point `\xi_1` containing `\xi_2`.
 
     INPUT:
@@ -119,21 +133,50 @@ class TypeVPointOnBerkovichLine(SageObject):
         sage: TypeVPointOnBerkovichLine(xi4, xi3)
         Point of type V given by residue class v(x/(2*x + 1)) > -5
 
-    """
+    The following example shows that the minor valuation is computed correctly ::
 
+        sage: xi5 = X.point_from_discoid(1/x,1)
+        sage: eta = TypeVPointOnBerkovichLine(xi0,xi5)
+        sage: eta
+        Point of type V given by residue class v(1/x) > 0
+        sage: eta.minor_valuation()
+        Valuation at the infinite place
+
+    """
     def __init__(self, xi0, xi1):
+
+        # the internal representation of self is via these attributes:
+        #
+        # self._xi0 = the boundary point
+        # self._v : the major valuation
+        # self._kv : the residue field of the major valuation
+        # self._vb : the minor valuation
+        # self._phi, self._s : a discoid representation of self
+        # self._phi_pol: the last key polynomial of the inductive valuation
+        #                from which self._v is induced
+        # it is crucial that self._v is induced from an inductive valuation
+        # on the polynomial subring K[x] (if xi0 lies inside the unit disk)
+        # or K[1/x] (if xi0 lies outside the unit disk)
 
         X = xi0.berkovich_line()
         x = X.function_field().gen()
         self._X = X
         assert xi0.type() == "II", "xi0 must be a point of type II"
         assert not xi0.is_equal(xi1), "xi0 and xi1 must be distinct"
+        # the boundary point:
         self._xi0 = xi0
+        # the major valuation
         self._v = xi0.valuation()
         v0 = xi0.pseudovaluation_on_polynomial_ring()
+        # the residue field of the major valuation
+        # we can't take self._v.residue_field because this does
+        # not give a true function field
         k_v = v0.residue_field()
+        self._k_v = k_v
         if not xi1.is_inductive():
             xi1 = xi1.approximation(xi0)
+        # now we compute a discoid representation of self
+        # i.e. we set the attributes self._phi, self._s, self._type
         v1 = xi1.pseudovaluation_on_polynomial_ring()
         if xi0.is_leq(xi1):
             # the Gauss point is not contained in the residue class
@@ -145,7 +188,6 @@ class TypeVPointOnBerkovichLine(SageObject):
                 # phi_pol is a key polynomial for v_0
                 self._phi_pol = phi_pol
                 phib = normalized_reduction(v0, phi_pol)
-                self._vb = k_v.valuation(phib(k_v.gen()))
                 phi = phi_pol(x)
                 self._phi = phi
                 self._s = xi0.v(phi)
@@ -156,7 +198,6 @@ class TypeVPointOnBerkovichLine(SageObject):
                 phi_pol = v0.equivalence_decomposition(v1.phi())[0][0]
                 self._phi_pol = phi_pol
                 phib = normalized_reduction(v0, phi_pol)
-                self._vb = k_v.valuation(phib(k_v.gen()))
                 phi = phi_pol(1/x)
                 self._phi = phi
                 self._s = xi0.v(phi)
@@ -167,7 +208,6 @@ class TypeVPointOnBerkovichLine(SageObject):
                 # properly contained in the standard closed unit disk.
                 # In particular, the residue class contains Infinity,
                 # and 0 lies in its complement.
-                self._vb = k_v.valuation(1/k_v.gen())
                 phi_pol = v0.phi()
                 self._phi_pol = phi_pol
                 phi = 1/phi_pol(x)
@@ -177,17 +217,20 @@ class TypeVPointOnBerkovichLine(SageObject):
             else:
                 # now self represents an open discoid which properly contains
                 # the standard closed unit disk
-                self._vb = k_v.valuation(1/k_v.gen())
                 phi_pol = v0.phi()
                 self._phi_pol = phi_pol
                 phi = 1/phi_pol(1/x)
                 self._phi = phi
                 self._s = xi0.v(phi)
                 self._type = "contains_unit_disk"
+        # we test that the discoid representation is correct.
+        assert not self.is_in_residue_class(xi0), "xi1 must not lie in the residue class!"
+        assert self.is_in_residue_class(xi1), "xi2 must lie in the residue class!"
+
 
     def __repr__(self):
-
         return "Point of type V given by residue class v(%s) > %s"%self.open_discoid()
+
 
     def X(self):
         """
@@ -204,8 +247,8 @@ class TypeVPointOnBerkovichLine(SageObject):
     def point_inside_residue_class(self):
         """
         Return some point inside the residue class corresponding to the point.
-        """
 
+        """
         from mclf.berkovich.berkovich_line import valuation_from_discoid
         X = self.X()
         F = X.function_field()
@@ -232,8 +275,28 @@ class TypeVPointOnBerkovichLine(SageObject):
     def major_valuation(self):
         return self._v
 
+
     def minor_valuation(self):
-        return self._vb
+        r""" Return the minor valuation of this type V point.
+
+        """
+        if hasattr(self, "_vb"):
+            return self._vb
+        f, s = self.open_discoid()
+        v = self.major_valuation()
+        Fb = self._k_v
+        # a function field into which the residue field of v coerces
+        pi = self.X().base_valuation().uniformizer()
+        v = v.scale(1/v(pi))
+        assert v(pi) == 1
+        s = v(f)
+        fb = Fb(v.reduce(f**s.denominator()/pi**s.numerator()))
+        if fb.numerator().degree() > 0:
+            vb = Fb.valuation(fb.numerator().factor()[0][0])
+        else:
+            vb = Fb.valuation(1/Fb.gen())
+        return vb
+
 
     def is_in_residue_class(self, xi):
         r""" Test whether ``xi`` lies in the residue class of ``self``.
@@ -265,8 +328,8 @@ class TypeVPointOnBerkovichLine(SageObject):
 
 
         """
-
         return xi.v(self._phi) > self._s
+
 
     def open_discoid(self):
         r""" Return the representation of self as an open discoid.
@@ -288,8 +351,8 @@ class TypeVPointOnBerkovichLine(SageObject):
 
         Either `\phi` of `1/\phi` is a monic, integral and strongly irreducible
         polynomial in `x` or in `1/x`.
-        """
 
+        """
         return self._phi, self._s
 
 
@@ -337,9 +400,6 @@ class TypeVPointOnBerkovichLine(SageObject):
             return X.point_from_discoid(eta._phi_pol, t, in_unit_disk=False)
         else:
             raise NotImplementedError
-
-
-
 
 
     def derivative(self, f):
@@ -464,6 +524,7 @@ class TypeVPointOnBerkovichLine(SageObject):
         # now pos is the index of the first item in v_list where the minimum ist attained
         return pos
 
+
     def left_derivative(self, f):
         r"""
         Return the left derivative of ``f`` with respect to ``self``.
@@ -487,11 +548,11 @@ class TypeVPointOnBerkovichLine(SageObject):
         as defined by MacLane.
 
         """
-
         if hasattr(f, "numerator"):
             return self.left_derivative_of_polynomial(f.numerator()) - self.left_derivative_of_polynomial(f.denominator())
         else:
             return self.left_derivative_of_polynomial(f)
+
 
     def left_derivative_of_polynomial(self, f):
 
