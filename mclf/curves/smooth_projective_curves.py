@@ -41,6 +41,20 @@ If `k` is a finite field, it is actually easy to compute `k_c`. If `k` is a
 number field we use a probabilistic algorithm for computing the degree `[k_c:k]`,
 by reducing the curve modulo several small primes.
 
+Currently, the function field `F` defining a smooth projective curve must be a
+simple finite extension of a rational function field, i.e. of the form
+
+.. MATH::
+
+    F = k(x)[y]/(G)
+
+where `G` is an irreducible polynomial over `k(x)`. If not explicitly stated
+otherwise, it is assumed that `k` is the constant base field of the curve `X`.
+If `k` is a finite field, then one may also declare any subfield `k_0` of `k`
+to be the constant base field. Geometrically, this means that we consider `X`
+as a curve over `{\rm Spec}(k_0)`. In any case, the field of constants of `X`
+is a finite extension of `k`.
+
 
 AUTHORS:
 
@@ -61,6 +75,16 @@ EXAMPLES::
     1
     sage: Y.zeta_function()
     (2*T^2 + T + 1)/(2*T^2 - 3*T + 1)
+
+Over finite fields, we are allowed to specify the constant base field: ::
+
+    sage: K = GF(4)
+    sage: F.<x> = FunctionField(K)
+    sage: X = SmoothProjectiveCurve(F, k=GF(2))
+    sage: X
+    the smooth projective curve with Rational function field in x over Finite Field in z2 of size 2^2 and constant base field Finite Field of size 2
+    sage: X.field_of_constants()
+    Finite Field in z2 of size 2^2
 
 
 .. TODO::
@@ -139,8 +163,11 @@ class SmoothProjectiveCurve(SageObject):
 
 
     def __repr__(self):
-        return "the smooth projective curve with %s"%self.function_field()
-
+        if self._extra_extension_degree == 1:
+            return "the smooth projective curve with %s"%self.function_field()
+        else:
+            return "the smooth projective curve with %s and constant base field %s"%(
+                self.function_field(), self.constant_base_field())
 
     def constant_base_field(self):
         r"""
@@ -154,7 +181,7 @@ class SmoothProjectiveCurve(SageObject):
 
         INPUT:
 
-        - ``v`` -- a discrete valuaton on the function field of the curve
+        - ``v`` -- a discrete valuation on the function field of the curve
 
         OUTPUT:
 
@@ -227,10 +254,12 @@ class SmoothProjectiveCurve(SageObject):
         """
         if hasattr(self, "_field_of_constants"):
             return self._field_of_constants
+        if not self.constant_base_field().is_finite():
+            raise NotImplementedError('Computation of field of constants only implemented for finite fields.')
         F = self.function_field()
         if F.degree() == 1:
-            self._field_of_constants = ZZ(1)
-            return ZZ(1)
+            self._field_of_constants = F.constant_base_field()
+            return self._field_of_constants
         else:
             G = F.polynomial().monic()
             self._field_of_constants = field_of_constant_degree_of_polynomial(G, return_field=True)
@@ -254,14 +283,14 @@ class SmoothProjectiveCurve(SageObject):
         EXAMPLES::
 
             sage: from mclf import *
-            sage: k = GF(2)
+            sage: k = GF(2^3)
             sage: F.<x> = FunctionField(k)
             sage: R.<y> = F[]
             sage: G = (y+x)^4 + (y+x) + 1
             sage: F1.<y> = F.extension(G)
-            sage: Y1 = SmoothProjectiveCurve(F1)
+            sage: Y1 = SmoothProjectiveCurve(F1, GF(2))
             sage: Y1.field_of_constants_degree()
-            4
+            12
             sage: F.<x> = FunctionField(QQ)
             sage: R.<y> = F[]
             sage: G = y^4 + x*y + 1
@@ -288,10 +317,10 @@ class SmoothProjectiveCurve(SageObject):
             return self._field_of_constants_degree
         F = self.function_field()
         if F.degree() == 1:
-            return ZZ(1)
+            return self._extra_extension_degree
         else:
             G = F.polynomial().monic()
-            return field_of_constant_degree_of_polynomial(G)
+            return field_of_constant_degree_of_polynomial(G)*self._extra_extension_degree
 
 
     def covering_degree(self):

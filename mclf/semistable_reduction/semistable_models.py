@@ -336,5 +336,18 @@ class SemistableModel(SageObject):
         r"""
         Return the conductor exponent at p of this curve.
 
+        EXAMPLES
+
+        In this example the conductor exponent was computed wrongly in a
+        previous version::
+
+            sage: from mclf import *
+            sage: R.<x> = QQ[]
+            sage: f = x^4+2*x^3+2*x^2+x
+            sage: Y = SuperellipticCurve(f, 3)
+            sage: Y3 = SemistableModel(Y, QQ.valuation(3))
+            sage: Y3.conductor_exponent()    
+            11
+
         """
         return self.reduction_tree().reduction_conductor()
