@@ -1077,7 +1077,6 @@ def make_function_field(k):
     the field `k` as a function field over the 'natural' constant base field.
 
     """
-    from sage.rings.function_field.function_field import is_FunctionField
     from mclf.curves.smooth_projective_curves import make_finite_field
     from sage.categories.finite_fields import FiniteFields
     from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
