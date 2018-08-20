@@ -1008,7 +1008,6 @@ def compute_value(v, f):
     (which is a finite extension of the base field of `F`), or `\infty`.
 
     """
-
     from sage.rings.infinity import Infinity
 
     if v(f) < 0:
@@ -1031,7 +1030,6 @@ def separate_points(coordinate_functions, valuations):
     where ``v`` runs through ``valuations``, are pairwise distinct.
 
     """
-
     repeat = True
     while repeat:
         dict = {}
@@ -1135,7 +1133,6 @@ def extension_degree(K, L, check=False):
         whether `K` really maps to `L`.
 
     """
-
     assert K.characteristic() == L.characteristic(), "K and L must have the same characteristic."
     if hasattr(K, "absolute_extension"):
         K = K.absolute_extension()[2]
@@ -1207,8 +1204,17 @@ def field_of_constant_degree_of_polynomial(G, return_field=False):
     if K.is_finite():
         d = 1    # will be the degree of the field of constants at the end
         for p in primes(2,n+1):
-            while p <= n:
-                K1 = K.extension(p)
+            while p.divides(n):
+                # attention: the latter condition is just to make this
+                # feasable; the result of this function is therefore
+                # not provably correct!
+                try:
+                    K1 = K.extension(p)
+                except:
+                    # if K is not a true finite field the above fails
+                    # we use a helper function which construct an extension
+                    # of the desired degree
+                    K1 = extension_of_finite_field(K, p)
                 F1 = FunctionField(K1, F.variable_name())
                 G1 = G.change_ring(F1)
                 G2 = G1.factor()[0][0]   # the first irreducible factor of G1
@@ -1265,3 +1271,69 @@ def e_f_of_valuation(v):
     if hasattr(v, "_approximation"):
         v = v._approximation
     return (v.E(), v.F())
+
+
+def extension_of_finite_field(K, n):
+    r""" Return a field extension of this finite field of degree n.
+
+    INPUT:
+
+    - ``K`` -- a finite field
+    - ``n`` -- a positive integer
+
+    OUTPUT: a field extension of `K` of degree `n`.
+
+    This function is useful if `K` is constructed as an explicit extension
+    `K = K_0[x]/(f)`; then ``K.extension(n)`` is not implemented.
+
+    """
+    assert K.is_field()
+    assert K.is_finite()
+    q = K.order()
+    R = PolynomialRing(K, 'z')
+    z = R.gen()
+    # we look for a small number e dividing q^n-1 but not q-1
+    e = min([d for d in (q**n-1).divisors() if not d.divides(q-1)])
+    F = (z**e-1).factor()
+    f = [g for g, e in F if g.degree() == n][0]
+    # this is very inefficient!
+    return K.extension(f, 'z'+str(e))
+
+
+def make_finite_field(k):
+    r""" Return the finite field isomorphic to this field.
+
+    INPUT:
+
+    - ``k`` -- a finite field
+
+    OUTPUT: a pair `(k_1,\phi)` where `k_1` is a 'true' finite field
+    and `\phi` is an isomorphism from `k` to `k_1`.
+
+    This function is useful when `k` is constructed as a tower of extensions
+    with a finite field as a base field.
+
+    """
+    from sage.categories.finite_fields import FiniteFields
+
+    assert k.is_field()
+    assert k.is_finite()
+    if k in FiniteFields:
+        return k, k.hom(k.gen(), k)
+    else:
+        k0 = k.base_field()
+        G = k.modulus()
+        assert G.parent().base_ring() is k0
+        k0_new, phi0 = make_finite_field(k0)
+        G_new = G.map_coefficients(phi0, k0_new)
+        k_new = k0_new.extension(G_new.degree())
+        alpha = G_new.roots(k_new)[0][0]
+        Pk0 = k.cover_ring()
+        Pk0_new = k0_new[Pk0.variable_name()]
+        psi1 = Pk0.hom(phi0, Pk0_new)
+        psi2 = Pk0_new.hom(alpha, k_new)
+        psi = psi1.post_compose(psi2)
+        # psi: Pk0 --> k_new
+        phi = k.hom(Pk0.gen(), Pk0, check=False)
+        phi = phi.post_compose(psi)
+        return k_new, phi

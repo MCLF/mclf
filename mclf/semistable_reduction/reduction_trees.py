@@ -983,7 +983,7 @@ class UpperComponent(ReductionComponent):
     - ``v`` -- a discrete valuation on the base extension to `L` of the function
       field `F_Y`, extending the valuation corresponding to `Z`
 
-    OUTPUT: The lower component above `Z` corresponding to `v`.
+    OUTPUT: The upper component above `Z` corresponding to `v`.
 
     """
     def __init__(self, Z, v):
@@ -1074,21 +1074,62 @@ def make_function_field(k):
 
     OUTPUT:
 
-    the field `k` as a function field; this is rather experimental..
+    the field `k` as a function field over the 'natural' constant base field.
 
     """
     from sage.rings.function_field.function_field import is_FunctionField
-    if is_FunctionField(k):
-        return k
-    if hasattr(k, "base_field"):
+    from mclf.curves.smooth_projective_curves import make_finite_field
+    from sage.categories.finite_fields import FiniteFields
+    from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
+
+    if hasattr(k, "modulus") or hasattr(k, "polynomial"):
         # it seems that k is an extension of a rational function field
         k0 = k.base_field()
-        f0 = FunctionField(k0.base_ring(), k0.base().variable_name())
-        G = k.modulus().change_ring(f0)
+        if hasattr(k0, "constant_base_field"):
+            l = k0.constant_base_field()
+        else:
+            l = k0.base_ring()
+        if l.is_finite() and not l in FiniteFields:
+            l1, phi0 = make_finite_field(l)
+            # now l1 is an isomorphic field and phi0:l-->l1 an isomorphism
+        else:
+            l1 = l
+            phi0 = l.hom(l.gen(), l)
+            # this is the identity on l
+        f0 = FunctionField(l1, k0.variable_name())
+        try:
+            phi = k0.hom(f0.gen(), phi0)
+            # the typical reason why this fails is that
+            # k0 is the fraction field of a polynomial ring
+        except:
+            k1 = FunctionField(l, k0.variable_name())
+            phi1 = k0.base().hom(k1.gen(), k1)
+            # phi1:k0 --> k1
+            phi2 = k1.hom(f0.gen(), phi0)
+            # phi2:k1 --> f0
+            # phi = phi1.post_compose(phi2)
+            phi = lambda f: phi2(phi1(f.numerator()))/phi2(phi1(f.denominator()))
+            # phi: k0 --> f0
+        if hasattr(k, "modulus"):
+            G = k.modulus()
+        else:
+            G = k.polynomial()
+        # assert G.base_ring() == phi.domain(), "G in %s, phi on %s"%(G.base_ring(), phi.domain())
+        R = PolynomialRing(f0, G.parent().variable_name())
+        G = R([phi(c) for c in G.list()])
         # G *should* be irreducible, but unfortunately this is sometimes
         # not true, due to a bug in Sage's factoring
         assert G.is_irreducible(), "G must be irreducible! This problem is probably caused by a bug in Sage's factoring."
         return f0.extension(G, 'y')
     else:
         # it seems that k is simply a rational function field
-        return FunctionField(k.base_ring(), k.variable_name())
+        if hasattr(k, "constant_base_field"):
+            l = k.constant_base_field()
+        else:
+            l = k.base_ring()
+        if l.is_finite() and not l in FiniteFields:
+            l1, _ = make_finite_field(l)
+            # now l1 is an isomorphic field
+        else:
+            l1 = l
+        return FunctionField(l1, k.base().variable_name())
