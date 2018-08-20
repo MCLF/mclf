@@ -156,7 +156,7 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
                 g = f.denominator()
                 extensions = [FX.valuation(h) for h, m in g.factor()]
                 if f.numerator().degree() > g.degree():
-                    extensions.append(FX.valuation(FX,~FX.gen()))
+                    extensions.append(FX.valuation(~FX.gen()))
             return [PointOnSmoothProjectiveCurve(X, w) for w in extensions]
 
 
