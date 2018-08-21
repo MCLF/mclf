@@ -1205,9 +1205,6 @@ def field_of_constant_degree_of_polynomial(G, return_field=False):
         d = 1    # will be the degree of the field of constants at the end
         for p in primes(2,n+1):
             while p.divides(n):
-                # attention: the latter condition is just to make this
-                # feasable; the result of this function is therefore
-                # not provably correct!
                 try:
                     K1 = K.extension(p)
                 except:
@@ -1242,7 +1239,7 @@ def field_of_constant_degree_of_polynomial(G, return_field=False):
             v = GaussValuation(G.parent(), v0)
             if v(G) == 0:
                 Gb = v.reduce(G)
-                Fb = make_function_field(Gb.base_ring())
+                Fb, _ = make_function_field(Gb.base_ring())
                 Gb = Gb.change_ring(Fb)
                 if Gb.is_irreducible():
                     dp = field_of_constant_degree_of_polynomial(Gb)

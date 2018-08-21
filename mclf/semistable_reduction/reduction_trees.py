@@ -383,7 +383,8 @@ class InertialComponent(SageObject):
         self._subtree = subtree
         self._xi = xi
         self._valuation = xi.valuation()
-        self._curve = SmoothProjectiveCurve(make_function_field(xi.valuation().residue_field()))
+        F, _ = make_function_field(xi.valuation().residue_field())
+        self._curve = SmoothProjectiveCurve(F)
         self._lower_components = {}
         self._upper_components = {}
         self._reduction_genus = {}
@@ -615,15 +616,15 @@ class InertialComponent(SageObject):
         lower_valuations = [xi.valuation() for xi in XL.points_from_inequality(f, s)]
         lower_components = []
         for v in lower_valuations:
-            F1 = make_function_field(v.residue_field())
+            F1, eta = make_function_field(v.residue_field())
             # we need to find the correct inclusion of F0 into F1
             if k0.is_prime_field():
-                phi = F0.hom(F1(v.reduce(x0)))
+                phi = F0.hom(eta(v.reduce(x0)))
             else:
                 k1 = F1.constant_base_field()
                 theta0 = FXL(v0.lift(k0.gen()))
-                psi = k0.hom([k1(F1(v.reduce(theta0)))])
-                phi = F0.hom(F1(v.reduce(x0)), psi)
+                psi = k0.hom([k1(eta(v.reduce(theta0)))])
+                phi = F0.hom(eta(v.reduce(x0)), psi)
             lower_components.append(LowerComponent(self, vL, v, phi))
         self._lower_components[u] = lower_components
         return lower_components
@@ -875,13 +876,14 @@ class LowerComponent(ReductionComponent):
 
     """
     def __init__(self, Z0, vL, v, phi):
+        from mclf.curves.smooth_projective_curves import make_finite_field
         self._inertial_component = Z0
         self._valuation = v
         self._base_valuation = vL
-        F = make_function_field(v.residue_field())
+        F, _ = make_function_field(v.residue_field())
         self._function_field = F
-        self._constant_base_field = vL.residue_field()
-        self._curve = SmoothProjectiveCurve(F, vL.residue_field())
+        self._constant_base_field, _ = make_finite_field(vL.residue_field())
+        self._curve = SmoothProjectiveCurve(F, self._constant_base_field)
         self._phi = phi
 
 
@@ -991,7 +993,7 @@ class UpperComponent(ReductionComponent):
         self._inertial_component = Z.inertial_component()
         self._base_valuation = Z.base_valuation()
         self._valuation = v
-        self._function_field = make_function_field(v.residue_field())
+        self._function_field, _ = make_function_field(v.residue_field())
         self._constant_base_field = Z.constant_base_field()
         self._curve = SmoothProjectiveCurve(self._function_field, Z.constant_base_field())
 
@@ -1064,71 +1066,68 @@ def base_change_of_function_field(F, L):
         return F0L.extension(F.polynomial().change_ring(F0L), F.variable_name())
 
 
-def make_function_field(k):
+def make_function_field(K):
     r"""
-    Return the function field corresponding to this field.
+    Return the function field isomorphic to this field, and an isomorphism.
 
     INPUT:
 
-    - ``k`` -- the residue field of a discrete valuation on a function field.
+    - ``K`` -- a field
 
-    OUTPUT:
+    OUTPUT: A pair `(F,\phi)`, where `F` is a rational function field
+    and `\phi:K\to F` is a field isomorphism.
 
-    the field `k` as a function field over the 'natural' constant base field.
+    It is assumed that such a pair exists. The typical case where we use this
+    is when `K` is the residue field of a nonstandard valuation on a function
+    field, corresponding to a type II point on the corresponding Berkovich curve.
+    Then `F=k(x)` is a rational function field over a finite field `k`. Note that
+    we will realize `k` as an absolute finite field.
 
     """
     from mclf.curves.smooth_projective_curves import make_finite_field
-    from sage.categories.finite_fields import FiniteFields
     from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
+    from sage.categories.function_fields import FunctionFields
 
-    if hasattr(k, "modulus") or hasattr(k, "polynomial"):
-        # it seems that k is an extension of a rational function field
-        k0 = k.base_field()
-        if hasattr(k0, "constant_base_field"):
-            l = k0.constant_base_field()
+
+    if hasattr(K, "modulus") or hasattr(K, "polynomial"):
+        # we hope that K is a simple finite extension of a field which is
+        # isomorphic to a rational function field
+        K_base = K.base_field()
+        F_base, phi_base = make_function_field(K_base)
+        if hasattr(K, "modulus"):
+            G = K.modulus()
         else:
-            l = k0.base_ring()
-        if l.is_finite() and not l in FiniteFields:
-            l1, phi0 = make_finite_field(l)
-            # now l1 is an isomorphic field and phi0:l-->l1 an isomorphism
-        else:
-            l1 = l
-            phi0 = l.hom(l.gen(), l)
-            # this is the identity on l
-        f0 = FunctionField(l1, k0.variable_name())
-        try:
-            phi = k0.hom(f0.gen(), phi0)
-            # the typical reason why this fails is that
-            # k0 is the fraction field of a polynomial ring
-        except:
-            k1 = FunctionField(l, k0.variable_name())
-            phi1 = k0.base().hom(k1.gen(), k1)
-            # phi1:k0 --> k1
-            phi2 = k1.hom(f0.gen(), phi0)
-            # phi2:k1 --> f0
-            # phi = phi1.post_compose(phi2)
-            phi = lambda f: phi2(phi1(f.numerator()))/phi2(phi1(f.denominator()))
-            # phi: k0 --> f0
-        if hasattr(k, "modulus"):
-            G = k.modulus()
-        else:
-            G = k.polynomial()
-        # assert G.base_ring() == phi.domain(), "G in %s, phi on %s"%(G.base_ring(), phi.domain())
-        R = PolynomialRing(f0, G.parent().variable_name())
-        G = R([phi(c) for c in G.list()])
-        # G *should* be irreducible, but unfortunately this is sometimes
-        # not true, due to a bug in Sage's factoring
-        assert G.is_irreducible(), "G must be irreducible! This problem is probably caused by a bug in Sage's factoring."
-        return f0.extension(G, 'y')
+            G = K.polynomial()
+        R = G.parent()
+        R_new = PolynomialRing(F_base, R.variable_name())
+        G_new = R_new([phi_base(c) for c in G.list()])
+        assert G_new.is_irreducible(), "G must be irreducible!"
+        # F = F_base.extension(G_new, R.variable_name())
+        F = F_base.extension(G_new, 'y')
+        # phi0 = R.hom(F.gen(), F)
+        # to construct phi:K=K_0[x]/(G) --> F=F_0[y]/(G),
+        # we first 'map' from K to K_0[x]
+        phi = K.hom(R.gen(), R, check=False)
+        # then from K_0[x] to F_0[y]
+        psi = R.hom(phi_base, R_new)
+        # then from F_0[y] to F = F_0[y]/(G)
+        phi = phi.post_compose(psi.post_compose(R_new.hom(F.gen(),F)))
+        return F, phi
     else:
-        # it seems that k is simply a rational function field
-        if hasattr(k, "constant_base_field"):
-            l = k.constant_base_field()
+        # we hope that K is isomorphic to a rational function field over a
+        # finite field
+        if K in FunctionFields():
+            # K is already a function field
+            k = K.constant_base_field()
+            k_new, phi_base = make_finite_field(k)
+            F = FunctionField(k_new, K.variable_name())
+            phi = K.hom(F.gen(), phi_base)
+            return F, phi
+        elif hasattr(K, "function_field"):
+            F1 = K.function_field()
+            phi1 = F1.coerce_map_from(K)
+            F, phi2 = make_function_field(F1)
+            phi = phi1.post_compose(phi2)
+            return F, phi
         else:
-            l = k.base_ring()
-        if l.is_finite() and not l in FiniteFields:
-            l1, _ = make_finite_field(l)
-            # now l1 is an isomorphic field
-        else:
-            l1 = l
-        return FunctionField(l1, k.base().variable_name())
+            raise NotImplementedError
