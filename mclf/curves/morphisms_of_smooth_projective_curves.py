@@ -22,7 +22,10 @@ EXAMPLES::
     sage: phi
     morphism from the smooth projective curve with Function field in y defined by y^2 - x^3 - 1
     to the smooth projective curve with Rational function field in x over Rational Field,
-    determined by inclusion of function fields
+    determined by Coercion map:
+      From: Rational function field in x over Rational Field
+      To:   Function field in y defined by y^2 - x^3 - 1
+
     sage: x0 = PointOnSmoothProjectiveCurve(X, FX.valuation(x-1))
     sage: phi.fiber(x0)
     [Point on the smooth projective curve with Function field in y defined by y^2 - x^3 - 1 with coordinates (1, u1).]

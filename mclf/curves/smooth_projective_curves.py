@@ -1311,8 +1311,6 @@ def make_finite_field(k):
     with a finite field as a base field.
 
     """
-    from sage.categories.finite_fields import FiniteFields
-
     assert k.is_field()
     assert k.is_finite()
     if not hasattr(k, "base_field"):
