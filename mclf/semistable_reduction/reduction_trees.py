@@ -1176,7 +1176,6 @@ class UpperComponent(ReductionComponent):
         v0 = Z.valuation()
         F0 = Z.function_field()
         # we need the isomorphism between the residue field of v0 and F0:
-        to_F0 = Z._to_function_field
         from_F0 = Z._from_function_field
         # we have to find an element x0 in F which reduces to the generator
         # of F0
