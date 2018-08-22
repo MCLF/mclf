@@ -1112,6 +1112,7 @@ class LowerComponent(ReductionComponent):
                     then
                       Function Field endomorphism of Rational function field in x over Finite Field of size 3
                       Defn: x |--> x
+            <BLANKLINE>
 
         """
         return self._map_to_inertial_component
