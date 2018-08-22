@@ -1239,7 +1239,7 @@ def field_of_constant_degree_of_polynomial(G, return_field=False):
             v = GaussValuation(G.parent(), v0)
             if v(G) == 0:
                 Gb = v.reduce(G)
-                Fb, _ = make_function_field(Gb.base_ring())
+                Fb, _, _ = make_function_field(Gb.base_ring())
                 Gb = Gb.change_ring(Fb)
                 if Gb.is_irreducible():
                     dp = field_of_constant_degree_of_polynomial(Gb)
@@ -1287,7 +1287,7 @@ def extension_of_finite_field(K, n):
     assert K.is_field()
     assert K.is_finite()
     q = K.order()
-    R = PolynomialRing(K, 'z')
+    R = PolynomialRing(K, 'z'+str(n))
     z = R.gen()
     # we look for a small number e dividing q^n-1 but not q-1
     e = min([d for d in (q**n-1).divisors() if not d.divides(q-1)])
@@ -1304,8 +1304,8 @@ def make_finite_field(k):
 
     - ``k`` -- a finite field
 
-    OUTPUT: a pair `(k_1,\phi)` where `k_1` is a 'true' finite field
-    and `\phi` is an isomorphism from `k` to `k_1`.
+    OUTPUT: a triple `(k_1,\phi,\psi)` where `k_1` is a 'true' finite field,
+    `\phi` is an isomorphism from `k` to `k_1` and `\psi` is the inverse of `\phi`.
 
     This function is useful when `k` is constructed as a tower of extensions
     with a finite field as a base field.
@@ -1315,22 +1315,30 @@ def make_finite_field(k):
 
     assert k.is_field()
     assert k.is_finite()
-    if k in FiniteFields:
-        return k, k.hom(k.gen(), k)
+    if not hasattr(k, "base_field"):
+        return k, k.hom(k), k.hom(k)
     else:
         k0 = k.base_field()
         G = k.modulus()
         assert G.parent().base_ring() is k0
-        k0_new, phi0 = make_finite_field(k0)
+        k0_new, phi0, _ = make_finite_field(k0)
         G_new = G.map_coefficients(phi0, k0_new)
         k_new = k0_new.extension(G_new.degree())
         alpha = G_new.roots(k_new)[0][0]
-        Pk0 = k.cover_ring()
-        Pk0_new = k0_new[Pk0.variable_name()]
-        psi1 = Pk0.hom(phi0, Pk0_new)
-        psi2 = Pk0_new.hom(alpha, k_new)
-        psi = psi1.post_compose(psi2)
-        # psi: Pk0 --> k_new
-        phi = k.hom(Pk0.gen(), Pk0, check=False)
-        phi = phi.post_compose(psi)
-        return k_new, phi
+        try:
+            phi = k.hom(alpha, k_new)
+        except Exception:
+            Pk0 = k.cover_ring()
+            Pk0_new = k0_new[Pk0.variable_name()]
+            psi1 = Pk0.hom(phi0, Pk0_new)
+            psi2 = Pk0_new.hom(alpha, k_new)
+            psi = psi1.post_compose(psi2)
+            # psi: Pk0 --> k_new
+            phi = k.hom(Pk0.gen(), Pk0, check=False)
+            phi = phi.post_compose(psi)
+        alpha_new = k_new.gen()
+        for alpha, e in alpha_new.minpoly().roots(k):
+            if phi(alpha) == alpha_new:
+                break
+        phi_inverse = k_new.hom(alpha, k)
+        return k_new, phi, phi_inverse

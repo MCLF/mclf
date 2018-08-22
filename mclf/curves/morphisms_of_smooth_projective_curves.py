@@ -102,8 +102,10 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
         self._Y = Y
         if phi==None:
             assert FY.is_subring(FX), "the function field of Y has to be a subfield of the function field of X"
-            self._phi = None
+            self._phi = FX.coerce_map_from(FY)
         else:
+            assert phi.domain() is FY, "the domain of phi must be %s"%FY
+            assert phi.codomain() is FX, "the codomain of phi must be %s"%FX
             self._phi = phi
 
 
@@ -112,6 +114,7 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
             return "morphism from %s \nto %s,\ndetermined by inclusion of function fields"%(self.domain(), self.codomain())
         else:
             return "morphism from %s \nto %s,\ndetermined by %s"%(self.domain(), self.codomain(), self._phi)
+
 
     def domain(self):
         r""" Return the domain of this morphism.
@@ -123,6 +126,20 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
         r""" Return the codomain of this morphism.
         """
         return self._Y
+
+
+    def pulback_map(self):
+        r""" Return the induced inclusion of function fields.
+
+        """
+        return self._phi
+
+
+    def pullback(self, f):
+        r""" Return the pullback of a function under this morphism.
+
+        """
+        return self.pullback_map(f)
 
 
     def fiber(self, P):
@@ -142,7 +159,7 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
         FX = X.function_field()
         FY = self.codomain().function_field()
         v = P.valuation()
-        if self._phi==None:
+        if FY.is_subring(FX):
             # FY is a subfield of FX
             return [PointOnSmoothProjectiveCurve(self.domain(), w) for w in v.extensions(FX)]
         else:
