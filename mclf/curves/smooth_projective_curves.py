@@ -351,6 +351,20 @@ class SmoothProjectiveCurve(SageObject):
         return self._function_field.base_field()
 
 
+    def structure_map(self):
+        r""" Return the canonical map from this curve to the projective line.
+
+        """
+        if hasattr(self, "_structure_map"):
+            return self._structure_map
+        else:
+            from mclf.curves.morphisms_of_smooth_projective_curves import\
+                                               MorphismOfSmoothProjectiveCurves
+            X = SmoothProjectiveCurve(self.rational_function_field())
+            self._structure_map = MorphismOfSmoothProjectiveCurves(self, X)
+            return self._structure_map
+
+
     def coordinate_functions(self):
         r""" Return a list of coordinate functions.
 
