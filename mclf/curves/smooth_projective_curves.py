@@ -793,13 +793,13 @@ class SmoothProjectiveCurve(SageObject):
 
         .. MATH::
 
-             \zeta(X,s) := \prod_x \frac{1}{1-N(x)^(-s)},
+             \zeta(X,s) := \prod_x \frac{1}{1-N(x)^{-s}},
 
         where `x` runs over over all closed points of `X` and `N(x)`
         denotes the cardinality of the residue field of `x`.
 
         If `X` is a smooth projective curve over a field with
-        `q` elements, then `\zeta(X,s) = Z(X,q^(-s))`,
+        `q` elements, then `\zeta(X,s) = Z(X,q^{-s})`,
         where `Z(X,T)` is a rational function in `T` of the form
 
         .. MATH::
@@ -1297,6 +1297,11 @@ def extension_of_finite_field(K, n):
     This function is useful if `K` is constructed as an explicit extension
     `K = K_0[x]/(f)`; then ``K.extension(n)`` is not implemented.
 
+    .. NOTE::
+
+        This function should be removed once ``trac.sagemath.org/ticket/26103``
+        has been merged.
+
     """
     assert K.is_field()
     assert K.is_finite()
@@ -1323,6 +1328,12 @@ def make_finite_field(k):
 
     This function is useful when `k` is constructed as a tower of extensions
     with a finite field as a base field.
+
+    .. NOTE::
+
+        This function should be removed once ``trac.sagemath.org/ticket/26103``
+        has been merged.
+
 
     """
     assert k.is_field()
