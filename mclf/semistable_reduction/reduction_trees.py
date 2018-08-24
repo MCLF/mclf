@@ -169,6 +169,7 @@ class ReductionTree(SageObject):
 
         In the present release, the base field `K` must be the field of rational
         numbers.
+
     """
     def __init__(self, Y, vK, T, separable_components=None):
 
@@ -383,7 +384,15 @@ class InertialComponent(SageObject):
         self._subtree = subtree
         self._xi = xi
         self._valuation = xi.valuation()
-        self._curve = SmoothProjectiveCurve(make_function_field(xi.valuation().residue_field()))
+        F, phi, psi = make_function_field(xi.valuation().residue_field())
+        k = R.base_valuation().residue_field()
+        # this is the natural constant base field of the component;
+        # we assume here that it is a finite field, and the embedding
+        # of k into F can be easily determined
+        self._component = SmoothProjectiveCurve(F, k)
+        # we have to remember the isomorphism between the residue field and F
+        self._to_function_field = phi
+        self._from_function_field = psi
         self._lower_components = {}
         self._upper_components = {}
         self._reduction_genus = {}
@@ -408,11 +417,15 @@ class InertialComponent(SageObject):
         return self._is_separable
 
 
-    def curve(self):
+    def component(self):
         r"""
         Return the smooth projective curve underlying this inertial component.
+
+        Note that the constant base field of this curve is, by definition,
+        the residue field of the base valuation. This may differ from the
+        field of constants of its function field.
         """
-        return self._curve
+        return self._component
 
 
     def function_field(self):
@@ -420,7 +433,35 @@ class InertialComponent(SageObject):
         Return the function field of this inertial component
         (which is the residue field of the valuation corresponding to it).
         """
-        return self.curve().function_field()
+        return self.component().function_field()
+
+
+    def reduce(self, f):
+        r""" Return the reduction of a rational function to this component.
+
+        INPUT:
+
+        - ``f`` -- an element of the function field of the Berkovich line
+
+        It is assumed that `f` a unit of the valuation ring corresponding to
+        this component.
+
+        OUTPUT: the image of `f` in the function field of this component.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: R.<x> = QQ[]
+            sage: Y = SuperellipticCurve(x^3-1, 2)
+            sage: Y3 = SemistableModel(Y, QQ.valuation(3))
+            sage: Z = Y3.reduction_tree().inertial_components()[1]
+            sage: f = Z.valuation().element_with_valuation(1)/3
+            sage: Z.reduce(f)
+            x
+
+        """
+        assert self.valuation()(f) ==0, "f must be a unit of the valuation ring"
+        return self._to_function_field(self.valuation().reduce(f))
 
 
     def berkovich_line(self):
@@ -587,7 +628,9 @@ class InertialComponent(SageObject):
 
         The entries of the list correspond to the irreducible components of the
         special fiber of the `v_L`-model `\mathcal{X}` (the normalization of
-        `\mathcal{X}_0`) lying over the given inertial component.
+        `\mathcal{X}_0`) lying over the given inertial component. By definition,
+        the constant base field of these components is the residue field of
+        `v_L` (and it may differ from its field of constants).
 
         """
         if u in self._lower_components.keys():
@@ -601,29 +644,49 @@ class InertialComponent(SageObject):
             L = L.ramification_subfield(u)
             vL = L.valuation()
 
+        # we construct the base change of the underlying Berkovich line
+        # to L:
         FX = self.berkovich_line().function_field()
         L = vL.domain()      # actually, this is the number field underlying L
         FXL = FunctionField(L, FX.variable_name())
+        # test that FX is a subring of FXL
+        assert FX.is_subring(FXL)
+        # hence there is a natural coercion morphism
         XL = BerkovichLine(FXL, vL)
+        # the representation of xi as a discoid on X, which is defined
+        # by an inequality v(f) >= s:
         f, s = self.type_II_point().discoid()
+        # the lower components correspon to the connected components of
+        # the base change to L of the discoid defining the inertial component:
         f = FXL(f)
+        lower_valuations = [xi.valuation() for xi in XL.points_from_inequality(f, s)]
 
+        # some preparation:
         v0 = self.valuation()
         F0 = self.function_field()
         x0 = FXL(v0.lift(v0.residue_field().gen()))
+        # x0 is a lift to FXL of the canonical coordinate on the
+        # inertial component; we need it to find the natural map from the
+        # lower components to the inertial component.
         k0 = F0.constant_base_field()
-        lower_valuations = [xi.valuation() for xi in XL.points_from_inequality(f, s)]
+        theta0 = FXL(v0.lift(k0.gen()))
+
+        # now we construct the lower components:
         lower_components = []
         for v in lower_valuations:
-            F1 = make_function_field(v.residue_field())
-            # we need to find the correct inclusion of F0 into F1
+            F1, to_F1, _ = make_function_field(v.residue_field())
+            # we need to find the correct inclusion phi of F0 into F1
             if k0.is_prime_field():
-                phi = F0.hom(F1(v.reduce(x0)))
+                # we don't have to worry about the right embedding of the
+                # constant base field
+                phi = F0.hom(to_F1(v.reduce(x0)))
             else:
                 k1 = F1.constant_base_field()
-                theta0 = FXL(v0.lift(k0.gen()))
-                psi = k0.hom([k1(F1(v.reduce(theta0)))])
-                phi = F0.hom(F1(v.reduce(x0)), psi)
+                # we have to be careful about the correct embedding of k0 into k1
+                phi_base = k0.hom([k1(to_F1(v.reduce(theta0)))])
+                # now phi is determined by phi_base and the image of the
+                # natural coordinate of F0
+                phi = F0.hom(to_F1(v.reduce(x0)), phi_base)
             lower_components.append(LowerComponent(self, vL, v, phi))
         self._lower_components[u] = lower_components
         return lower_components
@@ -647,7 +710,7 @@ class InertialComponent(SageObject):
             if xi1.type() == "II":
                 eta = TypeVPointOnBerkovichLine(xi0, xi1)
                 v = eta.minor_valuation()
-                outgoing_edges.append(PointOnSmoothProjectiveCurve(self.curve(), v))
+                outgoing_edges.append(PointOnSmoothProjectiveCurve(self.component(), v))
         return outgoing_edges
 
 
@@ -680,7 +743,7 @@ class InertialComponent(SageObject):
         for z in self.outgoing_edges():
             for Xb in self.lower_components(u):
                 for x in Xb.map_to_inertial_component().fiber(z):
-                    assert x.curve()==Xb.curve(), "x = %s,\nXb=%s"%(x,Xb)
+                    assert x.curve()==Xb.component(), "x = %s,\nXb=%s"%(x,Xb)
                     ret += Xb.fiber_degree_in_upper_components(x)
         return ret
 
@@ -778,6 +841,14 @@ class ReductionComponent(SageObject):
     The superclass for the classes ``LowerComponent`` and ``UpperComponent``.
 
     """
+    # private attributes:
+    #
+    # _inertial_component
+    # _valuation
+    # _base_valuation
+    # _component
+    # _to_function_field
+
 
     def reduction_tree(self):
         r"""
@@ -819,12 +890,12 @@ class ReductionComponent(SageObject):
         return self._valuation
 
 
-    def curve(self):
+    def component(self):
         r"""
         Return the normalization of this reduction component.
 
         """
-        return self._curve
+        return self._component
 
 
     def function_field(self):
@@ -836,30 +907,68 @@ class ReductionComponent(SageObject):
         the domain of `v`, which is the function field of the generic fiber.
 
         """
-        return self._function_field
+        return self.component().function_field()
+
+
+    def function_field_of_generic_fiber(self):
+        r""" Return the function field of the generic fiber of the model
+        underlying this reduction component.
+
+        """
+        return self.valuation().domain()
 
 
     def constant_base_field(self):
         r"""
         Return the constant base field of this reduction component.
 
+        Note that this field is isomorphic but not equal to the residue field
+        of the base valuation. The isomorphism can be obtained via the
+        restriction of isomorphism between the residue field of the valuation
+        corresponding to the component and the function field of the component
+        (can be obtained via ``self.from_residue_field()``).
+
         """
-        return self._constant_base_field
+        return self.component().constant_base_field()
 
 
     def multiplicity(self):
         r"""
         Return the multiplicity of this reduction component.
 
+        By definition, this is equal to the ramification index of the valuation
+        corresponding to this component over the base valuation.
         """
         pi_L = self.base_valuation().uniformizer()
         pi = self.valuation().uniformizer()
         return ZZ(self.valuation()(pi_L)/self.valuation()(pi))
 
 
+    def from_residue_field(self):
+        r""" Return the isomorphism from the residue field of the valuation
+        corresponding to this reduction component to its function field.
+
+        """
+        return self._to_function_field
+
+
+    def reduce(self, f):
+        r""" Return the image of a function on the generic fiber to this component.
+
+        """
+        assert self.valuation()(f) == 0, "f must be a unit of the valuation ring"
+        return self.from_residue_field(self.valuation().reduce(f))
+
+#-------------------------------------------------------------------------------
+
 class LowerComponent(ReductionComponent):
     r"""
     Return the lower component corresponding to a given valuation.
+
+    A *lower component* is a reduction component `Z` on the base change `X_L`
+    of the Berkovich line `X` to some finite extension `L/K`. It is by construction
+    the inverse image of a given inertial component `Z_0` on `X`, which is part
+    of a *reduction tree*.
 
     INPUT:
 
@@ -874,15 +983,37 @@ class LowerComponent(ReductionComponent):
     OUTPUT: The lower component above `Z` corresponding to `v`.
 
     """
+    # private attributes, from parent:
+    # _inertial_component
+    # _base_valuation
+    # _component
+    # _to_function_field
+
+    # own private attibutes:
+    #
+    # _inertial_component
+    # _map_to_inertial_component
+
     def __init__(self, Z0, vL, v, phi):
+        from mclf.curves.smooth_projective_curves import make_finite_field
         self._inertial_component = Z0
         self._valuation = v
         self._base_valuation = vL
-        F = make_function_field(v.residue_field())
-        self._function_field = F
-        self._constant_base_field = vL.residue_field()
-        self._curve = SmoothProjectiveCurve(F, vL.residue_field())
-        self._phi = phi
+        F, to_F, from_F = make_function_field(v.residue_field())
+        self._to_function_field = to_F
+        self._from_function_field = from_F
+        k, _, _ = make_finite_field(vL.residue_field())
+        # we force k to be the constant base field of the component;
+        # note that we can ignore the isomorphism, because
+        # - as an absolute finite field, k can be coerced into F,
+        # - the embedding itself is irrelevant; only the image matters
+        self._component = SmoothProjectiveCurve(F, k)
+        # construct the natural morphis Z-->Z0;
+        # the corresponding morphis of function fields is the given embedding
+        # phi of the function field of Z0 into the residue field of v,
+        # composed with the canonical isomorphism to F
+        self._map_to_inertial_component = MorphismOfSmoothProjectiveCurves(
+                self.component(), Z0.component(), phi.post_compose(to_F) )
 
 
     def __repr__(self):
@@ -919,14 +1050,18 @@ class LowerComponent(ReductionComponent):
         from sage.geometry.newton_polygon import NewtonPolygon
         from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
         v = self.valuation()
+        FXL = v.domain()
+        # this is the function field of X_L, on which this lower component lives
         FY = self.reduction_tree().curve().function_field()
-        FYL = base_change_of_function_field(FY, self.base_field())
-        FXL = FYL.rational_function_field()
-        assert v.domain() == FXL
-        G = FYL.polynomial()
+        # this is the function field of Y;
+        # we construct the function field of Y_L, on which the upper components live:
+        G = FY.polynomial().change_ring(FXL)
+        FYL = FXL.extension(G, FY.variable_name())
         # now FYL = FXL(y| G(y) = 0)
 
-        # we first have to make G integral with respect to v
+        # the upper components correspond to the extensions of v to FYL
+        # we use the MacLane algorithm to compute them;
+        # for this, we have to make G integral with respect to v
         np = NewtonPolygon([(i,v(G[i])) for i in range(G.degree() + 1)])
         r = np.slopes()[-1]   # the largest slope
         if r <= 0:      # G is integral w.r.t. v
@@ -954,10 +1089,22 @@ class LowerComponent(ReductionComponent):
         r"""
         Return the natural map from this lower component to its inertial component.
 
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: R.<x> = QQ[]
+            sage: Y = SuperellipticCurve(x^3-x, 2)
+            sage: Y3 = SemistableModel(Y,QQ.valuation(3))
+            sage: Z = Y3.reduction_tree().inertial_components()[0]
+            sage: W = Z.lower_components()[0]
+            sage: f = W.map_to_inertial_component()
+            sage: f.domain()
+            the smooth projective curve with Rational function field in x over Finite Field of size 3
+            sage: f.codomain()
+            the smooth projective curve with Rational function field in x over Finite Field of size 3
+
         """
-        # we hope that this works by the natural inclusion of function fields:
-        return MorphismOfSmoothProjectiveCurves(self.curve(),
-                self.inertial_component().curve(), self._phi)
+        return self._map_to_inertial_component
 
 
     def fiber_degree_in_upper_components(self, P):
@@ -966,16 +1113,18 @@ class LowerComponent(ReductionComponent):
         all upper components.
 
         """
-        assert P.curve()==self.curve(), "P must be a point on this lower component"
+        assert P.curve()==self.component(), "P must be a point on this lower component"
         ret = 0
         for Yb in self.upper_components():
             ret += Yb.map_to_lower_component().fiber_degree(P)
         return ret
 
+#------------------------------------------------------------------------------
 
 class UpperComponent(ReductionComponent):
     r"""
-    Return the upper component corresponding to a given valuation.
+    Return the upper component above this lower component,
+    corresponding to a given valuation.
 
     INPUT:
 
@@ -983,17 +1132,59 @@ class UpperComponent(ReductionComponent):
     - ``v`` -- a discrete valuation on the base extension to `L` of the function
       field `F_Y`, extending the valuation corresponding to `Z`
 
-    OUTPUT: The lower component above `Z` corresponding to `v`.
+    OUTPUT: The upper component above `Z` corresponding to `v`.
+
+    Note that the constant base fields of the upper and the lower components
+    are equal, by definition, and isomorphic to the residue field of `L`.
 
     """
+    # private attributes, from parent:
+    #
+    # _inertial_component
+    # _valuation
+    # _base_valuation
+    # _component
+    # _to_function_field
+    #
+    # own private attributes:
+    #
+    # _lower_component
+    # _map_to_lower_component
+
     def __init__(self, Z, v):
-        self._lower_component = Z
+
         self._inertial_component = Z.inertial_component()
+        self._lower_component = Z
         self._base_valuation = Z.base_valuation()
         self._valuation = v
-        self._function_field = make_function_field(v.residue_field())
-        self._constant_base_field = Z.constant_base_field()
-        self._curve = SmoothProjectiveCurve(self._function_field, Z.constant_base_field())
+        F, to_F, from_F = make_function_field(v.residue_field())
+        self._component = SmoothProjectiveCurve(F, Z.constant_base_field())
+        # we have to construct the embedding of the function field of Z into
+        # the function field of W (this component), which gives rise to the
+        # natural map W-->Z. The defining property of this embedding is its
+        # compatibility with the canonical embedding of FXL into FYL
+        v0 = Z.valuation()
+        F0 = Z.function_field()
+        # we need the isomorphism between the residue field of v0 and F0:
+        from_F0 = Z._from_function_field
+        # we have to find an element x0 in F which reduces to the generator
+        # of F0
+        x0 = to_F(v.reduce(v0.lift(from_F0(F0.gen()))))
+        # we also have to define the right map between the constant base fields
+        k0 = F0.constant_base_field() # note: this may not the equal to the
+                                      # constant base field of Z
+        k = F.constant_base_field()   # and this may not be equal to the cbf of W
+        if k0.is_prime_field():
+            # there is no choice; we can take the identity on k0:
+            phi_base = k0.hom(k0)
+        else:
+            # we have to find the element in k to which a generator
+            # of k0 has to be mapped
+            alpha = to_F(v.reduce((v0.lift(from_F0(k0.gen())))))
+            phi_base = k0.hom(alpha, k)
+        phi = F0.hom(x0, phi_base)
+        self._map_to_lower_component = MorphismOfSmoothProjectiveCurves(
+                self._component, Z.component(), phi )
 
 
     def __repr__(self):
@@ -1005,7 +1196,7 @@ class UpperComponent(ReductionComponent):
         Return the genus of this upper reduction component.
 
         """
-        return self.curve().genus()
+        return self.component().genus()
 
 
     def field_of_constants_degree(self):
@@ -1014,7 +1205,7 @@ class UpperComponent(ReductionComponent):
         of this upper reduction component.
 
         """
-        return self.curve().field_of_constants_degree()
+        return self.component().field_of_constants_degree()
 
 
     def lower_component(self):
@@ -1029,8 +1220,8 @@ class UpperComponent(ReductionComponent):
         Return the natural map from this upper component to the lower component beneath.
 
         """
-        # we hope that this works by the natural inclusion of function fields:
-        return MorphismOfSmoothProjectiveCurves(self.curve(), self.lower_component().curve())
+        return self._map_to_lower_component
+
 
 
 #-----------------------------------------------------------------------------
@@ -1038,57 +1229,77 @@ class UpperComponent(ReductionComponent):
 #                       auxiliary functions
 #                       -------------------
 
-def base_change_of_function_field(F, L):
+
+
+def make_function_field(K):
     r"""
-    Return the base change of a function field with respect to an extension
-    of the base field.
+    Return the function field isomorphic to this field, an isomorphism,
+    and its inverse.
 
     INPUT:
 
-    - ``F`` -- a function field over a field `K`
-    - ``L`` -- a finite field extension of `K`
+    - ``K`` -- a field
 
-    OUTPUT:
+    OUTPUT: A triple `(F,\phi,\psi)`, where `F` is a rational function field,
+    `\phi:K\to F` is a field isomorphism and `\psi` the inverse of `\phi`.
 
-    the function field `F_L:= F\otimes_K L`.
+    It is assumed that `K` is either the fraction field of a polynomial ring
+    over a finite field `k`, or a finite simple extension of such a field.
 
-    It is not checked whether the result is really a function field.
-
-    """
-    F0 = F.base()
-    F0L = FunctionField(L, F0.variable_name())
-    if F0 == F:
-        # F is a rational function field
-        return F0L
-    else:
-        return F0L.extension(F.polynomial().change_ring(F0L), F.variable_name())
-
-
-def make_function_field(k):
-    r"""
-    Return the function field corresponding to this field.
-
-    INPUT:
-
-    - ``k`` -- the residue field of a discrete valuation on a function field.
-
-    OUTPUT:
-
-    the field `k` as a function field; this is rather experimental..
+    In the first case, `F=k_1(x)` is a rational function field over a finite
+    field `k_1`, where `k_1` as an *absolute* finite field isomorphic to `k`.
+    In the second case, `F` is a finite simple extension of a rational function
+    field as in the first case.
 
     """
-    from sage.rings.function_field.function_field import is_FunctionField
-    if is_FunctionField(k):
-        return k
-    if hasattr(k, "base_field"):
-        # it seems that k is an extension of a rational function field
-        k0 = k.base_field()
-        f0 = FunctionField(k0.base_ring(), k0.base().variable_name())
-        G = k.modulus().change_ring(f0)
-        # G *should* be irreducible, but unfortunately this is sometimes
-        # not true, due to a bug in Sage's factoring
-        assert G.is_irreducible(), "G must be irreducible! This problem is probably caused by a bug in Sage's factoring."
-        return f0.extension(G, 'y')
+    from mclf.curves.smooth_projective_curves import make_finite_field
+    from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
+    from sage.categories.function_fields import FunctionFields
+
+
+    if hasattr(K, "modulus") or hasattr(K, "polynomial"):
+        # we hope that K is a simple finite extension of a field which is
+        # isomorphic to a rational function field
+        K_base = K.base_field()
+        F_base, phi_base, psi_base = make_function_field(K_base)
+        if hasattr(K, "modulus"):
+            G = K.modulus()
+        else:
+            G = K.polynomial()
+        R = G.parent()
+        R_new = PolynomialRing(F_base, R.variable_name())
+        G_new = R_new([phi_base(c) for c in G.list()])
+        assert G_new.is_irreducible(), "G must be irreducible!"
+        # F = F_base.extension(G_new, R.variable_name())
+        F = F_base.extension(G_new, 'y')
+        # phi0 = R.hom(F.gen(), F)
+        # to construct phi:K=K_0[x]/(G) --> F=F_0[y]/(G),
+        # we first 'map' from K to K_0[x]
+        phi = K.hom(R.gen(), R, check=False)
+        # then from K_0[x] to F_0[y]
+        psi = R.hom(phi_base, R_new)
+        # then from F_0[y] to F = F_0[y]/(G)
+        phi = phi.post_compose(psi.post_compose(R_new.hom(F.gen(),F)))
+        psi = F.hom(K.gen(), psi_base)
+        return F, phi, psi
     else:
-        # it seems that k is simply a rational function field
-        return FunctionField(k.base_ring(), k.variable_name())
+        # we hope that K is isomorphic to a rational function field over a
+        # finite field
+        if K in FunctionFields():
+            # K is already a function field
+            k = K.constant_base_field()
+            k_new, phi_base, psi_base = make_finite_field(k)
+            F = FunctionField(k_new, K.variable_name())
+            phi = K.hom(F.gen(), phi_base)
+            psi = F.hom(K.gen(), psi_base)
+            return F, phi, psi
+        elif hasattr(K, "function_field"):
+            F1 = K.function_field()
+            phi1 = F1.coerce_map_from(K)
+            psi1 = F1.hom(K.gen())
+            F, phi2, psi2 = make_function_field(F1)
+            phi = phi1.post_compose(phi2)
+            psi = psi2.post_compose(psi1)
+            return F, phi, psi
+        else:
+            raise NotImplementedError

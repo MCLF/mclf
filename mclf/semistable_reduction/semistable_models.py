@@ -319,7 +319,7 @@ class SemistableModel(SageObject):
         """
         components = []
         for Z in self.reduction_tree().inertial_components():
-            components += [W.curve() for W in Z.upper_components()]
+            components += [W.component() for W in Z.upper_components()]
         return components
 
 
@@ -346,7 +346,7 @@ class SemistableModel(SageObject):
             sage: f = x^4+2*x^3+2*x^2+x
             sage: Y = SuperellipticCurve(f, 3)
             sage: Y3 = SemistableModel(Y, QQ.valuation(3))
-            sage: Y3.conductor_exponent()    
+            sage: Y3.conductor_exponent()
             11
 
         """
