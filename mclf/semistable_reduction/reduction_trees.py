@@ -1097,22 +1097,11 @@ class LowerComponent(ReductionComponent):
             sage: Y3 = SemistableModel(Y,QQ.valuation(3))
             sage: Z = Y3.reduction_tree().inertial_components()[0]
             sage: W = Z.lower_components()[0]
-            sage: W.map_to_inertial_component()
-            morphism from the smooth projective curve with Rational function field in x over Finite Field of size 3
-            to the smooth projective curve with Rational function field in x over Finite Field of size 3,
-            determined by Composite map:
-              From: Rational function field in x over Finite Field of size 3
-              To:   Rational function field in x over Finite Field of size 3
-              Defn:   Function Field endomorphism of Rational function field in x over Finite Field of size 3
-                      Defn: x |--> x
-                    then
-                      Isomorphism morphism:
-                      From: Fraction Field of Univariate Polynomial Ring in x over Finite Field of size 3
-                      To:   Rational function field in x over Finite Field of size 3
-                    then
-                      Function Field endomorphism of Rational function field in x over Finite Field of size 3
-                      Defn: x |--> x
-            <BLANKLINE>
+            sage: f = W.map_to_inertial_component()
+            sage: f.domain()
+            the smooth projective curve with Rational function field in x over Finite Field of size 3
+            sage: f.codomain()
+            the smooth projective curve with Rational function field in x over Finite Field of size 3
 
         """
         return self._map_to_inertial_component
