@@ -1,0 +1,6 @@
+name: readthedocs
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - sage=8.3

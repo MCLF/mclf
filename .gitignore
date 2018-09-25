@@ -9,5 +9,5 @@ test/
 build/
 
 # ignore installation files
-mclf.egg-info/
+*.egg-info/
 dist

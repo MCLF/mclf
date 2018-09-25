@@ -67,14 +67,13 @@ jobs:
             sage -sh -c 'make html SPHINXOPTS="-W"'
   docbuild-readthedocs:
     docker:
-      - image: readthedocs/build
+      - image: readthedocs/build:latest
     steps:
       - checkout
       - run:
           command: |
             set -exo pipefail
-            pip install --user readthedocs-build
-            mkdir -p docs/_static
+            conda env create --name rtd --file docs/environment.yml
             ~/.local/bin/rtd-build 2>&1 | tee /tmp/rtd.log
             # fail on warnings
             grep WARNING /tmp/rtd.log && false
