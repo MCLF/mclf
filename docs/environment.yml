@@ -2,4 +2,4 @@ name: readthedocs
 channels:
   - conda-forge
 dependencies:
-  - sage=8.3
+  - sagelib=8.3
