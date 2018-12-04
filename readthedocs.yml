@@ -1,5 +1,5 @@
 build:
-    image: 1.0
+    image: 2.0
 
 python:
     version: 2.7
