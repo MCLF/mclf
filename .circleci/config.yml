@@ -76,8 +76,8 @@ jobs:
             conda update -n base conda
             conda env create --name rtd --file docs/environment.yml
             conda install --yes --name rtd mock pillow sphinx sphinx_rtd_theme
-            python /home/docs/.conda/rtd/bin/pip install -U recommonmark readthedocs-sphinx-ext
-            python /home/docs/.conda/rtd/bin/sphinx-build -T -b readthedocs -d _build/doctrees-readthedocs -D language=en . _build/html | tee /tmp/rtd.log
+            python /home/docs/.conda/envs/rtd/bin/pip install -U recommonmark readthedocs-sphinx-ext
+            python /home/docs/.conda/envs/rtd/bin/sphinx-build -T -b readthedocs -d _build/doctrees-readthedocs -D language=en . _build/html | tee /tmp/rtd.log
             # fail on warnings
             grep WARNING /tmp/rtd.log && false
             # check that readthedocs produced something non-empty
