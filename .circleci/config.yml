@@ -73,6 +73,7 @@ jobs:
       - run:
           command: |
             set -exo pipefail
+            conda update -n base conda
             conda env create --name rtd --file docs/environment.yml
             conda install --yes --name rtd mock pillow sphinx sphinx_rtd_theme
             python /home/docs/.conda/rtd/bin/pip install -U recommonmark readthedocs-sphinx-ext
