@@ -455,7 +455,7 @@ class InertialComponent(SageObject):
             sage: Y = SuperellipticCurve(x^3-1, 2)
             sage: Y3 = SemistableModel(Y, QQ.valuation(3))
             sage: Z = Y3.reduction_tree().inertial_components()[1]
-            sage: f = Z.valuation().element_with_valuation(1)/3
+            sage: f = Z.valuation().element_with_valuation(1/2)^2/3
             sage: Z.reduce(f)
             x
 
@@ -1062,7 +1062,7 @@ class LowerComponent(ReductionComponent):
         # the upper components correspond to the extensions of v to FYL
         # we use the MacLane algorithm to compute them;
         # for this, we have to make G integral with respect to v
-        np = NewtonPolygon([(i,v(G[i])) for i in range(G.degree() + 1)])
+        np = NewtonPolygon([(i, v(G[i])) for i in range(G.degree() + 1)])
         r = np.slopes()[-1]   # the largest slope
         if r <= 0:      # G is integral w.r.t. v
             upper_valuations = [FYL.valuation(w)
@@ -1070,20 +1070,19 @@ class LowerComponent(ReductionComponent):
         else:           # G is not integral
             vK = self.reduction_tree().base_valuation()
             pi = vK.uniformizer()           # we construct a function field FYL1
-            k = QQ(r/v(pi)).ceil()          # isomorphic to FYL, but with
+            k = QQ(r / v(pi)).ceil()          # isomorphic to FYL, but with
             R1 = PolynomialRing(FXL, 'y1')  # integral equation G_1
             y1 = R1.gen()
-            G1 = G(pi**(-k)*y1).monic()
+            G1 = G(pi**(-k) * y1).monic()
             assert all([v(c) >= 0 for c in G1.coefficients()]), "new G is not integral!"
             FYL1 = FXL.extension(G1, 'y1')
             y1 = FYL1.gen()
             V = v.mac_lane_approximants(G1, require_incomparability=True)
             V = [FYL1.valuation(w) for w in V]   # the extensions of v to FYL1
             upper_valuations = [FYL.valuation((w,
-                    FYL.hom(y1/pi**k), FYL1.hom(pi**k*FYL.gen()))) for w in V]
-                                                 # made into valuations on FYL
+                FYL.hom(y1 / pi**k), FYL1.hom(pi**k * FYL.gen()))) for w in V]
+            #                                      made into valuations on FYL
         return [UpperComponent(self, w) for w in upper_valuations]
-
 
     def map_to_inertial_component(self):
         r"""
@@ -1106,7 +1105,6 @@ class LowerComponent(ReductionComponent):
         """
         return self._map_to_inertial_component
 
-
     def fiber_degree_in_upper_components(self, P):
         r"""
         Return the sum of the absolute degrees of the points above ``P`` on
@@ -1119,7 +1117,8 @@ class LowerComponent(ReductionComponent):
             ret += Yb.map_to_lower_component().fiber_degree(P)
         return ret
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 class UpperComponent(ReductionComponent):
     r"""
@@ -1171,9 +1170,9 @@ class UpperComponent(ReductionComponent):
         # of F0
         x0 = to_F(v.reduce(v0.lift(from_F0(F0.gen()))))
         # we also have to define the right map between the constant base fields
-        k0 = F0.constant_base_field() # note: this may not the equal to the
-                                      # constant base field of Z
-        k = F.constant_base_field()   # and this may not be equal to the cbf of W
+        k0 = F0.constant_base_field()  # note: this may not the equal to the
+        #                                constant base field of Z
+        k = F.constant_base_field()    # and this may not be equal to the cbf of W
         if k0.is_prime_field():
             # there is no choice; we can take the identity on k0:
             phi_base = k0.hom(k0)
@@ -1184,12 +1183,10 @@ class UpperComponent(ReductionComponent):
             phi_base = k0.hom(alpha, k)
         phi = F0.hom(x0, phi_base)
         self._map_to_lower_component = MorphismOfSmoothProjectiveCurves(
-                self._component, Z.component(), phi )
-
+            self._component, Z.component(), phi)
 
     def __repr__(self):
         return "upper component of reduction tree corresponding to  %s"%self.valuation()
-
 
     def genus(self):
         r"""
@@ -1197,7 +1194,6 @@ class UpperComponent(ReductionComponent):
 
         """
         return self.component().genus()
-
 
     def field_of_constants_degree(self):
         r"""
@@ -1207,13 +1203,11 @@ class UpperComponent(ReductionComponent):
         """
         return self.component().field_of_constants_degree()
 
-
     def lower_component(self):
         r"""
         Return the lower component underneath this upper component.
         """
         return self._lower_component
-
 
     def map_to_lower_component(self):
         r"""
@@ -1222,13 +1216,12 @@ class UpperComponent(ReductionComponent):
         """
         return self._map_to_lower_component
 
-
-
-#-----------------------------------------------------------------------------
+#
+# -----------------------------------------------------------------------------
 
 #                       auxiliary functions
 #                       -------------------
-
+#
 
 
 def make_function_field(K):
@@ -1251,11 +1244,18 @@ def make_function_field(K):
     In the second case, `F` is a finite simple extension of a rational function
     field as in the first case.
 
+    .. NOTE:: this command seems to be superflous by now, because the residue
+    of a valuation is already of type "function field" whenever this makes sense.
+    It is kept for the moment for "backward compatibility" (or laziness).
+
     """
     from mclf.curves.smooth_projective_curves import make_finite_field
     from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
     from sage.categories.function_fields import FunctionFields
+    from sage.rings.function_field.function_field import is_FunctionField
 
+    if is_FunctionField(K):
+        return K, K.Hom(K).identity(), K.Hom(K).identity()
 
     if hasattr(K, "modulus") or hasattr(K, "polynomial"):
         # we hope that K is a simple finite extension of a field which is
@@ -1279,7 +1279,7 @@ def make_function_field(K):
         # then from K_0[x] to F_0[y]
         psi = R.hom(phi_base, R_new)
         # then from F_0[y] to F = F_0[y]/(G)
-        phi = phi.post_compose(psi.post_compose(R_new.hom(F.gen(),F)))
+        phi = phi.post_compose(psi.post_compose(R_new.hom(F.gen(), F)))
         psi = F.hom(K.gen(), psi_base)
         return F, phi, psi
     else:

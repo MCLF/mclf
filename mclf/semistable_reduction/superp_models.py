@@ -87,16 +87,17 @@ EXAMPLES::
     Elementary affinoid defined by
     v(x) >= 3/4
     Elementary affinoid defined by
-    v(x + 7) >= 5/4
+    v(x - 2) >= 5/4
     Elementary affinoid defined by
     v(x + 2) >= 5/4
+
     sage: YY.is_semistable()
     True
     sage: YY.components()
-    [the smooth projective curve with Function field in y defined by y^3 + 2*x^4 + 2*x^2 + 2,
-     the smooth projective curve with Function field in y defined by y^3 + y + 2*x^2,
-     the smooth projective curve with Function field in y defined by y^3 + y + 2*x^2,
-     the smooth projective curve with Function field in y defined by y^3 + y + 2*x^2]
+    [the smooth projective curve with Function field in u1 defined by u1^3 + 2*x^4 + 2*x^2 + 2,
+     the smooth projective curve with Function field in u2 defined by u2^3 + u2 + 2*x^2,
+     the smooth projective curve with Function field in u2 defined by u2^3 + u2 + 2*x^2,
+     the smooth projective curve with Function field in u2 defined by u2^3 + u2 + 2*x^2]
     sage: YY.conductor_exponent()
     12
 
@@ -123,7 +124,7 @@ TO DO:
 
 """
 
-#*****************************************************************************
+# *****************************************************************************
 #       Copyright (C) 2017-2018 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
