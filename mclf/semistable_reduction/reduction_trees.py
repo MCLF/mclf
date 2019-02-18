@@ -1013,7 +1013,7 @@ class LowerComponent(ReductionComponent):
         # phi of the function field of Z0 into the residue field of v,
         # composed with the canonical isomorphism to F
         self._map_to_inertial_component = MorphismOfSmoothProjectiveCurves(
-                self.component(), Z0.component(), phi.post_compose(to_F) )
+            self.component(), Z0.component(), phi.post_compose(to_F))
 
 
     def __repr__(self):
@@ -1244,9 +1244,13 @@ def make_function_field(K):
     In the second case, `F` is a finite simple extension of a rational function
     field as in the first case.
 
-    .. NOTE:: this command seems to be superflous by now, because the residue
+    .. NOTE::
+
+    this command seems to be partly superflous by now, because the residue
     of a valuation is already of type "function field" whenever this makes sense.
-    It is kept for the moment for "backward compatibility" (or laziness).
+    However, even if `K` is a function field over a finite field, it is not
+    guaranteed that the constant base field is a 'true' finite field, and then
+    it is important to change that.
 
     """
     from mclf.curves.smooth_projective_curves import make_finite_field
@@ -1255,7 +1259,24 @@ def make_function_field(K):
     from sage.rings.function_field.function_field import is_FunctionField
 
     if is_FunctionField(K):
-        return K, K.Hom(K).identity(), K.Hom(K).identity()
+        k = K.constant_base_field()
+        if k.is_finite() and hasattr(k, "base_field"):
+            # k seems to be finite, but not a true finite field
+            # we construct a true finite field k1 isomorphic to k
+            # and F isomorphic to K with constant base field k1
+            k1, phi, psi = make_finite_field(k)
+            if hasattr(K, "polynomial"):
+                # K is an extension of a rational function field
+                K0 = K.rational_function_field()
+                F0, phi0, psi0 = make_function_field(K0)
+                f = K.polynomial().change_ring(phi0)
+                F = F0.extension(f)
+                return F, K.hom(F.gen(), phi0), F.hom(K.gen(), psi0)
+            else:
+                F = FunctionField(k1, K.variable_name())
+                return F, K.hom(F.gen(), phi), F.hom(K.gen(), psi)
+        else:
+            return K, K.Hom(K).identity(), K.Hom(K).identity()
 
     if hasattr(K, "modulus") or hasattr(K, "polynomial"):
         # we hope that K is a simple finite extension of a field which is
