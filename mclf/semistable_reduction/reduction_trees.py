@@ -1246,11 +1246,11 @@ def make_function_field(K):
 
     .. NOTE::
 
-    this command seems to be partly superflous by now, because the residue
-    of a valuation is already of type "function field" whenever this makes sense.
-    However, even if `K` is a function field over a finite field, it is not
-    guaranteed that the constant base field is a 'true' finite field, and then
-    it is important to change that.
+        this command seems to be partly superflous by now, because the residue
+        of a valuation is already of type "function field" whenever this makes sense.
+        However, even if `K` is a function field over a finite field, it is not
+        guaranteed that the constant base field is a 'true' finite field, and then
+        it is important to change that.
 
     """
     from mclf.curves.smooth_projective_curves import make_finite_field
