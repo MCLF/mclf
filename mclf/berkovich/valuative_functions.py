@@ -1,23 +1,8 @@
 r""" Valuative functions on the Berkovich projective line.
 =========================================================
 
-Let `K` be a field and `v_K` a discrete valuation on `K`. Let `X=\mathbb{P}^1_K`
-be the projective line over `K`. Let `X^{an}` denote the
-`(K,v_K)`-analytic space associated to `X`. We call `X^{an}` the *Berkovich
-line* over `K`.
-
-According to [Ber1990], `X^{an}` is a simply connected quasi-polyhedron.
-Basically, this means that any two points `\xi_1,\xi_2` are the endpoints
-of a unique interval `[\xi_1,\xi_2]\subset X^{an}`. There is a canonical affine
-and metric structure on these intervals. So `[\xi_1,\xi_2]\cong [a,b]` such
-that '|a-b|' is independent of the choices (if `\xi_1` is a point of type I
-then `a=-\infty`, and similar for `\xi_2` and `b`).
-
-Let `T` be a *Berkovich tree* inside `X^{an}`, see ??. Then `T` spans a
-metric tree `|T|` inside `X^{an}` (where 'metric' has to be understood properly;
-the points of type I lie at 'infinity').  The `edges` of `|T|` are precisely
-the intervals between the points corresponding to the adjacent vertices.
-Therefore, the edges of `|T|` have a canonical affine structure.
+Let `K` be a field, `v_K` a discrete valuation on `K` and `X=\mathbb{P}^1_K`
+the *Berkovich line* over `K`.
 
 Let `f in F=K(x)` be a nonzero rational function. We associate to `f`
 the function
@@ -38,14 +23,12 @@ tree `T` (see ??) such that `H` is an affine function on every edge of `|T|`.
 Also, any refinement of `T` has the same property. We call `T` *compatible*
 with `H`.
 
-In this module we provide a class for working with harmonic functions on the
-Berkovich line. Our main algorithms computes, from the input of a finite list
-of harmonic functions, a Berkovich tree `T` compatible with all elements of the
-list.
+In this module we provide a class for working with valuative functions on the
+Berkovich line.
 
 AUTHORS:
 
-- Stefan Wewers (2017-02-13): initial version
+- Stefan Wewers (2017-2019)
 
 
 EXAMPLES::
@@ -63,8 +46,8 @@ EXAMPLES::
 #                  https://www.gnu.org/licenses/
 # *****************************************************************************
 
-from sage.all import SageObject, Infinity
-from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
+from sage.all import SageObject
+from mclf.berkovich.berkovich_trees import BerkovichTree
 
 
 class ValuativeFunction(SageObject):
@@ -74,74 +57,90 @@ class ValuativeFunction(SageObject):
 
     - ``X`` -- a Berkovich line
     - ``L`` -- a list of pairs `(f, a)`, or triples `(f, a, [\xi])`, consisting of
-                 - a polynomial `f`
+                 - a polynomial `f` (element of the function field on `X`)
                  - a nonzero rational number `a`, and *possibly*
-                 - the list of zeroes of `f`, if ``zeroes_are_given`` is true
+                 - a list of type-I-points `[\xi]`
     - ``a_0`` -- a rational number
-    - ``root`` -- a type-II-point (default: ``None``)
-    - ``zeroes_are_given`` -- a Boolean (default: ``False``)
-    - ``assume_irreducibility`` -- a Boolean (default: ``True``)
+    - ``root`` -- a point of type I or II, or ``None`` (default: ``None``)
+    - ``assume_complete_factorization`` -- a Boolean (default: ``False``)
 
     OUTPUT:
 
-    The harmonic function on the Berkovic line `X`, given by the datum (L, a_0).
-    If `L=[(f_1, a_1),\ldots,(f_n,a_n)]` then the corresponding valuative function
+    The valuative function given by the datum (L, a_0).
+    Here `a_0` is a rational number and `L` is a list of pairs `(f_i, a_i)`,
+    where `f_i` is a polynomial in the standard parameter on the Berkovich line
+    and `a_i` is a nonzero rational number; the corresponding valuative function
     is defined as
 
     .. MATH::
 
         H(\xi) := a_0 + \sum_i a_i v(f(\xi)).
 
-    If ``root`` is given, and not equal to the Gauss point, then we only consider
-    this function on the closed diskoid with boundary point ``root``. Recall that
-    this is the set of all points on the Berkovich line which are `\geq ` to
-    ``root`` with respect to the partial ordering.
+    The domain of this function is either the full Berkovich line `X`, or a
+    closed discoid `D`.
 
-    If ``root`` is given, and equal to a point of type I (a minimal element),
-    then this closed discoid degenerates to a point. In this case, the valuative
-    function is given by one value, possibly `\pm \infty`.
+    If ``root`` is equal to the Gauss point (the default) then the domain is `X`.
+    If ``root`` not equal to the Gauss point, then the domain is the closed
+    diskoid `D` with boundary point ``root``. Recall that this is the set of all
+    points on the Berkovich line which are `\geq ` to ``root`` with respect to
+    the partial ordering.
 
-    If ``zeroes_are_given`` is ``True`` then it is assumed that ``L`` actually
-    consists of *triples* `(f, a, [\xi_1,\ldots,\xi_r])`, where the `\xi_i` are
-    the zeroes of `f`.
+    Note that ``root`` may be a point of type I (a minimal element). If this is
+    the case, then the closed discoid degenerates to a single point and the
+    valuative function is given by one value, possibly (and typically) equal to
+    `\pm \infty`.
 
-    If ``assume_irreducibility`` is ``False`` then it is not assumed that the
-    polynomials `f` are irreducible.
+    If ``assume_complete_factorization`` is ``True`` then it is assumed that the
+    list `L` consists of triples `(f, a, [\xi])`, where the `f` are irreducible
+    and pairwise prime, and `[\xi]` is the list of all zeroes of `f`. Otherwise,
+    we assume that `L` consists of pairs `(f, a)`.
+
     """
 
-    def __init__(self, X, L, a_0, root=None, zeroes_are_given=False,
-                 assume_irreducibility=True):
+    def __init__(self, X, L, a_0, root=None, assume_complete_factorization=False):
 
         self._X = X
         v_K = X.base_valuation()
-
-        if not assume_irreducibility:
-            # factorize the f and recompute (L, a_0)
-            assert not zeroes_are_given, "if zeroes are given, then we must assume irreducibility"
-            L1 = []
-            for f, a in L:
-                F = f.factor()
-                a_0 = a_0 + a*v_K(F.unit())
-                L1 = L1 + [(g, a*m) for g, m in F]
-            L = L1
-
-        # compute the degree of the valuative function; this is a rational
-        # number which is positive (resp. negative) iff the valuative function
-        # takes the value -Infinity (resp. +Infinity) in the infinity point.
-        degree = sum([a*f.numerator().degree() for f, a in L])
-        self._degree = degree
+        infty = X.infty()
 
         if root is None:
             root = X.gauss_point()
-        if X.is_gauss_point(root):
+        if root.is_gauss_point():
             only_discoid = False  # we consider the full Berkovic line X
         else:
             only_discoid = True   # we restrict the function on a closed discoid
         self._root = root
         self._only_discoid = only_discoid
 
-        if not zeroes_are_given:
-            L = [(f, a, X.prime_divisor(f)) for f, a in L]
+        if not assume_complete_factorization:
+            # factor the f and recompute (L, a_0); this means also adding
+            # the zeroes of each factor
+            L1 = []
+            irreducible_factors = []
+            # note that a factor h in irreducible_factor must have the same
+            # position as the pair (h, b) in L1
+            for f, a in L:
+                F = f.factor()
+                a_0 = a_0 + a*v_K(F.unit())
+                for g, m in F:
+                    if g in irreducible_factors:
+                        # the factor g occured before
+                        i = irreducible_factors.index(g)
+                        h, b, zeroes = L1[i]
+                        assert h == g, "something is wrong!"
+                        L1[i] = (h, b + a*m, zeroes)
+                    else:
+                        zeroes = [xi for xi, m in X.prime_divisor(g)]
+                        L1.append((g, a*m, zeroes))
+                        irreducible_factors.append(g)
+            # we have recomputed L and updated a_0 accordingly
+            L = L1
+
+        # compute the degree of the valuative function; this is a rational
+        # number which is positive (resp. negative) iff the valuative function
+        # takes the value -Infinity (resp. +Infinity) in the infinity point.
+        degree = sum([a*f.numerator().degree() for f, a, zeroes in L])
+        self._degree = degree
 
         if only_discoid:
             # simplify (L, a_0) by restricting it to the discoid
@@ -156,54 +155,43 @@ class ValuativeFunction(SageObject):
             # the function is constant on the discoid if L is empty, but also
             # if the discoid is degenerate.
             is_constant = (len(L) == 0 or root.type() == "I")
-            # we can also dismiss the infinity point if it is not contained
-            # in our discoid
-            infty_is_critical = (not degree.is_zero()) and root.is_leq(X.infty())
         else:
-            # the infty point is a critical point iff the degree is not zero
-            infty_is_critical = not degree.is_zero()
             # the function is constant on the discoid if L is empty
             is_constant = (len(L) == 0)
 
-        self._infty_is_critical = infty_is_critical
+        # we compute the list of all endpoints
+        endpoints = []
+        for f, a, zeroes in L:
+            endpoints += zeroes
+        if not degree.is_zero() and self.is_in_domain(infty):
+            endpoints.append(infty)
+        print endpoints
+
         self._valuative_function = (L, a_0)
         self._is_constant = is_constant
+        self._endpoints = endpoints
 
         # if the function is constant, then we are done
         if is_constant:
             self._subtrees = []
+        # otherwise we still have to construct the subtrees; they correspond to
+        # the clusters formed by the set of endpoints
         else:
-            # find the new branches of the tree;
-            # each branch is represented by a pair (eta, endpoints), where eta
-            # is a point of type V and endpoints is the list of type-I-points
-            # contained in the residue disk corresponding to eta
-            if infty_is_critical:
-                branches = [(TypeVPointOnBerkovichLine(root, X.infty()),
-                             X.infty())]
-            else:
-                branches = []
-            for f, a, zeroes in L:
-                for xi in zeroes:
-                    new_branch = True
-                    for eta, endpoints in branches:
-                        if eta.is_in_residue_class(xi):
-                            endpoints.append(xi)
-                            new_branch = False
-                    if new_branch:
-                        eta = TypeVPointOnBerkovichLine(root, xi)
-                        branches.append((eta, [xi]))
+            # this may replaced by something more efficient later
+            T = BerkovichTree(X, root=root)
+            for xi in endpoints:
+                T, _ = T.add_point(xi)
+            # the roots of the children of T
 
-            # create the subtrees corresponding to the branches;
+            # create the subtrees
             # these are themselves valuative functions, restricted to the smallest
             # closed discoid containing all endpoints in one residue disk
             subtrees = []
-            for eta, endpoints in branches:
-                new_root = endpoints[0]
-                for xi in endpoints[1:]:
-                    new_root = new_root.infimum(xi)
-                subtrees.append(ValuativeFunction(X, L, a_0, root=new_root,
-                                                  zeroes_are_given=True,
-                                                  assume_irreducibility=True))
+            for child in T.children():
+                new_root = child.root()
+                new_subtree = ValuativeFunction(X, L, a_0, root=new_root,
+                                                assume_complete_factorization=True)
+                subtrees.append(new_subtree)
             self._subtrees = subtrees
 
     def __repr__(self):
@@ -214,9 +202,24 @@ class ValuativeFunction(SageObject):
 
         return self._X
 
-    def domain(self):
+    def root(self):
+        return self._root
 
-        pass
+    def domain(self):
+        if self._only_discoid:
+            return self.root()
+        else:
+            return self.berkovich_line()
+
+    def description(self):
+        return self._valuative_function
+
+    def is_in_domain(self, xi):
+
+        if self._only_discoid:
+            return self.root().is_leq(xi)
+        else:
+            return True
 
     def eval(self, xi):
         r""" Evaluate the function on the point `\xi`.
