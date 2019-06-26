@@ -112,7 +112,7 @@ We check that issues #39 and #40 have been fixed: ::
     Elementary affinoid defined by
     v(x + 1) >= 2/3
     Elementary affinoid defined by
-    v(x^4 + 4*x^2 + 4*x + 4) >= 8/3
+    v(x^4 +  4*x + 4) >= 8/3
     sage: Y2.is_semistable()
     True
 
@@ -267,6 +267,7 @@ class SuperpModel(SemistableModel):
         result is that the etale locus is contained in the closed unit disk.
 
         """
+        from mclf.berkovich.valuative_functions import ValuativeFunction
         if hasattr(self, "_etale_locus"):
             return self._etale_locus
 
@@ -289,28 +290,30 @@ class SuperpModel(SemistableModel):
         a = [a[i]/f for i in range(n+1)]
 
         pi = self.base_valuation().uniformizer()
-        delta = [ c[pl]**(p-1) * pi**(-p) ]
-        delta += [ c[pl]**(i*(p-1)) * a[i]**(-pl*(p-1)) * pi**(-i*p)
+        delta = [ ValuativeFunction(X, c[pl]**(p-1) * pi**(-p)) ]
+        delta += [ ValuativeFunction(X, c[pl]**(i*(p-1)) * a[i]**(-pl*(p-1)) * pi**(-i*p))
                    for i in range(1, n+1) ]
-        delta += [ c[pl]**(k*(p-1)) * c[k]**(-pl*(p-1)) * pi**(-p*(k-pl))
+        delta += [ ValuativeFunction(X, c[pl]**(k*(p-1)) * c[k]**(-pl*(p-1)) * pi**(-p*(k-pl)))
                    for k in range(m+1, n+1) if k != pl ]
 
-        X_et = RationalDomainOnBerkovichLine(X, delta[0])
+        # X_et = RationalDomainOnBerkovichLine(X, delta[0])
+        X_et = delta[0].rational_domain()
         for i in range(1, len(delta)):
             # the following exception if necessary because calling
             # RationalDomainOnBerkovichLine(X, f) with f constant
             # result in an error
-            k = delta[i].parent().constant_base_field()
-            if delta[i] in k:
+            # k = delta[i].parent().constant_base_field()
+            # if delta[i] in k:
                 # if delta[i] is constant, it must not be integral
                 # otherwise we add the whole Berkovich line which is
                 # not an affinoid
-                assert self.base_valuation()(delta[i]) < 0, "this is not an affinoid"
+                # assert self.base_valuation()(delta[i]) < 0, "this is not an affinoid"
                 # if vK(delta[i]) >= 0 then we add the empty set, i.e
                 # we do nothing
-            else:
-                X_et = X_et.union(RationalDomainOnBerkovichLine(X, delta[i]))
-                X_et.simplify()
+            # else:
+            # X_et = X_et.union(RationalDomainOnBerkovichLine(X, delta[i]))
+            X_et = X_et.union(delta[i].rational_domain())
+            X_et.simplify()
         X_et = X_et.intersection(ClosedUnitDisk(X))
         X_et = X_et.minimal_representation()
         self._etale_locus = X_et

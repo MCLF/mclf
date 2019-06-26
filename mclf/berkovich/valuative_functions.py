@@ -181,7 +181,7 @@ class ValuativeFunction(SageObject):
                         assert h == g, "something is wrong!"
                         L1[i] = (h, b + a*m, zeroes)
                     else:
-                        zeroes = [xi for xi, e in X.prime_divisor(g)]
+                        zeroes = [xi for xi, e in X.prime_divisor(g) if root.is_leq(xi)]
                         L1.append((g, a*m, zeroes))
                         irreducible_factors.append(g)
             # we have recomputed L and updated a_0 accordingly
@@ -216,6 +216,7 @@ class ValuativeFunction(SageObject):
                     # no root of f lies in the discoid D
                     a_0 = a_0 + a*root.v(f)
                 else:
+                    zeroes = [xi for xi in zeroes if root.is_leq(xi)]
                     L1.append((f, a, zeroes))
             L = L1
             # the function is constant on the discoid if L is empty, but also
@@ -237,7 +238,6 @@ class ValuativeFunction(SageObject):
                 endpoints += zeroes
             if not degree.is_zero() and self.is_in_domain(infty):
                 endpoints.append(infty)
-
         self._description = (L, a_0)
         self._is_constant = is_constant
         self._endpoints = endpoints
@@ -260,9 +260,9 @@ class ValuativeFunction(SageObject):
             restrictions = []
             for child in T.children():
                 new_root = child.root()
-                new_subtree = ValuativeFunction(X, (L, a_0), root=new_root,
+                restriction = ValuativeFunction(X, (L, a_0), root=new_root,
                                                 assume_complete_factorization=True)
-                restrictions.append(new_subtree)
+                restrictions.append(restriction)
             self._restrictions = restrictions
 
     def __repr__(self):
@@ -509,7 +509,7 @@ class ValuativeFunction(SageObject):
                                   is_in_affinoid=True)
                 new_subtrees.append(T2)
                 T1.make_parent(T2)
-            else:
+            elif ((s0 >= 0) != (s1 >= 0)) or xi1.type() == "II":
                 new_subtrees.append(T1)
         T0 = AffinoidTree(X, root=xi0, children=new_subtrees, parent=None,
                           is_in_affinoid=xi0_in)
