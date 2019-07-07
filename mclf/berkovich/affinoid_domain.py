@@ -684,9 +684,19 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         The point at infinity is also inside U and 'close to the boundary',
         and has smaller degree than the point produced above.
 
+        There is the following bug: ::
+
+            sage: f = (-2/25*x^6 - 4*x^5 - 1351/225*x^4 - 52/225*x^3 - 173/225*x^2 - 2/9*x + 2/3)/(x^2 + 2/3*x)
+            sage: h = valuative_function(D, f)
+            sage: U = h.affinoid_domain()
+            sage: U
+
+            sage U.point_close_to_boundary(U.boundary()[1])
+
         .. TODO::
 
-            Use a better strategie to find a point of minimal degree.
+            - Use a better strategie to find a point of minimal degree.
+            - fix the bug
 
         """
         U = self

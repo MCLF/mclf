@@ -420,8 +420,11 @@ sponding to v(x^2 + 4) >= 5
         else:
             return self._s2
 
-    def is_parameter(self, t):
-        return t >= self.initial_parameter() and t <= self.terminal_parameter()
+    def is_parameter(self, t, in_interior=False):
+        if in_interior:
+            return t > self.initial_parameter() and t < self.terminal_parameter()
+        else:
+            return t >= self.initial_parameter() and t <= self.terminal_parameter()
 
     def point(self, t):
         r""" Return the point on the path with given parameter.
@@ -649,45 +652,41 @@ class AffineFunction(SageObject):
     def is_increasing(self):
         return self._a > 0
 
-    def first_zero(self):
-        r""" Return the first zero of this affine function.
+    def find_zero(self):
+        r""" Return an isolated zero of this affine function (if there is one).
 
-        OUTPUT: a pair `(\xi, t)` such that `\xi` is the first zero of this
-        affine function on the underlying path, and `t` is the parameter of `\xi`.
+        OUTPUT: a point `\xi` on the interior of the path underlying this
+        function which is an isolated zero.
 
-        If no zero exists, ``None`` is returned.
+        If no such zero exists, ``None`` is returned.
+
+        We note that "isolated" implies that the function is not constant if
+        `\xi` exists, and therefore there is at most one such point.
 
         """
-        return self.first_point_with_value(0)
+        return self.find_point_with_value(0)
 
-    def first_point_with_value(self, c):
-        r""" Return the first point where this affine function takes a given value.
+    def find_point_with_value(self, c):
+        r""" Return a point where this affine function takes a given value.
 
-        OUTPUT: a pair `(\xi, t)` such that `\xi` is the first point on the path
-        underlying this affine function where the value is `c`, and `t` is the
-        parameter of `\xi`.
+        OUTPUT: a point `\xi` on the interior of the underlying path such that
+        the function is nonconstant in `\xi` and takes the value `c`.
 
         If no such point exists, ``None`` is returned.
 
         """
-
         a = self._a
         b = self._b
         gamma = self.path()
         if a == 0:
-            if b == c:
-                xi = gamma.initial_point()
-                t = gamma.initial_parameter()
-                return xi, t
-            else:
-                return None, None
+            return None
         else:
             t = (c - b)/a
-            if gamma.is_parameter(t):
+            if gamma.is_parameter(t, in_interior=True):
                 xi = gamma.point(t)
-                return xi, t
+                return xi
             else:
-                return None, None
+                return None
 
 
 class PiecewiseAffineFunction(SageObject):
@@ -823,65 +822,79 @@ class PiecewiseAffineFunction(SageObject):
         OUTPUT: The list of all points in the domain of this function which
 
         - are zeroes of this function,
+        - are not in the constant locus of the function
         - are greater or equal to `\xi_0`, and
         - are minimal with this property.
 
-        If ``xi0`` is ``None`` then we take for `\xi_0` the initial point of this
-        function.
+        If ``xi0`` is ``None`` then the third condition is ignored.
 
         """
         return self.find_next_points_with_value(0, xi0)
 
     def find_next_points_with_value(self, a, xi0=None):
-        r""" Return the next zeroes of this function after a given point.
+        r""" Return the next point where this function takes a given value,
+        after a given point.
 
         INPUT:
 
         - ``a`` -- a rational number
         - ``xi0`` (default: ``None``) -- a point in the domain of this function
 
-        OUTPUT: The list of all points in the domain of this function
+        OUTPUT: The list of all points on the nerf of this function
 
-        - at which this function takes the value `a`
-        - which are greater or equal to `\xi_0`, and
+        - at which this function takes the value `a`,
+        - at which the function is not constant,
+        - which are strictly greater than `\xi_0`, and
         - which are minimal with this property.
 
-        If ``xi0`` is ``None`` then we take for `\xi_0` the initial point of this
-        function.
+        If ``xi0`` is ``None`` then the second condition is ignored.
+
+        NOTE::
+
+        In this form, the problem is not well defined. Note that the function
+        may be constant on pathes of the nerf. If this constant value is equal
+        to a, and xi0 lies on this path and ist not the terminal point, then
+        there is no minimal next point with value a.
 
         """
-        if xi0 is None:
-            xi0 = self.initial_point()
-        else:
-            if not xi0.is_leq(self.initial_point()):
-                return []
-            else:
-                xi0 = self.initial_point()
+        if xi0 is not None and xi0.is_incomparable(self.initial_point()):
+            # no point in the domain of h can be strictly greater than xi0
+            return []
+        # now we know that xi0 is either None, or comparable to the initial point.
 
-        if self.initial_value() == a and self.initial_point().is_equal(xi0):
-            return [self.initial_point()]
+        is_strictly_less = xi0.is_strictly_less(self.initial_point())
+        initial_value_is_a = self.initial_value() == a
 
         ret = []
         for h1, h2 in self.restrictions():
-            xi1, _ = h1.first_point_with_value(a)
+            if (is_strictly_less and not h1.is_in_domain(xi0) and not h2.is_in_domain(xi0)):
+                # no point in visiting this branch, since no point there can be
+                # strictly less than xi0
+                continue
+            if h1.is_constant():
+                ret += h2.find_next_points_with_value(a, xi0)
+                continue
+            xi1, _ = h1.next_point_with_value(a)
+
             if xi1 is None and h2 is not None:
                 ret += h2.find_next_points_with_value(a, xi0)
-            elif xi1 is not None:
+            elif xi1 is not None and xi0.is_strictly_less(xi1):
                 ret.append(xi1)
+        # if ret is empty this means there are
+        if initial_value_is_a and ret == []:
+            if xi0 is None or (xi0 is not None and is_strictly_less):
+                return [self.initial_point()]
         return ret
 
-    def rational_domain(self):
-        r""" Return the rational domain defined by this function.
+    def affinoid_domain(self):
+        r""" Return the affinoid domain defined by this function.
 
-        OUTPUT: the rational subdomain of the domain of this function `H`,
+        OUTPUT: the affinoid subdomain of the domain of this function `h`,
         defind by the inequality
 
         .. MATH::
 
-            H(xi) \geq 0.
-
-        Note: for the moment we assume that the domain of this function is the
-        whole Berkovich line.
+            h(xi) \geq 0.
 
         EXAMPLES::
 
@@ -903,11 +916,11 @@ class PiecewiseAffineFunction(SageObject):
 
         """
         from mclf.berkovich.affinoid_domain import AffinoidDomainOnBerkovichLine
-        assert not self.only_discoid(), "the domain must be the whole Berkovich line"
         return AffinoidDomainOnBerkovichLine(self._affinoid_tree())
 
     def _affinoid_tree(self):
-        r""" Return the affinoid tree underlying the rational domain.
+        r""" Return the affinoid tree underlying the affinoid domain defined by
+        this function.
 
         This is a helper function for ``rational_domain()`` which works
         recursively.
@@ -921,7 +934,7 @@ class PiecewiseAffineFunction(SageObject):
           value of `h` in this point.
 
         """
-        from mclf.berkovich.berkovich_trees import AffinoidTree
+        from mclf.berkovich.affinoid_domain import AffinoidTree
         h = self
         X = h.berkovich_line()
         xi0 = h.initial_point()
@@ -931,6 +944,8 @@ class PiecewiseAffineFunction(SageObject):
             if h2 is not None:
                 T1 = h2._affinoid_tree()
                 xi2 = h1.find_zero()
+                # if xi2 is found, it is an isolated zero on the interior of the
+                # path underlying h1
                 if xi2 is not None:
                     T2 = AffinoidTree(X, root=xi2, children=[T1], parent=None,
                                       is_in_affinoid=True)
