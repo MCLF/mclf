@@ -680,14 +680,14 @@ class AffineFunction(SageObject):
                 t = gamma.initial_parameter()
                 return xi, t
             else:
-                return None
+                return None, None
         else:
             t = (c - b)/a
             if gamma.is_parameter(t):
                 xi = gamma.point(t)
                 return xi, t
             else:
-                return None
+                return None, None
 
 
 class PiecewiseAffineFunction(SageObject):
@@ -853,16 +853,20 @@ class PiecewiseAffineFunction(SageObject):
         if xi0 is None:
             xi0 = self.initial_point()
         else:
-            assert self.is_in_domain(xi0), "xi0 must lie in the domain of this function"
+            if not xi0.is_leq(self.initial_point()):
+                return []
+            else:
+                xi0 = self.initial_point()
+
         if self.initial_value() == a and self.initial_point().is_equal(xi0):
             return [self.initial_point()]
 
         ret = []
         for h1, h2 in self.restrictions():
-            xi1 = h1.first_point_with_value(a)
+            xi1, _ = h1.first_point_with_value(a)
             if xi1 is None and h2 is not None:
                 ret += h2.find_next_points_with_value(a, xi0)
-            else:
+            elif xi1 is not None:
                 ret.append(xi1)
         return ret
 
