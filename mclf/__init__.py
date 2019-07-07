@@ -7,7 +7,7 @@ from .curves.picard_curves import *
 from .berkovich.berkovich_line import *
 from .berkovich.berkovich_trees import *
 from .berkovich.type_V_points import *
-from .berkovich.valuative_functions import *
+from .berkovich.piecewise_affine_functions import *
 from .berkovich.affinoid_domain import *
 from .padic_extensions.weak_padic_galois_extensions import *
 from .padic_extensions.fake_padic_completions import *

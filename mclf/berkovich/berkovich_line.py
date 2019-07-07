@@ -445,7 +445,10 @@ class BerkovichLine(SageObject):
             v0 = valuation_from_discoid(vK, f1, s1)
         else:
             assert f == 1/x, "f must be either a polynomial, or 1/x"
-            assert s > 0, "if f=1/x then s must be positive"
+            if s == 0:
+                return X.gauss_point()
+            # this was changed on 6.7.19; still experimental!
+            assert s > 0, "if f=1/x then s must be nonnegative: f = {}, s = {}".format(f, s)
             v0 = GaussValuation(F._ring, vK).augmentation(F._ring.gen(), s)
             y = 1/x
 
@@ -831,7 +834,7 @@ class PointOnBerkovichLine(SageObject):
         ordering for which the Gauss point is the least element.
 
         """
-        return not self.is_leq(xi) or not xi.is_leq(self)
+        return not self.is_leq(xi) and not xi.is_leq(self)
 
 
     def parameter(self):
@@ -1082,13 +1085,14 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         return hasattr(self.pseudovaluation_on_polynomial_ring(), "_approximation")
 
 
-    def approximation(self, certified_point=None):
+    def approximation(self, certified_point=None, require_maximal_degree=False):
         r"""
         Return an approximation of this point.
 
         INPUT:
 
         - ``certified point`` (default=None) -- a point on the Berkovich line
+        - ``require_maximal_degree`` (default=False) -- boolean
 
         OUTPUT:
 
@@ -1101,6 +1105,15 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         If ``certified_point`` is not None and distinct from ``self``, then
         the output is not greater or equal to ``certified_point``.
 
+        If ``require_maximal_degree`` is ``True`` then any approximation will have
+        the same degree as the limit point. Here the *degree* of an inductive
+        point means the degree of the last key polynomial describing it, and the
+        degree of a type-I-point is the degree of its minimal polynomial.
+
+        Note::
+
+            The flag ``require_maximal_degree`` doesn't do anything yet.
+
         .. TODO::
 
             We should also make sure that the approximation has the same degree
@@ -1109,9 +1122,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             "require_final_EF=True" in "vK.approximants(f)".
 
         """
-        if not certified_point:
-            certified_point = self.berkovich_line().gauss_point()
-
+        certify = (certified_point is not None)
         if self.is_inductive():
             return self
         else:
@@ -1121,10 +1132,14 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
                 # w is the restriction of self.v to the subring K[y]
                 wa = w._approximation
                 xi = TypeIIPointOnBerkovichLine(self.berkovich_line(), (wa, y))
-                if xi.is_incomparable(certified_point):
-                    return xi
+                if not certify or not xi.is_leq(certified_point):
+                    if require_maximal_degree:
+                        eq_dec = wa.equivalence_decomposition(w._G)
+                        if len(eq_dec) == 1 and eq_dec[0][1] == 1 and eq_dec[0][0].degree() == wa.phi().degree():
+                            return xi
+                    else:
+                        return xi
                 w._improve_approximation()
-
 
     def improved_approximation(self):
         r"""

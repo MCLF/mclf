@@ -236,6 +236,8 @@ class TypeVPointOnBerkovichLine(SageObject):
         """
         return self._X
 
+    def type(self):
+        return "V"
 
     def boundary_point(self):
         """ Return the boundary point of the type-V-point. """
