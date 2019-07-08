@@ -715,9 +715,42 @@ class PiecewiseAffineFunction(SageObject):
     We allow `D_2` to be empty, in which case `h_2` is ``None`` and the domain of
     `h_1` is an open discoid.
 
+    EXAMPLES::
+
+        sage: from mclf import *
+        sage: F.<x> = FunctionField(QQ)
+        sage: X = BerkovichLine(F, QQ.valuation(2))
+
+    We can define the "valuative function" of a rational function: ::
+
+        sage: f = (x^2 - 2) / x
+        sage: h = valuative_function(X, f)
+        sage: h
+        piecewise affine function on the Berkovich line, with initial value 0
+
+    A piecewise affine function can be evaluated at any point. ::
+
+        sage: xi = X.point_from_discoid(x, 2)
+        sage: h(xi)
+        -1
+        sage: xi.v(f)
+        -1
+
+    A piecewise affine function defines an affininoid subdomain (the point where
+    the function takes nonnegative values).
+
+        sage: h.affinoid_domain()
+        Affinoid with 1 components:
+        Elementary affinoid defined by
+        v(1/x) >= -1
+        v(x) >= 0
+
     """
 
     def __init__(self, D, a0, restrictions):
+        from mclf.berkovich.berkovich_line import BerkovichLine
+        if isinstance(D, BerkovichLine):
+            D = Domain(D, [], [])
         self._domain = D
         self._initial_value = a0
         self._restrictions = restrictions
@@ -978,7 +1011,7 @@ def valuative_function(D, f, T=None):
 
     INPUT:
 
-    - ``D`` -- a domain in the Berkovich line
+    - ``D`` -- a domain in the Berkovich line, or the Berkovich line itself
     - ``f`` -- a nonconstant rational function on `X`, or
                a pair `(L, a_0)`, where `L` is
                  a list of pairs `(g, a)` consisting of
@@ -1010,6 +1043,10 @@ def valuative_function(D, f, T=None):
 
     """
     from mclf.berkovich.berkovich_trees import BerkovichTree
+    from mclf.berkovich.berkovich_line import BerkovichLine
+
+    if isinstance(D, BerkovichLine):
+        D = Domain(D, [], [])
     X = D.berkovich_line()
     initial_point = D.minimal_point()
 
