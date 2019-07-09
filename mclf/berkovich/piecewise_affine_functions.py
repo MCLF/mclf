@@ -949,7 +949,9 @@ class PiecewiseAffineFunction(SageObject):
 
         """
         from mclf.berkovich.affinoid_domain import AffinoidDomainOnBerkovichLine
-        return AffinoidDomainOnBerkovichLine(self._affinoid_tree())
+        U = AffinoidDomainOnBerkovichLine(self._affinoid_tree())
+        U.simplify()
+        return U
 
     def _affinoid_tree(self):
         r""" Return the affinoid tree underlying the affinoid domain defined by
