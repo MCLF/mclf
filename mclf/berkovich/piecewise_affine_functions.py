@@ -1163,11 +1163,13 @@ def complete_factorization(X, L, a_0):
     r""" refine `(L, a_0)` to a complete factorization.
     """
     v_K = X.base_valuation()
+    FField = X.function_field()
     L1 = []
     irreducible_factors = []
     # note that a factor h in irreducible_factor must have the same
     # position as the pair (h, b) in L1
     for f, a in L:
+        f = FField(f)
         F = f.factor()
         a_0 = a_0 + a*v_K(F.unit())
         for g, m in F:
@@ -1181,6 +1183,8 @@ def complete_factorization(X, L, a_0):
                 L1.append((g, a*m))
                 irreducible_factors.append(g)
     # we have recomputed L and updated a_0 accordingly
+    # get rid of trivial factors:
+    L1 = [(f, a) for f, a in L1 if a != 0]
     return L1, a_0
 
 

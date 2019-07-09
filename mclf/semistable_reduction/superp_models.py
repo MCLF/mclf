@@ -267,17 +267,18 @@ class SuperpModel(SemistableModel):
         result is that the etale locus is contained in the closed unit disk.
 
         """
-        from mclf.berkovich.valuative_functions import ValuativeFunction
+        from mclf.berkovich.piecewise_affine_functions import valuative_function
         if hasattr(self, "_etale_locus"):
             return self._etale_locus
 
         X = self._X
+        v_K = X.base_valuation()
         FX = self._FX
         f = self._f
         p = self._p
         n = f.degree()
         m = floor(n/p)
-        H, G = p_approximation_generic(f,p)
+        H, G = p_approximation_generic(f, p)
         # b = [FX(H[i]) for i in range(n+1)]
         c = [FX(G[k]) for k in range(n+1)]
         pl = 1
@@ -290,14 +291,14 @@ class SuperpModel(SemistableModel):
         a = [a[i]/f for i in range(n+1)]
 
         pi = self.base_valuation().uniformizer()
-        delta = [ ValuativeFunction(X, c[pl]**(p-1) * pi**(-p)) ]
-        delta += [ ValuativeFunction(X, c[pl]**(i*(p-1)) * a[i]**(-pl*(p-1)) * pi**(-i*p))
-                   for i in range(1, n+1) ]
-        delta += [ ValuativeFunction(X, c[pl]**(k*(p-1)) * c[k]**(-pl*(p-1)) * pi**(-p*(k-pl)))
-                   for k in range(m+1, n+1) if k != pl ]
+        delta = [valuative_function(X, ([(c[pl], p - 1)], -p*v_K(pi)))]
+        delta += [valuative_function(X, ([(c[pl], i*(p-1)), (a[i], -pl*(p-1))],
+                                          -i*p*v_K(pi))) for i in range(1, n + 1)]
+        delta += [valuative_function(X, ([(c[pl], k*(p-1)), (c[k], -pl*(p-1))],
+                  -p*(k-pl)*v_K(pi))) for k in range(m + 1, n + 1) if k != pl]
 
         # X_et = RationalDomainOnBerkovichLine(X, delta[0])
-        X_et = delta[0].rational_domain()
+        X_et = delta[0].affinoid_domain()
         for i in range(1, len(delta)):
             # the following exception if necessary because calling
             # RationalDomainOnBerkovichLine(X, f) with f constant
@@ -312,7 +313,7 @@ class SuperpModel(SemistableModel):
                 # we do nothing
             # else:
             # X_et = X_et.union(RationalDomainOnBerkovichLine(X, delta[i]))
-            X_et = X_et.union(delta[i].rational_domain())
+            X_et = X_et.union(delta[i].affinoid_domain())
             X_et.simplify()
         X_et = X_et.intersection(ClosedUnitDisk(X))
         X_et = X_et.minimal_representation()

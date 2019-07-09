@@ -711,7 +711,7 @@ class BerkovichLine(SageObject):
         e = ZZ(e)
         F = self._F
         x = F.gen()
-        assert f.parent() is F, "f must lie in the function field of X"
+        assert f.parent() is F, "f = {} must lie in the function field of X".format(f)
         assert f.denominator().is_one(), "f must be a polynomial"
         f = f.numerator()
         assert f.is_irreducible(), "f is not irreducible"
