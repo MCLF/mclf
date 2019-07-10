@@ -258,10 +258,6 @@ def open_discoid(xi0, xi1):
     """
     from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
     assert xi0.is_leq(xi1) and not xi0.is_equal(xi1), "we must have xi0 < xi1"
-    # if xi1.is_limit_point():
-    #     xi1 = xi1.approximation(certified_point=xi0)
-    # phi, _ = xi1.discoid()
-    # s = xi0.v(phi)
     phi, s = TypeVPointOnBerkovichLine(xi0, xi1).open_discoid()
     return Domain(xi0.berkovich_line(), [], [(phi, s)])
 
@@ -448,8 +444,6 @@ sponding to v(x^2 + 4) >= 5
             ``require_maximal_degree`` in ``mclf.berkovich.berkovich_line``.
 
         """
-        # it seems we can't demand that t is nonnegative
-        # assert t >= 0, "t must be nonnegative: gamma = {}, t = {}, s1 = {}".format(self, t, self._s1)
         assert t >= self._s1
         if self.is_limit_path():
             if t == Infinity:
@@ -460,7 +454,7 @@ sponding to v(x^2 + 4) >= 5
             assert t >= self._s1 and t <= self._s2, "desired point is not on the path"
         X = self.berkovich_line()
         phi = self._phi
-        # this is still a bit experimental
+        # this is not optimal
         return X.points_from_inequality(phi, t)[0]
 
     def tangent_vector(self, t):
@@ -950,7 +944,7 @@ class PiecewiseAffineFunction(SageObject):
         """
         from mclf.berkovich.affinoid_domain import AffinoidDomainOnBerkovichLine
         U = AffinoidDomainOnBerkovichLine(self._affinoid_tree())
-        U.simplify()
+        # U.simplify()
         return U
 
     def _affinoid_tree(self):
@@ -987,20 +981,40 @@ class PiecewiseAffineFunction(SageObject):
                     subtrees.append(T2)
                     T1.make_parent(T2)
                 else:
-                    subtrees.append(T1)
+                    # we may be able to replace T1 be a subtree
+                    if T1._is_in_affinoid == xi0_in:
+                        while (len(T1.children()) == 1
+                               and T1.children()[0]._is_in_affinoid == xi0_in):
+                            T1 = T1.children()[0]
+                    # or even omit it completely
+                    if not(T1._is_in_affinoid == xi0_in and T1.children() == []):
+                        subtrees.append(T1)
             else:
+                # the terminal point is of type I
                 xi1 = h1.terminal_point()
                 xi1_in = h1.terminal_value() >= 0
-                T1 = AffinoidTree(X, root=xi1, children=[], parent=None,
-                                  is_in_affinoid=xi1_in)
-                xi2 = h1.find_zero()
-                if xi2 is not None:
-                    T2 = AffinoidTree(X, root=xi2, children=[T1], parent=None,
-                                      is_in_affinoid=True)
-                    subtrees.append(T2)
-                    T1.make_parent(T2)
-                else:
-                    subtrees.append(T1)
+                if xi1_in != xi0_in:
+                    xi2 = h1.find_zero()
+                    if xi2 is not None:
+                        if xi1_in:
+                            # since xi2 lies in U, we don't need xi1
+                            T1 = AffinoidTree(X, root=xi2, children=[], parent=None,
+                                              is_in_affinoid=True)
+                            subtrees.append(T1)
+                        else:
+                            # we need both xi1 and xi2
+                            T1 = AffinoidTree(X, root=xi1, children=[], parent=None,
+                                              is_in_affinoid=False)
+                            T2 = AffinoidTree(X, root=xi2, children=[T1], parent=None,
+                                              is_in_affinoid=True)
+                            subtrees.append(T2)
+                            T1.make_parent(T2)
+                    else:
+                        # no zeroe on the interior found; one of the endpoints
+                        # must be a zero
+                        T1 = AffinoidTree(X, root=xi1, children=[], parent=None,
+                                          is_in_affinoid=xi1_in)
+                        subtrees.append(T1)
         T0 = AffinoidTree(X, root=xi0, children=subtrees, parent=None,
                           is_in_affinoid=xi0_in)
         for T1 in subtrees:
