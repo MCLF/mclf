@@ -57,7 +57,7 @@ from `\xi_1` towards `\xi_2`.
 
 
 """
-#*****************************************************************************
+# *****************************************************************************
 #       Copyright (C) 2017 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -65,7 +65,7 @@ from `\xi_1` towards `\xi_2`.
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# *****************************************************************************
 
 from sage.all import SageObject, Infinity
 
@@ -143,6 +143,7 @@ class TypeVPointOnBerkovichLine(SageObject):
         Valuation at the infinite place
 
     """
+
     def __init__(self, xi0, xi1):
 
         # the internal representation of self is via these attributes:
@@ -222,15 +223,13 @@ class TypeVPointOnBerkovichLine(SageObject):
                 self._s = xi0.v(phi)
                 self._type = "contains_unit_disk"
         # we test that the discoid representation is correct.
-        assert self._v(self._phi)==self._s, "xi1 must not lie in the residue class!"
+        assert self._v(self._phi) == self._s, "xi1 must not lie in the residue class!"
         assert self.is_in_residue_class(xi1), "xi2 must lie in the residue class!"
 
-
     def __repr__(self):
-        return "Point of type V given by residue class v(%s) > %s"%self.open_discoid()
+        return "Point of type V given by residue class v({}) > {}".format(self._phi, self._s)
 
-
-    def X(self):
+    def berkovich_line(self):
         """
         Return the Berkovich line underlying the point.
         """
@@ -242,7 +241,6 @@ class TypeVPointOnBerkovichLine(SageObject):
     def boundary_point(self):
         """ Return the boundary point of the type-V-point. """
         return self._xi0
-
 
     def point_inside_residue_class(self):
         """
@@ -271,10 +269,8 @@ class TypeVPointOnBerkovichLine(SageObject):
         assert self.is_in_residue_class(xi), "xi does not lie in the residue class"
         return xi
 
-
     def major_valuation(self):
         return self._v
-
 
     def minor_valuation(self):
         r""" Return the minor valuation of this type V point.
@@ -296,7 +292,6 @@ class TypeVPointOnBerkovichLine(SageObject):
         else:
             vb = Fb.valuation(1/Fb.gen())
         return vb
-
 
     def is_in_residue_class(self, xi):
         r""" Test whether ``xi`` lies in the residue class of ``self``.
@@ -328,8 +323,26 @@ class TypeVPointOnBerkovichLine(SageObject):
 
 
         """
-        return xi.v(self._phi) > self._s
+        phi, s = self.open_discoid()
+        if xi.type() == "V":
+            return self.boundary_point().v(phi) >= s and self.derivative(phi) > 0
+        else:
+            return xi.v(phi) > s
 
+    def is_leq(self, xi):
+        r""" Return whether this point is less or equal another point.
+
+        INPUT:
+
+        - ``xi`` -- a point of type I, II or V
+
+        OUTPUT: ``True`` is this point `\eta` is less than or equal to `\xi`.
+
+        This is equivalent to `\xi` lying inside the residue class defined by
+        `\eta`.
+
+        """
+        return self.is_in_residue_class(xi)
 
     def open_discoid(self):
         r""" Return the representation of self as an open discoid.
@@ -354,7 +367,6 @@ class TypeVPointOnBerkovichLine(SageObject):
 
         """
         return self._phi, self._s
-
 
     # this function is maybe not so useful..
     def point_inside_discoid(self, t):
@@ -391,7 +403,7 @@ class TypeVPointOnBerkovichLine(SageObject):
 
         eta = self
         X = eta.X()
-        phi,s = eta.open_discoid()
+        phi, s = eta.open_discoid()
         assert t > s, "t must be > s"
 
         if eta._type == "contained_in_unit_disk":
@@ -400,7 +412,6 @@ class TypeVPointOnBerkovichLine(SageObject):
             return X.point_from_discoid(eta._phi_pol, t, in_unit_disk=False)
         else:
             raise NotImplementedError
-
 
     def derivative(self, f):
         r"""
@@ -514,7 +525,6 @@ class TypeVPointOnBerkovichLine(SageObject):
                 v0 = eta._xi0.pseudovaluation_on_polynomial_ring()
                 return - v0.effective_degree(f.numerator()) + v0.effective_degree(f.denominator())
 
-
     def derivative_of_polynomial(self, f):
 
         v = self._xi0.pseudovaluation_on_polynomial_ring()
@@ -523,7 +533,6 @@ class TypeVPointOnBerkovichLine(SageObject):
         val, pos = min((val, pos) for (pos, val) in enumerate(v_list))
         # now pos is the index of the first item in v_list where the minimum ist attained
         return pos
-
 
     def left_derivative(self, f):
         r"""
@@ -553,10 +562,9 @@ class TypeVPointOnBerkovichLine(SageObject):
         else:
             return self.left_derivative_of_polynomial(f)
 
-
     def left_derivative_of_polynomial(self, f):
 
         v = self._xi0.pseudovaluation_on_polynomial_ring()
         return v.effective_degree(f)
 
-#--------------------------------------------------------------------------
+# --------------------------------------------------------------------------

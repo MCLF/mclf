@@ -35,7 +35,7 @@ EXAMPLES::
 <Lots and lots of examples>
 """
 
-#*****************************************************************************
+# *****************************************************************************
 #       Copyright (C) 2017 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -43,7 +43,7 @@ EXAMPLES::
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# *****************************************************************************
 
 from sage.all import SageObject, Graph
 
@@ -67,68 +67,106 @@ class BerkovichTree(SageObject):
     then there must be root.
 
     """
+
     def __init__(self, X, root=None, children=None, parent=None):
 
         # print("calling BerkovichTree with root %s, children %s and
         # parent %s"%(root, children, parent))
         self._root = root
-        if children == None:
+        if children is None:
             self._children = []
         else:
             self._children = children
-        if root == None and self._children != []:
+        if root is None and self._children != []:
             raise ValueError("tree with children must have a root")
 
         self._parent = parent
         self._X = X
-        assert all([self._X == T._X for T in self._children]), \
-                        "children must live on the same Berkovich line as root"
-
+        assert all([self._X == T._X for T in self._children]),\
+            "children must live on the same Berkovich line as root"
 
     def __repr__(self):
-        return "Berkovich tree with %s vertices"%len(self.vertices())
-
+        return "Berkovich tree with {} vertices".format(len(self.vertices()))
 
     def is_empty(self):
-        return self._root == None
-
+        return self._root is None
 
     def root(self):
         """ Return the root of the tree."""
         return self._root
 
-
     def berkovich_line(self):
         """ Return the Berkovich line underlying this tree."""
         return self._X
 
-
     def has_parent(self):
         """ Return True if self has a parent."""
-        return not self._parent == None
-
+        return self._parent is not None
 
     def parent(self):
         """ Return the parent of self."""
         return self._parent
 
-
     def make_parent(self, parent):
         """ add ``parent`` as parent of self."""
         self._parent = parent
 
+    def make_child(self, new_child, check=True):
+        r""" Make ``new_child`` a child of self.
+
+        INPUT:
+
+        - ``new_child`` -- a Berkovich tree
+        - ``check`` -- a boolean (default ``False``)
+
+        We make the tree ``new_child`` a child of ``self``. For this to make
+        sense, two conditions have to be satisfied:
+        - the root of `new_child` has to be strictly greater than the root of
+          ``self``
+        - the root of ``new_child`` has to be incomparable to the roots of the
+          already existing children of ``self``.
+        These conditions are checked only if ``check`` ist ``True``.
+
+        Note::
+
+        This changes both trees ``self`` and ``new_child``.
+        """
+        if check:
+            assert self.root().is_strictly_less(new_child.root()),\
+                "new child has to be strictly greater than self"
+            for child in self.children():
+                assert child.root().is_incomparable(new_child.root()),\
+                    "new child has to be incomparable to other children"
+        self.children().append(new_child)
+        new_child.make_parent(self)
+
+    def remove_child(self, child):
+        r""" Remove child from list of children of ``self``.
+
+        INPUT:
+
+        - ``child`` -- a Berkovich tree
+
+        We remove ``child`` from the list of children of ``self``. If ``child``
+        is not in this list, an error is raised.
+
+        Note::
+
+        This function changes both ``self`` and ``child``.
+
+        """
+        self.children().remove(child)
+        child._parent = None
 
     def children(self):
         """ Return the list of all children."""
         return self._children
 
-
     def is_leaf(self):
         """ Return True if self is a leaf.
 
         """
-        return self._root != None and self._children == []
-
+        return self._root is not None and self._children == []
 
     def vertices(self):
         r"""
@@ -136,12 +174,11 @@ class BerkovichTree(SageObject):
 
         """
         vertices = []
-        if self._root != None:
+        if self._root is not None:
             vertices.append(self._root)
         for T in self._children:
             vertices += T.vertices()
         return vertices
-
 
     def leaves(self):
         r"""
@@ -156,7 +193,6 @@ class BerkovichTree(SageObject):
                 leaves += T.leaves()
         return leaves
 
-
     def subtrees(self):
         r""" Return the list of all subtrees.
         """
@@ -167,7 +203,6 @@ class BerkovichTree(SageObject):
         for T in self.children():
             subtrees += T.subtrees()
         return subtrees
-
 
     def paths(self):
         r"""
@@ -187,6 +222,40 @@ class BerkovichTree(SageObject):
             path_list += T2.paths()
         return path_list
 
+    def direction_to_parent(self):
+        r""" Return the direction to the parent.
+
+        OUTPUT: the type V point `\eta` representing the direction from the
+        root of ``self`` to the root of its parent.
+
+        If ``self`` has no parent, an error is raised.
+
+        The directon is not well defined if the root of ``self`` is a point of
+        type I. Therefore, an error is raised in this case.
+
+        """
+        from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
+        assert self.root().type() == "II",\
+            "the root must be a point of type II: root = {}, parent = {}".format(self.root(), self.parent().root())
+        if not hasattr(self, "_direction_to_parent"):
+            eta = TypeVPointOnBerkovichLine(self.root(), self.parent().root())
+            self._direction_to_parent = eta
+        return self._direction_to_parent
+
+    def direction_from_parent(self):
+        r""" Return the direction from the parent.
+
+        OUTPUT: the type V point `\eta` representing the direction from the
+        root of the parent of ``self`` to the root of ``self``.
+
+        If ``self`` has no parent, an error is raised.
+
+        """
+        from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
+        if not hasattr(self, "_direction_from_parent"):
+            eta = TypeVPointOnBerkovichLine(self.parent().root(), self.root())
+            self._direction_from_parent = eta
+        return self._direction_from_parent
 
     def copy(self):
         r""" Return a copy of self."""
@@ -197,7 +266,6 @@ class BerkovichTree(SageObject):
             children.append(child.copy())
         T._children = children
         return T
-
 
     def add_point(self, xi):
         r"""
@@ -220,9 +288,9 @@ class BerkovichTree(SageObject):
         """
 
         T0 = self
-        if T0.parent() != None:
+        if T0.has_parent():
             assert T0.root().is_leq(xi), "The root of self must be less than xi, because self has a parent."
-        if T0._root == None:
+        if T0._root is None:
             T0._root = xi
             return T0, T0       # T0 is the leaf with root xi
 
@@ -256,7 +324,7 @@ class BerkovichTree(SageObject):
                     if not xi0.is_equal(xi2):
                         # now xi0 < xi2; we have to replace T1 (as a subtree of T0)
                         # by a new tree T_new with children T1 and a leaf T_xi
-                        T_xi = BerkovichTree(T0._X, xi) # the new leaf
+                        T_xi = BerkovichTree(T0._X, xi)  # the new leaf
                         T_new = BerkovichTree(T0._X, xi2, [T1, T_xi], T0)
                         # the new subtree has parent T0
                         T1.make_parent(T_new)
@@ -277,14 +345,13 @@ class BerkovichTree(SageObject):
         else:
             # now xi0 and xi are uncomparable
             # hence we need a new root
-            assert T0.parent() == None, "T0 must not have a parent"
+            assert T0.parent() is None, "T0 must not have a parent"
             new_root = xi0.infimum(xi)
             T_xi = BerkovichTree(T0._X, xi)
             T_new = BerkovichTree(T0._X, new_root, [T0, T_xi])
             T0.make_parent(T_new)
             T_xi.make_parent(T_new)
             return T_new, T_xi
-
 
     def find_point(self, xi):
         r""" Find subtree with root ``xi``.
@@ -304,10 +371,9 @@ class BerkovichTree(SageObject):
         else:
             for T in self._children:
                 T1 = T.find_point(xi)
-                if T1 != None:
+                if T1 is not None:
                     return T1
             return None
-
 
     def adjacent_vertices(self, xi0):
         """
@@ -315,7 +381,7 @@ class BerkovichTree(SageObject):
 
         """
         T = self.find_point(xi0)
-        if T == None:
+        if T is None:
             return []
         ret = []
         if T.has_parent():
@@ -324,7 +390,6 @@ class BerkovichTree(SageObject):
             ret.append(child.root())
         return ret
 
-
     def print_tree(self, depth=0):
         """ Print the vertices of the tree, with identation corresponding to depth.
 
@@ -332,13 +397,11 @@ class BerkovichTree(SageObject):
             to the vertices.
         """
 
-        if self._root == None:
+        if self._root is None:
             return
         print("___"*depth, " ", self._root)
         for T in self._children:
             T.print_tree(depth + 1)
-
-
 
     def position(self, xi):
         r"""
@@ -403,7 +466,6 @@ class BerkovichTree(SageObject):
         create_graph_recursive(self, G, vert_dict, 0)
         return G, vert_dict
 
-
     def adapt_to_function(self, f):
         r"""
         Add all zeroes and poles of `f` as leaves of the tree.
@@ -423,7 +485,6 @@ class BerkovichTree(SageObject):
         for xi, m in D:
             T, T1 = T.add_point(xi)
         return T
-
 
     def permanent_completion(self):
         r"""
@@ -477,9 +538,27 @@ class BerkovichTree(SageObject):
         return T
 
 
+def replace_subtree(T1, T2):
+    r""" Replace a subtree of a Berkovich tree by another tree.
 
+    INPUT:
 
-#-------------------------------------------------------------------------------
+    - ``T1``, ``T2`` - Berkovich trees with the same root
+
+    It is assumed that `T_1` has a parent, so it is a proper subtree of an
+    affinoid tree `T_0`. We replace the subtree `T_1` with `T_2`.
+
+    NOTE::
+
+        This changes the tree `T_0`; therefore this function must be
+        used carefully.
+
+    """
+    assert T1.has_parent(), "T1 must have a parent"
+    assert T1.root().is_equal(T2.root()), "T1 and T2 must have the same root"
+    T0 = T1.parent()
+    T0.remove_child(T1)
+    T0.make_child(T2, check=True)
 
 
 def create_graph_recursive(T, G, vertex_dict, root_index):
@@ -502,7 +581,7 @@ def component_jumps(xi0, xi1):
     from mclf.berkovich.berkovich_line import valuations_from_inequality
     from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
     from mclf.berkovich.berkovich_line import TypeIIPointOnBerkovichLine
-    
+
     assert xi0.is_leq(xi1), "xi0 has to be an ancestor of xi1"
     X = xi0.berkovich_line()
     vK = X.base_valuation()
@@ -524,7 +603,7 @@ def component_jumps(xi0, xi1):
     G = phi(x+T)
     NP = NewtonPolygon([(i, v1(G[i])) for i in range(G.degree()+1)])
     V = []
-    vertices =  NP.vertices()
+    vertices = NP.vertices()
     for k in range(len(vertices)-1):
         i, ai = vertices[k]
         j, aj = vertices[k+1]
@@ -540,3 +619,12 @@ def component_jumps(xi0, xi1):
     """
     return [xi for xi in ret if (xi0.is_leq(xi) and xi.is_leq(xi1))]
     # the last 'if' is necessary if phi = v1._G above
+
+
+def check_tree(T):
+    if T.has_parent():
+        assert T in T.parent().children(), "T is not child of parent!"
+    for child in T.children():
+        assert T.root().is_strictly_less(child.root()),\
+            "child with root {} is not strictly greater then parent with root {}".format(child.root(), T.root())
+        check_tree(child)

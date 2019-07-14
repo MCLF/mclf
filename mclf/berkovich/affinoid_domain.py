@@ -49,7 +49,7 @@ TO DO:
 """
 
 
-#*****************************************************************************
+# *****************************************************************************
 #       Copyright (C) 2017 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -57,7 +57,7 @@ TO DO:
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# *****************************************************************************
 
 
 from sage.all import SageObject, Infinity
@@ -69,7 +69,7 @@ class AffinoidTree(BerkovichTree):
     r""" A marked Berkovich tree representing an affinoid subdomain.
 
     An AffinoidTree is a Berkovich tree `T` in which every vertex has an additional
-    flag "is_in_affinoid" with value ``True`` or ``False``. It represents an
+    flag "is_in" with value ``True`` or ``False``. It represents an
     affinoid subdomain `U` in the way explained above.
 
     INPUT:
@@ -78,12 +78,12 @@ class AffinoidTree(BerkovichTree):
     - ``root`` -- a point on ``X`` or None (default = None)
     - ``children`` -- a list of affinoid trees or None (default = None)
     - ``parent`` -- an affinoid tree or none (default = None)
-    - ``is_in_affinoid`` -- a boolean or None (default = None)
+    - ``is_in`` -- a boolean or None (default = None)
 
     OUTPUT:
 
     An affinoid tree on ``X``. It is either empty (if only ``X`` is given) or
-    it has root, parent, children and the flag ``is_in_affinoid`` as given
+    it has root, parent, children and the flag ``is_in`` as given
     by the extra parameters.
 
     EXAMPLES::
@@ -109,24 +109,26 @@ class AffinoidTree(BerkovichTree):
         Affinoid tree with 6 vertices
     """
 
-    def __init__(self, X, root=None, children=None, parent=None, is_in_affinoid=False):
+    def __init__(self, X, root=None, children=None, parent=None, is_in=False):
         self._X = X
-        if root == None:
+        if root is None:
             self._root = None
             self._children = []
             self._parent = None
-            self._is_in_affinoid = False
+            self._is_in = False
             # Now we have an empty affinoid tree
         else:
+            assert root.type() in ["I", "II"], "root must be a point of type I or II"
             self._root = root
             self._parent = parent
-            self._children = children
-            self._is_in_affinoid = is_in_affinoid
-
+            if children is None:
+                self._children = []
+            else:
+                self._children = children
+            self._is_in = is_in
 
     def __repr__(self):
-        return "Affinoid tree with %s vertices"%len(self.vertices())
-
+        return "Affinoid tree with {} vertices".format(len(self.vertices()))
 
     def _check_for_parents(self):
         r"""
@@ -138,7 +140,6 @@ class AffinoidTree(BerkovichTree):
             assert T1.parent() is T0
             T1._check_for_parents()
 
-
     def copy(self, parent=None):
         """
         Return a copy of self, force ``parent`` as parent.
@@ -148,240 +149,105 @@ class AffinoidTree(BerkovichTree):
         """
 
         T = self
-        T_new = AffinoidTree(T._X, T.root(), [], parent,
-                              T._is_in_affinoid)
+        T_new = AffinoidTree(T._X, T.root(), [], parent, T._is_in)
         children = [T1.copy(T_new) for T1 in T.children()]
         T_new._children = children
         return T_new
 
+    def is_empty_set(self):
+        r""" Return whether this tree represents the empty set.
 
-    def add_point(self, xi, is_in_affinoid):
-        r"""
-        Return the affinoid tree spanned by self and the point xi.
+        """
+        return not self.root_is_in() and all([child.is_empty_set()
+                                              for child in self.children()])
+
+    def root_is_in(self):
+        r""" Return whether the root of ``self`` lies in the affinoid.
+        """
+        return self._is_in
+
+    def is_in(self, xi):
+        r""" Return True if ``xi`` lies in the affinoid  `U` represented by ``self``.
 
         INPUT:
 
-        - ``xi`` -- a point on the berkovich tree
-        - ``is_in_affinoid`` -- a boolean
+        - ``xi`` -- a point on the Berekovich space underlying this affinoid tree
 
-        OUTPUT:
-
-        (`T_1`, `T_2`), where
-
-        - `T_1` is the tree obtained from `T_0=` ``self`` after inserting ``xi``
-          as a vertex.
-        - `T_2` is the subtree of `T_1` with root ``xi``
-
-        It is assumed that if `T_0` has a parent, then the root of `T_0` is less
-        than `\xi`. As a result, the parent of `T_1` will be the original parent
-        of `T_0`.
-
-        Note that this command may change the tree `T_0`!  For instance, `\xi` may
-        become the root of `T_1` and then `T_0` has `T_1` as new parent.
-
-        Also, the new vertex (the root of `T_1`) is marked with the flag
-        ``is_in_affinoid``.
-
-        """
-        T0 = self
-        parent = T0.parent()
-        if parent != None:
-            assert T0.root().is_leq(xi), "The root of self must be less than xi, because self has a parent."
-        if T0._root == None:
-            T0._root = xi
-            T0._is_in_affinoid = is_in_affinoid
-            return T0, T0       # T0 is the leaf with root xi
-
-        xi0 = T0._root
-        if xi0.is_equal(xi):
-            # assert T0._is_in_affinoid == is_in_affinoid
-            T0._is_in_affinoid = is_in_affinoid
-            return T0, T0   # T0 has xi as root
-
-        if xi0.is_leq(xi):
-            # now xi0 < xi
-            for i in range(len(T0._children)):
-                # we run through all immediate children T1 of T0
-                T1 = T0._children[i]
-                xi1 = T1._root
-                if xi1.is_leq(xi):
-                    # now xi0 < xi1 <= xi and xi can be added to T1
-                    T_new, T_xi = T1.add_point(xi, is_in_affinoid)
-                    # note that this does not change the parent of T1, which is
-                    # still T0
-                    # IS THIS TRUE ?? Let's check:
-                    assert T_new.parent() == T0
-                    T0._children[i] = T_new
-                    return T0, T_xi
-                elif xi.is_leq(xi1):
-                    # now xi0 < xi < xi1; we have to insert x between T0 and T1
-                    T1_new = AffinoidTree(T0._X, xi, [T1], T0, is_in_affinoid)
-                    T1.make_parent(T1_new)
-                    T0._children[i] = T1_new
-                    return T0, T1_new
-                else:
-                    xi2 = xi1.infimum(xi)
-                    # note that xi0 <= xi2
-                    if not xi0.is_equal(xi2):
-                        # now xi0 < xi2; we have to replace T1 (as a subtree of T0)
-                        # by a new tree T_new with children T1 and a leaf T_xi
-                        T_xi = AffinoidTree(T0._X, xi, [], None, is_in_affinoid)
-                               # the new leaf
-                        T_new = AffinoidTree(T0._X, xi2, [T1, T_xi], T0,
-                                             T0._is_in_affinoid)
-                        # the new subtree has parent T0
-                        # and its root lies in U iff the root of T0 does
-                        T1.make_parent(T_new)
-                        T_xi.make_parent(T_new)
-                        T0._children[i] = T_new
-                        return T0, T_xi
-            # if we get here, we have to add xi as a new leaf with parent xi0
-            T_xi = AffinoidTree(T0._X, xi, [], T0, is_in_affinoid)
-            T0._children.append(T_xi)
-            return T0, T_xi
-        elif xi.is_leq(xi0):
-            # xi is less than the root of T0
-            # we have to make xi the root and append T0 as the only subtree
-            T_new = AffinoidTree(T0._X, xi, [T0], None, is_in_affinoid)
-            T0.make_parent(T_new)
-            T_new.make_parent(parent)
-            return T_new, T_new
-        else:
-            # now xi0 and xi are uncomparable
-            # hence we need a new root
-            assert T0.parent() == None, "T0 must not have a parent"
-            new_root = xi0.infimum(xi)
-            T_xi = AffinoidTree(T0._X, xi, [], None, is_in_affinoid)
-            T_new = AffinoidTree(T0._X, new_root, [T0, T_xi], None,
-                                 is_in_affinoid and T0._is_in_affinoid)
-            T0.make_parent(T_new)
-            T_xi.make_parent(T_new)
-            T_new.make_parent(parent)
-            return T_new, T_xi
-
-
-    def add_points(self, in_list, out_list):
-
-        T = self
-        for xi in in_list:
-            T, subtree = T.add_point(xi, True)
-        for xi in out_list:
-            T, subtree = T.add_point(xi, False)
-        return T
-
-
-    def is_in_affinoid(self, xi):
-        r""" Return True if xi lies in the affinoid  U represented by self.
+        Note that `\xi` may also be a point of type V.
 
         To test this, we compute the image of xi under the retraction map
         onto the total space of T=self and check whether it lies on a vertex
         in U or on an edge connecting two vertices in U.
 
         """
+        if xi.type() == "V":
+            eta = xi
+            xi = eta.boundary_point()
+            is_type_V = True
+        else:
+            is_type_V = False
         xi1, T1, T2, is_vertex = self.position(xi)
         # xi1 is the image of xi under the retraction map onto the total
         # space of T=self. If is_vertex==True then xi1 is the root of T1.
         # Otherwise, xi1 lies on the edge connecting the roots of T1 and T2.
         if is_vertex:
-            return T1._is_in_affinoid
+            if not is_type_V:
+                return T1.root_is_in()
+            else:
+                if not T1.root_is_in():
+                    return False
+                # return False if there is one child or parent whose root is an out-point
+                # lying in the residue class of eta
+                if T1.has_parent() and not T1.parent().root_is_in():
+                    return False
+                return all([child.root_is_in()
+                            or not eta.is_in_residue_class(child.root()) for child in T1.children()])
         else:
-            return T1._is_in_affinoid and T2._is_in_affinoid
+            return T1._is_in and T2._is_in
 
+    def minimal_points(self, xi0=None):
+        r""" Return the minimal points of the affinoid corresponding to this tree.
 
-    def simplify(self):
-        r"""
-        Return a simplified tree representing the same affinoid.
+        INPUT:
+
+        - ``xi0`` -- a point of type II, or ``None`` (default ``None``)
+
+        OUTPUT: the list of all minimal points of the affinoid corresponding to
+        this tree, which are `\geq \xi_0`. If `\xi_0` is not given, this condition
+        is ignored.
 
         """
         T = self
-        T_new = AffinoidTree(T._X)
-        for T1 in T.subtrees():
-            if len(T1._children) >= 2:
-                T_new, T2 = T_new.add_point(T1.root(), T1._is_in_affinoid)
-            elif (T1.parent() != None) and (T1.parent()._is_in_affinoid != T1._is_in_affinoid):
-                T_new, T2 = T_new.add_point(T1.root(), T1._is_in_affinoid)
-            elif (T1._children != []) and (T1._children[0]._is_in_affinoid != T1._is_in_affinoid):
-                T_new, T2 = T_new.add_point(T1.root(), T1._is_in_affinoid)
-        return T_new
+        if T.root_is_in() and (xi0 is None or xi0.is_leq(T.root())):
+            return [T.root()]
+        else:
+            minimal_points = []
+            for child in T.children():
+                minimal_points += child.minimal_points(xi0)
+            return minimal_points
 
-
-    def union(self, T1):
+    def simplify(self):
         r"""
-        Construct the tree representing the union of two affinoids.
-
-        INPUT:
-
-        - ``T1`` -- an affinoid tree
-
-        OUTPUT:
-
-        An affinoid tree which represents the union of the affinoids represented
-        by T0 = ``self`` and T1.
+        Simplify this tree without changing the represented affinoid.
 
         """
-        T0 = self
-        # T = T0.copy()  strangely, this did not work
-        T_new = AffinoidTree(self._X)
-        for xi0 in T0.vertices():
-            T_new, dump = T_new.add_point(xi0, None)
-        for xi1 in T1.vertices():
-            T_new, dump = T_new.add_point(xi1, None)
-        # print("First step of T_new:", T_new.vertices())
-        new_out = []
-        for subtree in T_new.subtrees():
-            xi = subtree.root()
-            # print("adding xi =", xi)
-            xi_in_T0 = T0.is_in_affinoid(xi)
-            xi_in_T1 = T1.is_in_affinoid(xi)
-            # print(xi_in_T0, xi_in_T1)
-            if xi_in_T0 == xi_in_T1:
-                subtree._is_in_affinoid = xi_in_T0
-                # print("xi is in union: ", xi_in_T0)
-                # print()
-            else:
-                subtree._is_in_affinoid = True
-                # print("xi is in union!")
-                # print()
-                if subtree.has_parent():
-                    parent = subtree.parent()
-                    xi0 = parent.root()
-                    xi0_in_T0 = T0.is_in_affinoid(xi0)
-                    xi0_in_T1 = T1.is_in_affinoid(xi0)
-                    if (xi_in_T0 != xi0_in_T0) and (xi0_in_T0 != xi0_in_T1):
-                        new_out.append(xi0.point_in_between(xi))
-                        # print("we have to exclude ", xi0)
-        T_new = T_new.add_points([], new_out)
-        return T_new
-
-
-    def intersection(self, T1):
-        r"""
-        Construct the tree representing the intersection of two affinoids.
-
-
-        INPUT:
-
-        - ``T1`` -- an affinoid tree
-
-        OUTPUT:
-
-        An affinoid tree which represents the intersection of the affinoids
-        represented by T0 = ``self`` and T1.
-        """
-
-        T0 = self
-        # T = T0.copy()  strangely, this did not work
-        T = AffinoidTree(self._X)
-        for xi in T0.vertices():
-            T, T2 = T.add_point(xi, False)
-        for xi in T1.vertices():
-            T, T2 = T.add_point(xi, False)
-        for subtree in T.subtrees():
-            xi = subtree.root()
-            subtree._is_in_affinoid = (T0.is_in_affinoid(xi) and
-                                       T1.is_in_affinoid(xi))
-        return T
-
+        T = self
+        if T.root_is_in():
+            # so far we only try to remove unnecessary in-points
+            children = T.children()[:]
+            # this is a shallow copy; this is necessary because the actual
+            # children of T may be changed during the following loop
+            for T1 in children:
+                if T1.root_is_in() and len(T1.children()) == 0:
+                    T.remove_child(T1)
+                elif T1.root_is_in() and len(T1.children()) == 1:
+                    T2 = T1.children()[0]
+                    if T2.root_is_in():
+                        # we can replace T1 by T2
+                        T.remove_child(T1)
+                        T.make_child(T2)
+        for T1 in T.children():
+            T1.simplify()
 
     def show(self):
         r""" Display a graphical representation of self.
@@ -391,7 +257,7 @@ class AffinoidTree(BerkovichTree):
         in_list = []
         out_list = []
         for i, xi in vertex_dict.items():
-            if self.is_in_affinoid(xi):
+            if self.is_in(xi):
                 in_list.append(i)
             else:
                 out_list.append(i)
@@ -399,6 +265,60 @@ class AffinoidTree(BerkovichTree):
         # print(vertex_dict)
         G.show(partition=[in_list, out_list])
 
+    def holes(self, upward_hole=True):
+        r""" Return the holes of this affinoid tree.
+
+        OUTPUT: a list of triples `(T_1, T_2, \eta)`, where `T_1`, `T_2` are
+        subtrees of ``self`` and `\eta` is a point of type V, satisfying the
+        following conditions:
+        - `T_2` is a child of `T_1`, or vice versa
+        - the root of `T_1` is a boundary point of the affinoid underlying ``self``
+        - the root of `T_2` does not lie in the affinoid
+        - `\eta` is the direction from the root of `T_1` to the root of `T_2`
+        This implies that `\eta` is a *hole* of the affinoid represented by ``self``.
+
+        """
+        T = self
+        holes = []
+        if T.root_is_in():
+            if upward_hole and T.has_parent() and not T.parent().root_is_in():
+                eta = T.direction_to_parent()
+                holes.append((T, T.parent(), eta))
+            for child in T.children():
+                if not child.root_is_in():
+                    eta = child.direction_from_parent()
+                    holes.append((T, child, eta))
+        for child in T.children():
+            holes += child.holes(upward_hole)
+        return holes
+
+    def connected_components(self):
+        r""" Return a list of affinoid trees representing the connected components.
+
+        """
+        T = self
+        X = T.berkovich_line()
+        if hasattr(T, "_components"):
+            return T._components
+
+        minimal_points = T.minimal_points()
+        components = []
+        for xi1 in minimal_points:
+            T1 = T.find_point(xi1)
+            # T1 is the subtree of T with root xi1
+            T2 = _connected_component_tree(T1)
+            if T1.has_parent() and not T1.parent().root_is_in():
+                new_component = AffinoidTree(X, root=T1.parent().root(), is_in=False)
+                new_component.make_child(T1)
+            else:
+                new_component = T2
+            components.append(new_component)
+        new_components = []
+        for T1 in components:
+            holes = T1.holes(upward_hole=False)
+            for _, T2, _ in holes:
+                new_components += T2.connected_components()
+        return components + new_components
 
     def compute_connected_components(self, comp_list, new_comp):
         r""" Compute the connected components of the represented affinoid.
@@ -446,14 +366,14 @@ class AffinoidTree(BerkovichTree):
 
         """
         T = self
-        if T._is_in_affinoid:
-            if T.parent() == None or T.parent()._is_in_affinoid:
+        if T._is_in:
+            if T.parent() is None or T.parent()._is_in:
                 holes = []
             else:
                 # possible source of error: root of T is of type I
                 holes = [TypeVPointOnBerkovichLine(T.root(), T.parent().root())]
             for T1 in T.children():
-                if T1._is_in_affinoid:
+                if T1._is_in:
                     T1.compute_connected_components(comp_list, new_comp)
                 else:
                     holes.append(TypeVPointOnBerkovichLine(T.root(), T1.root()))
@@ -461,13 +381,46 @@ class AffinoidTree(BerkovichTree):
             if holes != []:
                 new_comp.append(holes)
 
-            if T.parent() == None or not T.parent()._is_in_affinoid:
+            if T.parent() is None or not T.parent()._is_in:
                 # T.root() is the root of a component
                 comp_list.append(new_comp)
         else:
             # the root of T does not lie in U
             for T1 in T.children():
                 T1.compute_connected_components(comp_list, [])
+
+
+def _connected_component_tree(T):
+    r""" Return an affinoid tree corresponding to the leading connected component
+    the affinoid represented by ``T``.
+
+    INPUT:
+
+    - ``T`` -- an affinoid tree
+
+    OUTPUT: a new affinoid tree `T_1` representing a connected affinoid domain
+    whose minimal point is the root of `T`. This means that the out-points of
+    `T_1` are precisely the leaves of `T_1`.
+
+    If the root of `T` is an out-point, then `T_1` consists of a single out-point,
+    and thus represents an empty affinoid.
+
+    If the root of `T` is an in-point then then `T_1` has the same root as `T`,
+    and its children are computed by applying ``_connected_component_tree`` to
+    the children of `T`.
+
+    This is a helper function for
+    ``AffinoidDomainOnBerkovichLine.connected_component_tree``
+
+    """
+    X = T.berkovich_line()
+    if T.root_is_in():
+        T1 = AffinoidTree(X, root=T.root(), is_in=True)
+        for child in T.children():
+            T1.make_child(_connected_component_tree(child), check=True)
+    else:
+        T1 = AffinoidTree(X, root=T.root(), is_in=False)
+    return T1
 
 
 class AffinoidDomainOnBerkovichLine(SageObject):
@@ -495,6 +448,7 @@ class AffinoidDomainOnBerkovichLine(SageObject):
     - ..
 
     """
+
     def __init__(self, T):
         r""" Return the affinoid domain corresponding to the affinoid tree ``T``.
 
@@ -510,55 +464,64 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         self._X = T._X
         self._T = T
 
-
     def __repr__(self):
-        comp_str = ""
-        for U in self.components():
-            comp_str += str(U)
-        return "Affinoid with %s components:\n%s"%(self.number_of_components(),
-                                                 comp_str)
-
+        if self.is_empty():
+            return "The empty set"
+        elif self.is_full_berkovich_line():
+            return "the full berkovich line"
+        elif self.number_of_components() == 1:
+            return str(self.components()[0])
+        else:
+            comp_str = ""
+            for U in self.components():
+                comp_str += str(U)
+            return "Affinoid with {} components:\n{}".format(self.number_of_components(),
+                                                             comp_str)
 
     def berkovich_line(self):
         return self._X
 
+    def is_empty(self):
+        return self.number_of_components() == 0
 
-    def is_contained_in(self, xi):
+    def is_full_berkovich_line(self):
+        return (self.number_of_components() == 1
+                and self.components()[0].is_full_berkovich_line())
+
+    def tree(self):
+        if hasattr(self, "_T"):
+            return self._T
+        else:
+            xi0 = self.berkovich_line().gauss_point()
+            self._T = self.affinoid_subtree(xi0)
+            self._T.simplify()
+            return self._T
+
+    def is_in(self, xi):
         r"""
         Check whether ``x`` lies on the affinoid.
 
         INPUT:
 
-        - ``xi`` -- a point on the Berkovich line underlying the affinoid
+        - ``xi`` -- a point of type I, II or V
 
         OUTPUT:
 
         ``True`` if ``xi`` lies on the affinoid, ``False`` otherwise
 
         """
-        return self._T.is_in_affinoid(xi)
-
-
-    def compute_components(self):
-        T = self._T
-        comp_list = []
-        T.compute_connected_components(comp_list, [])
-        self._comp_list = comp_list
-        components = []
-        for comp in comp_list:
-            components.append(ElementaryAffinoidOnBerkovichLine(comp))
-        self._components = components
-
+        return self.tree().is_in(xi)
 
     def components(self):
-        if not hasattr(self, "_comp_list"):
-            self.compute_components()
+        if not hasattr(self, "_components"):
+            components = []
+            for T in self.tree().connected_components():
+                components.append(ElementaryAffinoidOnBerkovichLine(T))
+            self._components = components
         return self._components
-
 
     def number_of_components(self):
         return len(self.components())
-
 
     def boundary(self):
         r"""
@@ -568,74 +531,45 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         affinoid with the property that the valuative function of every rational
         function which is regular on the affinoid takes a minimum on this set.
 
-        The Shilov boundary is automatically computed when we construct the
+        The Shilov boundary is simply the union of the boundaries of the
         connected components.
 
         """
-        if not hasattr(self, "_comp_list"):
-            self.compute_components()
-        boundary = []
-        for comp in self._comp_list:
-            boundary += [b_list[0].boundary_point() for b_list in comp]
-        return boundary
-
+        if not hasattr(self, "_boundary"):
+            boundary = []
+            for V in self.components():
+                boundary += V.boundary()
+            self._boundary = boundary
+        return self._boundary
 
     def simplify(self):
         r""" Simplify this affinoid.
 
         This only changes the internal representation by an "affinoid tree".
+        Very likely, this is unnecessary because the simplification has already
+        occured when the affinoid was first constructed.
 
         """
-        self._T = self._T.simplify()
-
-
-    def minimal_representation(self):
-        r""" Return a a normlized representation of this affinoid.
-
-        A representation of an affinoid `U` by an affinoid tree `T` is called
-        *minimal* if all vertices  of type II
-        are either boundary points of `U` or have order at least 3.
-        Furthermore, no vertex of type I lies in `U`.
-
-        """
-        components = self.components()
-        U = components[0]
-        for i in range(1,len(components)):
-            U = U.union(components[i])
-
-        # check whether U is minimal
-        T = U._T
-        for T1 in T.subtrees():
-            xi = T1.root()
-            if xi.type == "II" and T1.order() <= 2:
-                # we check whether xi is a boundary point
-                is_boundary_point = (T1.has_parent() and not T1.parent().is_in_affinoid())
-                for child in T1.children():
-                    is_boundary_point = is_boundary_point or not child.is_in_affinoid()
-                assert is_boundary_point, "affinoid tree is not minimal"
-            else:
-                if xi.type == "I":
-                    assert not T1.is_in_affinoid()
-
-        return U
-
+        self._T = self.tree().simplify()
 
     def union(self, V):
         r"""
         Return the affinoid which is the union of ``self`` with ``V``.
+
+        This is now obsolete.
         """
 
-        T = self._T.union(V._T)
+        T = self.tree().union(V.tree())
         return AffinoidDomainOnBerkovichLine(T)
-
 
     def intersection(self, V):
         r"""
         Return the affinoid which is the intersection of ``self`` with ``V``.
-        """
-        T = self._T.intersection(V._T)
-        return AffinoidDomainOnBerkovichLine(T)
 
+        This is now obsolete.
+        """
+        T = self.tree().intersection(V.tree())
+        return AffinoidDomainOnBerkovichLine(T)
 
     def point_close_to_boundary(self, xi0):
         r"""
@@ -700,19 +634,19 @@ class AffinoidDomainOnBerkovichLine(SageObject):
 
         """
         U = self
-        T = U._T
+        T = U.tree()
         X = U.berkovich_line()
         F = X.function_field()
         x = F.gen()
         T0 = T.find_point(xi0)
-        assert T0 != None and T0._is_in_affinoid, "xi0 is not a boundary point"
+        assert T0 is not None and T0._is_in, "xi0 is not a boundary point"
         # we only look for point of type I which are larger than xi0
         # but it may be possibleto find other points with smaller degree
         v0 = xi0.pseudovaluation_on_polynomial_ring()
         Rb = v0.residue_ring()
         psi = Rb.one()
         for T1 in T0.children():
-            if not T1._is_in_affinoid:
+            if not T1._is_in:
                 eta1 = TypeVPointOnBerkovichLine(xi0, T1.root())
                 psi1 = eta1.minor_valuation().uniformizer()
                 if psi1.denominator().is_one():
@@ -728,6 +662,266 @@ class AffinoidDomainOnBerkovichLine(SageObject):
                 xi1 = X.point_from_discoid(phi(1/x)*x**phi.degree(), Infinity)
         assert U.is_contained_in(xi1), "error: xi1 is not contained in U"
         return xi1
+
+    def affinoid_subtree(self, xi0, is_in=None):
+        r""" Return the affinoid subtree with given root.
+
+        This function is used at most once, to construct a tree representing the
+        affinoid, if such a tree is not explicitly given, and the affinoid is
+        defined in some other way (as a rational domain, or as a union of other
+        affinoid domains,..).
+
+        INPUT:
+
+        - ``xi0`` - a point of type II or V
+        - ``is_in`` -- a boolean, or ``None`` (default ``None``)
+
+        OUTPUT: if `\xi_0` is of type II, then we return an affinoid tree with
+        root `\xi0` which represents the intersection of this affinoid with
+        `D_{\xi_0}`, the set of points `\geq \xi_0` (a closed discoid with
+        boundary point `\xi_0`, of the full Berkovich line if `xi_0` is the
+        Gauss point).
+
+        If `\xi0` is a type V point, corresponding to an open discoid `D`, then
+        we return the intersection with `D` of the affinoid subtree, whose root
+        is the boundary point of `\xi_0`.
+
+        If ``is_in`` is given, we assume it is equal to the truth value of
+        "`\xi_0` lies in this affinoid". This is useful to avoid an extra test
+        for membership.
+
+        """
+        from mclf.berkovich.berkovich_trees import replace_subtree
+        U = self
+        if is_in is None:
+            is_in = U.is_in(xi0)
+        if is_in:
+            # xi0 is in the affinoid; this should only happen if xi0 is of type I or II
+            assert xi0.type() in ["I", "II"], "if xi0 is an in-point, it must be of type I or II: xi0 = {}".format(xi0)
+            # we find the connected component of U(<=xi0) with boundary point xi0
+            T = U.connected_component_tree(xi0)
+            # in every hole < xi0 we have to see if there are more components of U
+            for T1, T2, eta in T.holes(upward_hole=False):
+                # T1 is a subtree of T with child T2 and eta is the
+                # direction from T1 to T2; eta does not lie in U
+                T3 = U.affinoid_subtree(eta, is_in=False)
+                # T3 is an affinoid tree with the same root as T1 such that
+                # all children lie in the direction of eta
+                if not T3.is_empty_set():
+                    # replace the hole (T1, T2) by T3
+                    T1.remove_child(T2)
+                    for new_child in T3.children():
+                        T1.make_child(new_child, check=True)
+            return T
+        else:
+            # xi0 is not in the affinoid U; we first look for all minimal points
+            # of U  which are greater than xi0. Each such point is a
+            # boundary point of an irreducible component of U
+            # In any case, the tree we return will have xi0, or the boundary
+            # of xi0, as root.
+            X = self.berkovich_line()
+            minimal_points = U.minimal_points(xi0)
+            if xi0.type() == "V":
+                T = AffinoidTree(X, root=xi0.boundary_point(), is_in=False)
+            else:
+                T = AffinoidTree(X, root=xi0, is_in=False)
+            if minimal_points == []:
+                # we give back a tree representing the empty set
+                return T
+            # we construct an affinoid tree T with root xi0 and whose leaves
+            # the minimal points, which are precisely the in-points of T
+            T = _make_affinoid_tree_with_in_leaves(xi0, minimal_points)
+            # now we replace the leaves by the subtrees defined by U
+            for xi in T.leaves():
+                T1 = T.find_point(xi)
+                T2 = U.affinoid_subtree(xi, is_in=True)
+                replace_subtree(T1, T2)
+            return T
+
+    def connected_component_tree(self, xi0):
+        r""" Return the tree of the connected component of this affinoid with given root.
+
+        INPUT:
+
+        - ``xi0`` -- a point type II or V
+
+        OUTPUT: if `\xi_0` is a point of type II, then we return an affinoid tree
+        underlying the connected component of this affinoid `U` with minimal
+        point `\xi_0`.
+
+        It is assumed but not checked that `\xi_0` lies in this affinoid.
+
+        If `\xi_0` is of type V then we return the branch of this tree in the
+        direction of `\xi_0`. This has the effect of "filling in all holes"
+        which do not lie in the open discoid `D_{\xi_0}`. It does *not*
+        correspond to the intersection with `D_{\xi_0}`.
+
+        Note::
+
+        This is the generic algorithm for the parent class
+        ``AffinoidDomainOnBerkovichLine``. It is assumed that the underlying
+        affinoid tree has already been computed. Otherwise we run into an
+        infinite loop.
+
+        """
+        U = self
+        X = U.berkovich_line()
+        T = U.tree()
+        if xi0.type() == "V":
+            is_type_V = True
+            eta = xi0
+            xi0 = eta.boundary_point()
+        else:
+            is_type_V = False
+        xi1, T0, T1, is_vertex = T.position(xi0)
+        if not xi0.is_equal(xi1):
+            # xi0 does not lie on the tree T; this means that every point > xi0
+            # are contained in U
+            return AffinoidTree(X, root=xi0, is_in=True)
+        # now xi0 lies on the tree
+        if not is_vertex:
+            # xi0 lies strictly on the path from T0 to T1
+            T_new = AffinoidTree(X, root=xi0, is_in=True)
+            T_new.make_child(_connected_component_tree(T1))
+            T1 = T_new
+        # now xi0 is the vertex of T1
+        if is_type_V:
+            T_new = AffinoidTree(X, root=xi0, is_in=True)
+            for T2 in T1.children():
+                if not eta.is_in_residue_class(T2.root()):
+                    continue
+                T3 = _connected_component_tree(T2)
+                T_new.make_child(T3, check=True)
+            return T_new
+        # now xi0 is the root of T1, and is of type I or II
+        T = _connected_component_tree(T1)
+        return T
+
+    def minimal_points(self, xi0=None):
+        r""" Return the minimal points of this affinoid greater than a given point.
+
+        INPUT:
+
+        - ``xi0`` -- a point of type II, or ``None`` (default ``None``)
+
+        OUTPUT: the list of all minimal points of this affinoid which are
+        `\geq \xi_0`.
+
+        """
+        return self.tree().minimal_points(xi0)
+
+
+class UnionOfDomains(AffinoidDomainOnBerkovichLine):
+    r""" Return the union of a list of affinoid domains.
+
+    INPUT:
+
+    - ``affinoid_list`` - a nonempty list of affinoid domains
+
+    OUTPUT: the union of the affinoid domains in ``affinoid_list``
+
+    """
+
+    def __init__(self, affinoid_list):
+
+        assert affinoid_list, "the list must not be empty"
+        self._X = affinoid_list[0].berkovich_line()
+        self._affinoid_list = affinoid_list
+
+    def is_in(self, xi):
+        r""" Return whether ``xi`` lies in this affinoid.
+
+        INPUT:
+
+        - ``xi`` -- a point on the Berkovich line (type V points are allowed)
+
+        OUTPUT: ``True`` if `\xi` lies on this affinoid.
+
+        """
+        for U in self._affinoid_list:
+            if U.is_in(xi):
+                return True
+        return False
+
+    def connected_component_tree(self, xi0):
+        r""" Return the tree of the connected component of this affinoid with given root.
+
+        INPUT:
+
+        - ``xi0`` -- a point type II or V
+
+        OUTPUT: if `\xi_0` is a point of type II, then we return an affinoid tree
+        underlying the connected component of this affinoid `U` with minimal
+        point `\xi_0`.
+
+        It is assumed but not checked that ``\xi_0` is a minimal point of a
+        connected component of `U`.
+
+        If `\xi_0` is of type V then we return the branch of this tree in the
+        direction of `\xi_0`. This has the effect of "filling in all holes"
+        which do not lie in the open discoid `D_{\xi_0}`. It does *not*
+        correspond to the intersection with `D_{\xi_0}`.
+
+        """
+        from mclf.berkovich.berkovich_trees import replace_subtree
+        U = self
+        affinoid_list = U._affinoid_list
+        T = affinoid_list[0].connected_component_tree(xi0)
+        for V in affinoid_list[1:]:
+            for T1, T2, eta in T.holes(upward_hole=False):
+                # we have T1 < T2
+                if not(T == T1 or T1.has_parent()):
+                    # T1 isn't a subtree of T anymore, so we can omit this run
+                    # of the loop; this is kind of dangerous, but so far it works
+                    continue
+                if V.is_in(eta):
+                    T3 = V.connected_component_tree(eta)
+                    if T == T1:
+                        T = T3
+                    else:
+                        # now T1 should be a proper subtree of T and hence
+                        # have a parent
+                        replace_subtree(T1, T3)   # error if T1 has no parent
+        return T
+
+    def minimal_points(self, xi0=None):
+        r""" Return the minimal points of this affinoid greater than a given point.
+
+        INPUT:
+
+        - ``xi0`` -- a point of type II, or ``None`` (default ``None``)
+
+        OUTPUT: the list of all minimal points of this affinoid which are
+        `\geq \xi_0`.
+
+        """
+        U = self
+        affinoid_list = U._affinoid_list
+        minimal_points = affinoid_list[0].minimal_points(xi0)
+        for V in affinoid_list[1:]:
+            new_points = V.minimal_points(xi0)
+            for xi1 in new_points:
+                # we see if we can replace an element of `minimal_points`
+                # by xi1, or if we can add xi1
+                new_minimal_points = []
+                check_xi1 = True
+                for xi2 in minimal_points:
+                    if check_xi1 and xi1.is_leq(xi2):
+                        # we can replace xi2 by xi1
+                        new_minimal_points.append(xi1)
+                        check_xi1 = False
+                    elif check_xi1 and xi2.is_leq(xi1):
+                        # we have xi2 < xi1 so we omit xi1 and retain xi2
+                        new_minimal_points.append(xi2)
+                        check_xi1 = False
+                    else:
+                        # xi1 and xi2 are incomparable or xi1 has already been dismissed
+                        new_minimal_points.append(xi2)
+                if check_xi1:
+                    # xi1 has not been found to be incomparable to all previous points
+                    new_minimal_points.append(xi1)
+                minimal_points = new_minimal_points
+        return minimal_points
 
 
 class ClosedUnitDisk(AffinoidDomainOnBerkovichLine):
@@ -760,6 +954,7 @@ class ClosedUnitDisk(AffinoidDomainOnBerkovichLine):
         v(x) >= 0
 
     """
+
     def __init__(self, X):
 
         self._X = X
@@ -772,7 +967,7 @@ class ElementaryAffinoidOnBerkovichLine(AffinoidDomainOnBerkovichLine):
     r"""
     Return the elementary affinoid corresponding to a boundary list.
 
-    An "elementary affinoid" is a a connected affinoid subdomain of a Berkovich
+    An "elementary affinoid" is a connected affinoid subdomain of a Berkovich
     line `X` which is the complement of a finite set of disjoint residue classes
     in `X`. It can be represented by a "boundary list" as follows.
 
@@ -798,30 +993,52 @@ class ElementaryAffinoidOnBerkovichLine(AffinoidDomainOnBerkovichLine):
       affinoid.
 
     """
-    def __init__(self, boundary_list):
-        assert boundary_list != [], "the boundary list must not be empty!"
-        # boundary = [ xi_list[0].boundary_point() for xi_list in boundary_list]
-        X = boundary_list[0][0].X()
+
+    def __init__(self, T):
+        X = T.berkovich_line()
         self._X = X
+        self._T = T
         boundary = []
         complement = []
-        T = AffinoidTree(X)
-        for boundary_comp  in boundary_list:
-            xi = boundary_comp[0].boundary_point()
-            T, T1 = T.add_point(xi, True)
-            boundary.append(xi)
-            for eta in boundary_comp:
-                T, T1 = T.add_point(eta.point_inside_residue_class(), False)
-                complement.append(eta)
-        self._T = T
-        self._comp_list = [boundary_list]
+        if T.root_is_in():
+            holes = T.holes()
+        else:
+            assert len(T.children()) > 0, "connected component must not be empty"
+            assert len(T.children()) == 1, "component is not connected"
+            T1 = T.children()[0]
+            assert T1.root_is_in(), "tree must have only one out-point for eachboundary point"
+            holes = T1.holes()
+        for T2, _, eta in holes:
+            xi = T2.root()
+            if not all([not xi.is_equal(xi1) for xi1 in boundary]):
+                boundary.append(xi)
+            complement.append(eta)
         self._boundary = boundary
         self._complement = complement
-
+        if holes == []:
+            if T.root_is_in():
+                self._is_empty = False
+                self._is_full_berkovich_line = True
+            else:
+                self._is_empty = True
+                self._is_full_berkovich_line = False
+        else:
+            self._is_empty = False
+            self._is_full_berkovich_line = False
 
     def __repr__(self):
-        return "Elementary affinoid defined by %s"%self.inequalities()
+        if self.is_empty():
+            return "The empty set"
+        elif self.is_full_berkovich_line():
+            return "the full berkovich line"
+        else:
+            return "Elementary affinoid defined by {}".format(self.inequalities())
 
+    def is_empty(self):
+        return self._is_empty
+
+    def is_full_berkovich_line(self):
+        return self._is_full_berkovich_line
 
     def inequalities(self):
         r"""
@@ -893,19 +1110,20 @@ class RationalDomainOnBerkovichLine(AffinoidDomainOnBerkovichLine):
       only need to know their valuations - which is constant on the subtree!
 
     """
+
     def __init__(self, X, f):
         F = X.function_field()
         f = F(f)
-        assert not f in F.constant_base_field(), "f must be nonconstant"
+        assert f not in F.constant_base_field(), "f must be nonconstant"
         self._X = X
         U = AffinoidTree(X)
         xi0 = X.gauss_point()
-        T = BerkovichTree(X,xi0)
+        T = BerkovichTree(X, xi0)
         T = T.adapt_to_function(f)
         path_list = T.paths()
         for xi1, xi2 in path_list:
-            in_list =[]
-            out_list= []
+            in_list = []
+            out_list = []
             xi1_in = xi1.v(f) >= 0
             if xi1_in:
                 in_list.append(xi1)
@@ -925,14 +1143,17 @@ class RationalDomainOnBerkovichLine(AffinoidDomainOnBerkovichLine):
             U = U.add_points(in_list, out_list)
         # we test whether U is correct
         for xi in U.vertices():
-            assert (xi.v(f) >= 0) == U.is_in_affinoid(xi)
+            assert (xi.v(f) >= 0) == U.is_in(xi)
         self._T = U
 
-#-------------------------------------------------------------------------
+# -------------------------------------------------------------------------
+
+
 """
 Some auxiliary functions:
 
 """
+
 
 def irreducible_polynomial_prime_to(f, min_deg=1):
     """ Return an irreducibel polynomial prime to f.
@@ -975,6 +1196,94 @@ def all_polynomials(F, x, d):
         for a in F.list():
             yield a*x**0
     else:
-        for e in range(0,d):
+        for e in range(0, d):
             for f in all_polynomials(F, x, e):
-                yield x**d+f
+                yield x**d + f
+
+
+def union_of_affinoid_trees(T1, T2):
+    r""" Return the tree representing the union of the affinoids with given trees.
+
+    This is now obsolete.
+
+    INPUT:
+
+     - ``T1``, ``T2`` -- affinoid trees
+
+     OUTPUT: the tree representing the union of the affinoids represented by
+     `T_1` and `T_2`.
+
+    """
+    xi1 = T1.root()
+    xi1_in = T1._is_in
+    xi2 = T2.root()
+    xi2_in = T2._is_in
+    if xi2.is_leq(xi1):
+        if xi1.is_leq(xi2) and not xi1_in and xi2_in:
+            xi1, xi2 = xi2, xi1
+            T1, T2 = T2, T1
+            xi1_in = True
+            xi2_in = False
+    if xi1_in:
+        # xi1 is the minimal point in the union
+        pass
+
+
+def simplify_tree_at_vertex(T, T1):
+    r""" Simplify the affinoid tree at a given vertex.
+
+    This is now obsolete.
+
+    INPUT:
+
+    - ``T`` -- an affinoid tree
+    - ``T1`` -- a subtree of `T`
+
+    OUTPUT: the affinoid tree `T` is simplified, starting at the subtree `T_1`.
+
+    We check whether the root of `T_1` (which is a vertex of `T`) may be
+    contracted, or whether `T_1` has a unique child which may be omitted.
+    In the first case, we try to iterate this, if possible.
+
+    This may not simplify `T` as much as possible. However, if `T` has been
+    obtained from a simplified
+
+    """
+    if T1.children() == []:
+        # a leaf can be omitted if its parent has the same in-out type
+        if T1.has_parent() and T1.parent()._is_in == T1._is_in:
+            T2 = T1.parent()
+            T.remove_subtree(T1)
+            simplify_tree_at_vertex(T, T2)
+    elif len(T1.children()) == 1:
+        T2 = T1.children()[0]
+
+
+def _make_affinoid_tree_with_in_leaves(xi0, leaves):
+    from mclf.berkovich.berkovich_trees import BerkovichTree
+    if xi0.type() == "V":
+        xi0 = xi0.boundary_point()
+    T = BerkovichTree(xi0.berkovich_line(), root=xi0)
+    for xi in leaves:
+        T, _ = T.add_point(xi)
+    return _make_affinoid_tree_with_in_leaves_inductively(T)
+
+
+def _make_affinoid_tree_with_in_leaves_inductively(T):
+    r""" Return an affinoid tree with in-leaves copied from a Berkovich tree.
+
+    INPUT:
+
+    - ``T`` -- a Berkovich tree
+
+    OUTPUT: an affinoid tree which is a copy of T, such that the in-points are
+    precisely the leaves.
+
+    """
+    if T.is_leaf():
+        return AffinoidTree(T.berkovich_line(), root=T.root(), is_in=True)
+    else:
+        T_new = AffinoidTree(T.berkovich_line(), root=T.root(), is_in=False)
+        for child in T.children():
+            T_new.make_child(_make_affinoid_tree_with_in_leaves_inductively(child))
+        return T_new

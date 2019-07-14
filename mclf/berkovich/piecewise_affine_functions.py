@@ -959,7 +959,7 @@ class PiecewiseAffineFunction(SageObject):
 
         - `T` is the refinement of the tree underlying `h`, obtained by adding
           all zeroes of `h` lying on the interior of an edge
-        - the flag ``is_in_affinoid`` is set for each vertex according to the
+        - the flag ``is_in`` is set for each vertex according to the
           value of `h` in this point.
 
         """
@@ -977,17 +977,17 @@ class PiecewiseAffineFunction(SageObject):
                 # path underlying h1
                 if xi2 is not None:
                     T2 = AffinoidTree(X, root=xi2, children=[T1], parent=None,
-                                      is_in_affinoid=True)
+                                      is_in=True)
                     subtrees.append(T2)
                     T1.make_parent(T2)
                 else:
                     # we may be able to replace T1 be a subtree
-                    if T1._is_in_affinoid == xi0_in:
+                    if T1._is_in == xi0_in:
                         while (len(T1.children()) == 1
-                               and T1.children()[0]._is_in_affinoid == xi0_in):
+                               and T1.children()[0]._is_in == xi0_in):
                             T1 = T1.children()[0]
                     # or even omit it completely
-                    if not(T1._is_in_affinoid == xi0_in and T1.children() == []):
+                    if not(T1._is_in == xi0_in and T1.children() == []):
                         subtrees.append(T1)
             else:
                 # the terminal point is of type I
@@ -999,24 +999,24 @@ class PiecewiseAffineFunction(SageObject):
                         if xi1_in:
                             # since xi2 lies in U, we don't need xi1
                             T1 = AffinoidTree(X, root=xi2, children=[], parent=None,
-                                              is_in_affinoid=True)
+                                              is_in=True)
                             subtrees.append(T1)
                         else:
                             # we need both xi1 and xi2
                             T1 = AffinoidTree(X, root=xi1, children=[], parent=None,
-                                              is_in_affinoid=False)
+                                              is_in=False)
                             T2 = AffinoidTree(X, root=xi2, children=[T1], parent=None,
-                                              is_in_affinoid=True)
+                                              is_in=True)
                             subtrees.append(T2)
                             T1.make_parent(T2)
                     else:
                         # no zeroe on the interior found; one of the endpoints
                         # must be a zero
                         T1 = AffinoidTree(X, root=xi1, children=[], parent=None,
-                                          is_in_affinoid=xi1_in)
+                                          is_in=xi1_in)
                         subtrees.append(T1)
         T0 = AffinoidTree(X, root=xi0, children=subtrees, parent=None,
-                          is_in_affinoid=xi0_in)
+                          is_in=xi0_in)
         for T1 in subtrees:
             T1.make_parent(T0)
         return T0
