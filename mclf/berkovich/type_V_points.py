@@ -248,7 +248,7 @@ class TypeVPointOnBerkovichLine(SageObject):
 
         """
         from mclf.berkovich.berkovich_line import valuation_from_discoid
-        X = self.X()
+        X = self.berkovich_line()
         F = X.function_field()
         x = F.gen()
         vK = X.base_valuation()
@@ -256,16 +256,16 @@ class TypeVPointOnBerkovichLine(SageObject):
         phi, s = self.open_discoid()
         if self._type == "contained_in_unit_disk":
             v0 = valuation_from_discoid(vK, self._phi_pol, Infinity)
-            xi = self.X().point_from_pseudovaluation(F.valuation(v0))
+            xi = self.berkovich_line().point_from_pseudovaluation(F.valuation(v0))
         elif self._type == "disjoint_from_unit_disk":
             v0 = valuation_from_discoid(vK, self._phi_pol, Infinity)
             v = F.valuation(v0)
             v = F.valuation((v, F.hom(1/x), F.hom(1/x)))
-            xi = self.X().point_from_pseudovaluation(v)
+            xi = self.berkovich_line().point_from_pseudovaluation(v)
         elif self._type == "overlaps_with_unit_disk":
-            xi = self.X().infty()
+            xi = self.berkovich_line().infty()
         else:
-            xi = self.X().gauss_point()
+            xi = self.berkovich_line().gauss_point()
         assert self.is_in_residue_class(xi), "xi does not lie in the residue class"
         return xi
 
@@ -282,7 +282,7 @@ class TypeVPointOnBerkovichLine(SageObject):
         v = self.major_valuation()
         Fb = self._k_v
         # a function field into which the residue field of v coerces
-        pi = self.X().base_valuation().uniformizer()
+        pi = self.berkovich_line().base_valuation().uniformizer()
         v = v.scale(1/v(pi))
         assert v(pi) == 1
         s = v(f)
@@ -344,6 +344,20 @@ class TypeVPointOnBerkovichLine(SageObject):
         """
         return self.is_in_residue_class(xi)
 
+    def is_equal(self, xi):
+        r"""
+        Return ``True`` is self is equal to ``xi``.
+
+        """
+        if not xi.type() == "V":
+            return False
+        return self.is_leq(xi) and xi.is_leq(self)
+
+    def is_strictly_less(self, xi1):
+        """ Check whether ``self`` is strictly smaller than ``xi1``.
+        """
+        return self.is_leq(xi1) and not self.is_equal(xi1)
+
     def open_discoid(self):
         r""" Return the representation of self as an open discoid.
 
@@ -402,7 +416,7 @@ class TypeVPointOnBerkovichLine(SageObject):
         """
 
         eta = self
-        X = eta.X()
+        X = eta.berkovich_line()
         phi, s = eta.open_discoid()
         assert t > s, "t must be > s"
 

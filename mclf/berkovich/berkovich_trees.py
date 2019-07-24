@@ -180,17 +180,23 @@ class BerkovichTree(SageObject):
             vertices += T.vertices()
         return vertices
 
-    def leaves(self):
+    def leaves(self, subtrees=False):
         r"""
         Return the list of all leaves.
+
+        If ``subtrees`` is ``True``, then we return the list of subtrees
+        corresponding to the leaves.
         """
 
         leaves = []
         if self.is_leaf():
-            leaves.append(self._root)
+            if subtrees:
+                leaves.append(self)
+            else:
+                leaves.append(self._root)
         else:
             for T in self._children:
-                leaves += T.leaves()
+                leaves += T.leaves(subtrees)
         return leaves
 
     def subtrees(self):

@@ -1200,7 +1200,7 @@ def complete_factorization(X, L, a_0):
                 irreducible_factors.append(g)
     # we have recomputed L and updated a_0 accordingly
     # get rid of trivial factors:
-    L1 = [(f, a) for f, a in L1 if a != 0]
+    L1 = [(g, a) for g, a in L1 if a != 0]
     return L1, a_0
 
 

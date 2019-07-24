@@ -132,16 +132,17 @@ TO DO:
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# *****************************************************************************
 
 from sage.all import PolynomialRing, FunctionField, floor, GaussValuation
 from mclf.berkovich.berkovich_line import BerkovichLine
 from mclf.berkovich.berkovich_trees import BerkovichTree
-from mclf.berkovich.affinoid_domain import RationalDomainOnBerkovichLine, ClosedUnitDisk
+# from mclf.berkovich.affinoid_domain import ClosedUnitDisk
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
 from mclf.curves.superelliptic_curves import SuperellipticCurve
 from mclf.semistable_reduction.reduction_trees import ReductionTree
 from mclf.semistable_reduction.semistable_models import SemistableModel
+
 
 class SuperpModel(SemistableModel):
     r"""
@@ -175,6 +176,7 @@ class SuperpModel(SemistableModel):
 
 
     """
+
     def __init__(self, Y, vK):
 
         p = vK.residue_field().characteristic()
@@ -191,7 +193,8 @@ class SuperpModel(SemistableModel):
         phi, psi, f1 = v0.monic_integral_model(f)
         # now f1 = phi(f).monic()
         if f1 != f.monic():
-            print("We make the coordinate change (x --> %s) in order to work with an integral polynomial f"%phi(R.gen()))
+            print("We make the coordinate change (x --> {}) in order to work\
+                with an integral polynomial f".format(phi(R.gen())))
             self._f = f1
             a = phi(f).leading_coefficient()
             pi = vK.uniformizer()
@@ -215,11 +218,11 @@ class SuperpModel(SemistableModel):
         X = BerkovichLine(self._FX, vK)
         self._X = X
 
-
     def __repr__(self):
-        return "semistable model of superelliptic curve Y: y^%s = %s over %s, with respect to %s"%(self._p,
-                        self._a*self._f, self.base_valuation().domain(), self.base_valuation())
-
+        return "semistable model of superelliptic curve Y: y^{} = {} over {},\
+            with respect to {}".format(self._p, self._a*self._f,
+                                       self.base_valuation().domain(),
+                                       self.base_valuation())
 
     def etale_locus(self):
         r"""
@@ -268,6 +271,7 @@ class SuperpModel(SemistableModel):
 
         """
         from mclf.berkovich.piecewise_affine_functions import valuative_function
+        from mclf.berkovich.affinoid_domain import UnionOfDomains
         if hasattr(self, "_etale_locus"):
             return self._etale_locus
 
@@ -292,34 +296,17 @@ class SuperpModel(SemistableModel):
 
         pi = self.base_valuation().uniformizer()
         delta = [valuative_function(X, ([(c[pl], p - 1)], -p*v_K(pi)))]
-        delta += [valuative_function(X, ([(c[pl], i*(p-1)), (a[i], -pl*(p-1))],
-                                          -i*p*v_K(pi))) for i in range(1, n + 1)]
-        delta += [valuative_function(X, ([(c[pl], k*(p-1)), (c[k], -pl*(p-1))],
-                  -p*(k-pl)*v_K(pi))) for k in range(m + 1, n + 1) if k != pl]
-
-        # X_et = RationalDomainOnBerkovichLine(X, delta[0])
-        X_et = delta[0].affinoid_domain()
-        for i in range(1, len(delta)):
-            # the following exception if necessary because calling
-            # RationalDomainOnBerkovichLine(X, f) with f constant
-            # result in an error
-            # k = delta[i].parent().constant_base_field()
-            # if delta[i] in k:
-                # if delta[i] is constant, it must not be integral
-                # otherwise we add the whole Berkovich line which is
-                # not an affinoid
-                # assert self.base_valuation()(delta[i]) < 0, "this is not an affinoid"
-                # if vK(delta[i]) >= 0 then we add the empty set, i.e
-                # we do nothing
-            # else:
-            # X_et = X_et.union(RationalDomainOnBerkovichLine(X, delta[i]))
-            X_et = X_et.union(delta[i].affinoid_domain())
-            X_et.simplify()
-        X_et = X_et.intersection(ClosedUnitDisk(X))
-        X_et = X_et.minimal_representation()
+        delta += [valuative_function(
+            X, ([(c[pl], i*(p - 1)), (a[i], -pl*(p - 1))],
+                -i*p*v_K(pi))) for i in range(1, n + 1)]
+        delta += [
+            valuative_function(
+                X, ([(c[pl], k*(p - 1)), (c[k], -pl*(p - 1))], -p*(k - pl)*v_K(pi)))
+            for k in range(m + 1, n + 1) if k != pl]
+        U_list = [delta[i].affinoid_domain() for i in range(len(delta))]
+        X_et = UnionOfDomains(U_list).intersection_with_unit_disk()
         self._etale_locus = X_et
         return X_et
-
 
     def reduction_tree(self):
         r"""
@@ -346,7 +333,6 @@ class SuperpModel(SemistableModel):
         self._reduction_tree = reduction_tree
         return reduction_tree
 
-
     def compute_semistable_reduction(self):
         r"""
         Compute the semistable reduction of this curve, and report on the
@@ -364,7 +350,8 @@ class SuperpModel(SemistableModel):
         inertial_components = reduction_tree.inertial_components()
         assert inertial_components != [], "no inertial components found! Something is wrong.."
         if len(inertial_components) > 1:
-            print("There are %s inertial components to consider: "%len(inertial_components))
+            print("There are {} inertial components to consider: ".format(
+                len(inertial_components)))
         else:
             print("There is exactly one inertial component to consider:")
         print()
@@ -372,12 +359,14 @@ class SuperpModel(SemistableModel):
             print("inertial component corresponding to ")
             print(Z.interior())
             print("It splits over ", Z.splitting_field().extension_field())
-            print("into %s lower components."%len(Z.lower_components()))
+            print("into {} lower components.".format(len(Z.lower_components())))
             print("The upper components are: ")
             for W in Z.upper_components():
                 print(W)
                 if W.field_of_constants_degree() > 1:
-                    print("   (note that this component is defined over an extension of degree %s over the residue field)"%W.field_of_constants_degree())
+                    print("   (note that this component is defined over an\
+                        extension of degree {} over the residue field)".format(
+                        W.field_of_constants_degree()))
             print("Contribution of this component to the reduction genus is ", Z.reduction_genus())
             print
         print
@@ -388,15 +377,13 @@ class SuperpModel(SemistableModel):
             raise ValueError()
 
 
-
 """
 auxiliary functions
 -------------------
 """
 
 
-
-def p_approximation(f,p):
+def p_approximation(f, p):
     r"""
     Return the `p`-approximation of ``f``.
 
@@ -431,10 +418,10 @@ def p_approximation(f,p):
     for k in range(1, r+1):
         h = h+(g[k]/p)*x**k
         g = f-h**p
-    return h,g
+    return h, g
 
 
-def p_approximation_generic(f,p):
+def p_approximation_generic(f, p):
     r"""
     Return the generic `p`-approximation of ``f``.
 
@@ -456,6 +443,6 @@ def p_approximation_generic(f,p):
     S = PolynomialRing(K, 't')
     t = S.gen()
     F = f(x+t)
-    H,G = p_approximation(F,p)
+    H, G = p_approximation(F, p)
     # d =[R(G[k]*f^k) for k in [0..f.degree()]]
-    return H,G
+    return H, G

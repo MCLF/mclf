@@ -122,7 +122,7 @@ TODO:
 """
 
 
-#*****************************************************************************
+# *****************************************************************************
 #       Copyright (C) 2017 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -130,7 +130,7 @@ TODO:
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# *****************************************************************************
 
 from sage.all import ZZ, QQ, FunctionField, SageObject, Infinity
 from mclf.berkovich.berkovich_line import BerkovichLine
@@ -141,7 +141,7 @@ from mclf.padic_extensions.weak_padic_galois_extensions import WeakPadicGaloisEx
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve, PointOnSmoothProjectiveCurve
 from mclf.curves.morphisms_of_smooth_projective_curves import MorphismOfSmoothProjectiveCurves
 
-#----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------
 
 #                       Reduction trees
 #                       ===============
@@ -171,6 +171,7 @@ class ReductionTree(SageObject):
         numbers.
 
     """
+
     def __init__(self, Y, vK, T, separable_components=None):
 
         assert Y.constant_base_field() == vK.domain()
@@ -179,7 +180,7 @@ class ReductionTree(SageObject):
         self._T = T
         self._X = T.berkovich_line()
 
-        if separable_components == None:
+        if separable_components is None:
             # all vertices of T are marked as "separable"
             for T1 in T.subtrees():
                 T1.is_separable = True
@@ -189,23 +190,21 @@ class ReductionTree(SageObject):
                 T1.is_separable = False
             for xi in separable_components:
                 T1 = T.find_point(xi)
-                assert T1 != None, "xi is not a vertex of T"
+                assert T1 is not None, "xi is not a vertex of T"
                 T1.is_separable = True
 
         # create the inertial components
         inertial_components = []
         for T1 in T.subtrees():
             xi = T1.root()
-            if xi.type()=="II":
+            if xi.type() == "II":
                 Z = InertialComponent(self, xi, T1.is_separable)
                 T1.inertial_component = Z
                 inertial_components.append(Z)
         self._inertial_components = inertial_components
 
-
     def __repr__(self):
-        return "A reduction tree for  %s, relative to %s"%(self._Y, self._vK)
-
+        return "A reduction tree for  %s, relative to {}".format((self._Y, self._vK))
 
     def curve(self):
         r"""
@@ -213,13 +212,11 @@ class ReductionTree(SageObject):
         """
         return self._Y
 
-
     def berkovich_line(self):
         r"""
         Return the Berkovich line `X` of which the curve `Y` is a cover.
         """
         return self._X
-
 
     def berkovich_tree(self):
         r"""
@@ -227,13 +224,11 @@ class ReductionTree(SageObject):
         """
         return self._T
 
-
     def base_valuation(self):
         r"""
         Return the specified valuation of the base field.
         """
         return self._vK
-
 
     def base_field(self):
         r"""
@@ -241,13 +236,11 @@ class ReductionTree(SageObject):
         """
         return self._vK.domain()
 
-
     def inertial_components(self):
         r"""
         Return the list of inertial components.
         """
         return self._inertial_components
-
 
     def add_inertial_component(self, xi):
         r"""
@@ -265,11 +258,10 @@ class ReductionTree(SageObject):
 
         """
         subtree = self.berkovich_tree().find_point(xi)
-        assert subtree != None, "xi is not a vertex of the given Berkovich tree"
+        assert subtree is not None, "xi is not a vertex of the given Berkovich tree"
         Z = InertialComponent(self, xi)
         self._inertial_components.append(Z)
         subtree.inertial_component = Z
-
 
     def reduction_genus(self):
         r"""
@@ -307,7 +299,6 @@ class ReductionTree(SageObject):
             self._reduction_genus = reduction_genus
         return self._reduction_genus
 
-
     def reduction_conductor(self):
         r"""
         Return the conductor of the curve.
@@ -337,7 +328,6 @@ class ReductionTree(SageObject):
             self._reduction_conductor = 1 + sum([Z.reduction_conductor() for Z in self.inertial_components()])
         return self._reduction_conductor
 
-
     def is_semistable(self):
         r"""
         Check wether the reduction specified by this object is semistable.
@@ -346,8 +336,7 @@ class ReductionTree(SageObject):
         return self.reduction_genus() == self.curve().genus()
 
 
-
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 #                    inertial components
 #                    ===============
@@ -376,6 +365,7 @@ class InertialComponent(SageObject):
     of models `Y` of `X` lying above `\xi`, over various extensions of the base field.
 
     """
+
     def __init__(self, R, xi, is_separable=True):
         assert xi.type() == "II", "xi must be a point of type II!"
         self._R = R
@@ -398,10 +388,8 @@ class InertialComponent(SageObject):
         self._reduction_genus = {}
         self._is_separable = is_separable
 
-
     def __repr__(self):
-        return "inertial component of reduction tree with interior %s"%self.interior()
-
+        return "inertial component of reduction tree with interior {}".format(self.interior())
 
     def reduction_tree(self):
         r"""
@@ -409,13 +397,11 @@ class InertialComponent(SageObject):
         """
         return self._R
 
-
     def is_separable(self):
         r"""
         Return ``True`` is this inertial component is separable.
         """
         return self._is_separable
-
 
     def component(self):
         r"""
@@ -427,14 +413,12 @@ class InertialComponent(SageObject):
         """
         return self._component
 
-
     def function_field(self):
         r"""
         Return the function field of this inertial component
         (which is the residue field of the valuation corresponding to it).
         """
         return self.component().function_field()
-
 
     def reduce(self, f):
         r""" Return the reduction of a rational function to this component.
@@ -460,16 +444,14 @@ class InertialComponent(SageObject):
             x
 
         """
-        assert self.valuation()(f) ==0, "f must be a unit of the valuation ring"
+        assert self.valuation()(f) == 0, "f must be a unit of the valuation ring"
         return self._to_function_field(self.valuation().reduce(f))
-
 
     def berkovich_line(self):
         r"""
         Return the underlying Berkovich line `X`.
         """
         return self._R.berkovich_line()
-
 
     def type_II_point(self):
         r"""
@@ -478,10 +460,8 @@ class InertialComponent(SageObject):
         """
         return self._xi
 
-
     def valuation(self):
         return self._valuation
-
 
     def basepoint(self):
         r"""
@@ -496,7 +476,6 @@ class InertialComponent(SageObject):
         if not hasattr(self, "_basepoint"):
             self._basepoint = self.interior().point_close_to_boundary(self._xi)
         return self._basepoint
-
 
     def interior(self):
         r"""
@@ -516,17 +495,21 @@ class InertialComponent(SageObject):
         and is disjoint from the residue classes of the marked points.
 
         """
+        from mclf.berkovich.affinoid_domain import AffinoidTree
+        X = self.berkovich_line()
         if not hasattr(self, "_interior"):
-            eta_list = []
             subtree = self._subtree
             xi = self._xi
-            if subtree.has_parent():
-                eta_list.append(TypeVPointOnBerkovichLine(xi, subtree.parent().root()))
+            T = AffinoidTree(X, root=xi, is_in=True)
             for child in subtree.children():
-                eta_list.append(TypeVPointOnBerkovichLine(xi, child.root()))
-            self._interior = ElementaryAffinoidOnBerkovichLine([eta_list])
+                T1 = AffinoidTree(X, root=child.root(), is_in=False)
+                T.make_child(T1)
+            if subtree.has_parent():
+                T1 = AffinoidTree(X, root=subtree.parent().root(), is_in=False)
+                T1.make_child(T)
+                T = T1
+            self._interior = ElementaryAffinoidOnBerkovichLine(T)
         return self._interior
-
 
     def splitting_field(self, check=False):
         r"""
@@ -570,7 +553,7 @@ class InertialComponent(SageObject):
                     # L should be a (relative) number field (which may include QQ)
                     if not L == QQ:
                         f = L.absolute_polynomial().change_ring(K)
-                        F += [g for g,m in f.factor()]
+                        F += [g for g, m in f.factor()]
                 # F = self.curve().fiber_equations(self.basepoint().function_field_valuation())
             else:
                 L = self.basepoint().function_field_valuation().residue_field()
@@ -583,7 +566,6 @@ class InertialComponent(SageObject):
             # print("e = ", e)
             self._splitting_field = WeakPadicGaloisExtension(Kh, F, minimal_ramification=e)
         return self._splitting_field
-
 
     def upper_components(self, u=Infinity):
         r"""
@@ -610,7 +592,6 @@ class InertialComponent(SageObject):
             upper_components += Z.upper_components()
         self._upper_components[u] = upper_components
         return upper_components
-
 
     def lower_components(self, u=Infinity):
         r"""
@@ -691,7 +672,6 @@ class InertialComponent(SageObject):
         self._lower_components[u] = lower_components
         return lower_components
 
-
     def outgoing_edges(self):
         r"""
         Return the list of outgoing edges from this inertial component.
@@ -712,8 +692,6 @@ class InertialComponent(SageObject):
                 v = eta.minor_valuation()
                 outgoing_edges.append(PointOnSmoothProjectiveCurve(self.component(), v))
         return outgoing_edges
-
-
 
     def outdegree(self, u=Infinity):
         r"""
@@ -743,10 +721,9 @@ class InertialComponent(SageObject):
         for z in self.outgoing_edges():
             for Xb in self.lower_components(u):
                 for x in Xb.map_to_inertial_component().fiber(z):
-                    assert x.curve()==Xb.component(), "x = %s,\nXb=%s"%(x,Xb)
+                    assert x.curve() == Xb.component(), "x = {},\nXb={}".format(x, Xb)
                     ret += Xb.fiber_degree_in_upper_components(x)
         return ret
-
 
     def reduction_genus(self, u=Infinity):
         r"""
@@ -767,9 +744,8 @@ class InertialComponent(SageObject):
             return self._reduction_genus[u]
         else:
             self._reduction_genus[u] = sum([W.genus()*W.field_of_constants_degree()
-                    for W in self.upper_components(u)])
+                                            for W in self.upper_components(u)])
             return self._reduction_genus[u]
-
 
     def component_degree(self, u=Infinity):
         r"""
@@ -781,7 +757,6 @@ class InertialComponent(SageObject):
 
         """
         return sum([W.field_of_constants_degree() for W in self.upper_components(u)])
-
 
     def reduction_conductor(self):
         r"""
@@ -819,19 +794,19 @@ class InertialComponent(SageObject):
             h_0 = self.outdegree(u_0) - self.component_degree(u_0)
             epsilon = 2*(g - g_0) + 2*h - h_0
             delta = m_0/n*2*(g + h - g_0 - h_0)*u_0
-            for i in range(1,len(ramification_filtration)):
+            for i in range(1, len(ramification_filtration)):
                 u = ramification_filtration[i][0]
                 m_u = ramification_filtration[i][1]
                 g_u = self.reduction_genus(u)
                 h_u = self.outdegree(u) - self.component_degree(u)
                 v = ramification_filtration[i-1][0]
-                delta += m_u/n*2*(g + h - g_u -h_u)*(u - v)
+                delta += m_u/n*2*(g + h - g_u - h_u)*(u - v)
             self._reduction_conductor = epsilon + delta
 
         return self._reduction_conductor
 
 
-#-----------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 #                 reduction components
 #                 ====================
@@ -849,14 +824,12 @@ class ReductionComponent(SageObject):
     # _component
     # _to_function_field
 
-
     def reduction_tree(self):
         r"""
         Return the reduction tree underlying the reduction component.
 
         """
         return self._inertial_component.reduction_tree()
-
 
     def inertial_component(self):
         r"""
@@ -865,14 +838,12 @@ class ReductionComponent(SageObject):
         """
         return self._inertial_component
 
-
     def base_valuation(self):
         r"""
         Return the base valuation of this reduction component.
 
         """
         return self._base_valuation
-
 
     def base_field(self):
         r"""
@@ -881,7 +852,6 @@ class ReductionComponent(SageObject):
         """
         return self._base_valuation.domain()
 
-
     def valuation(self):
         r"""
         Return the valuation corresponding to this reduction component.
@@ -889,14 +859,12 @@ class ReductionComponent(SageObject):
         """
         return self._valuation
 
-
     def component(self):
         r"""
         Return the normalization of this reduction component.
 
         """
         return self._component
-
 
     def function_field(self):
         r"""
@@ -909,14 +877,12 @@ class ReductionComponent(SageObject):
         """
         return self.component().function_field()
 
-
     def function_field_of_generic_fiber(self):
         r""" Return the function field of the generic fiber of the model
         underlying this reduction component.
 
         """
         return self.valuation().domain()
-
 
     def constant_base_field(self):
         r"""
@@ -931,7 +897,6 @@ class ReductionComponent(SageObject):
         """
         return self.component().constant_base_field()
 
-
     def multiplicity(self):
         r"""
         Return the multiplicity of this reduction component.
@@ -943,14 +908,12 @@ class ReductionComponent(SageObject):
         pi = self.valuation().uniformizer()
         return ZZ(self.valuation()(pi_L)/self.valuation()(pi))
 
-
     def from_residue_field(self):
         r""" Return the isomorphism from the residue field of the valuation
         corresponding to this reduction component to its function field.
 
         """
         return self._to_function_field
-
 
     def reduce(self, f):
         r""" Return the image of a function on the generic fiber to this component.
@@ -959,7 +922,8 @@ class ReductionComponent(SageObject):
         assert self.valuation()(f) == 0, "f must be a unit of the valuation ring"
         return self.from_residue_field(self.valuation().reduce(f))
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class LowerComponent(ReductionComponent):
     r"""
@@ -1015,10 +979,9 @@ class LowerComponent(ReductionComponent):
         self._map_to_inertial_component = MorphismOfSmoothProjectiveCurves(
             self.component(), Z0.component(), phi.post_compose(to_F))
 
-
     def __repr__(self):
-        return "lower component of reduction tree corresponding to  %s"%self.valuation()
-
+        return "lower component of reduction tree corresponding to {}".format(
+            self.valuation())
 
     def upper_components(self):
         r"""
@@ -1065,8 +1028,10 @@ class LowerComponent(ReductionComponent):
         np = NewtonPolygon([(i, v(G[i])) for i in range(G.degree() + 1)])
         r = np.slopes()[-1]   # the largest slope
         if r <= 0:      # G is integral w.r.t. v
-            upper_valuations = [FYL.valuation(w)
-                for w in v.mac_lane_approximants(FYL.polynomial(), require_incomparability=True)]
+            upper_valuations = [
+                FYL.valuation(w)
+                for w in v.mac_lane_approximants(FYL.polynomial(),
+                                                 require_incomparability=True)]
         else:           # G is not integral
             vK = self.reduction_tree().base_valuation()
             pi = vK.uniformizer()           # we construct a function field FYL1
@@ -1079,8 +1044,9 @@ class LowerComponent(ReductionComponent):
             y1 = FYL1.gen()
             V = v.mac_lane_approximants(G1, require_incomparability=True)
             V = [FYL1.valuation(w) for w in V]   # the extensions of v to FYL1
-            upper_valuations = [FYL.valuation((w,
-                FYL.hom(y1 / pi**k), FYL1.hom(pi**k * FYL.gen()))) for w in V]
+            upper_valuations = [
+                FYL.valuation((w, FYL.hom(y1 / pi**k),
+                               FYL1.hom(pi**k * FYL.gen()))) for w in V]
             #                                      made into valuations on FYL
         return [UpperComponent(self, w) for w in upper_valuations]
 
@@ -1111,7 +1077,7 @@ class LowerComponent(ReductionComponent):
         all upper components.
 
         """
-        assert P.curve()==self.component(), "P must be a point on this lower component"
+        assert P.curve() == self.component(), "P must be a point on this lower component"
         ret = 0
         for Yb in self.upper_components():
             ret += Yb.map_to_lower_component().fiber_degree(P)
@@ -1186,7 +1152,7 @@ class UpperComponent(ReductionComponent):
             self._component, Z.component(), phi)
 
     def __repr__(self):
-        return "upper component of reduction tree corresponding to  %s"%self.valuation()
+        return "upper component of reduction tree corresponding to  {}".format(self.valuation())
 
     def genus(self):
         r"""
