@@ -944,7 +944,6 @@ class PiecewiseAffineFunction(SageObject):
         """
         from mclf.berkovich.affinoid_domain import AffinoidDomainOnBerkovichLine
         U = AffinoidDomainOnBerkovichLine(self._affinoid_tree())
-        # U.simplify()
         return U
 
     def _affinoid_tree(self):
@@ -1022,7 +1021,7 @@ class PiecewiseAffineFunction(SageObject):
         return T0
 
 
-def valuative_function(D, f, T=None):
+def valuative_function(D, f, T=None, is_factored=False):
     r""" A valuative function on a domain in the Berkovich line.
 
     INPUT:
@@ -1072,15 +1071,18 @@ def valuative_function(D, f, T=None):
         a_0 = 0
     else:
         L, a_0 = f
-    L, a_0 = complete_factorization(X, L, a_0)
-    initial_value = a_0 + sum([a*initial_point.v(g) for g, a in L])
+    if not is_factored:
+        L, a_0 = complete_factorization(X, L, a_0)
+    else:
+        L, a_0 = simplify_L(D, L, a_0)
+    initial_value = a_0 + sum([a*initial_point.v(g) for g, a, zeroes in L])
     assert compute_value(L, a_0, initial_point) == initial_value
 
     if T is None:
-        degree = sum([a*g.numerator().degree() for g, a in L])
+        degree = sum([a*g.numerator().degree() for g, a, zeroes in L])
         T = BerkovichTree(X, root=initial_point)
-        for g, a in L:
-            for xi in [xi2 for xi2, m in X.prime_divisor(g)]:
+        for g, a, zeroes in L:
+            for xi in zeroes:
                 T, _ = T.add_point(xi)
         if degree != 0:
             T, _ = T.add_point(X.infty())
@@ -1088,7 +1090,33 @@ def valuative_function(D, f, T=None):
     for h1, _ in restrictions:
         assert h1.initial_point().is_equal(initial_point)
         assert h1.initial_value() == initial_value
-    return PiecewiseAffineFunction(D, initial_value, restrictions)
+    h = PiecewiseAffineFunction(D, initial_value, restrictions)
+    return h
+
+
+def simplify_L(D, L, a_0):
+    r""" Return the simplified presentation of a valuative function.
+
+    INPUT:
+
+    - ``D`` -- a domain on the Berkovich line
+    - ``L`` -- a list of tripels `(g, m, [\xi])`
+    - ``a_0`` -- a rational number
+
+    Here `L`, `a_0` represent a valuative function on a domain containing `D`.
+
+    OUTPUT: the simplification of `L`, `a_0` corresponding to the restriction of
+    the valuative function to `D`.
+
+    """
+    L1 = []
+    xi0 = D.minimal_point()
+    for g, m, zeroes in L:
+        if any(D.is_in(xi) for xi in zeroes):
+            L1.append((g, m, zeroes))
+        else:
+            a_0 += m*xi0.v(g)
+    return L1, a_0
 
 
 def compute_restrictions(L, a0, T):
@@ -1115,7 +1143,7 @@ def compute_restrictions(L, a0, T):
             h2 = None
         else:
             D2 = Discoid(xi1)
-            h2 = valuative_function(D2, (L, a0), T=T1)
+            h2 = valuative_function(D2, (L, a0), T=T1, is_factored=True)
             assert h1.terminal_point().is_equal(h2.initial_point())
             assert h1.terminal_value() == h2.initial_value(), "h1 = {}, h2 = {}, L = {}, a0 = {}".format(h1, h2, L, a0)
         restrictions.append((h1, h2))
@@ -1155,19 +1183,19 @@ def restriction_to_path(gamma, L, a0):
 
 def compute_value(L, a0, xi):
     if xi.is_infinity():
-        degree = sum([a*f.numerator().degree() for f, a in L])
+        degree = sum([a*f.numerator().degree() for f, a, _ in L])
         if degree < 0:
             return Infinity
         elif degree > 0:
             return -Infinity
         else:
-            return a0 + sum([a*xi.v(f.numerator().leading_coefficient()) for f, a in L])
+            return a0 + sum([a*xi.v(f.numerator().leading_coefficient()) for f, a, _ in L])
     else:
-        return a0 + sum([a*xi.v(f) for f, a in L])
+        return a0 + sum([a*xi.v(f) for f, a, _ in L])
 
 
 def compute_derivative(L, a0, eta):
-    return sum([a*eta.derivative(f) for f, a in L])
+    return sum([a*eta.derivative(f) for f, a, _ in L])
 
 
 # ----------------------------------------------------------------------------
@@ -1201,19 +1229,12 @@ def complete_factorization(X, L, a_0):
     # we have recomputed L and updated a_0 accordingly
     # get rid of trivial factors:
     L1 = [(g, a) for g, a in L1 if a != 0]
-    return L1, a_0
-
-
-def simplify_L(initial_point, L, a_0):
-    L1 = []
-    for f, a, zeroes in L:
-        if all([not initial_point.is_leq(xi) for xi in zeroes]):
-            # no root of f lies in the discoid D
-            a_0 = a_0 + a*initial_point.v(f)
-        else:
-            zeroes = [xi for xi in zeroes if initial_point.is_leq(xi)]
-            L1.append((f, a, zeroes))
-    return L, a_0
+    # compute the zeroes of each factor
+    L2 = []
+    for g, a in L1:
+        zeroes = [xi for xi, m in X.prime_divisor(g)]
+        L2.append((g, a, zeroes))
+    return L2, a_0
 
 
 def affine_valuative_function(gamma, description):
