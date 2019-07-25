@@ -270,7 +270,7 @@ class SuperpModel(SemistableModel):
         result is that the etale locus is contained in the closed unit disk.
 
         """
-        from mclf.berkovich.piecewise_affine_functions import valuative_function
+        from mclf.berkovich.piecewise_affine_functions import Discoid, valuative_function
         from mclf.berkovich.affinoid_domain import UnionOfDomains
         if hasattr(self, "_etale_locus"):
             return self._etale_locus
@@ -295,16 +295,17 @@ class SuperpModel(SemistableModel):
         a = [a[i]/f for i in range(n+1)]
 
         pi = self.base_valuation().uniformizer()
-        delta = [valuative_function(X, ([(c[pl], p - 1)], -p*v_K(pi)))]
+        D = Discoid(X.gauss_point())    # this is the closed unit disk
+        delta = [valuative_function(D, ([(c[pl], p - 1)], -p*v_K(pi)))]
         delta += [valuative_function(
-            X, ([(c[pl], i*(p - 1)), (a[i], -pl*(p - 1))],
+            D, ([(c[pl], i*(p - 1)), (a[i], -pl*(p - 1))],
                 -i*p*v_K(pi))) for i in range(1, n + 1)]
         delta += [
             valuative_function(
-                X, ([(c[pl], k*(p - 1)), (c[k], -pl*(p - 1))], -p*(k - pl)*v_K(pi)))
+                D, ([(c[pl], k*(p - 1)), (c[k], -pl*(p - 1))], -p*(k - pl)*v_K(pi)))
             for k in range(m + 1, n + 1) if k != pl]
         U_list = [delta[i].affinoid_domain() for i in range(len(delta))]
-        X_et = UnionOfDomains(U_list).intersection_with_unit_disk()
+        X_et = UnionOfDomains(U_list)
         self._etale_locus = X_et
         return X_et
 
