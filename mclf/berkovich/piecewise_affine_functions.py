@@ -1073,7 +1073,7 @@ def valuative_function(D, f, T=None, is_factored=False):
         for g, a, zeroes in L:
             for xi in zeroes:
                 T, _ = T.add_point(xi)
-        if degree != 0:
+        if degree != 0 and D.is_in(X.infty()):
             T, _ = T.add_point(X.infty())
     restrictions = compute_restrictions(L, a_0, T)
     for h1, _ in restrictions:

@@ -1385,7 +1385,8 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         self._X = X
 
     def __repr__(self):
-        return "Point of type II on Berkovich line, corresponding to v({}) >= {}".format(self.discoid())
+        f, s = self.discoid()
+        return "Point of type II on Berkovich line, corresponding to v({}) >= {}".format(f, s)
 
     def type(self):
         """ Return the type of self.
