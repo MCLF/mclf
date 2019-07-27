@@ -68,6 +68,7 @@ from `\xi_1` towards `\xi_2`.
 # *****************************************************************************
 
 from sage.all import SageObject, Infinity
+from sage.misc.cachefunc import cached_method
 
 
 class TypeVPointOnBerkovichLine(SageObject):
@@ -229,6 +230,15 @@ class TypeVPointOnBerkovichLine(SageObject):
     def __repr__(self):
         return "Point of type V given by residue class v({}) > {}".format(self._phi, self._s)
 
+    def _cache_key(self):
+        r""" Return a cache key for this point.
+
+        Note: this is very experimental.
+        """
+        if not hasattr(self, "_cache_key_value"):
+            self._cache_key_value = hash(str(self))
+        return self._cache_key_value
+
     def berkovich_line(self):
         """
         Return the Berkovich line underlying the point.
@@ -242,6 +252,7 @@ class TypeVPointOnBerkovichLine(SageObject):
         """ Return the boundary point of the type-V-point. """
         return self._xi0
 
+    @cached_method
     def point_inside_residue_class(self):
         """
         Return some point inside the residue class corresponding to the point.
@@ -293,6 +304,7 @@ class TypeVPointOnBerkovichLine(SageObject):
             vb = Fb.valuation(1/Fb.gen())
         return vb
 
+    @cached_method
     def is_in_residue_class(self, xi):
         r""" Test whether ``xi`` lies in the residue class of ``self``.
 
@@ -329,6 +341,7 @@ class TypeVPointOnBerkovichLine(SageObject):
         else:
             return xi.v(phi) > s
 
+    @cached_method
     def is_leq(self, xi):
         r""" Return whether this point is less or equal another point.
 
@@ -344,6 +357,7 @@ class TypeVPointOnBerkovichLine(SageObject):
         """
         return self.is_in_residue_class(xi)
 
+    @cached_method
     def is_equal(self, xi):
         r"""
         Return ``True`` is self is equal to ``xi``.
@@ -353,6 +367,7 @@ class TypeVPointOnBerkovichLine(SageObject):
             return False
         return self.is_leq(xi) and xi.is_leq(self)
 
+    @cached_method
     def is_strictly_less(self, xi1):
         """ Check whether ``self`` is strictly smaller than ``xi1``.
         """
@@ -427,6 +442,7 @@ class TypeVPointOnBerkovichLine(SageObject):
         else:
             raise NotImplementedError
 
+    @cached_method
     def derivative(self, f):
         r"""
         Return the "derivative" of ``f`` with respect to ``self``.
@@ -548,6 +564,7 @@ class TypeVPointOnBerkovichLine(SageObject):
         # now pos is the index of the first item in v_list where the minimum ist attained
         return pos
 
+    @cached_method
     def left_derivative(self, f):
         r"""
         Return the left derivative of ``f`` with respect to ``self``.

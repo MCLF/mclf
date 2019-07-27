@@ -808,11 +808,13 @@ class PointOnBerkovichLine(SageObject):
         """
         return self._X._vK
 
+    @cached_method
     def is_strictly_less(self, xi1):
         """ Check whether ``self`` is strictly smaller than ``xi1``.
         """
         return self.is_leq(xi1) and not self.is_equal(xi1)
 
+    @cached_method
     def is_incomparable(self, xi):
         """ Check whether this and another point are incomparable.
 
@@ -883,11 +885,21 @@ class PointOnBerkovichLine(SageObject):
         else:
             return self._z
 
+    def _cache_key(self):
+        r""" Return a cache key for this point.
+
+        Note: this is very experimental. Specific methods are need in particular
+        for limit points.
+        """
+        if not hasattr(self, "_cache_key_value"):
+            self._cache_key_value = hash(str(self))
+        return self._cache_key_value
 
 # -----------------------------------------------------------------------------
 
 #                    points of type I
 #                    ================
+
 
 class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
     r"""
@@ -1130,6 +1142,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         wa = w._approximation
         return TypeIIPointOnBerkovichLine(self.berkovich_line(), (wa, y))
 
+    @cached_method
     def is_equal(self, xi):
         r"""
         Return ``True`` is self is equal to ``xi``.
@@ -1182,6 +1195,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             xia = xi.approximation(xi0a)
             return xi0a.is_leq(xia)
 
+    @cached_method
     def is_leq(self, xi):
         r"""
         Return ``True`` if ``self`` is less or equal to ``xi``.
@@ -1244,6 +1258,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             self._discoid = f, Infinity
         return self._discoid
 
+    @cached_method
     def infimum(self, xi2):
         r"""
         Return the infimum of self and `\xi_2`.
@@ -1593,6 +1608,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
             self._discoid = f, s
         return self._discoid
 
+    @cached_method
     def is_equal(self, xi):
         r"""
         Return ``True`` if self is equal to ``xi``.
@@ -1601,6 +1617,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
             return False
         return self.is_leq(xi) and xi.is_leq(self)
 
+    @cached_method
     def is_leq(self, xi):
         r"""
         Return ``True`` if self is less or equal to ``xi``.
@@ -1625,6 +1642,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
             f, s = self.discoid()
             return xi.v(f) >= s
 
+    @cached_method
     def infimum(self, xi2):
         r"""
         Return the infimum of self and ``xi2``.

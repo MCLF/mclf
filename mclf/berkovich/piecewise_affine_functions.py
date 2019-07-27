@@ -211,6 +211,7 @@ class Discoid(Domain):
     def __repr__(self):
         return "the discoid defined by v({}) >= {}".format(self._phi, self._s)
 
+    @cached_method
     def is_in(self, xi):
         r""" Return whether the point xi lies in this domain.
 
@@ -417,6 +418,7 @@ sponding to v(x^2 + 4) >= 5
         else:
             return self._s2
 
+    @cached_method
     def is_parameter(self, t, in_interior=False):
         if in_interior:
             return t > self.initial_parameter() and t < self.terminal_parameter()
@@ -466,6 +468,7 @@ sponding to v(x^2 + 4) >= 5
         from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
         return TypeVPointOnBerkovichLine(self.point(t), self.terminal_point())
 
+    @cached_method
     def parameter(self, xi):
         r""" Return the parameter of a point on the annulus corresponding to this path.
         """
@@ -478,6 +481,7 @@ sponding to v(x^2 + 4) >= 5
         assert t >= self._s1 and t <= self._s2, "xi does not lie on the annulus"
         return t
 
+    @cached_method
     def retraction(self, xi):
         r""" Return the retraction of a point in the tube onto the path.
         """
@@ -495,6 +499,7 @@ sponding to v(x^2 + 4) >= 5
         else:
             return xi.is_equal(self.retraction(xi))
 
+    @cached_method
     def slope(self, eta):
         r""" Return the slope of this path at a given point of type V.
 
@@ -544,6 +549,7 @@ sponding to v(x^2 + 4) >= 5
         self._phi = phi
         self._s2 = s2
 
+    @cached_method
     def _make_phi(self, xi):
         phi, _ = xi.discoid()
         # phi is an irreducible polynomial in x, or is 1/x
@@ -604,6 +610,7 @@ class AffineFunction(SageObject):
     def is_in_domain(self, xi):
         return self.domain().is_in(xi)
 
+    @cached_method
     def __call__(self, xi):
         self.path().initial_slope()
         return self._a * self.path().parameter(xi) + self._b
@@ -618,6 +625,7 @@ class AffineFunction(SageObject):
             self._terminal_value = self(self.terminal_point())
         return self._terminal_value
 
+    @cached_method
     def derivative(self, eta):
         r""" Return the derivative of this affine function w.r.t. a type V point.
 
@@ -785,6 +793,7 @@ class PiecewiseAffineFunction(SageObject):
     def restrictions(self):
         return self._restrictions
 
+    @cached_method
     def __call__(self, xi):
         r""" Evaluate the function on the point `\xi`.
 
@@ -807,6 +816,7 @@ class PiecewiseAffineFunction(SageObject):
                 return h2(xi)
         return self.initial_value()
 
+    @cached_method
     def derivative(self, eta):
         r""" Return the derivative of the function with respect to a type V point.
 
