@@ -213,13 +213,14 @@ class BerkovichLine(SageObject):
             The point at infinity on the Berkovich line
 
         """
-
-        R = self._F._ring
-        F = self._F
-        x = F.gen()
-        v0 = GaussValuation(R, self._vK)
-        v1 = v0.augmentation(R.gen(), Infinity)
-        return TypeIPointOnBerkovichLine(self, (v1, 1/x))
+        if not hasattr(self, "_infty"):
+            R = self._F._ring
+            F = self._F
+            x = F.gen()
+            v0 = GaussValuation(R, self._vK)
+            v1 = v0.augmentation(R.gen(), Infinity)
+            self._infty = TypeIPointOnBerkovichLine(self, (v1, 1/x))
+        return self._infty
 
     def gauss_point(self):
         r"""
@@ -238,8 +239,10 @@ class BerkovichLine(SageObject):
             Point of type II on Berkovich line, corresponding to v(x) >= 0
 
         """
-        x = self.function_field().gen()
-        return self.point_from_discoid(x, 0)
+        if not hasattr(self, "_gauss_point"):
+            x = self.function_field().gen()
+            self._gauss_point = self.point_from_discoid(x, 0)
+        return self._gauss_point
 
     def point_from_pseudovaluation_on_polynomial_ring(self, v0, parameter=None):
         r""" Return the point corresponding to a pseudo-valuation on a polynomial ring.
