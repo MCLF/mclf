@@ -7,12 +7,12 @@ the *Berkovich line* over `K`.
 Let `f in F=K(x)` be a nonzero rational function. We associate to `f`
 the function
 
-..MATH::    H_f:X^{an} \to \RR\cup\{\pm\infty\},  \xi \mapsto v_\xi(f).
+..MATH::    h_f:X^{an} \to \RR\cup\{\pm\infty\},  \xi \mapsto v_\xi(f).
 
 
 **Definition:** A *valuative function* on `X^{an}` is a function of the form
 
-..MATH::      H = a_0 + \sum_i a_i\cdot H_{f_i}
+..MATH::      h = a_0 + \sum_i a_i\cdot h_{f_i}
 
 where the `f_i` are irreducible polynomials in the parameter `x`,
 and the `a_i` are rational numbers, with `a_i \neq 0` for `i > 0`.
@@ -34,32 +34,32 @@ sage: X = BerkovichLine(F, QQ.valuation(2))
 We can define a valuative function by a rational function on `X`::
 
 sage: f = (x^2+2*x-2)/(2*x-1)
-sage: H = ValuativeFunction(X, f)
+sage: h = valuative_function(X, f)
 
-We check that the value of `H` is the valuation of `f`, at several points::
+We check that the value of `h` is the valuation of `f`, at several points::
 
 sage: xi = X.gauss_point()
-sage: H(xi), xi.v(f)
+sage: h(xi), xi.v(f)
 (0, 0)
 sage: xi = X.infty()
-sage: H(xi), xi.v(f)
+sage: h(xi), xi.v(f)
 (-Infinity, -Infinity)
 sage: xi = X.point_from_discoid(x, 3)
-sage: H(xi), xi.v(f)
+sage: h(xi), xi.v(f)
 (1, 1)
 
 We can also define a valuative function by a pair `(L, a_0)`::
 
 sage: L = [(x - 1, 2/3), (x + 1, 3/2)]
 sage: a_0 = -3
-sage: H = ValuativeFunction(X, (L, a_0))
-sage: xi = X.point_from_discoid( x + 1, 2)
-sage: H(xi)
+sage: h = valuative_function(X, (L, a_0))
+sage: xi = X.point_from_discoid(x + 1, 2)
+sage: h(xi)
 2/3
 
-We can compute the rational domain given by the inequality `H(\xi)\geq 0`::
+We can compute the affinoid domain given by the inequality `h(\xi)\geq 0`::
 
-sage: H.rational_domain()
+sage: h.affinoid_domain()
 Affinoid with 2 components:
 Elementary affinoid defined by
 v(x - 1) >= 9/4
@@ -150,15 +150,15 @@ class Domain(SageObject):
         return self._X
 
     def inequalities(self):
-        inequalities = "\n"
+        inequalities = ""
         for phi, s in self._inequalities:
-            inequalities += ("v(" + str(phi) + ") >= " + str(s)) + "\n"
+            inequalities += + "\n" + ("v(" + str(phi) + ") >= " + str(s))
         return inequalities
 
     def strict_inequalities(self):
         str_inequalities = ""
         for phi, s in self._strict_inequalities:
-            str_inequalities += ("v(" + str(phi) + ") > " + str(s)) + "\n"
+            str_inequalities += "\n" + ("v(" + str(phi) + ") > " + str(s))
         return str_inequalities
 
     def is_full_berkovich_line(self):
@@ -167,6 +167,11 @@ class Domain(SageObject):
     def minimal_point(self):
         assert self.is_full_berkovich_line(), "an arbitrary domain has no minimal point"
         return self.berkovich_line().gauss_point()
+
+    def contains_infty(self):
+        if not hasattr(self, "_contains_infty"):
+            self._contains_infty = self.is_in(self.berkovich_line().infty())
+        return self._contains_infty
 
 
 class Discoid(Domain):
@@ -287,8 +292,9 @@ def open_annuloid(xi0, xi1):
     sage: xi1 = X.point_from_discoid(x+1, 2)
     sage: open_annuloid(xi0, xi1)
     domain defined by
-     v(x - 1) > 1
+     v(x + 1) > 1
     v(1/(x + 1)) > -2
+
 
     """
     from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
@@ -320,8 +326,7 @@ class DirectedPath(SageObject):
     sage: xi2 = X.point_from_discoid(x^2 + 4, 5)
     sage: gamma = DirectedPath(xi1, xi2)
     sage: gamma
-    path from Point of type II on Berkovich line, corresponding to v(x) >= 1 to Point of type II on Berkovich line, corre
-sponding to v(x^2 + 4) >= 5
+    path from Point of type II on Berkovich line, corresponding to v(x) >= 1 to Point of type II on Berkovich line, corresponding to v(x^2 + 4) >= 5
 
     We use the *standard parametrization* for a path; it depends on the discoid
     representation of the terminal point::
@@ -329,23 +334,21 @@ sponding to v(x^2 + 4) >= 5
     sage: gamma.point(3)
     Point of type II on Berkovich line, corresponding to v(x + 2) >= 3/2
 
-    sage: gamma.point(6)
-    AssertionError                            Traceback (most recent call last)
-    ...
-    AssertionError: desired point is not on the path
-
     Given a path `\gamma=[\xi_1,\xi_2]`, we define its *tube* `D` as follows.
     If `\xi_2` is of type II, then `D` is the open annuloid
     with boundary point points `\xi_1` and `\xi_2`. If `\xi_1` is of type I,
     then `D:=D_{\xi_1}` is the discoid with boundary point `\xi_1`.::
 
     sage: gamma.tube()
+    domain defined by
+     v(x + 2) > 1
+    v(1/(x^2 + 4)) > -5
 
     sage: gamma.is_in_tube(X.gauss_point())
     False
 
     sage: gamma.is_in_tube(xi2)
-    True
+    False
 
     """
 
@@ -739,10 +742,10 @@ class PiecewiseAffineFunction(SageObject):
     the function takes nonnegative values).
 
         sage: h.affinoid_domain()
-        Affinoid with 1 components:
         Elementary affinoid defined by
-        v(1/x) >= -1
         v(x) >= 0
+        v(1/x) >= -1
+        <BLANKLINE>
 
     """
 
@@ -935,13 +938,13 @@ class PiecewiseAffineFunction(SageObject):
             sage: from mclf import *
             sage: F.<x> = FunctionField(QQ)
             sage: X = BerkovichLine(F, QQ.valuation(2))
-            sage: H1 = ValuativeFunction(X, 2*x)
-            sage: H1.rational_domain()
-            Affinoid with 1 components:
+            sage: h1 = valuative_function(X, 2*x)
+            sage: h1.affinoid_domain()
             Elementary affinoid defined by
             v(x) >= -1
-            sage: H2 = ValuativeFunction(X, x*(x-1)/2)
-            sage: H2.rational_domain()
+            <BLANKLINE>
+            sage: h2 = valuative_function(X, x*(x-1)/2)
+            sage: h2.affinoid_domain()
             Affinoid with 2 components:
             Elementary affinoid defined by
             v(x - 1) >= 1
@@ -1116,7 +1119,16 @@ def simplify_L(D, L, a_0):
     OUTPUT: the simplification of `L`, `a_0` corresponding to the restriction of
     the valuative function to `D`.
 
+    NOTE:
+
+    There is a serious error here: if `D` contains the infinity point, then
+    dropping factors g from the list is wrong, because these g have poles on
+    `D` and are therefore not of constant valuation.
+
     """
+    # fix the error:
+    if D.contains_infty():
+        return L, a_0
     L1 = []
     xi0 = D.minimal_point()
     for g, m, zeroes in L:
