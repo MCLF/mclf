@@ -272,6 +272,7 @@ class SuperpModel(SemistableModel):
         """
         from mclf.berkovich.piecewise_affine_functions import Discoid, valuative_function
         from mclf.berkovich.affinoid_domain import UnionOfDomains
+
         if hasattr(self, "_etale_locus"):
             return self._etale_locus
 

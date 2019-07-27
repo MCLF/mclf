@@ -432,17 +432,6 @@ sponding to v(x^2 + 4) >= 5
         OUTPUT: the point `\xi = \gamma(t)` on this path, with respect to the
         standard parametrization.
 
-        .. Note::
-
-            If this path is a limit path, then the standard paramatrization is
-            computed with respect to an approximation of the terminal point.
-            The approximation is updated such that `t` is in the domain of the
-            parametrization. However, it could happen that updating the
-            approximation changes the parametrization.
-
-            This problem will disappear once we implement the flag
-            ``require_maximal_degree`` in ``mclf.berkovich.berkovich_line``.
-
         """
         assert t >= self._s1
         if self.is_limit_path():
