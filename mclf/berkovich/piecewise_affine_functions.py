@@ -117,6 +117,7 @@ class Domain(SageObject):
         else:
             return "domain defined by {} {}".format(self.inequalities(), self.strict_inequalities())
 
+    @cached_method
     def is_in(self, xi):
         r""" Return whether a point lies in this domain.
 
@@ -488,11 +489,13 @@ sponding to v(x^2 + 4) >= 5
         assert self.is_in_domain(xi), "xi must be in the tube"
         return self.point(self.parameter(xi))
 
+    @cached_method
     def is_in_tube(self, xi):
         r""" Check whether the point lies in the tube of this path.
         """
         return self.tube().is_in(xi)
 
+    @cached_method
     def is_on_path(self, xi):
         if not self.is_in_tube(xi):
             return False

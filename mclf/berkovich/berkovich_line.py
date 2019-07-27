@@ -964,7 +964,8 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
                 return "The point at infinity on the Berkovich line"
         else:
             f, s = self.approximation().discoid()
-            return "Point of type I on Berkovich space approximated by v({}) >= {}".format(f, s)
+            return "Point of type I on Berkovich space approximated by v({}) >= {}, \
+                with equation {} = 0".format(f, s, self.equation())
 
     def type(self):
         """ Return the type of self
@@ -1704,6 +1705,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         assert xi0.is_leq(xi1) and xi0.is_leq(xi2), "xi0 = {}, xi1 = {}, xi2 = {}".format(xi0, xi1, xi2)
         return xi0
 
+    @cached_method
     def point_in_between(self, xi1):
         r"""
         Return a point in between ``self`` and ``xi1``.
