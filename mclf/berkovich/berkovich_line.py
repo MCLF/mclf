@@ -121,8 +121,10 @@ irreducible over the ground field `\mathbb{Q}`, but not over its completion
 
     sage: D = X.divisor(f)
     sage: D
-    [(Point of type I on Berkovich space approximated by v(2*x + 1) >= 1, 1),
-     (Point of type I on Berkovich space approximated by v(x + 1) >= 1, 1),
+    [(Point of type I on Berkovich space approximated by v(2*x + 1) >= 1, with equation 4*x^2 + 2*x + 2 = 0,
+      1),
+     (Point of type I on Berkovich space approximated by v(x + 1) >= 1, with equation 4*x^2 + 2*x + 2 = 0,
+      1),
      (The point at infinity on the Berkovich line, -2)]
     sage: xi = D[0][0]
     sage: xi.equation()
@@ -476,14 +478,14 @@ class BerkovichLine(SageObject):
             sage: X = BerkovichLine(F, v_2)
             sage: X.points_from_inequality((x^2-1)*(2*x-1), 4)
             [Point of type II on Berkovich line, corresponding to v(x + 1) >= 3,
-             Point of type II on Berkovich line, corresponding to v(x + 7) >= 3,
-             Point of type II on Berkovich line, corresponding to v(-2*x + 1) >= 6]
+             Point of type II on Berkovich line, corresponding to v(-2*x + 1) >= 6,
+             Point of type II on Berkovich line, corresponding to v(x - 1) >= 3]
             sage: X.points_from_inequality(2*x^(-2)+x^(-1)+4, 5)
             [Point of type II on Berkovich line, corresponding to v(4*x + 1) >= 3,
-             Point of type II on Berkovich line, corresponding to v(x + 2/57) >= 7]
+             Point of type II on Berkovich line, corresponding to v(x - 2/7) >= 7]
             sage: X.points_from_inequality(2*x^(-2)+x^(-1)+4, Infinity)
-            [Point of type I on Berkovich space approximated by v(4*x + 1) >= 3,
-             Point of type I on Berkovich space approximated by v(x + 2) >= 4]
+            [Point of type I on Berkovich space approximated by v(4*x + 1) >= 3, with equation 16*x^2 + 4*x + 8 = 0,
+             Point of type I on Berkovich space approximated by v(x + 2) >= 4, with equation 16*x^2 + 4*x + 8 = 0]
 
         """
         vK = self.base_valuation()
@@ -695,8 +697,10 @@ class BerkovichLine(SageObject):
             sage: f = 2*x^2 + x + 1
             sage: D = X.prime_divisor(f)
             sage: D
-            [(Point of type I on Berkovich space approximated by v(2*x + 1) >= 1, 1),
-             (Point of type I on Berkovich space approximated by v(x + 1) >= 1, 1)]
+            [(Point of type I on Berkovich space approximated by v(2*x + 1) >= 1, with equation 4*x^2 + 2*x + 2 = 0,
+              1),
+             (Point of type I on Berkovich space approximated by v(x + 1) >= 1, with equation 4*x^2 + 2*x + 2 = 0,
+              1)]
 
         """
         e = ZZ(e)
@@ -964,8 +968,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
                 return "The point at infinity on the Berkovich line"
         else:
             f, s = self.approximation().discoid()
-            return "Point of type I on Berkovich space approximated by v({}) >= {}, \
-                with equation {} = 0".format(f, s, self.equation())
+            return "Point of type I on Berkovich space approximated by v({}) >= {}, with equation {} = 0".format(f, s, self.equation())
 
     def type(self):
         """ Return the type of self
@@ -1788,8 +1791,9 @@ def valuation_from_discoid(vK, f, s):
         sage: v_2 = QQ.valuation(2)
         sage: f =  x^6 - 8030/3241*x^5 + 24468979*x^4 + 14420644*x^3 + 24136511*x^2 + 5386/1505*x + 3981/5297
         sage: valuation_from_discoid(v_2, f, 76/15)
-        [ Gauss valuation induced by 2-adic valuation, v(x + 1) = 2/3, v(x^3 + 3*x^2 + 3*x + 5) = 38/15 ]
-
+        [ Gauss valuation induced by 2-adic valuation, v(x + 1) = 2/3, v(x^3 + 3*x^2 + 3*x - 3) = 38/15 ]
+        sage: _(f)
+        76/15
 
     """
     R = f.parent()

@@ -132,7 +132,7 @@ class TypeVPointOnBerkovichLine(SageObject):
         sage: TypeVPointOnBerkovichLine(xi3, xi4)
         Point of type V given by residue class v((2*x + 1)/x) > 3
         sage: TypeVPointOnBerkovichLine(xi4, xi3)
-        Point of type V given by residue class v(x/(2*x + 1)) > -5
+        Point of type V given by residue class v(1/2*x/(x + 1/2)) > -5
 
     The following example shows that the minor valuation is computed correctly ::
 
