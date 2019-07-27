@@ -79,6 +79,7 @@ v(x + 1) >= 14/9
 # *****************************************************************************
 
 from sage.all import SageObject, Infinity
+from sage.misc.cachefunc import cached_method
 
 
 class Domain(SageObject):
@@ -422,6 +423,7 @@ sponding to v(x^2 + 4) >= 5
         else:
             return t >= self.initial_parameter() and t <= self.terminal_parameter()
 
+    @cached_method
     def point(self, t):
         r""" Return the point on the path with given parameter.
 
@@ -446,6 +448,7 @@ sponding to v(x^2 + 4) >= 5
         # this is not optimal
         return X.points_from_inequality(phi, t)[0]
 
+    @cached_method
     def tangent_vector(self, t):
         r""" Return the tangent vector at a given point.
 
@@ -635,6 +638,7 @@ class AffineFunction(SageObject):
     def is_increasing(self):
         return self._a > 0
 
+    @cached_method
     def find_zero(self):
         r""" Return an isolated zero of this affine function (if there is one).
 
@@ -649,6 +653,7 @@ class AffineFunction(SageObject):
         """
         return self.find_point_with_value(0)
 
+    @cached_method
     def find_point_with_value(self, c):
         r""" Return a point where this affine function takes a given value.
 
@@ -932,8 +937,9 @@ class PiecewiseAffineFunction(SageObject):
 
         """
         from mclf.berkovich.affinoid_domain import AffinoidDomainOnBerkovichLine
-        U = AffinoidDomainOnBerkovichLine(self._affinoid_tree())
-        return U
+        if not hasattr(self, "_affinoid_domain"):
+            self._affinoid_domain = AffinoidDomainOnBerkovichLine(self._affinoid_tree())
+        return self._affinoid_domain
 
     def _affinoid_tree(self):
         r""" Return the affinoid tree underlying the affinoid domain defined by
@@ -1224,18 +1230,3 @@ def complete_factorization(X, L, a_0):
         zeroes = [xi for xi, m in X.prime_divisor(g)]
         L2.append((g, a, zeroes))
     return L2, a_0
-
-
-def affine_valuative_function(gamma, description):
-    r""" Return the affine valuative function with given description.
-
-    INPUT:
-
-    - ``gamma`` -- a directed path
-    - ``description`` -- a pair `(L, a_0)` defining a valuative function
-
-    OUTPUT: the valuative function defined by `(L, a_0)`; if it is not affine
-    on the path `gamma` then an error is raised.
-
-    """
-    L, a_0 = description

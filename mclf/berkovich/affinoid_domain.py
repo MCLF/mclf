@@ -63,6 +63,7 @@ TO DO:
 from sage.all import SageObject, Infinity
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
 from mclf.berkovich.berkovich_trees import BerkovichTree
+from sage.misc.cachefunc import cached_method
 
 
 class AffinoidTree(BerkovichTree):
@@ -154,6 +155,7 @@ class AffinoidTree(BerkovichTree):
         T_new._children = children
         return T_new
 
+    @cached_method
     def is_empty_set(self):
         r""" Return whether this tree represents the empty set.
 
@@ -1279,6 +1281,7 @@ Some auxiliary functions:
 """
 
 
+@cached_method
 def irreducible_polynomial_prime_to(f, min_deg=1):
     """ Return an irreducibel polynomial prime to f.
 
