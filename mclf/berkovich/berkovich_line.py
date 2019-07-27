@@ -157,6 +157,7 @@ TO DO:
 from sage.all import SageObject, Infinity, sgn, GaussValuation, ZZ
 from sage.rings.valuation.limit_valuation import LimitValuation
 from sage.geometry.newton_polygon import NewtonPolygon
+from sage.misc.cachefunc import cached_method
 
 
 class BerkovichLine(SageObject):
@@ -242,6 +243,7 @@ class BerkovichLine(SageObject):
         if not hasattr(self, "_gauss_point"):
             x = self.function_field().gen()
             self._gauss_point = self.point_from_discoid(x, 0)
+            self._gauss_point._is_gauss_point = True
         return self._gauss_point
 
     def point_from_pseudovaluation_on_polynomial_ring(self, v0, parameter=None):
@@ -317,6 +319,7 @@ class BerkovichLine(SageObject):
         else:
             return TypeIPointOnBerkovichLine(self, v)
 
+    @cached_method
     def point_from_discoid(self, f, s):
         r"""
         Return the point on ``self`` determined by a discoid.
@@ -448,6 +451,7 @@ class BerkovichLine(SageObject):
         assert xi.v(f) == s
         return xi
 
+    @cached_method
     def points_from_inequality(self, f, s):
         r"""
         Return the boundary points of the affinoid given by a polynomial inequality.
@@ -627,6 +631,7 @@ class BerkovichLine(SageObject):
         assert xi3.v(f) == 0
         return xi3
 
+    @cached_method
     def divisor(self, f):
         r"""
         Return the divisor of a rational function `f`.
@@ -661,6 +666,7 @@ class BerkovichLine(SageObject):
             D.append((self.infty(), -d))
         return D
 
+    @cached_method
     def prime_divisor(self, f, e=1):
         r"""
         Return the divisor of zeroes of an irreducible polynomial.
@@ -958,6 +964,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         """
         return False   # self is of type I
 
+    @cached_method
     def is_infinity(self):
         """ Check whether ``self`` is the point at infinity."""
 
@@ -969,6 +976,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         """
         return self._is_in_unit_disk
 
+    @cached_method
     def v(self, f):
         r"""
         Evaluate the pseudo-valuation corresponding to self on ``f``.
@@ -1017,6 +1025,8 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         `1/x`, and such that `v_\xi(f)=\infty`.
 
         """
+        if hasattr(self, "_equation"):
+            return self._equation
         if self.is_inductive():
             g, s = self.discoid()
             assert s == Infinity
@@ -1026,6 +1036,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             g = g(self.inverse_parameter())
         # in both cases, g=0 is a monic irreducible equation for xi
         assert self.v(g) == Infinity
+        self._equation = g
         return g
 
     def function_field_valuation(self):
@@ -1217,17 +1228,21 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
 
         """
 
+        if certified_point is None and hasattr(self, "_discoid"):
+            return self._discoid
+
         x = self.function_field().gen()
         if self.is_limit_point():
             xi = self.approximation(certified_point)
-            return xi.discoid()
+            self._discoid = xi.discoid()
         elif self.is_infinity():
-            return 1/x, Infinity
+            self._discoid = 1/x, Infinity
         else:
             v0 = self.pseudovaluation_on_polynomial_ring()
             y = self.inverse_parameter()
             f = v0.phi()(y).numerator().monic()(x)
-            return f, Infinity
+            self._discoid = f, Infinity
+        return self._discoid
 
     def infimum(self, xi2):
         r"""
@@ -1399,14 +1414,18 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
     def is_gauss_point(self):
         """ Return True if self is the Gauss point.
         """
+        if hasattr(self, "_is_gauss_point"):
+            return self._is_gauss_point
         x = self._X.function_field().gen()
         if self.v(x) != 0:
+            self._is_gauss_point = False
             return False
 
         v1 = self._v1
         while not hasattr(self._v1, "is_gauss_valuation"):
             v1 = v1._base_valuation
-        return v1.is_gauss_valuation()
+        self._is_gauss_point = v1.is_gauss_valuation()
+        return self._is_gauss_point
 
     def is_infinity(self):
         """ Check whether ``self`` is the point at infinity."""
@@ -1419,6 +1438,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         """
         return self._is_in_unit_disk
 
+    @cached_method
     def v(self, f):
         r"""
         Evaluate element of the function field on the valuation corresponding to self.
@@ -1549,17 +1569,20 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
 
 
         """
+        if hasattr(self, "_discoid"):
+            return self._discoid
         xi = self
         x = xi.function_field().gen()
         if xi.is_gauss_point():
-            return x, 0
+            self._discoid = x, 0
+            return self._discoid
         v = xi.pseudovaluation_on_polynomial_ring()
         phi = v.phi()
         if self.is_in_unit_disk():
             f = phi(x)
             s = xi.v(f)
             assert s > 0, 's must be positive: s={}, f= {}, xi = {}'.format(s, f, xi)
-            return f, s
+            self._discoid = f, s
         else:
             if phi[0] == 0:
                 f = 1/x
@@ -1567,7 +1590,8 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
                 f = phi(1/x).numerator()(x)
             s = xi.v(f)
             assert s > 0, 's must be positive: s={}, f = {}, v = {}'.format(s, f, xi.valuation())
-            return f, s
+            self._discoid = f, s
+        return self._discoid
 
     def is_equal(self, xi):
         r"""
