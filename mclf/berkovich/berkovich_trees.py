@@ -121,13 +121,15 @@ class BerkovichTree(SageObject):
 
         We make the tree ``new_child`` a child of ``self``. For this to make
         sense, two conditions have to be satisfied:
-        - the root of `new_child` has to be strictly greater than the root of
+
+        - the root of ``new_child`` has to be strictly greater than the root of
           ``self``
         - the root of ``new_child`` has to be incomparable to the roots of the
-          already existing children of ``self``.
+          already existing children of ``self``
+
         These conditions are checked only if ``check`` ist ``True``.
 
-        Note::
+        Note:
 
         This changes both trees ``self`` and ``new_child``.
         """
@@ -150,7 +152,7 @@ class BerkovichTree(SageObject):
         We remove ``child`` from the list of children of ``self``. If ``child``
         is not in this list, an error is raised.
 
-        Note::
+        Note:
 
         This function changes both ``self`` and ``child``.
 
