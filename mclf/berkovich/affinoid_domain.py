@@ -1,19 +1,17 @@
 r""" Affinoid subdomains of the Berkovich line.
 ===============================================
 
-Let `K` be a field and `v_K` a discrete valuation on `K`. Let `X=\mathbb{P}^1_K`
-be the projective line over `K`. Let `X^{an}` denote the
-`(K,v_K)`-analytic space associated to `X`. We call `X^{an}` the **Berkovich
-line** over `K`.
+Let `K` be a field, `v_K` a discrete valuation on `K` and `X` the Berkovich
+line over `K`, with respect to `v_K`.
 
 In this file we realize a Sage class which allows us to create and work with
-strictly affinoid subdomains of `X^{an}`.
+strictly affinoid subdomains of `X`.
 
-Let `T` be a Berkovich tree in `X^{an}` and let `r:T\to X^{an}` denote the
+Let `T` be a Berkovich tree in `X` and let `r:X\to T` denote the
 canonical retraction map. Let `S` be a nonempty proper subset of `V(T)`.
 We define `\bar{S}` as the union of `S` and of all edges connecting two points
 of `S`. Then the inverse image `U:=r^{-1}(\bar{S})` is an affinoid subdomain of
-`X^{an}`. We use the notation `U=U(T,S)`.
+`X`. We use the notation `U=U(T,S)`.
 
 We say that a Berkovich tree `T` *supports* an affinoid domain `U` if there
 exists a nonempty proper subset `S` of `V(T)` with `U=U(T,S)`. If this is the
@@ -39,12 +37,11 @@ TO DO:
 
 - more doctests
 
-- improve performance; many algorithms can be replaced by more efficient ones
-
 - add missing functions: intersection, ..
 
-- allow empty affinoids, and do something about the case where `U=X`
+- see if we can remove some obsolete functions
 
+- improve ``point_close_to_boundary``
 
 """
 
@@ -94,20 +91,7 @@ class AffinoidTree(BerkovichTree):
         sage: vK = K.valuation(2)
         sage: F.<x> = FunctionField(K)
         sage: X = BerkovichLine(F, vK)
-        sage: xi0 = X.gauss_point()
-        sage: xi1 = X.point_from_discoid(x^2+2, 3/2)
-        sage: xi2 = X.point_from_discoid(x^4+2, 3/2)
-        sage: xi3 = X.point_from_discoid(x^2+x+1, 1)
-        sage: xi4 = X.point_from_discoid(x^2+2, 1)
 
-        sage: U1 = AffinoidTree(X)
-        sage: U1 = U1.add_points([xi0], [xi1, xi3])
-        sage: U2 = AffinoidTree(X)
-        sage: U2 = U2.add_points([xi2], [xi4])
-
-        sage: U = U1.union(U2)
-        sage: U
-        Affinoid tree with 6 vertices
     """
 
     def __init__(self, X, root=None, children=None, parent=None, is_in=False):
@@ -290,13 +274,17 @@ class AffinoidTree(BerkovichTree):
     def holes(self, upward_hole=True):
         r""" Return the holes of this affinoid tree.
 
-        OUTPUT: a list of triples `(T_1, T_2, \eta)`, where `T_1`, `T_2` are
+        OUTPUT:
+
+        A list of triples `(T_1, T_2, \eta)`, where `T_1`, `T_2` are
         subtrees of ``self`` and `\eta` is a point of type V, satisfying the
         following conditions:
+
         - `T_2` is a child of `T_1`, or vice versa
         - the root of `T_1` is a boundary point of the affinoid underlying ``self``
         - the root of `T_2` does not lie in the affinoid
         - `\eta` is the direction from the root of `T_1` to the root of `T_2`
+
         This implies that `\eta` is a *hole* of the affinoid represented by ``self``.
 
         """
@@ -322,7 +310,9 @@ class AffinoidTree(BerkovichTree):
 
         - ``xi0`` -- a point of type II or V
 
-        OUTPUT: a list of affinid trees representing the connected components
+        OUTPUT:
+
+        A list of affinoid trees representing the connected components
         of the affinoid corresponding to this tree, which are `\geq` to the
         given point `\xi_0`. If it is not given, then we ignore
         this condition.
@@ -382,22 +372,6 @@ class AffinoidTree(BerkovichTree):
             sage: vK = K.valuation(2)
             sage: F.<x> = FunctionField(K)
             sage: X = BerkovichLine(F, vK)
-            sage: xi0 = X.gauss_point()
-            sage: xi1 = X.point_from_discoid(x+1, 1)
-            sage: xi2 = X.point_from_discoid(x+1, 2)
-            sage: xi3 = X.point_from_discoid(1/x, 1)
-
-            sage: U = AffinoidTree(X)
-            sage: U = U.add_points([xi0, xi2], [xi1, xi3])
-            sage: U
-            Affinoid tree with 4 vertices
-
-            sage: component_list = []
-            sage: U.compute_connected_components(component_list, [])
-            sage: component_list
-            [[[Point of type V given by residue class v(1/(x + 1)) > -2]],
-            [[Point of type V given by residue class v(x + 1) > 0,
-            Point of type V given by residue class v(1/x) > 0]]]
 
         """
         T = self
@@ -433,7 +407,9 @@ def _connected_component_tree(T):
 
     - ``T`` -- an affinoid tree
 
-    OUTPUT: a new affinoid tree `T_1` representing a connected affinoid domain
+    OUTPUT:
+
+    A new affinoid tree `T_1` representing a connected affinoid domain
     whose minimal point is the root of `T`. This means that the out-points of
     `T_1` are precisely the leaves of `T_1`.
 
@@ -459,8 +435,18 @@ def _connected_component_tree(T):
 
 
 class AffinoidDomainOnBerkovichLine(SageObject):
-    r"""
-    The class realizing affinoid domains on a Berkovich line.
+    r""" Return the affinoid domain corresponding to the affinoid tree ``T``.
+
+    Objects of this class represent (generic) affinoid domains on the Berkovich line.
+
+    INPUT:
+
+    - T -- an affinoid tree
+
+    OUTPUT:
+
+    The affinoid corresponding to ``T``.
+
 
     EXAMPLES::
 
@@ -469,14 +455,6 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         sage: vK = K.valuation(2)
         sage: F.<x> = FunctionField(K)
         sage: X = BerkovichLine(F, vK)
-        sage: U1 = RationalDomainOnBerkovichLine(X, 2*(x^2+2)/(x+1))
-        sage: U2 = RationalDomainOnBerkovichLine(X, x/(x+3))
-        sage: U = U1.union(U2)
-        sage: U
-        Affinoid with 1 components:
-        Elementary affinoid defined by
-        v(1/(x + 1)) >= -1
-
 
     TO DO:
 
@@ -485,17 +463,6 @@ class AffinoidDomainOnBerkovichLine(SageObject):
     """
 
     def __init__(self, T):
-        r""" Return the affinoid domain corresponding to the affinoid tree ``T``.
-
-        INPUT:
-
-        - T -- an affinoid tree
-
-        OUTPUT:
-
-        the affinoid corresponding to ``T``
-
-        """
         self._X = T._X
         self._T = T
 
@@ -514,16 +481,24 @@ class AffinoidDomainOnBerkovichLine(SageObject):
                                                              comp_str)
 
     def berkovich_line(self):
+        """ Return the Berkovich line underlying this affinoid.
+        """
         return self._X
 
     def is_empty(self):
+        """ Return wether this affinoid is the empty set.
+        """
         return self.number_of_components() == 0
 
     def is_full_berkovich_line(self):
+        """ Return whether this affinoid is equal to the full Berkovich line.
+        """
         return (self.number_of_components() == 1
                 and self.components()[0].is_full_berkovich_line())
 
     def tree(self):
+        """ Return the Berkovich tree representing this affinoid.
+        """
         if hasattr(self, "_T"):
             return self._T
         else:
@@ -533,8 +508,7 @@ class AffinoidDomainOnBerkovichLine(SageObject):
             return self._T
 
     def is_in(self, xi):
-        r"""
-        Check whether ``x`` lies on the affinoid.
+        r""" Return whether ``xi`` lies on the affinoid.
 
         INPUT:
 
@@ -542,12 +516,14 @@ class AffinoidDomainOnBerkovichLine(SageObject):
 
         OUTPUT:
 
-        ``True`` if ``xi`` lies on the affinoid, ``False`` otherwise
+        ``True`` if ``xi`` lies on the affinoid, ``False`` otherwise.
 
         """
         return self.tree().is_in(xi)
 
     def components(self):
+        """ Return the list of connected components of this affinoid.
+        """
         if not hasattr(self, "_components"):
             components = []
             for T in self.tree().connected_components():
@@ -556,6 +532,8 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         return self._components
 
     def number_of_components(self):
+        """ Return the number of connected components of ths affinoid.
+        """
         return len(self.components())
 
     def boundary(self):
@@ -591,7 +569,7 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         r"""
         Return the affinoid which is the union of ``self`` with ``V``.
 
-        This is now obsolete.
+        Need new implementation.
         """
 
         T = self.tree().union(V.tree())
@@ -601,14 +579,13 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         r"""
         Return the affinoid which is the intersection of ``self`` with ``V``.
 
-        This is now obsolete.
+        Not yet implemented.
         """
         T = self.tree().intersection(V.tree())
         return AffinoidDomainOnBerkovichLine(T)
 
     def intersection_with_unit_disk(self):
         r""" Return the intersection of this affinoid with the unit disk.
-
         """
         T = self.tree().intersection_with_unit_disk()
         return AffinoidDomainOnBerkovichLine(T)
@@ -621,7 +598,9 @@ class AffinoidDomainOnBerkovichLine(SageObject):
 
         - ``xi0`` -- a boundary point of the affinoid ``self``
 
-        OUTPUT: a type-I-point ``xi1`` on the affinoid `U:=` ``self`` which
+        OUTPUT:
+
+        A type-I-point ``xi1`` on the affinoid `U:=` ``self`` which
         is "close" to the boundary point ``xi0``.
 
         The latter means that ``xi1`` maps onto the irreducible components
@@ -630,16 +609,15 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         EXAMPLES::
 
             sage: from mclf import *
-            sage: K = QQ
-            sage: vK = K.valuation(2)
-            sage: F.<x> = FunctionField(K)
-            sage: X = BerkovichLine(F, vK)
-            sage: U = RationalDomainOnBerkovichLine(X, 2/x/(x+1))
+            sage: F.<x> = FunctionField(QQ)
+            sage: X = BerkovichLine(F, QQ.valuation(2))
+            sage: U = rational_domain(X, 2/x/(x+1))
             sage: U
-            Affinoid with 1 components:
             Elementary affinoid defined by
             v(1/x) >= -1
             v(1/(x + 1)) >= -1
+            <BLANKLINE>
+
             sage: xi0 = U.boundary()[0]
             sage: U.point_close_to_boundary(xi0)
             Point of type I on Berkovich line given by x + 2 = 0
@@ -647,9 +625,8 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         At the moment, our choice of point close to the boundary is not
         optimal, as the following example shows: ::
 
-            sage: U = RationalDomainOnBerkovichLine(X, 2/(x^2+x+1))
+            sage: U = rational_domain(X, 2/(x^2+x+1))
             sage: U
-            Affinoid with 1 components:
             Elementary affinoid defined by
             v(1/(x^2 + x + 1)) >= -1
 
@@ -660,19 +637,26 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         The point at infinity is also inside U and 'close to the boundary',
         and has smaller degree than the point produced above.
 
-        There is the following bug: ::
+        The following raised an error in an earlier version ::
 
             sage: f = (-2/25*x^6 - 4*x^5 - 1351/225*x^4 - 52/225*x^3 - 173/225*x^2 - 2/9*x + 2/3)/(x^2 + 2/3*x)
-            sage: h = valuative_function(D, f)
+            sage: h = valuative_function(X, f)
             sage: U = h.affinoid_domain()
             sage: U
+            Affinoid with 2 components:
+            Elementary affinoid defined by
+            v(x) >= 0
+            v(1/x) >= -1/2
+            Elementary affinoid defined by
+            v((2*x^2 + 1)/x^2) >= 2
+            <BLANKLINE>
 
-            sage U.point_close_to_boundary(U.boundary()[1])
+            sage: U.point_close_to_boundary(U.boundary()[1])
+            Point of type I on Berkovich line given by x^2 + 2 = 0
 
         .. TODO::
 
             - Use a better strategie to find a point of minimal degree.
-            - fix the bug
 
         """
         U = self
@@ -783,7 +767,9 @@ class AffinoidDomainOnBerkovichLine(SageObject):
 
         - ``eta`` - a point of type V
 
-        OUTPUT: We assume that `\eta` represents a downward hole of this
+        OUTPUT:
+
+        We assume that `\eta` represents a downward hole of this
         affinoid `U`. This means that the boundary point of `\eta` lies in `U`
         but `\eta` does not. We return an affinoid tree `T` whose root is the
         boundary point of `\eta`, representing the affinoid
@@ -855,7 +841,9 @@ class AffinoidDomainOnBerkovichLine(SageObject):
 
         - ``xi0`` -- a point type II or V
 
-        OUTPUT: if `\xi_0` is a point of type II, then we return an affinoid tree
+        OUTPUT:
+
+        If `\xi_0` is a point of type II, then we return an affinoid tree
         underlying the connected component of this affinoid `U` with minimal
         point `\xi_0`.
 
@@ -866,7 +854,7 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         which do not lie in the open discoid `D_{\xi_0}`. It does *not*
         correspond to the intersection with `D_{\xi_0}`.
 
-        Note::
+        Note:
 
         This is the generic algorithm for the parent class
         ``AffinoidDomainOnBerkovichLine``. It is assumed that the underlying
@@ -915,7 +903,9 @@ class AffinoidDomainOnBerkovichLine(SageObject):
 
         - ``xi0`` -- a point of type II, or ``None`` (default ``None``)
 
-        OUTPUT: the list of all minimal points of this affinoid which are
+        OUTPUT:
+
+        The list of all minimal points of this affinoid which are
         `\geq \xi_0`.
 
         """
@@ -929,7 +919,9 @@ class UnionOfDomains(AffinoidDomainOnBerkovichLine):
 
     - ``affinoid_list`` - a nonempty list of affinoid domains
 
-    OUTPUT: the union of the affinoid domains in ``affinoid_list``
+    OUTPUT:
+
+    The union of the affinoid domains in ``affinoid_list``
 
     """
 
@@ -961,15 +953,17 @@ class UnionOfDomains(AffinoidDomainOnBerkovichLine):
 
         - ``xi0`` -- a point type II or V
 
-        OUTPUT: if `\xi_0` is a point of type II, then we return an affinoid tree
+        OUTPUT:
+
+        If `\xi_0` is a point of type II, then we return an affinoid tree
         underlying the connected component of this affinoid `U` with minimal
         point `\xi_0`.
 
-        It is assumed but not checked that ``\xi_0` is a minimal point of a
+        It is assumed but not checked that `\xi_0` is a minimal point of a
         connected component of `U`.
 
         If `\xi_0` is of type V then we return the branch of this tree in the
-        direction of `\xi_0`. This has the effect of "filling in all holes"
+        direction of `\xi_0`. This has the effect of 'filling in all holes'
         which do not lie in the open discoid `D_{\xi_0}`. It does *not*
         correspond to the intersection with `D_{\xi_0}`.
 
@@ -1016,8 +1010,9 @@ class UnionOfDomains(AffinoidDomainOnBerkovichLine):
 
         - ``xi0`` -- a point of type II, or ``None`` (default ``None``)
 
-        OUTPUT: the list of all minimal points of this affinoid which are
-        `\geq \xi_0`.
+        OUTPUT:
+
+        The list of all minimal points of this affinoid which are `\geq \xi_0`.
 
         """
         U = self
@@ -1064,7 +1059,9 @@ class ClosedUnitDisk(AffinoidDomainOnBerkovichLine):
 
     - ``X`` -- a Berkovich line
 
-    OUTPUT: the closed unit disk inside ``X``
+    OUTPUT:
+
+    The closed unit disk inside ``X``.
 
     EXAMPLES::
 
@@ -1074,14 +1071,13 @@ class ClosedUnitDisk(AffinoidDomainOnBerkovichLine):
         sage: F.<x> = FunctionField(K)
         sage: X = BerkovichLine(F, vK)
         sage: ClosedUnitDisk(X)
-        Affinoid with 1 components:
         Elementary affinoid defined by
         v(x) >= 0
+        <BLANKLINE>
 
     """
 
     def __init__(self, X):
-
         self._X = X
         T = AffinoidTree(X, root=X.gauss_point(), is_in=True)
         T1 = AffinoidTree(X, root=X.infty(), is_in=False)
@@ -1161,15 +1157,17 @@ class ElementaryAffinoidOnBerkovichLine(AffinoidDomainOnBerkovichLine):
             return "Elementary affinoid defined by {}".format(self.inequalities())
 
     def is_empty(self):
+        """ Return whether this affinoid is the empty set.
+        """
         return self._is_empty
 
     def is_full_berkovich_line(self):
+        """ Return whether this affinoid is the full Beerkovich line.
+        """
         return self._is_full_berkovich_line
 
     def inequalities(self):
-        r"""
-        Return the inequalities defining the elementary affinoid, as a string.
-
+        r""" Return the inequalities defining the elementary affinoid, as a string.
         """
         inequalities = "\n"
         for eta in self._complement:
@@ -1178,9 +1176,8 @@ class ElementaryAffinoidOnBerkovichLine(AffinoidDomainOnBerkovichLine):
         return inequalities
 
 
-class RationalDomainOnBerkovichLine(AffinoidDomainOnBerkovichLine):
-    r"""
-    Return the rational domain on ``X`` defined by ``f``.
+def rational_domain(X, f):
+    r""" Return the rational domain defined by the function ``f``.
 
     INPUT:
 
@@ -1189,88 +1186,35 @@ class RationalDomainOnBerkovichLine(AffinoidDomainOnBerkovichLine):
 
     OUTPUT:
 
-    the affinoid domain on `X` defined by the inequality
+    The rational domain
 
     .. MATH::
 
-    v(f) >= 0.
-
+        U := \{ \xi \in X \mid v_\xi(f) \geq 0 \}.
 
     EXAMPLES::
 
         sage: from mclf import *
-        sage: K = QQ
-        sage: vK = K.valuation(2)
-        sage: F.<x> = FunctionField(K)
-        sage: X = BerkovichLine(F, vK)
-        sage: RationalDomainOnBerkovichLine(X, (x^2+2)/x*(x+1)/2)
+        sage: F.<x> = FunctionField(QQ)
+        sage: X = BerkovichLine(F, QQ.valuation(2))
+        sage: rational_domain(X, (x^2+2)/x*(x+1)/2)
         Affinoid with 2 components:
         Elementary affinoid defined by
         v(x^2 + 2) >= 3/2
         Elementary affinoid defined by
         v(x + 1) >= 1
+        <BLANKLINE>
 
-        f must be nonconstant:
+    f may be nonconstant: ::
 
-        sage: RationalDomainOnBerkovichLine(X, F(1/2))
-        Traceback (most recent call last):
-        ...
-        AssertionError: f must be nonconstant
-
-
-    TO DO:
-
-    I think this can be drastically improved, by using the following ideas:
-
-    - it should not be necessary to first build a tree with all zeroes and poles
-      of `f` as leaves. At any stage of bulding the tree one looks at a discoid
-      `D`. If `f` has nonnegative valuation on the boundary of `D` and
-      no poles inside `D` (or nonpositive valuation on the boundary and no
-      zero inside) then we can stop at `D`.
-    - Instead of working with a (possible huge) rational function `f` we should
-      work with a "factorization", i.e. a list of pairs `(f_i, e_i)` where
-      `f_i` is an irreducible polynomial or a constant and `e_i` an integer
-      (rationals are also fine).
-      At any stage of building the tree, we only retain the sublist
-      of pairs `(f_i,e_i)` which are "active"; for the "inactive" pairs we
-      only need to know their valuations - which is constant on the subtree!
+        sage: rational_domain(X, F(1/2))
+        The empty set
+        sage: rational_domain(X, F(1))
+        the full berkovich line
 
     """
-
-    def __init__(self, X, f):
-        F = X.function_field()
-        f = F(f)
-        assert f not in F.constant_base_field(), "f must be nonconstant"
-        self._X = X
-        U = AffinoidTree(X)
-        xi0 = X.gauss_point()
-        T = BerkovichTree(X, xi0)
-        T = T.adapt_to_function(f)
-        path_list = T.paths()
-        for xi1, xi2 in path_list:
-            in_list = []
-            out_list = []
-            xi1_in = xi1.v(f) >= 0
-            if xi1_in:
-                in_list.append(xi1)
-            else:
-                out_list.append(xi1)
-            xi2_in = xi2.v(f) >= 0
-            if xi2_in:
-                in_list.append(xi2)
-            else:
-                out_list.append(xi2)
-            if xi1_in != xi2_in:
-                # there must be a point between xi1 and xi2 where v(f)=0
-                # which we have to add to the in_list
-                xi3 = xi1.berkovich_line().find_zero(xi1, xi2, f)
-                assert xi3.v(f) == 0, "got the wrong value for t!"
-                in_list.append(xi3)
-            U = U.add_points(in_list, out_list)
-        # we test whether U is correct
-        for xi in U.vertices():
-            assert (xi.v(f) >= 0) == U.is_in(xi)
-        self._T = U
+    from mclf.berkovich.piecewise_affine_functions import valuative_function
+    return valuative_function(X, f).affinoid_domain()
 
 # -------------------------------------------------------------------------
 
