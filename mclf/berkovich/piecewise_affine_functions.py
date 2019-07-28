@@ -676,7 +676,7 @@ class DirectedPath(SageObject):
             self._initial_slope = initial_slope
         else:
             if self._initial_slope != initial_slope:
-                print "Warning: initial_slope of {} has changed!".format(self)
+                print("Warning: initial_slope of {} has changed!".format(self))
                 self._inititial_slope = initial_slope
         return initial_slope
 
