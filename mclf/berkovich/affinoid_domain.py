@@ -57,10 +57,10 @@ TO DO:
 # *****************************************************************************
 
 
-from sage.all import SageObject, Infinity
+from sage.all import SageObject, Infinity, cached_method
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
 from mclf.berkovich.berkovich_trees import BerkovichTree
-from sage.misc.cachefunc import cached_method
+# from sage.misc.cachefunc import cached_method
 
 
 class AffinoidTree(BerkovichTree):

@@ -212,10 +212,10 @@ TO DO:
 #                  https://www.gnu.org/licenses/
 # *****************************************************************************
 
-from sage.all import SageObject, Infinity, sgn, GaussValuation, ZZ
+from sage.all import SageObject, Infinity, sgn, GaussValuation, ZZ, cached_method
 from sage.rings.valuation.limit_valuation import LimitValuation
 from sage.geometry.newton_polygon import NewtonPolygon
-from sage.misc.cachefunc import cached_method
+# from sage.misc.cachefunc import cached_method
 
 
 class BerkovichLine(SageObject):

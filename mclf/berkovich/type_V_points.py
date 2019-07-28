@@ -67,8 +67,8 @@ from `\xi_1` towards `\xi_2`.
 #                  https://www.gnu.org/licenses/
 # *****************************************************************************
 
-from sage.all import SageObject, Infinity
-from sage.misc.cachefunc import cached_method
+from sage.all import SageObject, Infinity, cached_method
+# from sage.misc.cachefunc import cached_method
 
 
 class TypeVPointOnBerkovichLine(SageObject):

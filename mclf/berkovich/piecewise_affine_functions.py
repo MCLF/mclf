@@ -107,8 +107,8 @@ We can compute the affinoid domain given by the inequality `h(\xi)\geq 0`::
 #                  https://www.gnu.org/licenses/
 # *****************************************************************************
 
-from sage.all import SageObject, Infinity
-from sage.misc.cachefunc import cached_method
+from sage.all import SageObject, Infinity, cached_method
+# from sage.misc.cachefunc import cached_method
 
 
 class Domain(SageObject):
