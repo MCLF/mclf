@@ -1,68 +1,130 @@
 r"""
-The Berkovich projective line over a discretely valued field
-============================================================
+The Berkovich line over a discretely valued field
+=================================================
 
 Let `K` be a field and `v_K` a discrete valuation on `K`. Let `F=K(x)`
 be a rational function field over `K`. We consider `F` as the function
-field of the projective line `X:=\mathbb{P}_K^1` over `K`. Let `X^{an}` denote the
-`(K,v_K)`-analytic space associated to `X`. Then a point `\xi` on
-`X^{an}` may be identified with a (real valued) pseudo-valuation
-`v_{\xi}` on `F`.
+field of the projective line `\mathbb{P}_K^1` over `K`. Let `X` denote the
+`(K,v_K)`-analytic space associated to `\mathbb{P}_K^1`. We call `X` the
+*Berkovich line* with respect to `v_K`.
 
-Note that we do not assume `K` to be complete with respect to `v_K`. Hence we
-can work with 'exact' fields, e.g. number fields.
+Note that we do not assume `K` to be complete with respect to `v_K`. This allows
+us to work with 'exact' fields, e.g. number fields. As the 'official' definition
+of `K`-analytic spaces requires `K` to be complete, `X` is really defined over
+the completion `\hat{K}` with respect to `v_K`. We do have a continous map
 
-There are only two kind of 'points' which are relevant for us and can be handled
-using the mac_lane infrastructure:
+.. MATH::
 
-- Type I, algebraic: these are the points that come from a closed point on the
-  (algebraic) projective line over the completed base field.
-- Type II: these are the points which correspond to discrete valuations on the
-  function field whose residue field is a function field over the residue base
-  field
+    \pi: X \to \mathbb{P}_K^1
 
-If `v_\xi(x)\geq 0` we say that `\xi` lies *in the unit disk*. Then the
-restriction of `v_\xi` to `K[x]` is a discrete pseudo-valuation which can be
-realized either as an inductive valuation, or as a limit valuation.
+whose role we discuss below.
 
-If `\xi` does not lie in the unit disk, then we use instead the restriction
-of `v_\xi` to the polynomial ring `K[x^{-1}]` (internally, we use the ring
-`K[x]`, though).
+We systematically work with additive pseudo-valuations instead of multiplicative
+seminorms. Thus, we identitfy a point `\xi\in X` with a (real valued)
+pseudo-valuation `v_{\xi}` on `F` extending `v_K`,
 
-By a result of Berkovich, the topological space `X^{an}` is a *simply connected
+.. MATH::
+
+    v_{\xi}:F \to \mathbb{R}\cup\{\pm \infty\},
+
+as follows: the subring
+
+.. MATH::
+
+    \mathcal{O}_\xi := \{ f\in F \mid v_{\xi}(f) > -\infty \}
+
+is a local subring of `F`, with maximal ideal
+
+.. MATH::
+
+    \mathfrak{m}_\xi := \{ f \in F \mid v_\xi(f) = \infty \}.
+
+Then `v_\xi` induces a discrete valuation on the residue field
+
+.. MATH::
+
+    K(\xi) := \mathcal{O}_\xi/\mathfrak{m}_\xi.
+
+There are only two kind of points which are relevant for us and which we can
+represent and compute with:
+
+- *points of type I*, which are moreover *algebraic*: these are the points
+  `\xi\in X` such that `\bar{\xi}:=\pi(\xi)` is a closed point on `\mathbb{P}^1_K`.
+  Then `\mathcal{O}_\xi` is the local ring and `K(\xi)` the residue field of `\bar{\xi}`.
+  Since `K(\xi)/K` is a finite field extension, there are finitely many extensions
+  of `v_K` to a discrete valuation on `K(\xi)`; the point `\xi\in\pi^{-1}(\bar{\xi})`
+  corresponds precisely to the valuation induces by `v_\xi`.
+- *points of type II*: these are the points `\xi` such that `v_\xi` is a discrete
+  valuation on `F`. In particular, the local ring `\mathcal{O}_\xi` is equal to
+  `F` and the image `\bar{\xi}:=\pi(\xi)` is the generic point of `\mathbb{P}^1_K`.
+  A we see below, a point `\xi` of type II corresponds to a *discoid*, a certain
+  type of affinoid subdomain of `X`.
+
+Our choice of the generator `x` of the function field `F`, which we keep fixed
+throughout, yields certain distinguished subsets and points of `X`, as follows.
+
+The *unit disk* is the subset
+
+.. MATH::
+
+    \mathbb{D} := \{ \xi\in X \mid v_\xi(x)\geq 0 \}.
+
+Note that a point `\xi\in\mathbb{D}` is uniquely determined by the restriction
+of `v_\xi` to the polynomial ring `K[x]`.
+
+The *Gauss point* is the point
+`\xi^g\in\mathbb{D}` of type II corresponding to the Gauss valuation on `K[x]`,
+with respect to `v_K`, i.e. by
+
+.. MATH::
+
+    v_{\xi^g}(\sum_i a_i x^i) = \min_i v_K(a_i).
+
+The second distinguished is the *point at infinity*, denoted `\infty\in X`.
+It is the unique point of type I such that `\pi(\infty)` is the 'usual' point at
+infinity on the projective line, with respect to the parameter `x`. It is
+characterized by the condition
+
+.. MATH::
+
+    v_{\infty}(\frac{1}{x}) = \infty.
+
+
+By a result of Berkovich, the topological space `X` is a *simply connected
 quasi-polyhedron*. Among other things this means that for any two points
-`\xi_1,\xi_2\in X^{an}` there exists a unique closed subset
+`\xi_1,\xi_2\in X` there exists a unique closed subset
 
-.. MATH::      [\xi_1,\xi_2]\subset X^{an}
+.. MATH::
 
-which is homeomorphic to the unit interval `[0,1]\subset\mathbb{R}` in such a way that
-`\xi_1,\xi_2` are mapped to the endpoints `0,1`.
+    [\xi_1,\xi_2]\subset X
 
-Let `\xi^g\in X^{an}` denote the *Gauss point*, corresponding to the Gauss
-valuation on `F=K(x)` with respect to the parameter `x`. Then `X^{an}` has a
-unique partial ordering determined by the following two conditions:
+which is homeomorphic to the unit interval `[0,1]\subset\mathbb{R}` in such a
+way that `\xi_1,\xi_2` are mapped to the endpoints `0,1`. It follows that `X`
+has a unique partial ordering determined by the following two conditions:
 
-- `\xi^g` is the smallest element
+- the Gauss point `\xi^g` is the smallest element
 - we have `\xi_1<\xi_2` if and only if `\xi_2` lies in a connected component
-  of `X^{an}-\{\xi_1\}` which does not contain `\xi^g`.
+  of `X-\{\xi_1\}` which does not contain `\xi^g`.
 
 A point `\xi` of type II has a *discoid representation* as follows. If
-`\xi=\xi^g` then `D_\xi` is defined as the closed unit disk. Otherwise,
-`D_\xi` is defined of the set of all points `\xi_1\in X^{an}` such that
-`\xi\leq\xi_1`. Then `D_\xi` is of the form
+`\xi=\xi^g` then `D_{\xi^g}:=\mathbb{D}` is defined as the unit disk. Otherwise,
+`D_\xi` is defined of the set of all points `\xi_1\in X` such that
+`\xi\leq\xi_1`. One can show that `D_\xi` is then of the form
 
-.. MATH::    D_\xi = \{ \xi_1 \mid v_{\xi_1}(f) \geq s\},
+.. MATH::
 
-where `f` is a polynomial in `x`, irreducible over
-`\hat{\bar{K}}` (or `f= 1/x`) and `s` is a rational number.
-The pair `(f,s)` determines `\xi`, but this representation is not unique. We call
-`(f, s)` a *discoid representation* of `\xi`.
+    D_\xi = \{ \xi_1 \mid v_{\xi_1}(f) \geq s\},
 
-Conversely, if `D\subset X^{an}` is a *discoid*, i.e. an irreducible affinoid
+where `f` is a polynomial in `x`, irreducible over `\hat{K}` (or `f= 1/x` if
+`\infty\in D_\xi`) and `s` is a rational number. The pair `(f,s)` determines
+`\xi`, but this representation is not unique. We call `(f, s)` a
+*discoid representation* of `\xi`.
+
+Conversely, if `D\subset X` is a *discoid*, i.e. an irreducible affinoid
 subdomain which becomes a union of closed disks over a finite extension of `K`,
 then there exists a unique boundary point `\xi` of `D`. We have `D=D_\xi` if
 and only if `D` is a *standard discoid*, i.e. it is either contained in or
-disjoint from the closed unit disk.
+disjoint from the unit disk.
 
 Note that we can simply extend the discoid representation to points of
 type I by allowing `s` to take the value `\infty`. Then `D_\xi = \{\xi\}`
@@ -135,12 +197,6 @@ of the unit disk. This shows that issue #39 has been fixed.
 
 TO DO:
 
-- allow "virtual functions" for the evaluations of valuations (and derivations).
-  "Virtual functions" are products of rational functions with possible rational
-  exponents.
-
-- use more cached functions; this may improve speed
-
 - more doctests!
 
 
@@ -168,8 +224,8 @@ class BerkovichLine(SageObject):
 
     Let `K` be a field and `v_K` a discrete valuation on `K`. Let `F=K(x)`
     be a rational function field over `K`. We consider `F` a the function
-    field of the projective line `X` over `K`. Let `X^{an}` denote the
-    `(K,v_K)`-analytic space associated to `X`. Then a point `\xi` on `X^{an}`
+    field of the projective line `X` over `K`. Let `X` denote the
+    `(K,v_K)`-analytic space associated to `X`. Then a point `\xi` on `X`
     may be identified with a (real valued) pseudo-valuation `v_\xi` on `F`
     extending `v_K`.
 
@@ -331,7 +387,9 @@ class BerkovichLine(SageObject):
         - ``f`` -- a nonconstant polynomial in `x`, or `1/x`
         - ``s`` -- a rational number, or `\infty`
 
-        OUTPUT:  a point `\xi` on the Berkovich line which is the unique
+        OUTPUT:
+
+        a point `\xi` on the Berkovich line which is the unique
         boundary point of the discoid
 
         .. MATH::
@@ -380,7 +438,6 @@ class BerkovichLine(SageObject):
             Point of type II on Berkovich line, corresponding to v(1/x) >= 1/2
 
         """
-
         assert s > -Infinity
         X = self
         F = X.function_field()
@@ -777,10 +834,10 @@ class PointOnBerkovichLine(SageObject):
         residue base field
 
     In particular, the Gauss valuation on `F=K(x)` with respect to the parameter
-    `x` corresponds t a point `\xi^g` of type II on `X^{an}` which we call
+    `x` corresponds t a point `\xi^g` of type II on `X` which we call
     the *Gauss point*.
 
-    The set `X^{an}` has a canonical partial ordering in which the Gauss point
+    The set `X` has a canonical partial ordering in which the Gauss point
     is the smallest elements. All point of type I are maximal elements.
 
     """
@@ -1036,7 +1093,9 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
     def equation(self):
         r""" Return an equation for the Galois orbit of this point.
 
-        OUTPUT: An element `f` of the function field of `X` which is either
+        OUTPUT:
+
+        An element `f` of the function field of `X` which is either
         an irreducible polynomial in the standard generator `x`, or is equal to
         `1/x`, and such that `v_\xi(f)=\infty`.
 
@@ -1271,7 +1330,9 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
 
         - ``xi2`` -- a point of type I or II on the Berkovich line
 
-        OUTPUT: The infimum of self and `\xi_2`. Unless self or `\xi_2` are equal,
+        OUTPUT:
+
+        The infimum of self and `\xi_2`. Unless self or `\xi_2` are equal,
         this is a point of type II.
 
         EXAMPLES::
@@ -1343,7 +1404,9 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
     - ``X`` -- a Berkovich line over a valued field K
     - ``v`` -- a discrete valuation on the function field of X extending the base valuation
 
-    OUTPUT: the type-II-point `\xi` on `X` corresponding to `v`.
+    OUTPUT:
+
+    The type-II-point `\xi` on `X` corresponding to `v`.
 
     It is also possible to replace ``v`` by a pair ``(v0, y)``, where ``v0``
     is a discrete valuation on a polynomial ring `K[x]`, and ``y`` is a parameter
@@ -1717,7 +1780,9 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
 
         - ``xi1`` -- a point which is strictly larger than ``self``
 
-        OUTPUT: a point which lies strictly between ``self`` and ``xi1``
+        OUTPUT:
+
+        A point which lies strictly between ``self`` and ``xi1``.
 
         EXAMPLES::
 
@@ -1922,7 +1987,9 @@ def is_generator(y):
 
     - ``y`` - an element of a rational function field `F=K(x)`
 
-    OUTPUT: ``True`` if `F=K(y)`, ``False`` otherwise.
+    OUTPUT:
+
+    ``True`` if `F=K(y)`, ``False`` otherwise.
 
     """
 
@@ -1938,7 +2005,9 @@ def inverse_generator(y):
 
     - ``y`` - a generator of a rational function field `F=K(x)`
 
-    OUTPUT: the inverse generator for `y`. So if `\phi:F\to F` is the automorphism
+    OUTPUT:
+
+    The inverse generator for `y`. So if `\phi:F\to F` is the automorphism
     of `F` such that `\phi(x)=y` then `z:=\phi^{-1}(x)` is the inverse generator.
 
     """
