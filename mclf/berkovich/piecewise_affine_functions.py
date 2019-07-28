@@ -1,23 +1,52 @@
 r""" Piecewise affine functions on the Berkovich projective line.
-=========================================================
+=================================================================
 
 Let `K` be a field, `v_K` a discrete valuation on `K` and `X=\mathbb{P}^1_K`
 the *Berkovich line* over `K`.
 
-Let `f in F=K(x)` be a nonzero rational function. We associate to `f`
-the function
+A continuous function
 
-..MATH::    h_f:X^{an} \to \RR\cup\{\pm\infty\},  \xi \mapsto v_\xi(f).
+.. MATH::
 
+    h: X \to \mathbb{R}\cup\{\pm\infty\}
 
-**Definition:** A *valuative function* on `X^{an}` is a function of the form
+is called *piecewise affine* if it factors over the retraction map
 
-..MATH::      h = a_0 + \sum_i a_i\cdot h_{f_i}
+.. MATH::
+
+    r_T: X \to T
+
+onto a Berkovich subtree `T\subset X`, and the restriction of `h` to the edges
+of `T` are affine (with respect to the natural affine structure of a path on a
+Berkovich line).
+
+The most important examples of piecewise linear functions are
+*valuative functions*. For instance, to any nonzero rational function
+`f \in F=K(x)` we associate the function
+
+.. MATH::
+
+    h_f:X \to \mathbb{R}\cup\{\pm\infty\},  \xi \mapsto v_\xi(f).
+
+A general valuative function on `X` is simply a rational multiple of a function
+of the form `h_f`. Any such function `h` can be written uniquely in the form
+
+.. MATH::
+
+    h = a_0 + \sum_i a_i\cdot h_{f_i}
 
 where the `f_i` are irreducible polynomials in the parameter `x`,
 and the `a_i` are rational numbers, with `a_i \neq 0` for `i > 0`.
 
-Valuative functions are piecewise affine.
+Let `h` be a nonconstant piecewise affine function on `X`. Then the subset
+
+.. MATH::
+
+    U := \{ \xi \in X \mid h(\xi) \geq 0 \}
+
+is an affinoid subdomain (unless it is empty, or the full Berkovich line `X`).
+If `h=h_f` is the valuative function associated to a rational function `f`, then
+`U` is actually a rational domain.
 
 
 AUTHORS:
@@ -27,44 +56,44 @@ AUTHORS:
 
 EXAMPLES::
 
-sage: from mclf import *
-sage: F.<x> = FunctionField(QQ)
-sage: X = BerkovichLine(F, QQ.valuation(2))
+    sage: from mclf import *
+    sage: F.<x> = FunctionField(QQ)
+    sage: X = BerkovichLine(F, QQ.valuation(2))
 
 We can define a valuative function by a rational function on `X`::
 
-sage: f = (x^2+2*x-2)/(2*x-1)
-sage: h = valuative_function(X, f)
+    sage: f = (x^2+2*x-2)/(2*x-1)
+    sage: h = valuative_function(X, f)
 
 We check that the value of `h` is the valuation of `f`, at several points::
 
-sage: xi = X.gauss_point()
-sage: h(xi), xi.v(f)
-(0, 0)
-sage: xi = X.infty()
-sage: h(xi), xi.v(f)
-(-Infinity, -Infinity)
-sage: xi = X.point_from_discoid(x, 3)
-sage: h(xi), xi.v(f)
-(1, 1)
+    sage: xi = X.gauss_point()
+    sage: h(xi), xi.v(f)
+    (0, 0)
+    sage: xi = X.infty()
+    sage: h(xi), xi.v(f)
+    (-Infinity, -Infinity)
+    sage: xi = X.point_from_discoid(x, 3)
+    sage: h(xi), xi.v(f)
+    (1, 1)
 
 We can also define a valuative function by a pair `(L, a_0)`::
 
-sage: L = [(x - 1, 2/3), (x + 1, 3/2)]
-sage: a_0 = -3
-sage: h = valuative_function(X, (L, a_0))
-sage: xi = X.point_from_discoid(x + 1, 2)
-sage: h(xi)
-2/3
+    sage: L = [(x - 1, 2/3), (x + 1, 3/2)]
+    sage: a_0 = -3
+    sage: h = valuative_function(X, (L, a_0))
+    sage: xi = X.point_from_discoid(x + 1, 2)
+    sage: h(xi)
+    2/3
 
 We can compute the affinoid domain given by the inequality `h(\xi)\geq 0`::
 
-sage: h.affinoid_domain()
-Affinoid with 2 components:
-Elementary affinoid defined by
-v(x - 1) >= 9/4
-Elementary affinoid defined by
-v(x + 1) >= 14/9
+    sage: h.affinoid_domain()
+    Affinoid with 2 components:
+    Elementary affinoid defined by
+    v(x - 1) >= 9/4
+    Elementary affinoid defined by
+    v(x + 1) >= 14/9
 
 """
 
@@ -84,6 +113,10 @@ from sage.misc.cachefunc import cached_method
 
 class Domain(SageObject):
     r""" A domain in the Berkovich line, defined by inequalities.
+
+    Objects of this class are used as domians of definition of affine and
+    piecewise affine functions. Although they may be affinoid domains, this
+    class has no relation to the class ``AffinoidDomainOnBerkovichLine``.
 
     INPUT:
 
@@ -147,28 +180,45 @@ class Domain(SageObject):
             return True
 
     def berkovich_line(self):
+        """ Return the Berkovich line underlying this domain.
+        """
         return self._X
 
     def inequalities(self):
+        """ Return the list of non-strict inequalities which are part of the
+        definition of this domain.
+        """
         inequalities = ""
         for phi, s in self._inequalities:
             inequalities += + "\n" + ("v(" + str(phi) + ") >= " + str(s))
         return inequalities
 
     def strict_inequalities(self):
+        """ Return the list of strict inequalities which are part of the
+        definition of this domain.
+        """
         str_inequalities = ""
         for phi, s in self._strict_inequalities:
             str_inequalities += "\n" + ("v(" + str(phi) + ") > " + str(s))
         return str_inequalities
 
     def is_full_berkovich_line(self):
+        """ Return whether this domain is the full Berkovich line.
+        """
         return self._inequalities == [] and self._strict_inequalities == []
 
     def minimal_point(self):
+        """ Return the minimal point of this domain.
+
+        Since an arbitrary domain has no minimal point, this method raises
+        an error, unless this domain is the full Berkovich line.
+        """
         assert self.is_full_berkovich_line(), "an arbitrary domain has no minimal point"
         return self.berkovich_line().gauss_point()
 
     def contains_infty(self):
+        """ Return whether this domain contains the point at infinity.
+        """
         if not hasattr(self, "_contains_infty"):
             self._contains_infty = self.is_in(self.berkovich_line().infty())
         return self._contains_infty
@@ -182,7 +232,9 @@ class Discoid(Domain):
     - ``xi0`` - a point on the Berkovich line `X`
     - ``xi1`` (default: ``None``) -- another point on `X`
 
-    OUTPUT: the discoid `D` consisting of all point on the Berkovich line which
+    OUTPUT:
+
+    the closed discoid `D` consisting of all point on the Berkovich line which
     are greater or equal to `\xi_0`. If `\xi_1` is given, then it is checked
     whether `\xi1` lies in `D`.
 
@@ -192,11 +244,11 @@ class Discoid(Domain):
 
     EXAMPLES::
 
-    sage: from mclf import *
-    sage: F.<x> = FunctionField(QQ)
-    sage: X = BerkovichLine(F, QQ.valuation(2))
-    sage: Discoid(X.gauss_point())
-    the discoid defined by v(x) >= 0
+        sage: from mclf import *
+        sage: F.<x> = FunctionField(QQ)
+        sage: X = BerkovichLine(F, QQ.valuation(2))
+        sage: Discoid(X.gauss_point())
+        the closed discoid defined by v(x) >= 0
 
     """
 
@@ -215,17 +267,17 @@ class Discoid(Domain):
         self._s = s
 
     def __repr__(self):
-        return "the discoid defined by v({}) >= {}".format(self._phi, self._s)
+        return "the closed discoid defined by v({}) >= {}".format(self._phi, self._s)
 
     @cached_method
     def is_in(self, xi):
-        r""" Return whether the point xi lies in this domain.
+        r""" Return whether the point xi lies in this closed discoid.
 
         INPUT:
 
         - ``xi`` -- a point of type I, II or V on the Berkovich line
 
-        OUTPUT: ``True`` if `\xi` lies in this domain, ``False`` otherwise.
+        OUTPUT: ``True`` if `\xi` lies in this discoid, ``False`` otherwise.
 
         """
         point_type = xi.type()
@@ -236,6 +288,8 @@ class Discoid(Domain):
             return xi0.v(self._phi) >= self._s and xi.derivative(self._phi) >= 0
 
     def minimal_point(self):
+        """ Return the minimal point of this closed discoid.
+        """
         return self._minimal_point
 
 
@@ -246,7 +300,9 @@ def open_discoid(xi0, xi1):
 
     - ``xi0``, ``xi1`` -- points on the Berkovich line `X`
 
-    OUTPUT: the open discoid `D` with boundary point `xi_0` which contains `\xi_1`.
+    OUTPUT:
+
+    the open discoid `D` with boundary point `xi_0` which contains `\xi_1`.
     Note that `\xi0` is *not* contained in `D`.
 
     It is assumed that `\xi_0 < \xi_1`. This means that `D` cannot contain the
@@ -254,14 +310,14 @@ def open_discoid(xi0, xi1):
 
     EXAMPLES::
 
-    sage: from mclf import *
-    sage: F.<x> = FunctionField(QQ)
-    sage: X = BerkovichLine(F, QQ.valuation(2))
-    sage: xi0 = X.point_from_discoid(x-1, 1)
-    sage: xi1 = X.point_from_discoid(x+1, 2)
-    sage: open_discoid(xi0, xi1)
-    domain defined by
-     v(x + 1) > 1
+        sage: from mclf import *
+        sage: F.<x> = FunctionField(QQ)
+        sage: X = BerkovichLine(F, QQ.valuation(2))
+        sage: xi0 = X.point_from_discoid(x-1, 1)
+        sage: xi1 = X.point_from_discoid(x+1, 2)
+        sage: open_discoid(xi0, xi1)
+        domain defined by
+        v(x + 1) > 1
 
     """
     from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
@@ -277,7 +333,9 @@ def open_annuloid(xi0, xi1):
 
     - ``xi0``, ``xi1`` -- points of type II on the Berkovich line `X`
 
-    OUTPUT: the open annuloid `A` with boundary points `xi_0` and `\xi_1`.
+    OUTPUT:
+
+    the open annuloid `A` with boundary points `xi_0` and `\xi_1`.
     Note that `\xi0` and `\xi_1` are *not* contained in `D`.
 
     It is assumed that `\xi_0 < \xi_1`. This means that `A` cannot contain the
@@ -285,15 +343,15 @@ def open_annuloid(xi0, xi1):
 
     EXAMPLES::
 
-    sage: from mclf import *
-    sage: F.<x> = FunctionField(QQ)
-    sage: X = BerkovichLine(F, QQ.valuation(2))
-    sage: xi0 = X.point_from_discoid(x-1, 1)
-    sage: xi1 = X.point_from_discoid(x+1, 2)
-    sage: open_annuloid(xi0, xi1)
-    domain defined by
-     v(x + 1) > 1
-    v(1/(x + 1)) > -2
+        sage: from mclf import *
+        sage: F.<x> = FunctionField(QQ)
+        sage: X = BerkovichLine(F, QQ.valuation(2))
+        sage: xi0 = X.point_from_discoid(x-1, 1)
+        sage: xi1 = X.point_from_discoid(x+1, 2)
+        sage: open_annuloid(xi0, xi1)
+        domain defined by
+        v(x + 1) > 1
+        v(1/(x + 1)) > -2
 
 
     """
@@ -312,43 +370,45 @@ class DirectedPath(SageObject):
 
     - ``xi1``, ``xi2`` -- two points on the Berkovich line such that `\xi1\leq \xi_2`
 
-    OUTPUT: the directed path `\gamma = [\xi_1,\xi_2]`.
+    OUTPUT:
+
+    the directed path `\gamma = [\xi_1,\xi_2]`.
 
     EXAMPLES::
 
-    sage: from mclf import *
-    sage: F.<x> = FunctionField(QQ)
-    sage: X = BerkovichLine(F, QQ.valuation(2))
+        sage: from mclf import *
+        sage: F.<x> = FunctionField(QQ)
+        sage: X = BerkovichLine(F, QQ.valuation(2))
 
     We can define a path by specifying the initial and the terminal point::
 
-    sage: xi1 = X.point_from_discoid(x, 1)
-    sage: xi2 = X.point_from_discoid(x^2 + 4, 5)
-    sage: gamma = DirectedPath(xi1, xi2)
-    sage: gamma
-    path from Point of type II on Berkovich line, corresponding to v(x) >= 1 to Point of type II on Berkovich line, corresponding to v(x^2 + 4) >= 5
+        sage: xi1 = X.point_from_discoid(x, 1)
+        sage: xi2 = X.point_from_discoid(x^2 + 4, 5)
+        sage: gamma = DirectedPath(xi1, xi2)
+        sage: gamma
+        path from Point of type II on Berkovich line, corresponding to v(x) >= 1 to Point of type II on Berkovich line, corresponding to v(x^2 + 4) >= 5
 
     We use the *standard parametrization* for a path; it depends on the discoid
     representation of the terminal point::
 
-    sage: gamma.point(3)
-    Point of type II on Berkovich line, corresponding to v(x + 2) >= 3/2
+        sage: gamma.point(3)
+        Point of type II on Berkovich line, corresponding to v(x + 2) >= 3/2
 
     Given a path `\gamma=[\xi_1,\xi_2]`, we define its *tube* `D` as follows.
     If `\xi_2` is of type II, then `D` is the open annuloid
     with boundary point points `\xi_1` and `\xi_2`. If `\xi_1` is of type I,
     then `D:=D_{\xi_1}` is the discoid with boundary point `\xi_1`.::
 
-    sage: gamma.tube()
-    domain defined by
-     v(x + 2) > 1
-    v(1/(x^2 + 4)) > -5
+        sage: gamma.tube()
+        domain defined by
+        v(x + 2) > 1
+        v(1/(x^2 + 4)) > -5
 
-    sage: gamma.is_in_tube(X.gauss_point())
-    False
+        sage: gamma.is_in_tube(X.gauss_point())
+        False
 
-    sage: gamma.is_in_tube(xi2)
-    False
+        sage: gamma.is_in_tube(xi2)
+        False
 
     """
 
@@ -414,9 +474,25 @@ class DirectedPath(SageObject):
         return tube
 
     def initial_parameter(self):
+        r""" Return the initial parameter of this path.
+
+        OUTPUT:
+
+        a rational number `s_0` such that `\gamma(s_0)` is the initial point
+        of this path `\gamma`.
+
+        """
         return self._s1
 
     def terminal_parameter(self):
+        r""" Return the terminal parameter of this path.
+
+        OUTPUT:
+
+        a rational number `s_1` (or `\infty`)` such that `\gamma(s_1)` is the
+        terminal point of this path `\gamma`.
+
+        """
         if self.is_limit_path():
             return Infinity
         else:
@@ -424,6 +500,22 @@ class DirectedPath(SageObject):
 
     @cached_method
     def is_parameter(self, t, in_interior=False):
+        r""" Return whether ``t`` is a valid parameter for this path.
+
+        INPUT:
+
+        - ``t`` -- a rational number, or `\infty`
+        - ``in_interior`` -- a boolean (default: ``False``)
+
+        OUTPUT:
+
+        ``True`` if `\gamma(t)` is well defined, else ``False``.
+
+        If ``in_interior`` is ``True`` then we check whether `\gamma(t)` lies
+        in the interior of this path (i.e. we exclude the initial and the
+        terminal point).
+
+        """
         if in_interior:
             return t > self.initial_parameter() and t < self.terminal_parameter()
         else:
@@ -437,7 +529,9 @@ class DirectedPath(SageObject):
 
         - ``t`` -- a rational number, or ``Infinity``
 
-        OUTPUT: the point `\xi = \gamma(t)` on this path, with respect to the
+        OUTPUT:
+
+        the point `\xi = \gamma(t)` on this path, with respect to the
         standard parametrization.
 
         """
@@ -462,7 +556,9 @@ class DirectedPath(SageObject):
 
         - ``t`` -- a rational number, or `\infty`
 
-        OUTPUT: the type-V-point which is the tangent vector at the point
+        OUTPUT:
+
+        the type-V-point which is the tangent vector at the point
         `\gamma(t)` in the direction of `\gamma`.
 
         It is assumed that the point `\gamma(t)` does exist and is not the
@@ -475,6 +571,16 @@ class DirectedPath(SageObject):
     @cached_method
     def parameter(self, xi):
         r""" Return the parameter of a point on the annulus corresponding to this path.
+
+        INPUT:
+
+        - ``xi`` -- a point of type I or II
+
+        OUTPUT:
+
+        the parameter `t` such that `\gamma(t)=\xi`. If `\xi` does not lie on
+        the path `\gamma` then an error is raised.
+
         """
         if self.is_limit_path():
             if self.terminal_point().is_equal(xi):
@@ -488,18 +594,49 @@ class DirectedPath(SageObject):
     @cached_method
     def retraction(self, xi):
         r""" Return the retraction of a point in the tube onto the path.
+
+        INPUT:
+
+        - ``xi`` -- a point of type I or II
+
+        OUTPUT:
+
+        the image of the point `\xi` under the retraction map onto the path.
+
+        It is assumed that `\xi` lies in the tube of the path; otherwise an
+        error is raised.
+
         """
-        assert self.is_in_domain(xi), "xi must be in the tube"
+        assert self.is_in_tube(xi), "xi must be in the tube"
         return self.point(self.parameter(xi))
 
     @cached_method
     def is_in_tube(self, xi):
-        r""" Check whether the point lies in the tube of this path.
+        r""" Return whether a point lies in the tube of this path.
+
+        INPUT:
+
+        - ``xi`` -- a point of type I or II
+
+        OUTPUT:
+
+        ``True`` is `\xi` lies on the tube of this path, ``False`` otherwise.
+
         """
         return self.tube().is_in(xi)
 
     @cached_method
     def is_on_path(self, xi):
+        r""" Return whether a point lies on this path.
+
+        INPUT:
+
+        - ``xi`` -- a point of type I or II
+
+        OUTPUT:
+
+        ``True`` if `\xi=\gamma(t)` for a parameter `t`.
+        """
         if not self.is_in_tube(xi):
             return False
         else:
@@ -532,6 +669,8 @@ class DirectedPath(SageObject):
         return self._initial_tangent_vector
 
     def initial_slope(self):
+        """ Return the slope of this path at the initial point.
+        """
         initial_slope = self.initial_tangent_vector().derivative(self._phi)
         if not hasattr(self, "_initial_slope"):
             self._initial_slope = initial_slope
@@ -579,9 +718,11 @@ class AffineFunction(SageObject):
     - ``xi1``, ``xi2`` -- points on the Berkovich line `X` such that `\xi_1<=\xi_2`
     - ``a``, ``b`` -- rational numbers
 
-    OUTPUT: the affine function `h` on the domain `D` of the path
-    `\gamma = [\xi_1,\xi]` defined by `a` and `b`. If `t:D \to \RR` is the
-    standard parametrization, then
+    OUTPUT:
+
+    the affine function `h` on the domain `D` of the path `\gamma = [\xi_1,\xi]`
+    defined by `a` and `b`. If `t:D \to \mathbb{R}` is the standard
+    parametrization, then
 
     .. MATH::
 
@@ -590,7 +731,6 @@ class AffineFunction(SageObject):
     """
 
     def __init__(self, gamma, a, b):
-
         self._gamma = gamma
         self._a = a
         self._b = b
@@ -599,34 +739,64 @@ class AffineFunction(SageObject):
         return "affine function on the tube of the {}, with initial value {}.".format(self.path(), self.initial_value())
 
     def berkovich_line(self):
+        r""" Return the Berkovich line underlying this affine function.
+        """
         return self._initial_point.berkovich_line()
 
     def path(self):
+        r""" Return the path underlying this affine function.
+        """
         return self._gamma
 
     def initial_point(self):
+        r""" Return the initial point of the path underlying this affine function.
+        """
         return self.path().initial_point()
 
     def terminal_point(self):
+        r""" Return the terminal point of the path underlying this affine function.
+        """
         return self.path().terminal_point()
 
     def domain(self):
+        r""" Return the domain of definition of this affine function.
+        """
         return self.path().tube()
 
     def is_in_domain(self, xi):
+        r""" Return whether a point is in the domain of definition of this affine function.
+        """
         return self.domain().is_in(xi)
 
     @cached_method
     def __call__(self, xi):
+        r""" Return the value of this affine function on a point.
+
+        INPUT:
+
+        - ``xi`` -- a point of type I or II
+
+        OUTPUT:
+
+        the value `h(\xi)`, where `h` is this affine function.
+
+        It is assumed that `\xi` lies in the domain of `h`; otherwise an error
+        is raised.
+
+        """
         self.path().initial_slope()
         return self._a * self.path().parameter(xi) + self._b
 
     def initial_value(self):
+        r""" Return the initial value of this affine function.
+        """
         if not hasattr(self, "_initial_value"):
             self._initial_value = self(self.initial_point())
         return self._initial_value
 
     def terminal_value(self):
+        r""" Return the terminal value of this affine function.
+        """
         if not hasattr(self, "_terminal_value"):
             self._terminal_value = self(self.terminal_point())
         return self._terminal_value
@@ -639,24 +809,32 @@ class AffineFunction(SageObject):
 
         - ``eta`` -- a type-V-point on the Berkovich line
 
-        OUTPUT: the derivative of this affine function `h` w.r.t. the tangent
-        vector corresponding to `eta`.
+        OUTPUT:
+
+        the derivative of this affine function `h` w.r.t. the tangent
+        vector corresponding to `\eta`.
 
         """
         assert self.is_in_domain(eta), "eta must lie in the domain of this function"
         return self._a * self.path().slope(eta)
 
     def is_constant(self):
+        r""" Return whether this affine function is constant.
+        """
         return self._a == 0
 
     def is_increasing(self):
+        r""" Return whether this affine function is strictly increasing.
+        """
         return self._a > 0
 
     @cached_method
     def find_zero(self):
         r""" Return an isolated zero of this affine function (if there is one).
 
-        OUTPUT: a point `\xi` on the interior of the path underlying this
+        OUTPUT:
+
+        a point `\xi` on the interior of the path underlying this
         function which is an isolated zero.
 
         If no such zero exists, ``None`` is returned.
@@ -671,7 +849,9 @@ class AffineFunction(SageObject):
     def find_point_with_value(self, c):
         r""" Return a point where this affine function takes a given value.
 
-        OUTPUT: a point `\xi` on the interior of the underlying path such that
+        OUTPUT:
+
+        a point `\xi` on the interior of the underlying path such that
         the function is nonconstant in `\xi` and takes the value `c`.
 
         If no such point exists, ``None`` is returned.
@@ -700,7 +880,9 @@ class PiecewiseAffineFunction(SageObject):
     - ``a0`` -- a rational number
     - ``restrictions`` -- a list of pairs `(h_1,h_2)`
 
-    OUTPUT: a piecewise affine function `h` on `D`.
+    OUTPUT:
+
+    a piecewise affine function `h` on `D`.
 
     We assume that `D` is either a closed discoid, or the full Berkovich line `X`.
     Let `\xi_0` be the *initial point* of the function, which is either the boundary
@@ -797,6 +979,23 @@ class PiecewiseAffineFunction(SageObject):
         return self._initial_value
 
     def restrictions(self):
+        r""" Return the restrictions of this piecewise affine functions.
+
+        OUTPUT:
+
+        a list of pairs `(h_1,h_2)`, where `h_1` is an *affine* function which is
+        the restriction of this function `h` to an open subannuloid of the domain of
+        `h`, and `h_2` is the restriction of `h` to the closed discoid which
+        the unique hole of the domain of `h_1`.
+
+        If the domain of `h_1` is an open discoid (so there is no hole), then
+        `h_2` is ``None``.
+
+        Together with the initial value, these restrictions define `h`, because
+        `h` is constant on the complement of the domains of definitios of these
+        restrictions.
+
+        """
         return self._restrictions
 
     @cached_method
@@ -809,7 +1008,7 @@ class PiecewiseAffineFunction(SageObject):
 
         OUTPUT:
 
-        A rational number (or +/-Infinity).
+        A rational number (or +/-Infinity), the value `h(\xi)`.
 
         """
         assert self.is_in_domain(xi), "xi must lie in the domain of this function"
@@ -828,12 +1027,12 @@ class PiecewiseAffineFunction(SageObject):
 
         INPUT:
 
-        - ``eta`` -- a point of type V on the underlying Berkovich line
+        - ``eta`` -- a point of type V on the domain of this function
 
         OUTPUT:
 
         A rational number, the value of the derivative of the function
-        with respect to ``eta``.
+        with respect to `\eta`.
 
         NOTE: This needs to be defined in a more precise way.
 
@@ -888,10 +1087,10 @@ class PiecewiseAffineFunction(SageObject):
 
         NOTE::
 
-        In this form, the problem is not well defined. Note that the function
-        may be constant on pathes of the nerf. If this constant value is equal
-        to a, and xi0 lies on this path and ist not the terminal point, then
-        there is no minimal next point with value a.
+            In this form, the problem is not well defined. Note that the function
+            may be constant on pathes of the nerf. If this constant value is equal
+            to a, and xi0 lies on this path and ist not the terminal point, then
+            there is no minimal next point with value a.
 
         """
         if xi0 is not None and xi0.is_incomparable(self.initial_point()):
@@ -926,7 +1125,9 @@ class PiecewiseAffineFunction(SageObject):
     def affinoid_domain(self):
         r""" Return the affinoid domain defined by this function.
 
-        OUTPUT: the affinoid subdomain of the domain of this function `h`,
+        OUTPUT:
+
+        the affinoid subdomain of the domain of this function `h`,
         defind by the inequality
 
         .. MATH::
@@ -964,7 +1165,9 @@ class PiecewiseAffineFunction(SageObject):
         This is a helper function for ``rational_domain()`` which works
         recursively.
 
-        OUTPUT: an affinoid tree `T` with the following properties (`h` is this
+        OUTPUT:
+
+        an affinoid tree `T` with the following properties (`h` is this
         valuative function):
 
         - `T` is the refinement of the tree underlying `h`, obtained by adding
@@ -1039,14 +1242,18 @@ def valuative_function(D, f, T=None, is_factored=False):
 
     - ``D`` -- a domain in the Berkovich line, or the Berkovich line itself
     - ``f`` -- a nonconstant rational function on `X`, or
-               a pair `(L, a_0)`, where `L` is
-                 a list of pairs `(g, a)` consisting of
-                 - a polynomial `g` (element of the function field on `X`)
-                 - a nonzero rational number `a`
-                and where `a_0` is a rational number
-    - ``T`` (default: ``None``) -- a Berkovich tree
+               a pair `(L, a_0)`, where `L` is a list of pairs `(g, a)` consisting of
 
-    OUTPUT: If `f` is a rational function, then we create the valuative function
+               - a polynomial `g` (element of the function field on `X`)
+               - a nonzero rational number `a`
+
+               and where `a_0` is a rational number
+    - ``T`` (default: ``None``) -- a Berkovich tree
+    - ``is_factored`` -- a boolean (default: ``False``)
+
+    OUTPUT:
+
+    If `f` is a rational function, then we create the valuative function
     `h` on `D` defined as
 
     .. MATH::
@@ -1060,12 +1267,17 @@ def valuative_function(D, f, T=None, is_factored=False):
 
         h(\xi) := a_0 + \sum_i a_i v(f(\xi)).
 
-    The domain `D` must be either a discoid, or the the full Berkovich line.
+    The domain `D` must be either a standard closed discoid, or the the full
+    Berkovich line.
 
     If the Berkovich tree `T` is given, then it is assumed that `T` is the
     *dendrite* of the function `h` on `D`. This means that the root of `T`
     is the minimal point of `D`, and that the restriction of `h` to the edges
     of `T` are affine.
+
+    If ``is_factored`` is ``True`` then we assume that `L` is actually a list
+    of triples `(f, a, [\xi])`, where the `f` are *irreducible* polynomials,
+    and `[\xi]` is the list of all points of type I which are zeroes of `f`.
 
     """
     from mclf.berkovich.berkovich_trees import BerkovichTree
@@ -1083,11 +1295,11 @@ def valuative_function(D, f, T=None, is_factored=False):
     else:
         L, a_0 = f
     if not is_factored:
-        L, a_0 = complete_factorization(X, L, a_0)
+        L, a_0 = _complete_factorization(X, L, a_0)
     else:
-        L, a_0 = simplify_L(D, L, a_0)
+        L, a_0 = _simplify_L(D, L, a_0)
     initial_value = a_0 + sum([a*initial_point.v(g) for g, a, zeroes in L])
-    assert compute_value(L, a_0, initial_point) == initial_value
+    assert _compute_value(L, a_0, initial_point) == initial_value
 
     if T is None:
         degree = sum([a*g.numerator().degree() for g, a, zeroes in L])
@@ -1097,7 +1309,7 @@ def valuative_function(D, f, T=None, is_factored=False):
                 T, _ = T.add_point(xi)
         if degree != 0 and D.is_in(X.infty()):
             T, _ = T.add_point(X.infty())
-    restrictions = compute_restrictions(L, a_0, T)
+    restrictions = _compute_restrictions(L, a_0, T)
     for h1, _ in restrictions:
         assert h1.initial_point().is_equal(initial_point)
         assert h1.initial_value() == initial_value
@@ -1105,7 +1317,14 @@ def valuative_function(D, f, T=None, is_factored=False):
     return h
 
 
-def simplify_L(D, L, a_0):
+"""
+                         Helper functions
+                         ----------------
+
+"""
+
+
+def _simplify_L(D, L, a_0):
     r""" Return the simplified presentation of a valuative function.
 
     INPUT:
@@ -1116,17 +1335,13 @@ def simplify_L(D, L, a_0):
 
     Here `L`, `a_0` represent a valuative function on a domain containing `D`.
 
-    OUTPUT: the simplification of `L`, `a_0` corresponding to the restriction of
+    OUTPUT:
+
+    the simplification of `L`, `a_0` corresponding to the restriction of
     the valuative function to `D`.
 
-    NOTE:
-
-    There is a serious error here: if `D` contains the infinity point, then
-    dropping factors g from the list is wrong, because these g have poles on
-    `D` and are therefore not of constant valuation.
-
     """
-    # fix the error:
+    # if D contains infty, then we can't simplify at all:
     if D.contains_infty():
         return L, a_0
     L1 = []
@@ -1139,18 +1354,29 @@ def simplify_L(D, L, a_0):
     return L1, a_0
 
 
-def compute_restrictions(L, a0, T):
+def _compute_restrictions(L, a0, T):
     r""" Return the restrictions of a valuative function.
 
     INPUT:
 
-    - ``L`` -- a list of pairs `(f, a)`, where `f` is an irreducible
-      polynomial and `a` a rational number
+    - ``L`` -- a list of triples `(f_i, a_i, [\xi])`, where `f_i` is an irreducible
+      polynomial, `a_i` a nonzero rational number and `[\xi]` the list of zeroes
+      of `f_i`
     - ``a0`` -- a rational number
     - ``T`` -- a Berkovich tree
-    - ``degree`` -- an integer
 
-    OUTPUT: a list of pairs `(h_1, h_2)`.
+    OUTPUT:
+
+    a list of pairs `(h_1, h_2)`; these are the *restrictions* of the valuative
+    function
+
+    .. MATH::
+
+        h = a_0 + \sum_i a_i\cdot h_{f_i}.
+
+    It is assumed that the Berkovich tree `T` is a dendrite of `h`, i.e. `h`
+    factors over the retraction map onto `T` and is affine on the edges of `T`.
+    Also, the root of `T` must be the minimal point of the domain of `h`.
 
     """
     restrictions = []
@@ -1158,7 +1384,7 @@ def compute_restrictions(L, a0, T):
     for T1 in T.children():
         xi1 = T1.root()
         gamma = DirectedPath(xi0, xi1)
-        h1 = restriction_to_path(gamma, L, a0)
+        h1 = _restriction_to_path(gamma, L, a0)
         if xi1.type() == "I":
             h2 = None
         else:
@@ -1170,7 +1396,7 @@ def compute_restrictions(L, a0, T):
     return restrictions
 
 
-def restriction_to_path(gamma, L, a0):
+def _restriction_to_path(gamma, L, a0):
     r""" Return the restriction of a valuative function to a directed path.
 
     INPUT:
@@ -1179,7 +1405,9 @@ def restriction_to_path(gamma, L, a0):
     - ``L`` -- a list of pairs `(f, a)`
     - ``a0`` -- a rational number
 
-    OUTPUT: the valuative function given by `(L, a_0)`, restricted to the
+    OUTPUT:
+
+    the valuative function given by `(L, a_0)`, restricted to the
     directed path `\gamma`. It is assumed that this restriction is affine. If it
     is not, an error is raised.
 
@@ -1188,12 +1416,12 @@ def restriction_to_path(gamma, L, a0):
     eta = gamma.tangent_vector(s)
     e = eta.derivative(gamma._phi)
     assert e != 0, "error: gamma = {}, L = {}, s = {}, eta = {}".format(gamma, L, s, eta)
-    a = compute_derivative(L, a0, eta)/e
-    c = compute_value(L, a0, gamma.initial_point())
+    a = _compute_derivative(L, a0, eta)/e
+    c = _compute_value(L, a0, gamma.initial_point())
     b = c - a*s
     h = AffineFunction(gamma, a, b)
     assert h.initial_value() == c, "a = {}, b = {}, c = {}, gamma ={}, L = {}, a0 = {}".format(a, b, c, gamma, L, a0)
-    d = compute_value(L, a0, gamma.terminal_point())
+    d = _compute_value(L, a0, gamma.terminal_point())
     if a == 0:
         assert d == b, "a = {}, b = {}, c = {}, d ={}, gamma ={}".format(a, b, c, d, gamma)
     else:
@@ -1201,7 +1429,7 @@ def restriction_to_path(gamma, L, a0):
     return h
 
 
-def compute_value(L, a0, xi):
+def _compute_value(L, a0, xi):
     if xi.is_infinity():
         degree = sum([a*f.numerator().degree() for f, a, _ in L])
         if degree < 0:
@@ -1214,18 +1442,11 @@ def compute_value(L, a0, xi):
         return a0 + sum([a*xi.v(f) for f, a, _ in L])
 
 
-def compute_derivative(L, a0, eta):
+def _compute_derivative(L, a0, eta):
     return sum([a*eta.derivative(f) for f, a, _ in L])
 
 
-# ----------------------------------------------------------------------------
-#
-#                          Helper functions
-
-
-def complete_factorization(X, L, a_0):
-    r""" refine `(L, a_0)` to a complete factorization.
-    """
+def _complete_factorization(X, L, a_0):
     v_K = X.base_valuation()
     FField = X.function_field()
     L1 = []
