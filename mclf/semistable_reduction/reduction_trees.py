@@ -204,7 +204,7 @@ class ReductionTree(SageObject):
         self._inertial_components = inertial_components
 
     def __repr__(self):
-        return "A reduction tree for  %s, relative to {}".format((self._Y, self._vK))
+        return "A reduction tree for  {}, relative to {}".format(self._Y, self._vK)
 
     def curve(self):
         r"""

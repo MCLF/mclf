@@ -258,9 +258,9 @@ class SuperpModel(SemistableModel):
             sage: YY = SuperpModel(Y, v_2)
             sage: YY.etale_locus()
             Elementary affinoid defined by
-            v(1/x) >= -5/2
             v(x) >= 2
-
+            v(1/x) >= -5/2
+            <BLANKLINE>
 
     .. NOTE::
 
@@ -322,7 +322,7 @@ class SuperpModel(SemistableModel):
         vK = self.base_valuation()
         X_et = self.etale_locus()
         T = BerkovichTree(self._X)
-        for xi in X_et._T.vertices():
+        for xi in X_et.tree().vertices():
             T, _ = T.add_point(xi)
         # this is the affinoid tree underlying the etale locus
         # the inertial components are the boundary points
