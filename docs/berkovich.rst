@@ -6,3 +6,4 @@ The Berkovich line
     berkovich_trees
     type_V_points
     affinoid_domain
+    piecewise_affine_functions

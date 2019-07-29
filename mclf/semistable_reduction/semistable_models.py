@@ -112,9 +112,9 @@ three of genus `1`. ::
     sage: [Z.genus() for Z in Y2.components()]
     [0, 1, 1, 1]
     sage: Y2.components_of_positive_genus()
-    [the smooth projective curve with Function field in y defined by y^3 + x^4 + x^2,
-     the smooth projective curve with Function field in y defined by y^3 + x^2 + x,
-     the smooth projective curve with Function field in y defined by y^3 + x^2 + x + 1]
+    [the smooth projective curve with Function field in u2 defined by u2^3 + x^4 + x^2,
+     the smooth projective curve with Function field in u2 defined by u2^3 + x^2 + x,
+     the smooth projective curve with Function field in u2 defined by u2^3 + x^2 + x + 1]
     sage: Y2.conductor_exponent()
     6
     sage: v_3 = QQ.valuation(3)
@@ -122,13 +122,13 @@ three of genus `1`. ::
     sage: Y3.is_semistable()
     True
     sage: Y3.components_of_positive_genus()
-    [the smooth projective curve with Function field in y defined by y^3 + y + 2*x^4]
+    [the smooth projective curve with Function field in u2 defined by u2^3 + u2 + 2*x^4]
     sage: Y3.conductor_exponent()
     6
 
 """
 
-#*****************************************************************************
+# *****************************************************************************
 #       Copyright (C) 2017-2018 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -195,7 +195,7 @@ class SemistableModel(SageObject):
         sage: YY.is_semistable()
         True
         sage: YY.components_of_positive_genus()
-        [the smooth projective curve with Function field in y defined by y^3 + 4*y^2 + x^4 + x + 1]
+        [the smooth projective curve with Function field in u1 defined by u1^3 + 4*u1^2 + x^4 + x + 1]
 
     """
     def __init__(self, Y, vK, check=True):
