@@ -25,7 +25,7 @@ This means that we want to know
 At the moment we can do this only in certain special cases, which should
 nevertheless be useful.
 
-If you have at least [Sage 8.2](https://www.sagemath.org/) you can install the
+If you have at least [Sage 8.4](https://www.sagemath.org/) you can install the
 latest version of this package with `sage -pip install --user --upgrade mclf`.
 
 If you can not install Sage on your local machine, you can also click
