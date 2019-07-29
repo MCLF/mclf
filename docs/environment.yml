@@ -2,4 +2,4 @@ name: readthedocs
 channels:
   - conda-forge
 dependencies:
-  - sagelib=8.2
+  - sagelib=8.8
