@@ -13,18 +13,30 @@ jobs:
             sage -pip install patchy
             sage -python setup.py install
             sage -tp --long --initial mclf docs
-  "test-sage-8.2":
+  "test-sage-8.4":
     <<: *test
     docker:
-      - image: sagemath/sagemath:8.2
-  "test-sage-8.3":
+      - image: sagemath/sagemath:8.4
+  "test-sage-8.5":
     <<: *test
     docker:
-      - image: sagemath/sagemath:8.3
+      - image: sagemath/sagemath:8.5
+  "test-sage-8.6":
+    <<: *test
+    docker:
+      - image: sagemath/sagemath:8.6
+  "test-sage-8.7":
+    <<: *test
+    docker:
+      - image: sagemath/sagemath:8.7
+  "test-sage-8.8":
+    <<: *test
+    docker:
+      - image: sagemath/sagemath:8.8
   coverage:
     working_directory: /home/sage/mclf
     docker:
-      - image: sagemath/sagemath:8.3
+      - image: sagemath/sagemath:8.8
     steps:
       - checkout
       - run:
@@ -139,8 +151,11 @@ workflows:
   test:
     jobs:
        # When adding a new stable release of Sage here, make sure to also upgrade the Dockerfile
-       - test-sage-8.2
-       - test-sage-8.3
+       - test-sage-8.4
+       - test-sage-8.5
+       - test-sage-8.6
+       - test-sage-8.7
+       - test-sage-8.8
        - pyflakes
        - coverage
        - docbuild-sage
