@@ -66,6 +66,18 @@ class BerkovichTree(SageObject):
     `T` may be empty (no root and no children), but if there are children
     then there must be root.
 
+
+    EXAMPLES::
+
+        sage: from mclf import *
+        sage: v_2 = QQ.valuation(2)
+        sage: F.<x> = FunctionField(QQ)
+        sage: X = BerkovichLine(F, v_2)
+        sage: T = BerkovichTree(X); T
+        Berkovich tree with 0 vertices
+        sage: xi = X.gauss_point()
+        sage: T.find_point(xi)
+
     """
 
     def __init__(self, X, root=None, children=None, parent=None):
@@ -84,6 +96,9 @@ class BerkovichTree(SageObject):
         self._X = X
         assert all([self._X == T._X for T in self._children]),\
             "children must live on the same Berkovich line as root"
+        # initialize an empty dictionary, to be used by applications
+        # in this module we do not touch it
+        self._attr = {}
 
     def __repr__(self):
         return "Berkovich tree with {} vertices".format(len(self.vertices()))
@@ -139,7 +154,7 @@ class BerkovichTree(SageObject):
             for child in self.children():
                 assert child.root().is_incomparable(new_child.root()),\
                     "new child has to be incomparable to other children"
-        self.children().append(new_child)
+        self._children.append(new_child)
         new_child.make_parent(self)
 
     def remove_child(self, child):
@@ -157,12 +172,17 @@ class BerkovichTree(SageObject):
         This function changes both ``self`` and ``child``.
 
         """
-        self.children().remove(child)
+        self._children.remove(child)
         child._parent = None
 
     def children(self):
-        """ Return the list of all children."""
-        return self._children
+        """ Return the list of all children.
+
+        This is a deep copy of the internal list of children!
+        Therefore, it cannot be used to change the tree.
+
+        """
+        return [child for child in self._children]
 
     def is_leaf(self):
         """ Return True if self is a leaf.
@@ -238,7 +258,7 @@ class BerkovichTree(SageObject):
 
         If ``self`` has no parent, an error is raised.
 
-        The directon is not well defined if the root of ``self`` is a point of
+        The direction is not well defined if the root of ``self`` is a point of
         type I. Therefore, an error is raised in this case.
 
         """
@@ -372,8 +392,31 @@ class BerkovichTree(SageObject):
 
         The subtree `T` of ``self`` with root ``xi``, or ``None`` if ``xi``
         is not a vertex of ``self``.
-        """
 
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: v_2 = QQ.valuation(2)
+            sage: F.<x> = FunctionField(QQ)
+            sage: X = BerkovichLine(F, v_2)
+            sage: T = BerkovichTree(X); T
+            Berkovich tree with 0 vertices
+
+        Searching in the empty tree does not give an error anymore.::
+
+            sage: xi = X.gauss_point()
+            sage: T.find_point(xi)
+
+            sage: T.add_point(xi)
+            (Berkovich tree with 1 vertices, Berkovich tree with 1 vertices)
+            sage: T.find_point(xi)
+            Berkovich tree with 1 vertices
+
+
+        """
+        # if the tree is empty:
+        if not self._root:
+            return None
         if self._root.is_equal(xi):
             return self
         else:
@@ -382,6 +425,76 @@ class BerkovichTree(SageObject):
                 if T1 is not None:
                     return T1
             return None
+
+    def remove_point(self, xi, test_inequality=True):
+        r"""
+        Remove a point from the tree, if possible.
+
+        INPUT:
+
+        - ``xi`` -- a point of type I or II on the Berkovich line
+        - ``test_inequality -- a boolean (default: ``True``)
+
+        OUTPUT:
+
+        the tree obtained from ``self`` by removing, if possible, the vertex
+        with root `\xi`.
+
+        Removing the vertex with root `\xi` is possible if a vertex with root
+        `\xi` exists, and if it has at most one child. Otherwise, nothing is
+        changed.
+
+        Note that the vertex to be removed may be the root of this tree. If this
+        is the case and there is no child, then an empty tree is return *and*
+        the tree is remove as a child from its parent.
+
+        If ``test_inequality`` is ``False`` then it is assumed that `\xi` is
+        greater or equal to the root of ``self``. This saves us a test for
+        inequality.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: v_2 = QQ.valuation(2)
+            sage: F.<x> = FunctionField(QQ)
+            sage: X = BerkovichLine(F, v_2)
+            sage: T = BerkovichTree(X)
+            sage: T, _ = T.add_point(X.gauss_point())
+            sage: T = T.remove_point(X.gauss_point()); T
+            Berkovich tree with 0 vertices
+            sage: xi_list = [xi for xi, m in X.divisor(x*(x^2+2))]
+            sage: for xi in xi_list: T, _ = T.add_point(xi)
+            sage: T
+            Berkovich tree with 5 vertices
+            sage: T.remove_point(xi_list[0])
+            Berkovich tree with 4 vertices
+
+        """
+        if test_inequality and not self.root().is_leq(xi):
+            # xi cannot be a vertex of this tree, so we have to do nothing
+            return self
+        if len(self._children) <= 1 and self.root().is_equal(xi):
+            # xi is the root of this tree and can be removed
+            if len(self.children()) == 0:
+                # we return an empty tree
+                return BerkovichTree(self.berkovich_line())
+            else:
+                # we return the only child
+                return self._children[0]
+        else:
+            # xi is not the root of this tree, but
+            # xi may be a vertex in at most one of the subtrees
+            subtree = None
+            for child in self.children():
+                if child.root().is_leq(xi):
+                    subtree = child
+                    break
+            if subtree:
+                new_subtree = subtree.remove_point(xi, test_inequality=False)
+                self.remove_child(subtree)
+                if not new_subtree.is_empty():
+                    self.make_child(new_subtree)
+            return self
 
     def adjacent_vertices(self, xi0):
         """
