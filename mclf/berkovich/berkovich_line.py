@@ -377,6 +377,52 @@ class BerkovichLine(SageObject):
         else:
             return TypeIPointOnBerkovichLine(self, v)
 
+    def point_from_valuation(self, v):
+        r""" Return the point corresponding to a discrete valuation.
+
+        INPUT:
+
+        - ``v`` -- a discrete valuation on the function field of this Berkovich line
+
+        OUPUT:
+
+        The point corresponding to v.
+
+        If the restriction of `v` to the constant base field is trivial, then
+        we obtain a point of type I. Otherwise, the restriction of `v` to `K`
+        must be equivalent to the base valuation `v_K`, and in this case we
+        obtain a point of type II.
+
+        EXAMPLES::
+
+            sage: from mclf.berkovich.berkovich_line import BerkovichLine
+            sage: v_2 = QQ.valuation(2)
+            sage: F.<x> = FunctionField(QQ)
+            sage: X = BerkovichLine(F, v_2)
+            sage: v = F.valuation(x^2+1/2)
+            sage: X.point_from_valuation(v)
+            Point of type I on Berkovich line given by x^2 + 1/2 = 0
+            sage: xi = X.point_from_discoid(x, 1/2)
+            sage: xi1 = X.point_from_valuation(xi.valuation())
+            sage: xi.is_equal(xi1)
+            True
+
+        """
+        from sage.all import Infinity
+        F = self.function_field()
+        assert v.domain() == F, "the domain of v must be the function field of the Berkovich line"
+        v_K = self.base_valuation()
+        if v(v_K.uniformizer()) > 0:
+            # v restricted to K is the base valuation
+            return self.point_from_pseudovaluation(v)
+        else:
+            # the restriction of v to K must be trivial
+            K = v_K.domain()
+            assert v.restriction(K).is_trivial(), \
+                "the restriction of v to the constant base field must be trivial or the base valuation"
+            f = v.uniformizer()
+            return self.point_from_discoid(f, Infinity)
+
     @cached_method
     def point_from_discoid(self, f, s):
         r"""
@@ -1089,6 +1135,36 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
 
         """
         return self._v0
+
+    def valuation(self):
+        r""" Return the function field valuation corresponding to this point.
+
+        OUTPUT:
+
+        the normalized discrete valuation on the function field of the Berkovich
+        line corresponding to this point of type I.
+
+        This should not be confused with the *pseudovaluation* usually associated
+        with a type-I-point.
+
+        EXAMPLES::
+
+            sage: from mclf.berkovich.berkovich_line import BerkovichLine
+            sage: F.<x> = FunctionField(QQ)
+            sage: v_2 = QQ.valuation(2)
+            sage: X = BerkovichLine(F, v_2)
+            sage: X.gauss_point().valuation()
+            2-adic valuation
+            sage: xi = X.point_from_discoid(x+1, Infinity)
+            sage: xi.valuation()
+            (x + 1)-adic valuation
+
+        """
+        if not hasattr(self, "_valuation"):
+            f, _ = self.discoid()
+            F = f.parent()
+            self._valuation = F.valuation(f)
+        return self._valuation
 
     def equation(self):
         r""" Return an equation for the Galois orbit of this point.
