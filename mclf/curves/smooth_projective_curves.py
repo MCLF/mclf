@@ -29,8 +29,8 @@ to the projective line over the base field `k`.
 The base field `k` is called the *constant base field* of the curve, and it is
 part of the data. We do not assume that the extension `F_X/k` is regular (i.e.
 that `k` is algebraically closed in `F_X`). Geometrically this means that the
-curve `X` may not be absolutely irreducibel as a `k`-scheme. The 'field of
-constants' of `X` is defined as the algebraic closure of `k` inside `F_X`.
+curve `X` may not be absolutely irreducibel as a `k`-scheme. The *field of
+constants* of `X` is defined as the algebraic closure of `k` inside `F_X`.
 It is a finite extension `k_c/k`. If we regard `X` as a curve over its fields of
 constants then it becomes absolute irreducible.
 
@@ -183,9 +183,12 @@ class SmoothProjectiveCurve(SageObject):
 
         OUTPUT:
 
-        The point on the curve corresponding to ``v``.
+        The point on the curve corresponding to ``v``. The valuation `v` must be
+        trivial on the constant base field.
 
         """
+        assert v.restriction(self.constant_base_field()).is_trivial(), \
+            "the restriction of v to the constant base field must be trivial"
         return PointOnSmoothProjectiveCurve(self, v)
 
     def singular_locus(self):
@@ -195,7 +198,7 @@ class SmoothProjectiveCurve(SageObject):
 
         a list of discrete valuations on the base field `k(x)` which represent
         the `x`-coordinates of the points where the affine model of the curve
-        given by the defining equation of the function field may be singular.
+        given by the defining equation of the function field *may* be singular.
 
         """
         F = self.function_field()
@@ -968,6 +971,37 @@ class PointOnSmoothProjectiveCurve(SageObject):
             self._coordinates = tuple([self.value(x) for x in self._curve._coordinate_functions])
         return self._coordinates
 
+    def is_equal(self, P):
+        r""" Check whether this point is equal to P.
+
+        INPUT:
+
+        - ``P`` -- a point on the curve underlying this point
+
+        OUTPUT:
+
+        ``True`` is `P` is equal to ``self``, ``False`` otherwise.
+
+        Currently, the check for equality is done using the 'coordinates' of the
+        points. This may be very slow. It would probably be better to test the
+        equality of the underlying valuations. But here we can't rely on Sage,
+        so this would require a hack.
+
+        EXAMPLES::
+
+            sage: import mclf.curves.smooth_projective_curves
+            sage: from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
+            sage: F0.<x> = FunctionField(GF(3))
+            sage: R.<y> = F0[]
+            sage: F.<y> = F0.extension(y^2 - (x+1)*x^2)
+            sage: Y = SmoothProjectiveCurve(F)
+            sage: v0 = F0.valuation(x)
+            sage: fiber = Y.fiber(v0)
+            sage: fiber[0].is_equal(fiber[1])
+            False
+
+        """
+        return self.coordinates() == P.coordinates()
 
 # ------------------------------------------------------------------------------
 
