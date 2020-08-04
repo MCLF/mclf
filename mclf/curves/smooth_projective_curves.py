@@ -154,7 +154,7 @@ class SmoothProjectiveCurve(SageObject):
             self._extra_extension_degree = ZZ(1)
             self._covering_degree = F.degree()
 
-        self._coordinate_functions = self.coordinate_functions()
+        # self._coordinate_functions = self.coordinate_functions()
         if assume_regular:
             self._field_of_constants_degree = ZZ(1)
         else:
@@ -586,6 +586,53 @@ class SmoothProjectiveCurve(SageObject):
     def canonical_divisor(self):
         pass
 
+    def plane_equation(self):
+        r""" Return the plane equation of this curve.
+
+        OUTPUT:
+
+        A polynomial in two variables over the constant base field which defines
+        the plane model of this curve, where the first variable corresponds to
+        the base field F0.
+
+        """
+        FY = self._function_field
+        K = self.constant_base_field()
+        A = PolynomialRing(K, ['x', 'y'])
+        x, y = A.gens()
+        G = FY.polynomial()
+        h = lcm([G[i].denominator() for i in range(G.degree()+1)])
+        G = G*h
+        ret = A.zero()
+        for i in range(G.degree() + 1):
+            ret = ret + G[i].numerator()(x)*y**i
+        return ret
+
+    def potential_branch_divisor(self):
+        r""" Return list of valuations containing the branch locus.
+
+        OUTPUT:
+
+        A list of pairs `(v,d)', where `v` runs over a list of valuations of the
+        base field `F_0 = K(x)` containing all the valuations corresponding to a
+        branch point of the cover of curves, and `d` is the degree of `v`.
+
+        """
+        FY = self.function_field()
+        FX = self.rational_function_field()
+        if FX is FY:
+            return []
+        # We return a list V of valuations of FX containing the branch locus
+        # first we add the valuation at infinity
+        V = [(FX.valuation(1/FX.gen()), 1)]
+        # now we use the plane equation and compute the discriminant wrt x
+        G = self.plane_equation()
+        R = PolynomialRing(self.constant_base_field(), 'x')
+        D = R(G.discriminant(G.parent().gens()[1]))
+        for f, m in D.factor():
+            V.append((FX.valuation(FX(f)), f.degree()))
+        return V
+
     def ramification_divisor(self):
         r""" Return the ramification divisor of self.
 
@@ -687,12 +734,8 @@ class SmoothProjectiveCurve(SageObject):
             r = self.degree(self.ramification_divisor())
             # if k is finite, we can't use the 'tame' RHF
         else:
-            # if k has characteristic zero, we use the RHF
-            G = FY.polynomial()
-            V = [(FX.valuation(1/FX.gen()), 1)]
-            D = G.discriminant()
-            for f, m in D.factor():
-                V.append((FX.valuation(f), f.numerator().degree()))
+            # if k has characteristic zero, we use the tame RHF
+            V = self.potential_branch_divisor()
             r = 0
             for v, d in V:
                 v = v/v(v.uniformizer())
@@ -717,7 +760,7 @@ class SmoothProjectiveCurve(SageObject):
         a list ``N``, where ``N[i]`` is the number of points on self
         of *absolute* degree `i`, for `i=1,..,d`.
 
-        Recall that the absolute degree of a point if the degree of
+        Recall that the absolute degree of a point is the degree of
         the residue field of the point over the constant base field
         (*not* over the field of constants).
 
@@ -968,7 +1011,7 @@ class PointOnSmoothProjectiveCurve(SageObject):
         """
 
         if not hasattr(self, "_coordinates"):
-            self._coordinates = tuple([self.value(x) for x in self._curve._coordinate_functions])
+            self._coordinates = tuple([self.value(x) for x in self._curve.coordinate_functions()])
         return self._coordinates
 
     def is_equal(self, P):
@@ -1050,8 +1093,8 @@ def separate_points(coordinate_functions, valuations):
         dict = {}
         for v in valuations:
             a = tuple([compute_value(v, x) for x in coordinate_functions])
-            if a in dict.keys():
-                v1 = dict[a]
+            v1 = dict.get(a)
+            if v1:
                 coordinate_functions.append(separate_two_points(v, v1))
                 repeat = True
                 break
