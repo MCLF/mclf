@@ -86,6 +86,12 @@ Over finite fields, we are allowed to specify the constant base field: ::
     sage: X.field_of_constants()
     Finite Field in z2 of size 2^2
 
+A curve may also be defined by an irreducible bivariate polynomial: ::
+
+    sage: A.<x,y> = QQ[]
+    sage: SmoothProjectiveCurve(y^2 - x^3 - 1)
+    the smooth projective curve with Function field in y defined by y^2 - x^3 - 1
+
 
 .. TODO::
 
@@ -119,7 +125,7 @@ class SmoothProjectiveCurve(SageObject):
 
     INPUT:
 
-    - ``F`` -- a function field
+    - ``F`` -- a function field, or an irreducible  bivariate polynomial over a field
     - ``k`` -- a field which has a natural embedding into the constant
       base field of `F`, such that the constant base field is a finite
       extension of k (or ``None``).
@@ -127,9 +133,12 @@ class SmoothProjectiveCurve(SageObject):
 
     OUTPUT:
 
-    the smooth projective curve `X` with function field `F`. If `k` is given,
-    then `X` is considered as a `k`-scheme. If `k` is not given then we
-    use the field of constants of `F` instead.
+    the smooth projective curve `X` with function field `F`. If `F` is an
+    irreducible bivariate polynomial, we use the function field with two
+    generators and relation `F`.
+
+    If `k` is given, then `X` is considered as a `k`-scheme. If `k` is not given
+    then we use the field of constants of `F` instead.
 
     NOTE:
 
@@ -140,7 +149,20 @@ class SmoothProjectiveCurve(SageObject):
 
     def __init__(self, F, k=None, assume_regular=False):
 
-        self._function_field = F
+        from sage.rings.ring import Field
+        from sage.rings.function_field.constructor import FunctionField
+        if isinstance(F, Field):
+            self._function_field = F
+        else:
+
+            A = F.parent()
+            K = A.base_ring()
+            F0 = FunctionField(K, A.variable_names()[0])
+            R = PolynomialRing(F0, A.variable_names()[1])
+            G = F(F0.gen(), R.gen())
+            assert G.is_irreducible(), "the polynomial F must be irreducible"
+            F = F0.extension(G, A.variable_names()[1])
+            self._function_field = F
 
         if k is not None:
             k1 = F.constant_base_field()
@@ -607,6 +629,22 @@ class SmoothProjectiveCurve(SageObject):
         for i in range(G.degree() + 1):
             ret = ret + G[i].numerator()(x)*y**i
         return ret
+
+    def prime_of_good_reduction(self):
+        r""" Return a prime ideal where this curve has good reduction.
+
+        OUTPUT:
+
+        We assume that the constant base field `K` is a number field. We return
+        a discrete valuation `v` on `K` such that the following holds:
+
+        - all the coefficients of the plane equation `G(x,y)=0` of this curve
+          are `v`-integral
+        - the reduction of `G` to the residue field of `v` is irreducible and
+          defines a plane curve with the same genus as the original curve.
+
+        """
+        pass
 
     def potential_branch_divisor(self):
         r""" Return list of valuations containing the branch locus.
