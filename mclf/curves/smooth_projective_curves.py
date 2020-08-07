@@ -89,9 +89,25 @@ Over finite fields, we are allowed to specify the constant base field: ::
 A curve may also be defined by an irreducible bivariate polynomial: ::
 
     sage: A.<x,y> = QQ[]
-    sage: SmoothProjectiveCurve(y^2 - x^3 - 1)
+    sage: X = SmoothProjectiveCurve(y^2 - x^3 - 1)
+    sage: X
     the smooth projective curve with Function field in y defined by y^2 - x^3 - 1
 
+If the curve is defined over a number field, we can find a prime of good
+reduction, and compute the reduction: ::
+
+    sage: v_p = X.prime_of_good_reduction()
+    sage: v_p
+    5-adic valuation
+
+The result is a discrete (p-adic) valuation on the constant base field. The
+reduction is a smooth projective curve of the same genus: ::
+
+    sage: Xb = X.good_reduction(v_p)
+    sage: Xb
+    the smooth projective curve with Function field in y defined by y^2 + 4*x^3 + 4
+    sage: Xb.genus()
+    1
 
 .. TODO::
 
@@ -643,8 +659,68 @@ class SmoothProjectiveCurve(SageObject):
         - the reduction of `G` to the residue field of `v` is irreducible and
           defines a plane curve with the same genus as the original curve.
 
+        Note that this implies that `v` is inert in the field of constants of
+        the curve.
+
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: R.<T> = QQ[]
+            sage: K.<zeta> = NumberField(T^2+T+1)
+            sage: A.<x,y> = K[]
+            sage: X = SmoothProjectiveCurve(y^3 - y - x^2 + 1 + zeta)
+            sage: X.prime_of_good_reduction()
+            5-adic valuation
+            sage: X.good_reduction(_)
+            the smooth projective curve with Function field in y defined by y^3 + 4*y + 4*x^2 + u1 + 1
+
         """
-        pass
+        from sage.rings.number_field.number_field import NumberFields
+        from sage.misc.misc_c import prod
+        from sage.rings.fast_arith import prime_range
+        from sage.rings.rational_field import QQ
+
+        K = self.constant_base_field()
+        assert K in NumberFields(), "the constant base fields has to be a number field"
+        G = self.plane_equation()
+        n = self.covering_degree()
+        # we find an integer N which is divided by any prime we need to avoid
+        # first we exclude primes wrt which G is not integral
+        N = lcm([c.norm().denominator() for c in G.coefficients()])
+        D = G.discriminant(G.parent().gens()[1]).univariate_polynomial()
+        factors = D.factor()
+        N = N*factors.unit().norm().numerator()
+        N = N*prod(factors).discriminant().norm().numerator()
+        N = N.radical()
+        for p in prime_range(n+1, 100):
+            if not p.divides(N):
+                for v_p in QQ.valuation(p).extensions(K):
+                    Gb = G.map_coefficients(v_p.reduce, v_p.residue_field())
+                    if len(Gb.factor()) == 1:
+                        return v_p
+
+    def good_reduction(self, v_p):
+        r""" Return the reduction of this curve at a prime of good reduction.
+
+        INPUT:
+
+        - ``v_p`` -- a discrete valuation on the constant base field `K`
+
+        OUTPUT: the reduction of this curve with respect to `v_p`, assuming
+        that this is again a smooth projective curve of the same genus.
+        Otherwise, an error is raised.
+
+        Note that we just reduce the plane equation for this curve with respect
+        to `v_p`. This is a very naive notion of good reduction. If it works,
+        then the curve does indeed have good reduction at `v_p`, and the result
+        is correct.
+
+        """
+        G = self.plane_equation()
+        assert all(v_p(c) >= 0 for c in G.coefficients()), "the plane equation is not integral wrt. v_p"
+        Gb = G.map_coefficients(v_p.reduce, v_p.residue_field())
+        return SmoothProjectiveCurve(Gb)
 
     def potential_branch_divisor(self):
         r""" Return list of valuations containing the branch locus.
