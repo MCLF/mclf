@@ -29,8 +29,8 @@ to the projective line over the base field `k`.
 The base field `k` is called the *constant base field* of the curve, and it is
 part of the data. We do not assume that the extension `F_X/k` is regular (i.e.
 that `k` is algebraically closed in `F_X`). Geometrically this means that the
-curve `X` may not be absolutely irreducibel as a `k`-scheme. The 'field of
-constants' of `X` is defined as the algebraic closure of `k` inside `F_X`.
+curve `X` may not be absolutely irreducibel as a `k`-scheme. The *field of
+constants* of `X` is defined as the algebraic closure of `k` inside `F_X`.
 It is a finite extension `k_c/k`. If we regard `X` as a curve over its fields of
 constants then it becomes absolute irreducible.
 
@@ -86,6 +86,28 @@ Over finite fields, we are allowed to specify the constant base field: ::
     sage: X.field_of_constants()
     Finite Field in z2 of size 2^2
 
+A curve may also be defined by an irreducible bivariate polynomial: ::
+
+    sage: A.<x,y> = QQ[]
+    sage: X = SmoothProjectiveCurve(y^2 - x^3 - 1)
+    sage: X
+    the smooth projective curve with Function field in y defined by y^2 - x^3 - 1
+
+If the curve is defined over a number field, we can find a prime of good
+reduction, and compute the reduction: ::
+
+    sage: v_p = X.prime_of_good_reduction()
+    sage: v_p
+    5-adic valuation
+
+The result is a discrete (p-adic) valuation on the constant base field. The
+reduction is a smooth projective curve of the same genus: ::
+
+    sage: Xb = X.good_reduction(v_p)
+    sage: Xb
+    the smooth projective curve with Function field in y defined by y^2 + 4*x^3 + 4
+    sage: Xb.genus()
+    1
 
 .. TODO::
 
@@ -100,7 +122,7 @@ Over finite fields, we are allowed to specify the constant base field: ::
 
 """
 
-#*****************************************************************************
+# *****************************************************************************
 #       Copyright (C) 2016 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -108,7 +130,7 @@ Over finite fields, we are allowed to specify the constant base field: ::
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# *****************************************************************************
 
 from sage.all import lcm, SageObject, Infinity, ZZ, PolynomialRing, randint, PowerSeriesRing
 
@@ -119,7 +141,7 @@ class SmoothProjectiveCurve(SageObject):
 
     INPUT:
 
-    - ``F`` -- a function field
+    - ``F`` -- a function field, or an irreducible  bivariate polynomial over a field
     - ``k`` -- a field which has a natural embedding into the constant
       base field of `F`, such that the constant base field is a finite
       extension of k (or ``None``).
@@ -127,9 +149,12 @@ class SmoothProjectiveCurve(SageObject):
 
     OUTPUT:
 
-    the smooth projective curve `X` with function field `F`. If `k` is given,
-    then `X` is considered as a `k`-scheme. If `k` is not given then we
-    use the field of constants of `F` instead.
+    the smooth projective curve `X` with function field `F`. If `F` is an
+    irreducible bivariate polynomial, we use the function field with two
+    generators and relation `F`.
+
+    If `k` is given, then `X` is considered as a `k`-scheme. If `k` is not given
+    then we use the field of constants of `F` instead.
 
     NOTE:
 
@@ -140,9 +165,23 @@ class SmoothProjectiveCurve(SageObject):
 
     def __init__(self, F, k=None, assume_regular=False):
 
-        self._function_field = F
+        from sage.rings.ring import Field
+        from sage.rings.function_field.constructor import FunctionField
+        if isinstance(F, Field):
+            self._function_field = F
+        else:
 
-        if k != None:
+            A = F.parent()
+            K = A.base_ring()
+            F0 = FunctionField(K, A.variable_names()[0])
+            R = PolynomialRing(F0, A.variable_names()[1])
+            G = R(F(F0.gen(), R.gen()))
+            assert G.degree() > 0, "the polynomial F must have positive degree in y"
+            assert G.is_irreducible(), "the polynomial F must be irreducible"
+            F = F0.extension(G.monic(), A.variable_names()[1])
+            self._function_field = F
+
+        if k is not None:
             k1 = F.constant_base_field()
             assert k.is_finite() and k1.is_finite(), "k must be finite or None"
             assert k.is_subring(k1), "k must be a subfield of the field of constants of F"
@@ -154,19 +193,18 @@ class SmoothProjectiveCurve(SageObject):
             self._extra_extension_degree = ZZ(1)
             self._covering_degree = F.degree()
 
-        self._coordinate_functions = self.coordinate_functions()
+        # self._coordinate_functions = self.coordinate_functions()
         if assume_regular:
             self._field_of_constants_degree = ZZ(1)
         else:
             self._field_of_constants_degree = self.field_of_constants_degree()
         self.compute_separable_model()
 
-
     def __repr__(self):
         if self._extra_extension_degree == 1:
-            return "the smooth projective curve with %s"%self.function_field()
+            return "the smooth projective curve with {}".format(self.function_field())
         else:
-            return "the smooth projective curve with %s and constant base field %s"%(
+            return "the smooth projective curve with {} and constant base field {}".format(
                 self.function_field(), self.constant_base_field())
 
     def constant_base_field(self):
@@ -174,7 +212,6 @@ class SmoothProjectiveCurve(SageObject):
         Return the constant base field.
         """
         return self._constant_base_field
-
 
     def point(self, v):
         r""" Returns the point on the curve corresponding to ``v``.
@@ -185,11 +222,13 @@ class SmoothProjectiveCurve(SageObject):
 
         OUTPUT:
 
-        The point on the curve corresponding to ``v``.
+        The point on the curve corresponding to ``v``. The valuation `v` must be
+        trivial on the constant base field.
 
         """
+        assert v.restriction(self.constant_base_field()).is_trivial(), \
+            "the restriction of v to the constant base field must be trivial"
         return PointOnSmoothProjectiveCurve(self, v)
-
 
     def singular_locus(self):
         r""" Return the singular locus of the affine model of the curve.
@@ -198,7 +237,7 @@ class SmoothProjectiveCurve(SageObject):
 
         a list of discrete valuations on the base field `k(x)` which represent
         the `x`-coordinates of the points where the affine model of the curve
-        given by the defining equation of the function field may be singular.
+        given by the defining equation of the function field *may* be singular.
 
         """
         F = self.function_field()
@@ -212,7 +251,7 @@ class SmoothProjectiveCurve(SageObject):
         # the lcm of the denominators of the coefficients
         c = lcm([f[i].denominator() for i in range(f.degree()+1)])
         f = c*f
-        f = f.map_coefficients(lambda c:c.numerator(), F0._ring)
+        f = f.map_coefficients(lambda c: c.numerator(), F0._ring)
         y = f.parent().gen()
         x = f.base_ring().gen()
         # now f is a polynomial in y over the polynomial ring in x
@@ -227,9 +266,8 @@ class SmoothProjectiveCurve(SageObject):
                 Dx = f.resultant(fx)
                 D = Dx.gcd(Dy)
             else:
-                D =  Dy
-        return [F0.valuation(g.monic()) for g, m in D.factor()]
-
+                D = Dy
+        return [F0.valuation(h.monic()) for h, m in D.factor()]
 
     def field_of_constants(self):
         r""" Return the field of constants of this curve.
@@ -264,7 +302,6 @@ class SmoothProjectiveCurve(SageObject):
             G = F.polynomial().monic()
             self._field_of_constants = field_of_constant_degree_of_polynomial(G, return_field=True)
             return self._field_of_constants
-
 
     def field_of_constants_degree(self):
         r""" Return the degree of the field of constants over the constant base field.
@@ -322,7 +359,6 @@ class SmoothProjectiveCurve(SageObject):
             G = F.polynomial().monic()
             return field_of_constant_degree_of_polynomial(G)*self._extra_extension_degree
 
-
     def covering_degree(self):
         r"""
         Return the degree of this curve as a covering of the projective line.
@@ -330,14 +366,12 @@ class SmoothProjectiveCurve(SageObject):
         """
         return self._covering_degree
 
-
     def function_field(self):
         """
         Return the function field of the curve ``self``.
 
         """
         return self._function_field
-
 
     def rational_function_field(self):
         r"""
@@ -349,7 +383,6 @@ class SmoothProjectiveCurve(SageObject):
 
         """
         return self._function_field.base_field()
-
 
     def structure_map(self):
         r""" Return the canonical map from this curve to the projective line.
@@ -363,7 +396,6 @@ class SmoothProjectiveCurve(SageObject):
             X = SmoothProjectiveCurve(self.rational_function_field())
             self._structure_map = MorphismOfSmoothProjectiveCurves(self, X)
             return self._structure_map
-
 
     def coordinate_functions(self):
         r""" Return a list of coordinate functions.
@@ -402,7 +434,6 @@ class SmoothProjectiveCurve(SageObject):
         self._coordinate_functions = ret
         return ret
 
-
     def random_point(self):
         """
         Return a random closed point on the curve.
@@ -411,12 +442,11 @@ class SmoothProjectiveCurve(SageObject):
         F = self.function_field()
         F0 = self.rational_function_field()
         R = F0._ring
-        f = R.random_element(degree=(1,3)).factor()[0][0](F0.gen())
+        f = R.random_element(degree=(1, 3)).factor()[0][0](F0.gen())
         v0 = F0.valuation(f)
         V = v0.extensions(F)
         v = V[randint(0, len(V)-1)]
         return PointOnSmoothProjectiveCurve(self, v)
-
 
     def principal_divisor(self, f):
         r""" Return the principal divisor of ``f``.
@@ -453,26 +483,25 @@ class SmoothProjectiveCurve(SageObject):
         assert self.degree(D) == 0, "Something is wrong: the degree of (f) is not zero!"
         return D
 
-
     def divisor_of_zeroes(self, f):
         r""" Return the divisor of zeroes of ``f``.
         """
         D = self.principal_divisor(f)
         ret = []
-        for x,m in D:
-            if m > 0: ret.append((x,m))
+        for x, m in D:
+            if m > 0:
+                ret.append((x, m))
         return ret
-
 
     def divisor_of_poles(self, f):
         r""" Return the divisor of poles of ``f``.
         """
         D = self.principal_divisor(f)
         ret = []
-        for x,m in D:
-            if m < 0: ret.append((x,-m))
+        for x, m in D:
+            if m < 0:
+                ret.append((x, -m))
         return ret
-
 
     def degree(self, D):
         r""" Return the degree of the divisor ``D``.
@@ -484,7 +513,6 @@ class SmoothProjectiveCurve(SageObject):
         for P, m in D:
             deg += m*P.degree()
         return deg
-
 
     def separable_model(self):
         r"""
@@ -508,7 +536,6 @@ class SmoothProjectiveCurve(SageObject):
         else:
             return self._separable_model
 
-
     def is_separable(self):
         r"""
         Check whether this curve is represented as a separable cover of the projective line.
@@ -517,7 +544,6 @@ class SmoothProjectiveCurve(SageObject):
         if not hasattr(self, "_is_separable"):
             self.compute_separable_model()
         return self._is_separable
-
 
     def phi(self):
         r""" Return the natural embedding of the function field of the separable
@@ -533,7 +559,6 @@ class SmoothProjectiveCurve(SageObject):
         else:
             return self._phi
 
-
     def degree_of_inseparability(self):
         r"""
         Return the degree of inseparability of this curve.
@@ -546,7 +571,6 @@ class SmoothProjectiveCurve(SageObject):
             return ZZ(1)
         else:
             return self._degree_of_inseparability
-
 
     def compute_separable_model(self):
         r"""
@@ -598,10 +622,133 @@ class SmoothProjectiveCurve(SageObject):
         self._phi = F1.hom([F.gen()**q])
         self._degree_of_inseparability = q
 
-
     def canonical_divisor(self):
         pass
 
+    def plane_equation(self):
+        r""" Return the plane equation of this curve.
+
+        OUTPUT:
+
+        A polynomial in two variables over the constant base field which defines
+        the plane model of this curve, where the first variable corresponds to
+        the base field F0.
+
+        """
+        FY = self._function_field
+        K = self.constant_base_field()
+        A = PolynomialRing(K, ['x', 'y'])
+        x, y = A.gens()
+        G = FY.polynomial()
+        h = lcm([G[i].denominator() for i in range(G.degree()+1)])
+        G = G*h
+        ret = A.zero()
+        for i in range(G.degree() + 1):
+            ret = ret + G[i].numerator()(x)*y**i
+        return ret
+
+    def prime_of_good_reduction(self):
+        r""" Return a prime ideal where this curve has good reduction.
+
+        OUTPUT:
+
+        We assume that the constant base field `K` is a number field. We return
+        a discrete valuation `v` on `K` such that the following holds:
+
+        - all the coefficients of the plane equation `G(x,y)=0` of this curve
+          are `v`-integral
+        - the reduction of `G` to the residue field of `v` is irreducible and
+          defines a plane curve with the same genus as the original curve.
+
+        Note that this implies that `v` is inert in the field of constants of
+        the curve.
+
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: R.<T> = QQ[]
+            sage: K.<zeta> = NumberField(T^2+T+1)
+            sage: A.<x,y> = K[]
+            sage: X = SmoothProjectiveCurve(y^3 - y - x^2 + 1 + zeta)
+            sage: X.prime_of_good_reduction()
+            5-adic valuation
+            sage: X.good_reduction(_)
+            the smooth projective curve with Function field in y defined by y^3 + 4*y + 4*x^2 + u1 + 1
+
+        """
+        from sage.rings.number_field.number_field import NumberFields
+        from sage.misc.misc_c import prod
+        from sage.rings.fast_arith import prime_range
+        from sage.rings.rational_field import QQ
+
+        K = self.constant_base_field()
+        assert K in NumberFields(), "the constant base fields has to be a number field"
+        G = self.plane_equation()
+        n = self.covering_degree()
+        # we find an integer N which is divided by any prime we need to avoid
+        # first we exclude primes wrt which G is not integral
+        N = lcm([c.norm().denominator() for c in G.coefficients()])
+        D = G.discriminant(G.parent().gens()[1]).univariate_polynomial()
+        factors = D.factor()
+        N = N*factors.unit().norm().numerator()
+        N = N.radical()
+        if len(factors) > 0:
+            N = N*prod([f for f, m in factors]).discriminant().norm().numerator()
+        # N = N.radical()
+        for p in prime_range(n+1, 100):
+            if not p.divides(N):
+                for v_p in QQ.valuation(p).extensions(K):
+                    Gb = G.map_coefficients(v_p.reduce, v_p.residue_field())
+                    if len(Gb.factor()) == 1:
+                        return v_p
+
+    def good_reduction(self, v_p):
+        r""" Return the reduction of this curve at a prime of good reduction.
+
+        INPUT:
+
+        - ``v_p`` -- a discrete valuation on the constant base field `K`
+
+        OUTPUT: the reduction of this curve with respect to `v_p`, assuming
+        that this is again a smooth projective curve of the same genus.
+        Otherwise, an error is raised.
+
+        Note that we just reduce the plane equation for this curve with respect
+        to `v_p`. This is a very naive notion of good reduction. If it works,
+        then the curve does indeed have good reduction at `v_p`, and the result
+        is correct.
+
+        """
+        G = self.plane_equation()
+        assert all(v_p(c) >= 0 for c in G.coefficients()), "the plane equation is not integral wrt. v_p"
+        Gb = G.map_coefficients(v_p.reduce, v_p.residue_field())
+        return SmoothProjectiveCurve(Gb)
+
+    def potential_branch_divisor(self):
+        r""" Return list of valuations containing the branch locus.
+
+        OUTPUT:
+
+        A list of pairs `(v,d)', where `v` runs over a list of valuations of the
+        base field `F_0 = K(x)` containing all the valuations corresponding to a
+        branch point of the cover of curves, and `d` is the degree of `v`.
+
+        """
+        FY = self.function_field()
+        FX = self.rational_function_field()
+        if FX is FY:
+            return []
+        # We return a list V of valuations of FX containing the branch locus
+        # first we add the valuation at infinity
+        V = [(FX.valuation(1/FX.gen()), 1)]
+        # now we use the plane equation and compute the discriminant wrt x
+        G = self.plane_equation()
+        R = PolynomialRing(self.constant_base_field(), 'x')
+        D = R(G.discriminant(G.parent().gens()[1]))
+        for f, m in D.factor():
+            V.append((FX.valuation(FX(f)), f.degree()))
+        return V
 
     def ramification_divisor(self):
         r""" Return the ramification divisor of self.
@@ -644,7 +791,7 @@ class SmoothProjectiveCurve(SageObject):
             Ft = F.derivative()(t)
             x = FX.gen()
             dx = FX.derivation()
-            if P.order(x)<0:
+            if P.order(x) < 0:
                 der = lambda f: -x**2*dx(f)
             else:
                 der = dx
@@ -654,9 +801,14 @@ class SmoothProjectiveCurve(SageObject):
         self._ramification_divisor = R
         return R
 
-
-    def genus(self):
+    def genus(self, use_reduction=True):
         r""" Return the genus of the curve.
+
+        INPUT:
+
+        - ``use_reduction`` -- a boolean (default: ``True``)
+
+        OUTPUT: the genus of this curve.
 
         The genus of the curve is defined as the dimension of
         the cohomology group `H^1(X,\mathcal{O}_X)`, as a vector space
@@ -672,6 +824,11 @@ class SmoothProjectiveCurve(SageObject):
         If the constant base field is finite, we compute the degree of the
         'ramification divisor'. If it is not, we assume that the characteristic
         is zero, and we use the 'tame' Riemann Hurwitz Formula.
+
+        If the curve is defined over a number field, and ``use_reduction`` is
+        ``True`` (the default) then the genus of a reduction of this curve to
+        some prime of good reduction is computed. This may be consderably
+        faster.
 
         EXAMPLES::
 
@@ -690,7 +847,8 @@ class SmoothProjectiveCurve(SageObject):
             0
 
         """
-        if hasattr(self,"_genus"):
+        from sage.categories.number_fields import NumberFields
+        if hasattr(self, "_genus"):
             return self._genus
         if not self._is_separable:
             self._genus = self.separable_model().genus()
@@ -698,18 +856,23 @@ class SmoothProjectiveCurve(SageObject):
         FY = self.function_field()
         FX = self.rational_function_field()
         if FX is FY:
+            self._genus = 0
             return 0
         n = self.covering_degree()/self.field_of_constants_degree()
+        K = self.constant_base_field()
 
-        if self.constant_base_field().is_finite():
+        if K.is_finite() and K.characteristic() <= n:
             r = self.degree(self.ramification_divisor())
-                   # if k is finite, we can't use the 'tame' RHF
-        else:      # if k has characteristic zero, we use the RHF
-            G = FY.polynomial()
-            V = [(FX.valuation(1/FX.gen()), 1)]
-            D = G.discriminant()
-            for f, m in D.factor():
-                V.append((FX.valuation(f), f.numerator().degree()))
+            # if the characteristic is not larger than the covering degree,
+            # we can't use the 'tame' RHF
+            g = ZZ(-n + r/2 + 1)
+        elif K in NumberFields() and use_reduction:
+            # we use reduction to compute the genus
+            v_p = self.prime_of_good_reduction()
+            g = self.good_reduction(v_p).genus()
+        elif K.characteristic() > n:
+            # we can use the tame RHF
+            V = self.potential_branch_divisor()
             r = 0
             for v, d in V:
                 v = v/v(v.uniformizer())
@@ -717,11 +880,12 @@ class SmoothProjectiveCurve(SageObject):
                 for w in W:
                     e, f = e_f_of_valuation(w)
                     r += d*f*(e-1)
+            g = ZZ(-n + r/2 + 1)
+        else:
+            raise NotImplementedError("constant base field must be finite or have characteristic zero")
 
-        g = ZZ(-n + r/2 + 1)
         self._genus = g
-        return self._genus
-
+        return g
 
     def count_points(self, d):
         r""" Return number of points of degree less or equal to ``d``.
@@ -735,7 +899,7 @@ class SmoothProjectiveCurve(SageObject):
         a list ``N``, where ``N[i]`` is the number of points on self
         of *absolute* degree `i`, for `i=1,..,d`.
 
-        Recall that the absolute degree of a point if the degree of
+        Recall that the absolute degree of a point is the degree of
         the residue field of the point over the constant base field
         (*not* over the field of constants).
 
@@ -754,7 +918,7 @@ class SmoothProjectiveCurve(SageObject):
         R = F0._ring
         x = R.gen()
         polys = set([x])
-        for k in range(1,d+1):
+        for k in range(1, d+1):
             G = (x**(q**k-1)-1).factor()
             for g, e in G:
                 polys.add(g)
@@ -783,7 +947,6 @@ class SmoothProjectiveCurve(SageObject):
             if k <= d:
                 N[k] += 1
         return N
-
 
     def zeta_function(self, var_name='T'):
         r""" Return the Zeta function of the curve.
@@ -817,7 +980,7 @@ class SmoothProjectiveCurve(SageObject):
         `\zeta(X,s)`!).
 
         """
-        if hasattr(self,"_zeta_function"):
+        if hasattr(self, "_zeta_function"):
             return self._zeta_function
 
         K = self._constant_base_field
@@ -826,19 +989,18 @@ class SmoothProjectiveCurve(SageObject):
         S = PowerSeriesRing(ZZ, var_name, g+1)
         N = self.count_points(g)
         Z_series = S(1)
-        for k in range(1,g+1):
+        for k in range(1, g+1):
             Z_series *= (1-S.gen()**k)**(-N[k])
         P = (Z_series*(1-S.gen())*(1-q*S.gen())).polynomial()
         c = range(2*g+1)
         for k in range(g+1):
             c[k] = P[k]
-        for k in range(g+1,2*g+1):
+        for k in range(g+1, 2*g+1):
             c[k] = c[2*g-k]*q**(k-g)
         R = P.parent()
         zeta = R(c)/(1-R.gen())/(1-q*R.gen())
         self._zeta_function = zeta
         return zeta
-
 
     def points_with_coordinates(self, a):
         r""" Return all points with given coordinates.
@@ -872,7 +1034,6 @@ class SmoothProjectiveCurve(SageObject):
             if all([compute_value(v, f[i]) == a[i] for i in range(n)]):
                 ret.append(self.point(v))
         return ret
-
 
     def fiber(self, v0):
         r"""
@@ -915,28 +1076,23 @@ class PointOnSmoothProjectiveCurve(SageObject):
         self._curve = X
         self._valuation = v/v(v.uniformizer())
 
-
     def __repr__(self):
-        return "Point on %s with coordinates %s."%(self._curve, self.coordinates())
-
+        return "Point on {} with coordinates {}.".format(self._curve, self.coordinates())
 
     def curve(self):
         """ Return the underlying curve of the point.
         """
         return self._curve
 
-
     def valuation(self):
         """ Return the valuation corresponding to the point.
         """
         return self._valuation
 
-
     def residue_field(self):
         """ Return the residue field of the point.
         """
         return self._valuation.residue_field()
-
 
     def absolute_degree(self):
         r""" Return the absolute degree of self.
@@ -947,10 +1103,9 @@ class PointOnSmoothProjectiveCurve(SageObject):
         Here `k` is the constant base field of the curve, which may not be equal to
         the field of constants.
         """
-        if not hasattr(self,"_absolute_degree"):
+        if not hasattr(self, "_absolute_degree"):
             self._absolute_degree = extension_degree(self._curve._constant_base_field, self._valuation.residue_field())
         return self._absolute_degree
-
 
     def degree(self):
         r""" Return the degree of self.
@@ -964,7 +1119,6 @@ class PointOnSmoothProjectiveCurve(SageObject):
             self._degree = ZZ(extension_degree(self._curve._constant_base_field, self._valuation.residue_field())/self._curve._field_of_constants_degree)
         return self._degree
 
-
     def value(self, f):
         r""" Return the value of the function ``f`` in the point.
 
@@ -976,7 +1130,6 @@ class PointOnSmoothProjectiveCurve(SageObject):
         else:
             return self._valuation.reduce(f)
 
-
     def order(self, f):
         r""" Return the order of the function in the point.
 
@@ -984,7 +1137,6 @@ class PointOnSmoothProjectiveCurve(SageObject):
         """
 
         return self._valuation(f)
-
 
     def coordinates(self):
         r""" Return the coordinate tupel of the point.
@@ -997,12 +1149,43 @@ class PointOnSmoothProjectiveCurve(SageObject):
         for instance as an iterator.
         """
 
-        if not hasattr(self,"_coordinates"):
-            self._coordinates = tuple([self.value(x) for x in self._curve._coordinate_functions])
+        if not hasattr(self, "_coordinates"):
+            self._coordinates = tuple([self.value(x) for x in self._curve.coordinate_functions()])
         return self._coordinates
 
+    def is_equal(self, P):
+        r""" Check whether this point is equal to P.
 
-#------------------------------------------------------------------------------
+        INPUT:
+
+        - ``P`` -- a point on the curve underlying this point
+
+        OUTPUT:
+
+        ``True`` is `P` is equal to ``self``, ``False`` otherwise.
+
+        Currently, the check for equality is done using the 'coordinates' of the
+        points. This may be very slow. It would probably be better to test the
+        equality of the underlying valuations. But here we can't rely on Sage,
+        so this would require a hack.
+
+        EXAMPLES::
+
+            sage: import mclf.curves.smooth_projective_curves
+            sage: from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
+            sage: F0.<x> = FunctionField(GF(3))
+            sage: R.<y> = F0[]
+            sage: F.<y> = F0.extension(y^2 - (x+1)*x^2)
+            sage: Y = SmoothProjectiveCurve(F)
+            sage: v0 = F0.valuation(x)
+            sage: fiber = Y.fiber(v0)
+            sage: fiber[0].is_equal(fiber[1])
+            False
+
+        """
+        return self.coordinates() == P.coordinates()
+
+# ------------------------------------------------------------------------------
 
 # auxiliary functions
 
@@ -1049,8 +1232,8 @@ def separate_points(coordinate_functions, valuations):
         dict = {}
         for v in valuations:
             a = tuple([compute_value(v, x) for x in coordinate_functions])
-            if a in dict.keys():
-                v1 = dict[a]
+            v1 = dict.get(a)
+            if v1:
                 coordinate_functions.append(separate_two_points(v, v1))
                 repeat = True
                 break
@@ -1112,10 +1295,10 @@ def separate_two_points(v1, v2):
         # probably, v1 is induced from w1 by an isomorphism of function fields
         w2 = v2._base_valuation
         if w2.domain() == w1.domain():
-            f = separate_two_points(w1,w2)
+            f = separate_two_points(w1, w2)
             return v1._from_base_domain(f)
         elif w1.domain() == v2.domain():
-            return separate_two_points(w1,v2)
+            return separate_two_points(w1, v2)
     raise NotImplementedError
 
 
@@ -1217,7 +1400,7 @@ def field_of_constant_degree_of_polynomial(G, return_field=False):
     n = G.degree()
     if K.is_finite():
         d = 1    # will be the degree of the field of constants at the end
-        for p in primes(2,n+1):
+        for p in primes(2, n+1):
             while p.divides(n):
                 try:
                     K1 = K.extension(p)
@@ -1311,7 +1494,7 @@ def extension_of_finite_field(K, n):
     # we look for a small number e dividing q^n-1 but not q-1
     e = min([d for d in (q**n-1).divisors() if not d.divides(q-1)])
     F = (z**e-1).factor()
-    f = [g for g, e in F if g.degree() == n][0]
+    f = [g for g, m in F if g.degree() == n][0]
     # this is very inefficient!
     return K.extension(f, 'z'+str(e))
 
