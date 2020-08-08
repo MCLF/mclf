@@ -691,8 +691,10 @@ class SmoothProjectiveCurve(SageObject):
         D = G.discriminant(G.parent().gens()[1]).univariate_polynomial()
         factors = D.factor()
         N = N*factors.unit().norm().numerator()
-        N = N*prod(factors).discriminant().norm().numerator()
         N = N.radical()
+        if len(factors) > 0:
+            N = N*prod([f for f, m in factors]).discriminant().norm().numerator()
+        # N = N.radical()
         for p in prime_range(n+1, 100):
             if not p.divides(N):
                 for v_p in QQ.valuation(p).extensions(K):
@@ -798,8 +800,14 @@ class SmoothProjectiveCurve(SageObject):
         self._ramification_divisor = R
         return R
 
-    def genus(self):
+    def genus(self, use_reduction=True):
         r""" Return the genus of the curve.
+
+        INPUT:
+
+        - ``use_reduction`` -- a boolean (default: ``True``)
+
+        OUTPUT: the genus of this curve.
 
         The genus of the curve is defined as the dimension of
         the cohomology group `H^1(X,\mathcal{O}_X)`, as a vector space
@@ -815,6 +823,11 @@ class SmoothProjectiveCurve(SageObject):
         If the constant base field is finite, we compute the degree of the
         'ramification divisor'. If it is not, we assume that the characteristic
         is zero, and we use the 'tame' Riemann Hurwitz Formula.
+
+        If the curve is defined over a number field, and ``use_reduction`` is
+        ``True`` (the default) then the genus of a reduction of this curve to
+        some prime of good reduction is computed. This may be consderably
+        faster.
 
         EXAMPLES::
 
@@ -833,6 +846,7 @@ class SmoothProjectiveCurve(SageObject):
             0
 
         """
+        from sage.categories.number_fields import NumberFields
         if hasattr(self, "_genus"):
             return self._genus
         if not self._is_separable:
@@ -841,14 +855,22 @@ class SmoothProjectiveCurve(SageObject):
         FY = self.function_field()
         FX = self.rational_function_field()
         if FX is FY:
+            self._genus = 0
             return 0
         n = self.covering_degree()/self.field_of_constants_degree()
+        K = self.constant_base_field()
 
-        if self.constant_base_field().is_finite():
+        if K.is_finite() and K.characteristic() <= n:
             r = self.degree(self.ramification_divisor())
-            # if k is finite, we can't use the 'tame' RHF
-        else:
-            # if k has characteristic zero, we use the tame RHF
+            # if the characteristic is not larger than the covering degree,
+            # we can't use the 'tame' RHF
+            g = ZZ(-n + r/2 + 1)
+        elif K in NumberFields() and use_reduction:
+            # we use reduction to compute the genus
+            v_p = self.prime_of_good_reduction()
+            g = self.good_reduction(v_p).genus()
+        elif K.characteristic() > n:
+            # we can use the tame RHF
             V = self.potential_branch_divisor()
             r = 0
             for v, d in V:
@@ -857,10 +879,12 @@ class SmoothProjectiveCurve(SageObject):
                 for w in W:
                     e, f = e_f_of_valuation(w)
                     r += d*f*(e-1)
+            g = ZZ(-n + r/2 + 1)
+        else:
+            raise NotImplementedError("constant base field must be finite or have characteristic zero")
 
-        g = ZZ(-n + r/2 + 1)
         self._genus = g
-        return self._genus
+        return g
 
     def count_points(self, d):
         r""" Return number of points of degree less or equal to ``d``.
