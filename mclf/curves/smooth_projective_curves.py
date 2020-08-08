@@ -175,9 +175,10 @@ class SmoothProjectiveCurve(SageObject):
             K = A.base_ring()
             F0 = FunctionField(K, A.variable_names()[0])
             R = PolynomialRing(F0, A.variable_names()[1])
-            G = F(F0.gen(), R.gen())
+            G = R(F(F0.gen(), R.gen()))
+            assert G.degree() > 0, "the polynomial F must have positive degree in y"
             assert G.is_irreducible(), "the polynomial F must be irreducible"
-            F = F0.extension(G, A.variable_names()[1])
+            F = F0.extension(G.monic(), A.variable_names()[1])
             self._function_field = F
 
         if k is not None:
