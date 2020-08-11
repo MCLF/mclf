@@ -731,9 +731,10 @@ class AffineFunction(SageObject):
     """
 
     def __init__(self, gamma, a, b):
+        from sage.rings.rational_field import QQ
         self._gamma = gamma
-        self._a = a
-        self._b = b
+        self._a = QQ(a)
+        self._b = QQ(b)
 
     def __repr__(self):
         return "affine function on the tube of the {}, with initial value {}.".format(self.path(), self.initial_value())
@@ -933,10 +934,11 @@ class PiecewiseAffineFunction(SageObject):
 
     def __init__(self, D, a0, restrictions):
         from mclf.berkovich.berkovich_line import BerkovichLine
+        from sage.rings.rational_field import QQ
         if isinstance(D, BerkovichLine):
             D = Domain(D, [], [])
         self._domain = D
-        self._initial_value = a0
+        self._initial_value = QQ(a0)
         self._restrictions = restrictions
         self._initial_point = D.minimal_point()
 
