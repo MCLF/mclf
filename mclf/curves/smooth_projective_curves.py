@@ -992,7 +992,7 @@ class SmoothProjectiveCurve(SageObject):
         for k in range(1, g+1):
             Z_series *= (1-S.gen()**k)**(-N[k])
         P = (Z_series*(1-S.gen())*(1-q*S.gen())).polynomial()
-        c = range(2*g+1)
+        c = list(range(2*g+1))
         for k in range(g+1):
             c[k] = P[k]
         for k in range(g+1, 2*g+1):
