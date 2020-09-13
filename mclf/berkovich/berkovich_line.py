@@ -153,10 +153,10 @@ We define a point of type II via its discoid.::
 
 If the affinoid `v(f)\geq s` is not irreducible, an error is raised.::
 
-    sage: X.point_from_discoid(x^2-1, 2)
+    sage: X.point_from_discoid(x^2-1, 3)
     Traceback (most recent call last):
     ...
-    AssertionError: D defined by f=x^2 - 1 and s=2 is not a discoid
+    AssertionError: D defined by f=x^2 - 1 and s=3 is not a discoid
 
 We can similarly define points which do not lie on the unit disk.::
 
@@ -466,10 +466,10 @@ class BerkovichLine(SageObject):
 
         If `D` is reducible, it is not a discoid, and an error is raised: ::
 
-            sage: X.point_from_discoid(x^2-1, 2)
+            sage: X.point_from_discoid(x^2-1, 3)
             Traceback (most recent call last):
             ...
-            AssertionError: D defined by f=x^2 - 1 and s=2 is not a discoid
+            AssertionError: D defined by f=x^2 - 1 and s=3 is not a discoid
 
         We can define point outside the unit disk as well: ::
 
@@ -520,7 +520,7 @@ class BerkovichLine(SageObject):
                     f1 = R(x)
                     y = x
                 else:
-                    # D strictyl contains the unit disk; we replace it
+                    # D strictly contains the unit disk; we replace it
                     # by the complementary discoid
                     f1 = R(x)
                     s1 = -s1
@@ -580,12 +580,12 @@ class BerkovichLine(SageObject):
             sage: v_2 = QQ.valuation(2)
             sage: X = BerkovichLine(F, v_2)
             sage: X.points_from_inequality((x^2-1)*(2*x-1), 4)
-            [Point of type II on Berkovich line, corresponding to v(x + 1) >= 3,
-             Point of type II on Berkovich line, corresponding to v(-2*x + 1) >= 6,
-             Point of type II on Berkovich line, corresponding to v(x - 1) >= 3]
+            [Point of type II on Berkovich line, corresponding to v(-2*x + 1) >= 6,
+            Point of type II on Berkovich line, corresponding to v(x - 1) >= 3,
+            Point of type II on Berkovich line, corresponding to v(x + 1) >= 3]
             sage: X.points_from_inequality(2*x^(-2)+x^(-1)+4, 5)
-            [Point of type II on Berkovich line, corresponding to v(4*x + 1) >= 3,
-             Point of type II on Berkovich line, corresponding to v(x - 2/7) >= 7]
+            [Point of type II on Berkovich line, corresponding to v(x - 2/7) >= 7,
+            Point of type II on Berkovich line, corresponding to v(4*x + 1) >= 3]
             sage: X.points_from_inequality(2*x^(-2)+x^(-1)+4, Infinity)
             [Point of type I on Berkovich space approximated by v(4*x + 1) >= 3, with equation 16*x^2 + 4*x + 8 = 0,
              Point of type I on Berkovich space approximated by v(x + 2) >= 4, with equation 16*x^2 + 4*x + 8 = 0]
@@ -601,7 +601,7 @@ class BerkovichLine(SageObject):
             return [xi for xi, m in D if m > 0]
         if f.denominator().is_one():
             # f is a polynomial in x
-            # by scaling we find a monic integral version of f
+            # by scaling, we find a monic integral version of f
             f0 = f.numerator().monic()
             v0 = GaussValuation(f0.parent(), vK)
             c = vK.domain().one()
@@ -1876,7 +1876,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
             sage: xi0.point_in_between(xi2)
             Point of type II on Berkovich line, corresponding to v(x) >= 1
             sage: xi0.point_in_between(xi3)
-            Point of type II on Berkovich line, corresponding to v(-2*x + 1) >= 1
+            Point of type II on Berkovich line, corresponding to v(2*x + 1) >= 1
             sage: xi0.point_in_between(xi4)
             Point of type II on Berkovich line, corresponding to v(1/x) >= 1
             sage: xi1.point_in_between(xi2)
@@ -1944,50 +1944,15 @@ def valuation_from_discoid(vK, f, s):
     assert f.is_monic()
     assert v0(f) >= 0, "f = {}, s = {}".format(f, s)
     assert s >= 0, "f = {}, s = {}".format(f, s)
-    v = v0
-    while v(f) < s:
-        V = v.mac_lane_step(f)
-        assert len(V) == 1, "D defined by f={} and s={} is not a discoid".format(f, s)
-        v = V[0]
-    if v(f) == s:
-        if v(v.phi()[0]) >= v(v.phi()):
-            # the discoid D_v contains 0;
-            # we must replace v by v = [v0, v(x) = ..]
-            r = v(R.gen())
-            if r > 0:
-                v = v0.augmentation(R.gen(), r)
-            else:
-                v = v0
-        return v
-    else:
-        # now v is an inductive valuation such that v(f) > s
-        for v1 in v.augmentation_chain():
-            if v1(f) <= s:
-                break
-            else:
-                v = v1
-        if v1(f) == s:
-            return v0
-        # now v1 is an inductive valuation such that v1(f) < s,
-        # and v is an augmentation of v1 such that v(f) > s.
-        # We test this:
-        assert v1(f) < s
-        assert v(f) > s
-        assert v._base_valuation == v1
-        a = [v1(c) for c in v.coefficients(f)]
-        t = max([(s-a[i])/i for i in range(1, len(a))])
-        v = v1.augmentation(v.phi(), t)
-        assert v(f) == s
-        if v(v.phi()[0]) >= v(v.phi()):
-            # the discoid D_v contains 0;
-            # we must replace v by v = [v0, v(x) = ..]
-            v = v0.augmentation(R.gen(), v(R.gen()))
-        return v
+
+    V = valuations_from_inequality(vK, f, s)
+    assert len(V) == 1, "D defined by f={} and s={} is not a discoid".format(f, s)
+    return V[0]
 
 
 def valuations_from_inequality(vK, f, s, v0=None):
     r"""
-    Return the list of inductive valuations corresponding to the given inequlities.
+    Return the list of inductive valuations corresponding to the given inequalities.
 
     INPUT:
 
@@ -1998,13 +1963,43 @@ def valuations_from_inequality(vK, f, s, v0=None):
 
     OUTPUT:
 
-    a list of inductive valuations on the domain of ``f``, extending ``vK``,
+    A list of inductive valuations on the domain of ``f``, extending ``vK``,
     corresponding to the boundary points of the irreducible components of the
     affinoid defined by the condition `v(f)\geq s`. Note that these components
-    are all discoids.
+    are all discoids (possibly degenerate).
+
+    If `s=\infty` then the list may contain algebraic limit valuations.
 
     If `v_0` is given then the output only includes the valuations greater or
     equal to `v_0`.
+
+    ALGORITHM:
+
+    This is a modification of the MacLane algorithm. If `v_0(f) > s` or if the
+    effective degree of `f` with respect to `v_0` is zero, then no valuation
+    with the above properties can exist. If `v_0(f)=s` and the effective degree
+    is positive, then `v:=v_0` is the only solution.
+
+    Otherwise, we consider the equivalence decomposition of `f` with respect to
+    `v_0`, such that
+
+    .. MATH::
+
+        f \sim_{v_0} u\cdot \prod_{i=1}^r \phi_i^{e_i}.
+
+    By assumption, `r\geq 1`. For each `i`, we determine the proper augmentation
+
+    .. MATH::
+
+        v_i := [v_0, v_i(\phi_i)=t_i]
+
+    which is maximal under the conditions that
+
+    - `v_i(f) \leq s`, and
+    - the effective degree of `f` with respect to `v_i` is equal to `e_i`.
+
+    Every valuation `v` we are looking for must be greater or equal to one of
+    the `v_i`. Therefore, we can apply our algorithms inductively.
 
     """
     R = f.parent()
@@ -2017,43 +2012,96 @@ def valuations_from_inequality(vK, f, s, v0=None):
     assert f.is_monic()
     assert v0(f) >= 0
     assert s >= 0
-    V = [v0]
-    V_new = []
-    ret = []
-    while len(V) > 0:
-        # V contains all valuations which still need to be developped
-        V_new = []
-        for v in V:
-            vf = v(f)
-            if vf < s:
-                V_new += v.mac_lane_step(f)
-            elif vf == s:
-                if all([not v == w for w in ret]):
-                    ret.append(v)
+
+    if v0(f) > s or v0.effective_degree(f) == 0:
+        return []
+    elif v0(f) == s:
+        return [v0]
+    else:
+        # now we know that v0(f) < s and v0.effective_degree(f) > 0
+        F = v0.equivalence_decomposition(f)
+        # we check whether the result is a single limit valuation
+        if s == Infinity and len(F) == 1 and F[0][1] == 1 and F[0][0].degree() < f.degree():
+            return [LimitValuation(v0, f)]
+        ret = []
+        for phi, e in F:
+            v1 = _next_valuation_from_inequality(v0, f, s, phi, e)
+            ret += valuations_from_inequality(vK, f, s, v0=v1)
+    for v in ret:
+        assert v(f) == s
+    if s < Infinity:
+        assert (sum([v.effective_degree(f)*v.phi().degree() for v in ret])
+                == v0.effective_degree(f)*v0.phi().degree())
+    else:
+        d = 0
+        for v in ret:
+            if hasattr(v, "_approximation"):
+                d += v._approximation.effective_degree(f)*v._approximation.phi().degree()
             else:
-                # now v is an inductive valuation such that v(f) > s
-                for v0 in v.augmentation_chain():
-                    if v0(f) <= s:
-                        break
-                    else:
-                        v = v0
-                if v0(f) == s:
-                    if all([not v == w for w in ret]):
-                        ret.append(v0)
-                # now v0 is an inductive valuation such that v0(f) < s,
-                # and v is an augmentation of v0 such that v(f) > s.
-                # We test this:
-                assert v0(f) < s
-                assert v(f) > s
-                assert v._base_valuation == v0
-                a = [v0(c) for c in v.coefficients(f)]
-                t = max([(s-a[i])/i for i in range(1, len(a))])
-                v = v0.augmentation(v.phi(), t)
-                assert v(f) == s
-                if all([not v == w for w in ret]):
-                    ret.append(v)
-        V = V_new
+                g = f
+                i = 0
+                phi = v.phi()
+                while phi.divides(g):
+                    g, _ = g.quo_rem(phi)
+                    i += 1
+                d += i*phi.degree()
+        assert d == v0.effective_degree(f)*v0.phi().degree()
     return ret
+
+
+def _next_valuation_from_inequality(v0, f, s, phi, e):
+    r""" Return a suitable augmentation of v0.
+
+    INPUT:
+
+    - ``v0`` -- an inductive valuation
+    - ``f`` -- a monic integral polynomial in the domain of `v_0`
+    - ``s`` -- a positive rational number such that `v_0(f) < s`, or `\infty`
+    - ``phi`` -- a key polynomial for `v_0` which `v_0`-divides `f`
+    - ``e`` -- a positive integer; the number of times that `\phi` `v_0`-divides `f`
+
+    OUTPUT:
+
+    The augmentation of `v_0` of the form `v=[v_0,v(\phi)=t]`, which is maximal
+    with the property that `v(f) \leq s` and such that the effectice degree of
+    `f` with respect to `v` is equal to `e`.
+
+    If `s=\infty` and `f` is a key polynomial for `v_0` then the result is the
+    augmentation `v=[v_0,v(f)=\infty]`. In this case, the condition on the
+    effective degree is not quite true, because ``v.effective_degree(f)`` is
+    not what we actually want.
+
+    This is a helper function for ``valuations_from_inequality``.
+
+    """
+    # we first compute the phi-adic expansion of f with respect to phi
+    coeffs = []
+    g = f
+    while g.degree() >= 0:
+        g, r = g.quo_rem(phi)
+        coeffs.append(r)
+
+    # we see how far we can augment v0 such that v(f)<=s:
+    if s == Infinity:
+        t1 = Infinity
+    else:
+        t1 = max([(s-v0(c))/(i+1) for i, c in enumerate(coeffs[1:])])
+
+    # next we see how far we can augment v0 such that the effective degree is e:
+    slopes = NewtonPolygon([(i, v0(c)) for i, c in enumerate(coeffs)]).slopes()
+    if coeffs[0].is_zero():
+        # we add artifically the slope -infty; otherwise the list from which
+        # we choose t2 below may be empty
+        slopes = [-Infinity] + slopes
+    t2 = [-t for t in slopes if -t > v0(phi)][-1]
+
+    # v is the maximal augmentation such that both conditions are met:
+    v = v0.augmentation(phi, min(t1, t2))
+    assert v(f) <= s
+    if v(f) < Infinity:
+        # we test if the effective degree is correct. This is automatic if v(f)=infty
+        assert v.effective_degree(f) == e, "v = {}, e = {}, eff-deg = {}".format(v, e, v.effective_degree(f))
+    return v
 
 
 def is_generator(y):
