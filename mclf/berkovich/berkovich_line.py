@@ -1922,6 +1922,17 @@ def valuation_from_discoid(vK, f, s):
 
     If `D` is not irreducible, an error is raised.
 
+    Note that `s` maybe `\infty`, in which case the discoid is degenerate and
+    consists of a single point of type I. This means that the resulting valuation
+    is actually a pseudo-valuation.
+
+    ALGORITHM:
+
+    We use the function ``valuations_from_inequality`` which computes more
+    generally the valuations corresponding to the irreducible components of
+    the affinoid defined by an inequality `w(f)\leq s`. We then test whether
+    this affinoid is connected, i.e. corresponds to a single valuation.
+
 
     EXAMPLES:
 
@@ -1935,6 +1946,11 @@ def valuation_from_discoid(vK, f, s):
         [ Gauss valuation induced by 2-adic valuation, v(x + 1) = 2/3, v(x^3 + 3*x^2 + 3*x - 3) = 38/15 ]
         sage: _(f)
         76/15
+
+    We can create pseudovaluations corresponding to points if type I by setting `s:=\infty`: ::
+
+        sage: valuation_from_discoid(v_2, x^2+2, Infinity)
+        [ Gauss valuation induced by 2-adic valuation, v(x) = 1/2, v(x^2 + 2) = +Infinity ]
 
     """
     R = f.parent()
@@ -1952,7 +1968,7 @@ def valuation_from_discoid(vK, f, s):
 
 def valuations_from_inequality(vK, f, s, v0=None):
     r"""
-    Return the list of inductive valuations corresponding to the given inequalities.
+    Return the list of inductive pseudo-valuations corresponding to the given inequalities.
 
     INPUT:
 
@@ -1968,10 +1984,13 @@ def valuations_from_inequality(vK, f, s, v0=None):
     affinoid defined by the condition `v(f)\geq s`. Note that these components
     are all discoids (possibly degenerate).
 
-    If `s=\infty` then the list may contain algebraic limit valuations.
+    If `s=\infty` then the list consists of pseudo-valuations and may contain
+    algebraic limit valuations.
 
     If `v_0` is given then the output only includes the valuations greater or
-    equal to `v_0`.
+    equal to `v_0`. So if `v_0` is not given, we may assume that `v_0` is the
+    Gauss valuation.
+
 
     ALGORITHM:
 
@@ -2001,6 +2020,23 @@ def valuations_from_inequality(vK, f, s, v0=None):
     Every valuation `v` we are looking for must be greater or equal to one of
     the `v_i`. Therefore, we can apply our algorithms inductively.
 
+
+    EXAMPLES::
+
+        sage: from mclf import *
+        sage: vK = QQ.valuation(2)
+        sage: R.<x> = QQ[]
+        sage: f = x^2*(x^4+2*x^2+8)
+        sage: valuations_from_inequality(vK, f, 1)
+        [[ Gauss valuation induced by 2-adic valuation, v(x) = 1/6 ]]
+        sage: valuations_from_inequality(vK, f, 4)
+        [[ Gauss valuation induced by 2-adic valuation, v(x) = 1/2, v(x^2 + 2) = 2 ],
+         [ Gauss valuation induced by 2-adic valuation, v(x) = 3/4 ]]
+        sage: valuations_from_inequality(vK, f, Infinity)
+        [[ Gauss valuation induced by 2-adic valuation, v(x) = 1/2, v(x^2 + 2) = 2 , … ],
+         [ Gauss valuation induced by 2-adic valuation, v(x + 2) = 2 , … ],
+         [ Gauss valuation induced by 2-adic valuation, v(x) = +Infinity ]]
+
     """
     R = f.parent()
     K = R.base_ring()
@@ -2027,6 +2063,9 @@ def valuations_from_inequality(vK, f, s, v0=None):
         for phi, e in F:
             v1 = _next_valuation_from_inequality(v0, f, s, phi, e)
             ret += valuations_from_inequality(vK, f, s, v0=v1)
+
+    # we test the result; at some point we may drop some of these tests as they
+    # increase the running time
     for v in ret:
         assert v(f) == s
     if s < Infinity:
