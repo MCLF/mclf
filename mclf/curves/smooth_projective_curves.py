@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 r"""
-Smooth projective curves over a field.
-======================================
+Smooth projective curves over a field
+=====================================
 
 Let `k` be a field and `F/k` a finitely generated field extension of transcendence
 degree one (i.e. a 'function field over `k`'). Then there exists a smooth projective

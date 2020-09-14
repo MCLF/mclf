@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 r"""
-Reduction trees: a data structure for semistable reduction of covers of the projective line.
-============================================================================================
+Reduction trees: a data structure for semistable reduction of covers of the projective line
+===========================================================================================
 
 Let `K` be a field with a discrete valuation `v_K`. We let `X:=\mathbb{P}^1_K`
 denote the projective line over `K`. We are also given a finite cover
