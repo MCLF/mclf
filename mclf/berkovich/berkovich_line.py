@@ -2037,6 +2037,13 @@ def valuations_from_inequality(vK, f, s, v0=None):
          [ Gauss valuation induced by 2-adic valuation, v(x + 2) = 2 , … ],
          [ Gauss valuation induced by 2-adic valuation, v(x) = +Infinity ]]
 
+    We test some boundary cases: ::
+
+        sage: valuations_from_inequality(vK, R(1), 0)
+        [Gauss valuation induced by 2-adic valuation]
+        sage: valuations_from_inequality(vK, R(1), 1)
+        []
+
     """
     R = f.parent()
     K = R.base_ring()
@@ -2049,6 +2056,14 @@ def valuations_from_inequality(vK, f, s, v0=None):
     assert v0(f) >= 0
     assert s >= 0
 
+    # first treat the case where f is constant (i.e. f=1)
+    if f.degree() == 0:
+        if s == 0 and v0.is_gauss_valuation():
+            return [v0]
+        else:
+            return []
+
+    # now we may assume that f is non-constant
     if v0(f) > s or v0.effective_degree(f) == 0:
         return []
     elif v0(f) == s:
