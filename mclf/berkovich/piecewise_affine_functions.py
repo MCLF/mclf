@@ -1145,12 +1145,11 @@ class PiecewiseAffineFunction(SageObject):
             sage: h1.affinoid_domain()
             Elementary affinoid defined by
             v(x) >= -1
-            <BLANKLINE>
             sage: h2 = valuative_function(X, x*(x-1)/2)
             sage: h2.affinoid_domain()
             Affinoid with 2 components:
             Elementary affinoid defined by
-            v(x - 1) >= 1
+            v(x + 1) >= 1
             Elementary affinoid defined by
             v(x) >= 1
 
