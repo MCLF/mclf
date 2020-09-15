@@ -247,7 +247,7 @@ class SuperpModel(SemistableModel):
             sage: YY = SuperpModel(Y, v_2)
             sage: YY.etale_locus()
             Elementary affinoid defined by
-            v(x^4 + 4/3*x^3 + 4*x + 4/3) >= 8/3
+            v(x^4 + 4*x + 4) >= 8/3
 
         We check Example 4.14 from [BouWe16]. The original equation is
         `y^2 = f(x) = 2x^3 + x^2 + 32`, and `f` is not monic, as required.
