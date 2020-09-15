@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 r"""
 Semistable reduction of a smooth projective curve over a local field
 ====================================================================

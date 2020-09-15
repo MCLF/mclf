@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 r"""
 Fake `p`-adic embeddings
 ========================

@@ -1,4 +1,6 @@
-r""" Paths on the Berkovich line
+# -*- coding: utf-8 -*-
+r"""
+Paths on the Berkovich line
 
 Let `K` be a field with a discrete valuation `v_K`. Let `X` be the projective
 line over `K` and `X^{an}` the Berkovich analytic space associated to `X` and

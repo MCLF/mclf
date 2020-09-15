@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 r"""
 Weak p-adic Galois extensions
 =============================

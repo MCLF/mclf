@@ -1,5 +1,7 @@
-r""" Points of type V on the Berkovich line.
-============================================
+# -*- coding: utf-8 -*-
+r"""
+Points of type V on the Berkovich line
+======================================
 
 Let `X^{an}` be a Berkovich line over a discretely valued field `K`.
 A "point" `\eta` of type V on `X^{an}` corresponds to a

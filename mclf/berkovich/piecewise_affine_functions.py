@@ -1,5 +1,7 @@
-r""" Piecewise affine functions on the Berkovich projective line.
-=================================================================
+# -*- coding: utf-8 -*-
+r"""
+Piecewise affine functions on the Berkovich projective line
+===========================================================
 
 Let `K` be a field, `v_K` a discrete valuation on `K` and `X=\mathbb{P}^1_K`
 the *Berkovich line* over `K`.
