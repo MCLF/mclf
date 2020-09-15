@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 r"""
 Semistable models of superelliptic curves of degree `p`
-==========================================================
+=======================================================
 
 Let `K` be a field of characteritic zero and `v_K` a discrete valuation on `K`
 whose residue field is finite of characteristic `p>0`.

@@ -1,5 +1,7 @@
-r""" Affinoid subdomains of the Berkovich line.
-===============================================
+# -*- coding: utf-8 -*-
+r"""
+Affinoid subdomains of the Berkovich line
+=========================================
 
 Let `K` be a field, `v_K` a discrete valuation on `K` and `X` the Berkovich
 line over `K`, with respect to `v_K`.

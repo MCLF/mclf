@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 r"""
 Finite subtrees of the Berkovich line
 =====================================

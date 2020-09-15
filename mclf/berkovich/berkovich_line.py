@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 r"""
 The Berkovich line over a discretely valued field
 =================================================
