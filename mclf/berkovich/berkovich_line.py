@@ -1832,6 +1832,9 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         if xi1.is_in_unit_disk() != xi2.is_in_unit_disk():
             return X.gauss_point()
         # now the point lie both inside or outside the unit disk
+        # if xi2 is of type I, we have to replace it by a sufficiently good approx.
+        if xi2.type() == "I":
+            xi2 = xi2.approximation(xi1)
         f1, s1 = xi1.discoid()
         f2, s2 = xi2.discoid()
         if not xi1.is_in_unit_disk():
