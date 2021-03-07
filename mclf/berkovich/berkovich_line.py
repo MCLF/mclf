@@ -1280,7 +1280,8 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         y = self.parameter()
         w._improve_approximation()
         wa = w._approximation
-        return TypeIIPointOnBerkovichLine(self.berkovich_line(), (wa, y))
+        self._approximation = TypeIIPointOnBerkovichLine(self.berkovich_line(), (wa, y))
+        return self._approximation
 
     @cached_method
     def is_equal(self, xi):
@@ -1382,8 +1383,8 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
 
         """
 
-        if certified_point is None and hasattr(self, "_discoid"):
-            return self._discoid
+        # if certified_point is None and hasattr(self, "_discoid"):
+        #     return self._discoid
 
         x = self.function_field().gen()
         if self.is_limit_point():

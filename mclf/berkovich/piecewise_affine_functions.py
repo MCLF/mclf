@@ -523,7 +523,6 @@ class DirectedPath(SageObject):
         else:
             return t >= self.initial_parameter() and t <= self.terminal_parameter()
 
-    @cached_method
     def point(self, t):
         r""" Return the point on the path with given parameter.
 
@@ -685,9 +684,9 @@ class DirectedPath(SageObject):
     def _improve_approximation(self, xi=None):
         xi2 = self.terminal_point()
         if xi is None:
-            xi2 = xi2.improved_approximation()
+            xi2.improved_approximation()
         else:
-            xi2 = xi2.approximation(certified_point=xi)
+            xi2.approximation(certified_point=xi)
         phi = self._make_phi(xi2)
         s2 = xi2.v(phi)
         s1 = self.initial_point().v(phi)
@@ -696,7 +695,6 @@ class DirectedPath(SageObject):
         self._phi = phi
         self._s2 = s2
 
-    @cached_method
     def _make_phi(self, xi):
         phi, _ = xi.discoid()
         # phi is an irreducible polynomial in x, or is 1/x
@@ -848,7 +846,6 @@ class AffineFunction(SageObject):
         """
         return self.find_point_with_value(0)
 
-    @cached_method
     def find_point_with_value(self, c):
         r""" Return a point where this affine function takes a given value.
 
@@ -1100,7 +1097,9 @@ class PiecewiseAffineFunction(SageObject):
         if xi0 is not None and xi0.is_incomparable(self.initial_point()):
             # no point in the domain of h can be strictly greater than xi0
             return []
-        # now we know that xi0 is either None, or comparable to the initial point.
+        else:
+            xi0 = self.initial_point()
+        # now we know that xi0 is comparable to the initial point.
 
         is_strictly_less = xi0.is_strictly_less(self.initial_point())
         initial_value_is_a = self.initial_value() == a
@@ -1114,7 +1113,7 @@ class PiecewiseAffineFunction(SageObject):
             if h1.is_constant():
                 ret += h2.find_next_points_with_value(a, xi0)
                 continue
-            xi1, _ = h1.next_point_with_value(a)
+            xi1 = h1.find_point_with_value(a)
 
             if xi1 is None and h2 is not None:
                 ret += h2.find_next_points_with_value(a, xi0)
@@ -1165,7 +1164,7 @@ class PiecewiseAffineFunction(SageObject):
         r""" Return the affinoid tree underlying the affinoid domain defined by
         this function.
 
-        This is a helper function for ``rational_domain()`` which works
+        This is a helper function for ``affinoid_domain()`` which works
         recursively.
 
         OUTPUT:
@@ -1237,6 +1236,15 @@ class PiecewiseAffineFunction(SageObject):
             T1.make_parent(T0)
         return T0
 
+    def edges(self):
+        ret = [self.initial_point()]
+        for h1, h2 in self.restrictions():
+            if h2 is None:
+                ret.append(h1.terminal_point())
+            else:
+                ret += h2.edges()
+        return ret
+
 
 def valuative_function(D, f, T=None, is_factored=False):
     r""" A valuative function on a domain in the Berkovich line.
@@ -1270,7 +1278,7 @@ def valuative_function(D, f, T=None, is_factored=False):
 
         h(\xi) := a_0 + \sum_i a_i v(f(\xi)).
 
-    The domain `D` must be either a standard closed discoid, or the the full
+    The domain `D` must be either a standard closed discoid, or the full
     Berkovich line.
 
     If the Berkovich tree `T` is given, then it is assumed that `T` is the
@@ -1309,7 +1317,8 @@ def valuative_function(D, f, T=None, is_factored=False):
         T = BerkovichTree(X, root=initial_point)
         for g, a, zeroes in L:
             for xi in zeroes:
-                T, _ = T.add_point(xi)
+                if D.is_in(xi):
+                    T, _ = T.add_point(xi)
         if degree != 0 and D.is_in(X.infty()):
             T, _ = T.add_point(X.infty())
     restrictions = _compute_restrictions(L, a_0, T)
@@ -1426,7 +1435,7 @@ def _restriction_to_path(gamma, L, a0):
     assert h.initial_value() == c, "a = {}, b = {}, c = {}, gamma ={}, L = {}, a0 = {}".format(a, b, c, gamma, L, a0)
     d = _compute_value(L, a0, gamma.terminal_point())
     if a == 0:
-        assert d == b, "a = {}, b = {}, c = {}, d ={}, gamma ={}".format(a, b, c, d, gamma)
+        assert d == b, "a = {}, b = {}, c = {}, d ={}, gamma ={}, L = {}, a0 = {}".format(a, b, c, d, gamma, L, a0)
     else:
         assert d == h.terminal_value(), "a = {}, b = {}, c = {}, d ={}, gamma ={}, L = {}, a0 = {}".format(a, b, c, d, gamma, L, a0)
     return h
