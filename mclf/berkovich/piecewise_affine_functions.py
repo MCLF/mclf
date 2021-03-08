@@ -110,13 +110,12 @@ We can compute the affinoid domain given by the inequality `h(\xi)\geq 0`::
 # *****************************************************************************
 
 from sage.all import SageObject, Infinity, cached_method
-# from sage.misc.cachefunc import cached_method
 
 
 class Domain(SageObject):
     r""" A domain in the Berkovich line, defined by inequalities.
 
-    Objects of this class are used as domians of definition of affine and
+    Objects of this class are used as domains of definition of affine and
     piecewise affine functions. Although they may be affinoid domains, this
     class has no relation to the class ``AffinoidDomainOnBerkovichLine``.
 
@@ -720,13 +719,13 @@ class AffineFunction(SageObject):
 
     OUTPUT:
 
-    the affine function `h` on the domain `D` of the path `\gamma = [\xi_1,\xi]`
+    the affine function `h` on the domain `D` of the path `\gamma = [\xi_1,\xi_2]`
     defined by `a` and `b`. If `t:D \to \mathbb{R}` is the standard
     parametrization, then
 
     .. MATH::
 
-            h(\xi) := a\cdot r_\gamma(\xi) + b.
+            h(\xi) := a\cdot t(\xi) + b.
 
     """
 
@@ -753,6 +752,9 @@ class AffineFunction(SageObject):
         r""" Return the initial point of the path underlying this affine function.
         """
         return self.path().initial_point()
+
+    def initial_tangent_vector(self):
+        return self.path().initial_tangent_vector()
 
     def terminal_point(self):
         r""" Return the terminal point of the path underlying this affine function.
@@ -785,7 +787,7 @@ class AffineFunction(SageObject):
         is raised.
 
         """
-        self.path().initial_slope()
+        # self.path().initial_slope()  # ????
         return self._a * self.path().parameter(xi) + self._b
 
     def initial_value(self):
@@ -835,7 +837,7 @@ class AffineFunction(SageObject):
 
         OUTPUT:
 
-        a point `\xi` on the interior of the path underlying this
+        a point `\xi` on the *interior* of the path underlying this
         function which is an isolated zero.
 
         If no such zero exists, ``None`` is returned.
@@ -851,10 +853,12 @@ class AffineFunction(SageObject):
 
         OUTPUT:
 
-        a point `\xi` on the interior of the underlying path such that
+        a point `\xi` on the *interior* of the underlying path such that
         the function is nonconstant in `\xi` and takes the value `c`.
 
         If no such point exists, ``None`` is returned.
+
+        Note: do I really want only the points in the interior?
 
         """
         a = self._a
@@ -862,6 +866,7 @@ class AffineFunction(SageObject):
         gamma = self.path()
         if a == 0:
             return None
+            # the function is constant on this path
         else:
             t = (c - b)/a
             if gamma.is_parameter(t, in_interior=True):
@@ -1069,7 +1074,7 @@ class PiecewiseAffineFunction(SageObject):
         return self.find_next_points_with_value(0, xi0)
 
     def find_next_points_with_value(self, a, xi0=None):
-        r""" Return the next point where this function takes a given value,
+        r""" Return the next points where this function takes a given value,
         after a given point.
 
         INPUT:
@@ -1080,7 +1085,6 @@ class PiecewiseAffineFunction(SageObject):
         OUTPUT: The list of all points on the nerf of this function
 
         - at which this function takes the value `a`,
-        - at which the function is not constant,
         - which are strictly greater than `\xi_0`, and
         - which are minimal with this property.
 
@@ -1088,41 +1092,61 @@ class PiecewiseAffineFunction(SageObject):
 
         NOTE::
 
-            In this form, the problem is not well defined. Note that the function
-            may be constant on pathes of the nerf. If this constant value is equal
-            to a, and xi0 lies on this path and ist not the terminal point, then
-            there is no minimal next point with value a.
+            Note that the function may be constant on a path of the nerf. If
+            this constant value is equal to a, and xi0 lies on this path, then
+            there is no minimal point on this path with the required conditions.
+            Therefore, the search is continued on all strictly greater paths.
+
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: F.<x> = FunctionField(QQ)
+            sage: X = BerkovichLine(F, QQ.valuation(2))
+            sage: h = valuative_function(X, (x^2 + x + 2)/x)
+            sage: h.find_next_points_with_value(0)
+            [Point of type II on Berkovich line, corresponding to v(x) >= 0]
+
+        If the second parameter `\xi_0` is given, the output consists of points
+        strictly less than `\xi_0`. As the function `h` is constant on the path
+        from the Gauss point to the point `v(x)\geq 1`, no point on this path
+        is minimal with the required properties. ::
+
+            sage: h.find_next_points_with_value(0, X.gauss_point())
+            []
+            sage: h.find_next_points_with_value(1)
+            [Point of type II on Berkovich line, corresponding to v(x + 2) >= 2,
+             Point of type II on Berkovich line, corresponding to v(x + 1) >= 1]
+            sage: points = h.find_next_points_with_value(-1)
+            sage: points
+            [Point of type II on Berkovich line, corresponding to v(x) >= 2,
+             Point of type II on Berkovich line, corresponding to v(1/x) >= 1]
+            sage: h.find_next_points_with_value(-1, points[0])
+            []
+
+        For the moment, the value `a=\infty` does not lead to a correct result. ::
+
+            sage: h.find_next_points_with_value(Infinity)
+            []
 
         """
         if xi0 is not None and xi0.is_incomparable(self.initial_point()):
             # no point in the domain of h can be strictly greater than xi0
             return []
-        else:
-            xi0 = self.initial_point()
-        # now we know that xi0 is comparable to the initial point.
-
-        is_strictly_less = xi0.is_strictly_less(self.initial_point())
-        initial_value_is_a = self.initial_value() == a
+        elif self.initial_value() == a and (xi0 is None or xi0.is_strictly_less(self.initial_point())):
+            return [self.initial_point()]
 
         ret = []
         for h1, h2 in self.restrictions():
-            if (is_strictly_less and not h1.is_in_domain(xi0) and not h2.is_in_domain(xi0)):
-                # no point in visiting this branch, since no point there can be
-                # strictly less than xi0
-                continue
-            if h1.is_constant():
-                ret += h2.find_next_points_with_value(a, xi0)
+            if xi0 is not None and not (h1.is_in_domain(xi0) or (h2 is not None and h2.is_in_domain(xi0))):
+                # no point in the domain of this restriction is strictly less
+                # then xi0
                 continue
             xi1 = h1.find_point_with_value(a)
-
             if xi1 is None and h2 is not None:
                 ret += h2.find_next_points_with_value(a, xi0)
-            elif xi1 is not None and xi0.is_strictly_less(xi1):
+            elif xi1 is not None and (xi0 is None or xi0.is_strictly_less(xi1)):
                 ret.append(xi1)
-        # if ret is empty this means there are
-        if initial_value_is_a and ret == []:
-            if xi0 is None or (xi0 is not None and is_strictly_less):
-                return [self.initial_point()]
         return ret
 
     def affinoid_domain(self):
