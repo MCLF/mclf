@@ -86,11 +86,11 @@ EXAMPLES::
     sage: YY.etale_locus()
     Affinoid with 3 components:
     Elementary affinoid defined by
+    v(x) >= 3/4
+    Elementary affinoid defined by
     v(x - 2) >= 5/4
     Elementary affinoid defined by
     v(x + 2) >= 5/4
-    Elementary affinoid defined by
-    v(x) >= 3/4
 
     sage: YY.is_semistable()
     True

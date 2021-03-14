@@ -2078,11 +2078,14 @@ class PiecewiseAffineFunctionOnClosedDomain(PiecewiseAffineFunction):
             else:
                 T = AffinoidTree(X, root=self.initial_point(), is_in=True)
                 for g in self.restrictions():
-                    T.make_child(g.affinoid_tree())
-                    # g.affinoid_tree is None if D_g is contained in U
-                    # otherwise it an affinoid tree with root  a point inside D_g
+                    if g.is_disjoint_from_affinoid():
+                        # the domain of g is a hole of the affinoid
+                        T.make_child(AffinoidTree(X, root=g.affine_base().terminal_point(), is_in=False))
+                    elif not g.is_contained_in_affinoid():
+                        T.make_child(g.affinoid_tree())
                 return T
         else:
+            # now the initial value is strictly negative
             if all(g.is_disjoint_from_affinoid() for g in self.restrictions()):
                 self._is_contained_in_affinoid = False
                 self._is_disjoint_from_affinoid = True
@@ -2090,9 +2093,10 @@ class PiecewiseAffineFunctionOnClosedDomain(PiecewiseAffineFunction):
             else:
                 T = AffinoidTree(X, root=self.initial_point(), is_in=False)
                 for g in self.restrictions():
-                    T.make_child(g.affinoid_tree())
-                    # g.affinoid_domain is None if D_g is disjoint from U
-                    # otherwise it an affinoid tree with root  a point inside D_g
+                    if not g.is_disjoint_from_affinoid():
+                        child = g.affinoid_tree()
+                        if child is not None:
+                            T.make_child(child)
                 return T
 
 
@@ -2213,6 +2217,40 @@ class PiecewiseAffineFunctionOnOpenDomain(PiecewiseAffineFunction):
                     ret += h.find_next_points_with_value(a, xi0)
                 return ret
 
+    def is_disjoint_from_affinoid(self):
+        r""" Return whether the domain of this function is disjoint from its affinoid domain.
+
+        This means that the function is strictly negative everywhere.
+
+        If the answer is ``True` then it is guaranteed that this actually holds.
+        But if the anwer is ``False`` we don't know.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: FX.<x> = FunctionField(QQ)
+            sage: v_K = QQ.valuation(2)
+            sage: X = BerkovichLine(FX, v_K)
+            sage: xi0 = X.gauss_point()
+            sage: xi1 = X.point_from_discoid(x, 1)
+            sage: D = OpenPafDomain(xi0, xi1)
+            sage: h = valuative_function(D, 1/x)
+            sage: h.is_disjoint_from_affinoid()
+            True
+
+        """
+        if hasattr(self, "_is_disjoint_from_affinoid"):
+            return self._is_disjoint_from_affinoid
+        if self.initial_value() < 0 and self.is_decreasing():
+            self._is_disjoint_from_affinoid = True
+            return True
+        elif self.initial_value() == 0 and self.is_decreasing() and self.affine_base().slope() < 0:
+            self._is_disjoint_from_affinoid = True
+            return True
+        else:
+            # we don't know, so we do not set the flag
+            return False
+
     def affinoid_tree(self):
         r""" Return the affinoid tree underlying the affinoid domain defined by
         this piecewise affine function on a open paf domain.
@@ -2235,7 +2273,7 @@ class PiecewiseAffineFunctionOnOpenDomain(PiecewiseAffineFunction):
         and `is_disjoint_from_affinoid` are set accordingly, and the output is an
         affinoid tree `T` with just one node, or ``None``. We return ``None`` if
         `U=D` and the initial value is `\geq 0`, or if `U` is empty and the
-        initial value is `\leq 0`. So if `T` is not ``None`` then its root
+        initial value is `< 0`. So if `T` is not ``None`` then its root
         must lie inside the domain of this function.
 
         """
@@ -2260,7 +2298,12 @@ class PiecewiseAffineFunctionOnOpenDomain(PiecewiseAffineFunction):
                 # now xi is an isolated zero on the interior of the path
                 T = AffinoidTree(X, root=xi, is_in=True)
                 if len(self.restrictions()) > 0:
-                    T.make_child(self.restrictions()[0].affinoid_tree())
+                    h = self.restrictions()[0]
+                    child = h.affinoid_tree()
+                    if child is not None:
+                        T.make_child(child)
+                    elif h.initial_value() < 0:
+                        T.make_child(AffinoidTree(X, root=h.initial_point(), is_in=False))
                 else:
                     # the terminal point of the affine base is of type I;
                     if affine_base.terminal_value() < 0:
@@ -2270,7 +2313,11 @@ class PiecewiseAffineFunctionOnOpenDomain(PiecewiseAffineFunction):
             else:
                 # there is no isolated zero on the interior of the path
                 if len(self.restrictions()) > 0:
-                    return self.restrictions()[0].affinoid_tree()
+                    g = self.restrictions()[0]
+                    if self.initial_value() < 0 and g.is_contained_in_affinoid():
+                        return AffinoidTree(X, root=g.initial_point(), is_in=True)
+                    else:
+                        return self.restrictions()[0].affinoid_tree()
                 elif self.initial_value() == 0 and affine_base.slope() < 0:
                     # in this case, U is empty, but the initial point is contained in U
                     return AffinoidTree(X, root=affine_base.terminal_point(), is_in=False)
