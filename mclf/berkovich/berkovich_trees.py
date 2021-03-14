@@ -132,7 +132,7 @@ class BerkovichTree(SageObject):
 
         INPUT:
 
-        - ``new_child`` -- a Berkovich tree
+        - ``new_child`` -- a Berkovich tree, or ``None``
         - ``check`` -- a boolean (default ``False``)
 
         We make the tree ``new_child`` a child of ``self``. For this to make
@@ -144,19 +144,20 @@ class BerkovichTree(SageObject):
           already existing children of ``self``
 
         These conditions are checked only if ``check`` ist ``True``.
-
+        If ``new_chid`` is ``None`` then nothing is done.
         Note:
 
         This changes both trees ``self`` and ``new_child``.
         """
-        if check:
-            assert self.root().is_strictly_less(new_child.root()),\
-                "new child has to be strictly greater than self"
-            for child in self.children():
-                assert child.root().is_incomparable(new_child.root()),\
-                    "new child has to be incomparable to other children"
-        self._children.append(new_child)
-        new_child.make_parent(self)
+        if new_child is not None:
+            if check:
+                assert self.root().is_strictly_less(new_child.root()),\
+                    "new child has to be strictly greater than self"
+                for child in self.children():
+                    assert child.root().is_incomparable(new_child.root()),\
+                        "new child has to be incomparable to other children"
+            self._children.append(new_child)
+            new_child.make_parent(self)
 
     def remove_child(self, child):
         r""" Remove child from list of children of ``self``.

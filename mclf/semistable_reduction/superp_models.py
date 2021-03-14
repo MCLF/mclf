@@ -86,11 +86,11 @@ EXAMPLES::
     sage: YY.etale_locus()
     Affinoid with 3 components:
     Elementary affinoid defined by
-    v(x) >= 3/4
-    Elementary affinoid defined by
     v(x - 2) >= 5/4
     Elementary affinoid defined by
     v(x + 2) >= 5/4
+    Elementary affinoid defined by
+    v(x) >= 3/4
 
     sage: YY.is_semistable()
     True
@@ -271,7 +271,7 @@ class SuperpModel(SemistableModel):
         result is that the etale locus is contained in the closed unit disk.
 
         """
-        from mclf.berkovich.piecewise_affine_functions import Discoid, valuative_function
+        from mclf.berkovich.piecewise_affine_functions import ClosedPafDomain, valuative_function
         from mclf.berkovich.affinoid_domain import UnionOfDomains
 
         if hasattr(self, "_etale_locus"):
@@ -280,6 +280,7 @@ class SuperpModel(SemistableModel):
         X = self._X
         v_K = X.base_valuation()
         FX = self._FX
+        x = FX.gen()
         f = self._f
         p = self._p
         n = f.degree()
@@ -297,7 +298,7 @@ class SuperpModel(SemistableModel):
         a = [a[i]/f for i in range(n+1)]
 
         pi = self.base_valuation().uniformizer()
-        D = Discoid(X.gauss_point())    # this is the closed unit disk
+        D = ClosedPafDomain(X.gauss_point(), X.point_from_discoid(x, 1))    # this is the closed unit disk
         delta = [valuative_function(D, ([(c[pl], p - 1)], -p*v_K(pi)))]
         delta += [valuative_function(
             D, ([(c[pl], i*(p - 1)), (a[i], -pl*(p - 1))],
