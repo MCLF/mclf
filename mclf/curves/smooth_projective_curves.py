@@ -745,7 +745,7 @@ class SmoothProjectiveCurve(SageObject):
         V = [(FX.valuation(1/FX.gen()), 1)]
         # now we use the plane equation and compute the discriminant wrt x
         G = self.plane_equation()
-        R = PolynomialRing(self.FY.constant_base_field(), 'x')
+        R = PolynomialRing(FY.constant_base_field(), 'x')
         D = R(G.discriminant(G.parent().gens()[1]))
         for f, m in D.factor():
             V.append((FX.valuation(FX(f)), f.degree()))
