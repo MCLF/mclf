@@ -1,0 +1,5 @@
+name: readthedocs
+channels:
+  - conda-forge
+dependencies:
+  - sagelib=8.8
