@@ -150,6 +150,7 @@ class FakepAdicExtension(SageObject):
             if n == 1:
                 x = L.polynomial().parent().gen()
                 self._polynomial = x - self.p()
+                # this seems to be wrong!!
                 return self._polynomial()
 
             # the following computation may be quite expensive

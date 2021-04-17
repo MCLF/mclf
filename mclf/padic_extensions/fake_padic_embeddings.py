@@ -62,14 +62,10 @@ class FakepAdicEmbedding(SageObject):
 
     - ``K``, ``L`` -- two `p`-adic number fields, given as objects of
       ``FakepAdicCompletion``
-    - ``approximation`` - an approximation of the desired embedding, or ``None``
-      (default: ``None``)
+    - ``approximation`` - an approximation of the desired embedding
 
-    OUTPUT: an embedding of `K` into `L` which is approximated by ``approximation``,
-    or ``None`` if no such embedding exists.
-
-    WARNING: to return ``None`` doesn't make sense, because __init__ returns
-    an instance of ``FakepAdicEmbedding``.
+    OUTPUT: an embedding of `K` into `L` which is approximated by ``approximation``.
+    If no such embedding exists, an error is raised.
 
     Internally, the embedding `\phi` is represented by a limit pseudo valuation
     `v` on `L_0[x]` such that `v(P_K)=\infty`. Here `K_0` and `L_0` are the
@@ -88,7 +84,8 @@ class FakepAdicEmbedding(SageObject):
         if isinstance(approximation, MacLaneLimitValuation):
             # v = approximation determines phi uniquely
             v = approximation
-            assert v(K.polynomial()) == Infinity
+            assert v(K.polynomial()) == Infinity, "the given approximation doesn't work"
+            assert v.phi().degree() == 1, "the given limit valuation does not correspond to an embedding"
         else:
             if approximation is None:
                 R = PolynomialRing(L.number_field(), 'x')
@@ -118,17 +115,17 @@ class FakepAdicEmbedding(SageObject):
         # now v is an approximation of an irreducible factor of P of degree 1
         v = LimitValuation(v, P)
         self._domain = K
-        self._target = L
+        self._codomain = L
         self._limit_valuation = v
 
     def __repr__(self):
-        return "an embedding of {} into {}".format(self._domain, self._target)
+        return "an embedding of {} into {}".format(self.domain(), self.codomain())
 
     def domain(self):
         return self._domain
 
-    def target(self):
-        return self._target
+    def codomain(self):
+        return self._codomain
 
     def limit_valuation(self):
         return self._limit_valuation
@@ -139,49 +136,298 @@ class FakepAdicEmbedding(SageObject):
     def postcompose_with(self, psi):
         pass
 
-    def eval(self, alpha, precision=2):
-        r"""
-        Evaluate this embedding on an element of this domain, or on a polynomial.
+    def approximate_generator(self, t=None):
+        r""" Return an approximation of the image of the generator of the domain.
 
         INPUT:
 
-        - ``alpha`` -- an element of the domain of this embedding, or a polynomial
-          over the underlying number field of the domain
-        - ``precision`` -- a positive integer, or None (default: ``None``)
+        - ``t`` -- a positive rational number, or ``None`` (default: ``None``)
+
+        OUTPUT: an approximation `\pi_0` of `\phi(\pi_K)`, up to precision `t`.
+
+        Here `\phi:K\to L` is this embedding, `\pi_K\in K_0` is the generator of
+        the number field underlying the domain `K` and `\pi_0\in L_0` is an
+        element of the number field `L_0` underlying the codomain `L`, such that
+
+        .. MATH::
+
+            v_L(\pi_0-\phi(\pi_K)) > t.
+
+        If `t` is not given, then the approximation of `\pi_K` used for the
+        previous call of this method is returned. It is guaranteed to determine
+        the embedding uniquely.
+
+        """
+        if not hasattr(self, "_pi0"):
+            # first call of this method; we have to compute some approximation
+            v = self.limit_valuation()
+            phi = v._approximation.phi()
+            self._pi0 = -phi[0]
+            self._t0 = v(phi)
+        if self._t0 <= t:
+            # we have to improve the current approximation
+            v = self.limit_valuation()
+            v._improve_approximation()
+            while v(v._approximation.phi()) <= t:
+                v._improve_approximation()
+            phi = v._approximation.phi()
+            self._pi0 = -phi[0]
+            self._t0 = v(phi)
+        return self._pi0
+
+    def approximate_evaluation(self, alpha, s):
+        r""" Return an approximation of this embedding on an element.
+
+        INPUT:
+
+        - ``alpha`` -- an element of the number field `K_0`approximating the domain `K`
+        - ``s`` -- a positive rational number
 
         OUTPUT:
 
-        the image of ``alpha`` under this embedding `\phi:K\to L`, with the
-        guaranteed precision ``precision``.
+        an approximation `\alpha_0` of the image of `\alpha under this embedding
+        `\phi:K\to L`, with the guaranteed precision `s`. This means that
 
-        The element `\alpha` of `K` may be given as an element of the number
-        field `K_0` underlying `K`. In this case the image `\phi(\alpha)`
-        will be given as an element of the number field `L_0` underlying `L`,
-        which is an approximation of the true value of `\phi(\alpha)` modulo `p^N`,
-        where `N` is the guaranteed precision. If ``precision`` is given then
-        `N` is larger or equal to ``precision``. Otherwise the internal precision
-        of `\phi` is used (which only guarantees that `\phi` is uniquely determined).
+        .. MATH::
 
-        The element `\alpha` in `K` may also be given by a ...
+            v_L(\alpha_0 - \phi(\alpha)) > s.
 
         """
+        K = self.domain()
+        L = self.codomain()
+        assert alpha in K.number_field(), "alpha must be an element of the underlying number field of the domain"
+        if alpha.is_rational():
+            return L.number_field()(alpha)
+        pi = K.generator()
+        f = alpha.polynomial()
+        assert f(pi) == alpha
+        R = f.parent()
+        S = PolynomialRing(R, 'T')
+        F = f(R.gen() + S.gen())
+        v = self.limit_valuation()
+        t = max((s-v(F[i])/i) for i in range(1, F.degree() + 1))
+        pi0 = self.approximate_generator(t)
+        return f(pi0)
 
-        pass
-
-    def improve_approximation(self, N=None):
-        r"""
-        Improve the underlying approximation of this embedding.
+    def approximate_polynomial(self, f, s):
+        r""" Return an approximation of the image of a polynomial under this embedding.
 
         INPUT:
 
-        - ``N`` -- a positive integer, or ``None`` (default: ``None``)
+        - ``f`` -- a polynomial in `K_0[x]`
+        - ``s`` -- a positive rational number
 
-        The effect of this method is that the underlying approximation of the
-        limit valuation representing this embedding is improved. If ``N``
-        is given then this improvement will guarantee that for any integral
-        element `\alpha` of the number field `K_0` underlying the domain `K`
-        of this embedding, the value of ``self.eval(alpha)`` will agree with
-        the true value `\phi(\alpha)` modulo `p^N`.
+        Here `K_0` is the number field underlying the domain of this embedding.
+
+        OUTPUT: a polynomial `f_0 \in L_0[x]`, where `L_0` is the number field
+        underlying the codomain of this embedding `\phi:K\to L`, such that
+
+        .. MATH::
+
+            v_L(f_0-\phi(f)) > s.
 
         """
-        pass
+        R_K = f.parent()
+        assert R_K.base_ring() == self.domain().number_field()
+        L0 = self.codomain().number_field()
+        return f.map_coefficients(lambda c: self.approximate_evaluation(c, s), L0)
+
+# -----------------------------------------------------------------------------
+
+
+def extensions_of_inductive_valuation(v, phi):
+    r""" Return all extensions of an inductive valuation to the base change.
+
+    INPUT:
+
+    - ``v`` -- an inductive valuation on a polynomial ring `K[x]`
+    - ``phi`` -- an embedding `\phi:K\to L` of fake p-adic number fields
+
+    Here `v` must be defined over `K_0`, the number field underlying `K`.
+
+    OUTPUT: the list of all extensions of `v` to `L[x]`.
+
+    ALGORITHM:
+
+    If `v` is the Gauss valuation on `K[x]`, then it has a unique extension
+    to `L[x]`, namely the Gauss valuation.
+
+    Otherwise, `v` is an augmentation of the form
+
+    .. MATH::
+
+        v = [v_0, v(f)=\mu].
+
+    Then any extension of `v` to `L[x]` is of the form
+
+    .. MATH::
+
+        w = [w_0, w_1(g_1)=\mu_1,\ldots,w_n(g_n)=\mu_n],
+
+    with `n>0`, `w_0` an extension of `v_0` to `L[x]`. By induction, we may
+    assume that we know all possibilities for `w_0`.
+
+    The valuations `w` we are looking for are then exactly the inductive
+    valuations on `L[x]` with the following properties:
+
+    1. `w_0\leq w`
+    2. `w(f) = \mu`
+    3. `f` is not an equivalence unit with respect to `w`
+
+    We can compute these inductive valuations with a variant of MacLane's
+    algorithm. This is done by the helper function :func:`_all_augmentations`.
+
+    """
+    K = phi.domain()
+    L = phi.codomain()
+    assert v.domain().base_ring() == K.number_field()
+    if v.is_gauss_valuation():
+        return [GaussValuation(v.domain().change_ring(L.number_field()), L.valuation())]
+    else:
+        v0 = v.augmentation_chain()[1]
+        W0 = extensions_of_inductive_valuation(v0, phi)
+        W = []
+        for w0 in W0:
+            W += extensions_of_augmented_valuation(v, w0, phi)
+        return W
+
+
+def extensions_of_augmented_valuation(v, w0, phi):
+    r""" Return all extensions of an inductive valuation to the base change.
+
+    INPUT:
+
+    - ``v`` -- an augmented valuation on a polynomial ring `K[x]`
+    - ``w0`` -- an inductive valuation on `L[x]`
+    - ``phi`` -- an embedding `\phi:K\to L` of p-adic number fields
+
+    Here `v` must be an augmentation of the restriction `v_0` of `w_0` to `K[x]`.
+
+    OUTPUT: the list of all extensions `w` of `v` to `L[x]` such that `w_0\leq w`.
+
+    """
+    K = phi.domain()
+    L = phi.codomain()
+    assert v.domain().base_ring() == K.number_field()
+    assert w0.domain().base_ring() == L.number_field()
+    f = v.phi()
+    s = v(f)
+    # so v = [v_0, v(f)=s]
+    f0 = phi.approximate_polynomial(f, s)
+    assert w0(f0) < s
+    return _all_augmentations(w0, f0, s)
+
+#
+# ----------------------------------------------------------------------------
+
+#                          helper functions
+#                          ----------------
+
+
+def _all_augmentations(v0, f, s):
+    r""" Return all augmentations of `v_0` corresponding to an inequality.
+
+    INPUT:
+
+    - ``v0`` -- an inductive valuation on `K[x]`
+    - ``f`` -- a monic integral polynomial in `K[x]`
+    - ``s`` -- a positive rational number
+
+    OUTPUT:
+
+    the list of all inductive valuations `v \geq v0` corresponding to the
+    irreducible components of the affinoid given by `v(f) \geq s`.
+
+    These are precisely the augmentations `v` of `v_0` such that
+
+    - `v(f) = s`, and
+
+    - `f` is not an equivalence unit of `v`
+
+    ALGORITHM:
+
+    This is a variant of MacLane's algorithm for developping inductive
+    valuations, see ??.
+
+    If `v_0(f) > s` or if `v_0(f) = s` and `f` is an equivalence unit for `v`
+    then no `v` with the required property exists. If `v_0(f) = s` and if `f`
+    is not an equivalence unit, then `v=v_0` is the only solution.
+
+    Therefore, we may assume that `v_0(f) < s` and that `f` is not an equivalence
+    unit. Then any solution `v` is of the form
+
+    .. MATH::
+
+        v = [v_0, v_1(\phi_1)=t_1,\ldots, v_n(\phi_n)=t_n],
+
+    with `n>0`. Moreover, for every `i>0`, we may assume that
+
+    - `\phi_i` is a irreducible factor of a `v_{i-1}`-equivalence decomposition
+      of `f`,
+    - t_i > v_{i-1}(\phi_i)` is maximal with the property that `v_i(f)\leq s`
+      and that `f` is not an equivalence unit for `v_i`.
+
+    By induction, it suffices to find, for every factor `\phi` in a `v_0`-equivalence
+    decomposition of `f`, the maximal value of `t_1 > t_0:=v_0(\phi)` such that
+    the augmentation
+
+    .. MATH::
+
+         v_1:=[v_0, v_1(\phi)=t_1]
+
+    has the property that
+
+    1. `v_1(\phi) \leq s`, and
+
+    2. `f` is not a `v_0`-equivalence unit.
+
+    To determine the value of `t_1`, we consider the `\phi`-development of `f`,
+
+    .. MATH::
+
+        f = f_0 + f_1\phi + \ldots + f_r\phi^r.
+
+    Then (1) holds if and only if there exists an index `i` such that
+
+    .. MATH::
+
+        v_0(f_i) + i t_1 \leq s.
+
+    Furthermore, (2) holds if and only if
+
+    .. MATH::
+
+        t_1 \leq t_0 - \mu,
+
+    where `\mu` is the largest negative slope of the Newton polygon of the
+    `\phi`-development of `f` with respect to `v_0`.
+
+    This makes it easy to compute `t_1`.
+
+    """
+    from sage.geometry.newton_polygon import NewtonPolygon
+    assert v0(f) <= s
+    if v0(f) == s:
+        if v0.is_equivalence_unit(f):
+            return []
+        else:
+            return [v0]
+    # we should return a nonempty list of true augmentations of v0
+    F = v0.equivalence_decomposition(f)
+    ret = []
+    for phi, _ in F:
+        t0 = v0(phi)
+        v00 = v0.augmentation(phi, t0, check=False)
+        np = NewtonPolygon(enumerate(v00.valuations(f)))
+        slopes = [mu for mu in np.slopes(repetition=False) if mu < 0]
+        # this list should be nonempty if we include the possible slope -infinity
+        # since `NewtonPolygon` ignores the slope -infinity, we have to add it
+        if len(slopes) == 0:
+            slopes = [-Infinity]
+        t1 = max((s-v0(g))/i for i, g in enumerate(v00.coefficients(f)) if i > 0)
+        # this is the maximal value for t_1 such that (1) holds
+        t1 = min([t1, t0 - max(slopes)])
+        # now t_1 is maximal with (1) and (2)
+        v1 = v0.augmentation(phi, t1)
+        ret += _all_augmentations(v1, f, s)
+    return ret
