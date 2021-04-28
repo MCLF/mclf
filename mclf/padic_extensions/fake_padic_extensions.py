@@ -58,14 +58,15 @@ class FakepAdicExtension(SageObject):
 
     - ``phi`` -- an embedding of `p`-adic number fields
 
-    OUTPUT:  the extension `L/K` where `K` is the domain and `L` the target of `phi`
+    OUTPUT:  the extension `L/K` where `K` is the domain and `L` the codomain of `phi`
 
     """
 
     def __init__(self, phi):
 
         K = phi.domain()
-        L = phi.target()
+        L = phi.codomain()
+        self._embedding = phi
         self._base_field = K
         self._extension_field = L
         self._ramification_degree = ZZ(L.absolute_ramification_degree()/K.absolute_ramification_degree())
@@ -93,6 +94,9 @@ class FakepAdicExtension(SageObject):
         Return the extension field.
         """
         return self._extension_field
+
+    def embedding(self):
+        return self._embedding
 
     def valuation(self):
         """ Return the valuation of the extension."""

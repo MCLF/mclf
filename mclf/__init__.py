@@ -12,6 +12,7 @@ from .berkovich.affinoid_domain import *
 from .padic_extensions.weak_padic_galois_extensions import *
 from .padic_extensions.fake_padic_completions import *
 from .padic_extensions.fake_padic_embeddings import *
+from .padic_extensions.approximate_factorizations import *
 from .semistable_reduction.reduction_trees import *
 from .semistable_reduction.admissible_reduction import *
 from .semistable_reduction.semistable_models import *

@@ -340,7 +340,7 @@ class FakepAdicCompletion(SageObject):
                     g = QQp.approximate_irreducible_factor(P)
                     return QQp.extension(g)
             N = N + 5
-            # this is now very cumbersome and should we reworked at some point
+            # this is now very cumbersome and should be reworked at some point
 
     def ramified_extension(self, n, embedding=False):
         r"""
@@ -437,6 +437,8 @@ class FakepAdicCompletion(SageObject):
             2-adic completion of Number Field in pi2 with defining polynomial x^2 + 2
 
         """
+        # F should be factorized into a set of 'approximate irreducible factors'
+        # these can be base changed to any (fake) extension
         if not isinstance(F, Polynomial):
             F = prod(F).radical()
         else:

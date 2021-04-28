@@ -121,7 +121,7 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
 
     NOTE:
 
-    For the time being, ``F`` has to be defined oover `\mathbb{Q}`,
+    For the time being, ``F`` has to be defined over `\mathbb{Q}`,
     and ``minimal ramification`` has to be prime to `p`.
 
     """
