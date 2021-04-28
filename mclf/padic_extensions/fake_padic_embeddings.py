@@ -158,12 +158,15 @@ class FakepAdicEmbedding(SageObject):
         the embedding uniquely.
 
         """
+        L = self.codomain()
+        e = L.valuation()(L.p())
         if not hasattr(self, "_pi0"):
             # first call of this method; we have to compute some approximation
             v = self.limit_valuation()
             phi = v._approximation.phi()
-            self._pi0 = -phi[0]
-            self._t0 = v(phi)
+            t0 = v(phi)
+            self._pi0 = L.reduce(-phi[0], (e*t0).ceil())
+            self._t0 = t0
         if self._t0 <= t:
             # we have to improve the current approximation
             v = self.limit_valuation()
@@ -171,7 +174,7 @@ class FakepAdicEmbedding(SageObject):
             while v(v._approximation.phi()) <= t:
                 v._improve_approximation()
             phi = v._approximation.phi()
-            self._pi0 = -phi[0]
+            self._pi0 = L.reduce(-phi[0], (e*t).ceil())
             self._t0 = v(phi)
         return self._pi0
 
@@ -195,6 +198,7 @@ class FakepAdicEmbedding(SageObject):
         """
         K = self.domain()
         L = self.codomain()
+        e = L.valuation()(L.p())
         assert alpha in K.number_field(), "alpha must be an element of the underlying number field of the domain"
         if alpha.is_rational():
             return L.number_field()(alpha)
@@ -207,7 +211,7 @@ class FakepAdicEmbedding(SageObject):
         v = self.limit_valuation()
         t = max((s-v(F[i])/i) for i in range(1, F.degree() + 1))
         pi0 = self.approximate_generator(t)
-        return f(pi0)
+        return L.reduce(f(pi0), (e*t).ceil())
 
     def approximate_polynomial(self, f, s):
         r""" Return an approximation of the image of a polynomial under this embedding.
