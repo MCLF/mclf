@@ -88,6 +88,7 @@ TO DO:
 from sage.all import SageObject, ZZ, QQ, NumberField, GaussValuation, PolynomialRing, Polynomial, Integer, matrix, IntegerModRing, mod, Infinity, prod, lcm, vector, GF
 from sage.geometry.newton_polygon import NewtonPolygon
 from sage.rings.valuation.limit_valuation import LimitValuation
+from mclf.padic_extensions.fake_padic_embeddings import FakepAdicEmbedding
 
 
 class FakepAdicCompletion(SageObject):
@@ -296,9 +297,6 @@ class FakepAdicCompletion(SageObject):
         f = f.change_ring(K0)
 
         vK = self.valuation()
-        if embedding:
-            raise NotImplementedError
-
         V = vK.mac_lane_approximants(f)
         assert len(V) == 1, "f is not irreducible"
         v = LimitValuation(V[0], f)
@@ -317,10 +315,26 @@ class FakepAdicCompletion(SageObject):
         g = g.squarefree_decomposition()[0][0]
         # now we compute the absolute characteristic polynomial of a root
         # of g
+        if embedding:
+            # write pi_K as a polynomial in pix1
+            # first naively:
+            L0_rel = K0.extension(g, "Pi_rel")
+            L0_abs = L0_rel.absolute_field("Pi_abs")
+            from_abs, to_abs = L0_abs.structure()
+            h = to_abs(self.uniformizer()).polynomial()
+            # now h(pi1x) should be equal to pi_K
+            assert h(L0_rel.gen()) == self.uniformizer()
+            # this fails if we call weak_splitting_field(Q2, f)
+            # with f = x^8 + 2*x^7 - 14*x^6 + 2*x^5 - 302*x^4 - 4*x^3 + 4*x^2 + 4
+            h = h.map_coefficients(lambda c: self.reduce_rational_number(c, m+20))
+            print("h = ", h)
+            a = h(L0_rel.gen()) - self.uniformizer()
+            print("h(pi_L) - pi_K", a)
+            A = a.polynomial()
+            print([self.valuation()(c) for c in A.coefficients()])
 
-        done = False
         N = m+5
-        while not done:
+        while True:
             Pmod = self.characteristic_polynomial_mod(g, N)
             # this is very heuristic; there should be a conclusive test whether
             # the result is correct, or the choice of the precision should be made correctly and
@@ -334,11 +348,16 @@ class FakepAdicCompletion(SageObject):
             f = vL.residue_field().degree()
             if 1/e == r:
                 if len(V) == 1:
-                    return FakepAdicCompletion(L0, vL)
+                    L = FakepAdicCompletion(L0, vL)
                 else:
                     QQp = FakepAdicCompletion(QQ, self.base_valuation())
                     g = QQp.approximate_irreducible_factor(P)
-                    return QQp.extension(g)
+                    L = QQp.extension(g)
+                if embedding:
+                    phi = FakepAdicEmbedding(self, L, approximation=h(L.number_field().gen()))
+                    return L, phi
+                else:
+                    return L
             N = N + 5
             # this is now very cumbersome and should be reworked at some point
 

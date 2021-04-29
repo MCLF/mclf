@@ -281,8 +281,8 @@ class ApproximatePrimeFactor(SageObject):
 
         """
         K = self.base_field()
-        L = K.extension(self.approximate_polynomial())
-        phi = FakepAdicEmbedding(K, L)
+        _, phi = K.extension(self.approximate_polynomial(), embedding=True)
+        # phi = FakepAdicEmbedding(K, L)
         return FakepAdicExtension(phi)
 
     def base_change(self, L):

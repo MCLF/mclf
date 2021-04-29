@@ -81,20 +81,26 @@ class FakepAdicEmbedding(SageObject):
     """
 
     def __init__(self, K, L, approximation=None):
+        R = PolynomialRing(L.number_field(), 'x')
+        P = R(K.polynomial())
         if isinstance(approximation, MacLaneLimitValuation):
             # v = approximation determines phi uniquely
             v = approximation
             assert v(K.polynomial()) == Infinity, "the given approximation doesn't work"
             assert v.phi().degree() == 1, "the given limit valuation does not correspond to an embedding"
+        elif approximation in L.number_field():
+            # approximation is an element of L_0 close to the image of the generator
+            # of K under the desired embedding
+            pi = approximation
+            v0 = GaussValuation(R, L.valuation())
+            v = v0.augmentation(R.gen() - pi, 5)
         else:
             if approximation is None:
-                R = PolynomialRing(L.number_field(), 'x')
                 v0 = GaussValuation(R, L.valuation())
             else:
                 v0 = approximation
             # now we have to find a limit valuation v such that v(P_K)=infinity
             # which is approximated by v0
-            P = R(K.polynomial())
             V = [v0]
             done = False
             while len(V) > 0 and not done > 0:
@@ -164,7 +170,17 @@ class FakepAdicEmbedding(SageObject):
             # first call of this method; we have to compute some approximation
             v = self.limit_valuation()
             phi = v._approximation.phi()
-            t0 = v(phi)
+            try:
+                t0 = v(phi)
+            except AssertionError:
+                print("Assertion Error!")
+                print("v = ", v)
+                print()
+                print("approx: ", v._approximation)
+                print()
+                t0 = v._approximation(phi)
+            # this gives an error if we call weak_splitting_field(Q2, f)
+            # with f = x^8 - 2*x^7 + 8*x^6 - 28*x^5 - 22*x^4 - 22*x^3 - 18*x^2 + 2
             self._pi0 = L.reduce(-phi[0], (e*t0).ceil())
             self._t0 = t0
         if self._t0 <= t:
