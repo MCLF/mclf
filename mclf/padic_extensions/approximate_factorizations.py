@@ -113,6 +113,13 @@ def weak_splitting_field(K, f):
     This means that `L/K` is a finite extension of `p`-adic number fields such
     that `f` splits into linear factors over an unramified extension of `L`.
 
+
+    .. NOTE::
+
+        At the moment, the extension that is returned is in general *not* an
+        extension of `K`! But it should, and for this we need to implement
+        composition of embeddings first.
+
     """
     f = f.change_ring(K.number_field())
     f = f.radical()

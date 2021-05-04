@@ -260,6 +260,11 @@ class pAdicNumberField(SageObject):
 
         OUTPUT: the weak splitting field of `f` over this `p`-adic number field.
 
+        .. NOTE::
+
+            We have to make sure, that the result if a p-adic number field, as
+            an *extension* of this field `K`.
+
         """
         from mclf.padic_extensions.approximate_factorizations import weak_splitting_field
         return weak_splitting_field(self, f)

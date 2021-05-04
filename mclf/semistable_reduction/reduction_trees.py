@@ -537,13 +537,22 @@ class InertialComponent(SageObject):
             For the moment, this only works if the basepoint is contained inside
             the closed unit disk.
 
+        .. NOTE::
+
+            Also, this only works over the base field `\mathbb{Q}_p`, unless we
+            make sure that the method `weak_splitting_field` returns a field
+            as an extension of the base field.
+
         """
         if not hasattr(self, "_splitting_field"):
             vK = self.reduction_tree().base_valuation()
             K = vK.domain()
+
             # K must be number field for the rest to work
             # Actually, it must be QQ!
-            assert K == QQ, "K must be QQ"
+            # try without this assumption:
+            # assert K == QQ, "K must be QQ"
+
             Kh = pAdicNumberField(K, vK)
             if self.is_separable():
                 fiber = self.reduction_tree().curve().fiber(self.basepoint().function_field_valuation())
@@ -614,12 +623,20 @@ class InertialComponent(SageObject):
         the constant base field of these components is the residue field of
         `v_L` (and it may differ from its field of constants).
 
+        .. NOTE::
+
+            This doesn't work yet over an arbitrary base field other than
+            `\mathbb{Q}_p`. The problem is that that we first have to implement
+            'base change' for Berkovich lines along an extension of `p`-adic
+            number fields.
+
         """
         if u in self._lower_components.keys():
             return self._lower_components[u]
             # we have already computed this before!
 
         L = self.splitting_field()
+        # I have to make sure that L is an extension of the base field K!
         if u == Infinity:
             vL = L.valuation()
         else:
@@ -628,6 +645,10 @@ class InertialComponent(SageObject):
 
         # we construct the base change of the underlying Berkovich line
         # to L:
+
+        # unfortunately, this doesn't works for an arbitrary base field yet!
+        # I have to implement base change for Berkovich lines along p-adic
+        # extensions, or at least for function field valuations
         FX = self.berkovich_line().function_field()
         L = vL.domain()      # actually, this is the number field underlying L
         FXL = FunctionField(L, FX.variable_name())
