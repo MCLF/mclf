@@ -128,12 +128,15 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
 
     def __init__(self, K, F, minimal_ramification=1):
         minimal_ramification = ZZ(minimal_ramification)
-        # print "entering WeakPadicGaloisExtension with"
-        # print "F = %s"%F
+        # print("entering WeakPadicGaloisExtension with")
+        # print("F = {}, over {}".format(F, K))
         # if F is a polynomial, replace it by the list of its irreducible factors
         # if isinstance(F, Polynomial):
         #     F = [f for f, m in F.factor()]
-        assert K.is_Qp(), "for the moment, K has to be Q_p"
+
+        # try without this restriction:
+        # assert K.is_Qp(), "for the moment, K has to be Q_p"
+
         # assert not K.p().divides(minimal_ramification), "minimal_ramification has to be prime to p"
         if not isinstance(F, Polynomial):
             if F == []:
@@ -141,14 +144,14 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
             else:
                 F = prod(F)
         self._base_field = K
-        L = K.weak_splitting_field(F)
+        L = K.weak_splitting_field(F).extension_field()
         e = ZZ(L.absolute_ramification_degree()/K.absolute_ramification_degree())
         if not minimal_ramification.divides(e):
             #  enlarge the absolute ramification index of vL
             #  such that minimal_ramification divides e(vL/vK):
             m = ZZ(minimal_ramification/e.gcd(minimal_ramification))
             # assert not self.p().divides(m), "p = %s, m = %s, e = %s,\nminimal_ramification = %s"%(self.p(), m, e, minimal_ramification)
-            L = L.ramified_extension(m)
+            L = L.purely_ramified_extension(m).extension_field()
             # if m was not prime to p, L/K may not be weak Galois anymore
         else:
             m = ZZ(1)

@@ -96,6 +96,20 @@ class pAdicNumberField(SageObject):
     def __repr__(self):
         return "{}-adic completion of {}".format(self.p(), self.number_field())
 
+    def base_field(self):
+        r""" Return the 'base field', i.e. this p-adic number field itself.
+
+        This method exists only for compatibility reasons.
+        """
+        return self
+
+    def extension_field(self):
+        r""" Return the 'extension_field', i.e. this p-adic number field itself.
+
+        This method exists only for compatibility reasons.
+        """
+        return self
+
     def number_field(self):
         r"""
         Return the number field representing this p-adic extension.
@@ -226,13 +240,29 @@ class pAdicNumberField(SageObject):
         ramification degree.
 
         """
-        pass
+        K0 = self.number_field()
+        R = PolynomialRing(K0, "T")
+        f = R.gen()**n - self.uniformizer()
+        return self.simple_extension(f)
 
     def unramified_extension(self, n):
         r""" Return the unramified extension of this p-adic number field of given degree.
 
         """
         pass
+
+    def weak_splitting_field(self, f):
+        r""" Return the weak splitting field of a polynomial.
+
+        INPUT:
+
+        - ``f`` -- a univariate polynomial over the underlying number field `K_0`
+
+        OUTPUT: the weak splitting field of `f` over this `p`-adic number field.
+
+        """
+        from mclf.padic_extensions.approximate_factorizations import weak_splitting_field
+        return weak_splitting_field(self, f)
 
     def approximation(self, a, N):
         r"""
@@ -332,6 +362,8 @@ class pAdicNumberField(SageObject):
                 phi = [aug_chain[i].phi() for i in range(len(aug_chain)-2, -1, -1)]
                 if len(phi) == 0:
                     phi = [v_f.domain().gen()]
+                elif phi[0].degree() > 1:
+                    phi = [v_f.domain().gen()] + phi
                 d = [phi[i].degree() for i in range(len(phi))]
                 t = [v_f(phi[i]) for i in range(len(phi))]
                 assert all(d[i] < d[i+1] for i in range(len(d)-1)), "the augmented valuation v_f = {} is not in reduced form!".format(v_f)
@@ -645,6 +677,8 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         phi = [aug_chain[i].phi() for i in range(len(aug_chain)-2, -1, -1)]
         if len(phi) == 0:
             phi = [v_f.domain().gen()]
+        elif phi[0].degree() > 1:
+            phi = [v_f.domain().gen()] + phi
         d = [phi[i].degree() for i in range(len(phi))]
         t = [v_f(phi[i]) for i in range(len(phi))]
         assert all(d[i] < d[i+1] for i in range(len(d)-1)), "the augmented valuation v_f = {} is not in reduced form!".format(v_f)
@@ -654,6 +688,7 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
             g = prod(phi[i]**m[i] for i in range(len(m)))
             s = (e*sum(t[i]*m[i] for i in range(len(m)))).floor()
             integral_basis.append(g*pi_K**(-s))
+        assert len(integral_basis) == self.degree()
         self._relative_integral_basis = integral_basis
         return integral_basis
 
@@ -873,7 +908,7 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
 
     def raise_precision(self):
         self._precision = self._precision + 2
-        if self._precision > 15:
+        if self._precision > 20:
             raise AssertionError("Maximal precision reached; probably something is wrong!")
 
     def approximate_inverse_of_matrix(self, A):
@@ -924,6 +959,7 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         """
         A = self.absolute_matrix(g)
         p = self.base_field().p()
+        e = self.pseudovaluation().E()*self.base_field().ramification_degree()
         while True:
             R = IntegerModRing(p**self.precision())
             Ab = A.change_ring(R)
@@ -937,12 +973,15 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
                         break
                     else:
                         v = V[0]
-                if v(f) == Infinity:
+                if v(f) == Infinity and v.E() == e:
                     if matrix:
                         return (f, Ab.change_ring(QQ))
                     else:
                         return f
             self.raise_precision()
+            # if the precison is greater then a certain threshold, an error
+            # is raised. The reason is that probably the chosen element g
+            # does not correspond to a generator.
 
 # ------------------------------------------------------------------------------
 
