@@ -12,7 +12,7 @@ a number field `K_0` together with a discrete valuation `v_K` on `K_0` which
 extends the `p`-adic valuation `v_p` on `\mathbb{Q}`, such that `K` is the
 completion of `K_0` at `v_K`.
 
-Our main goal is to be able to compute *weak* `p`-*adic Galois extensions* of
+Our main goal is to be able to compute *weak* `p`-adic Galois extensions* of
 `p`-adic number fields of large degree. We want to:
 
 - compute efficiently with general extensions of `\mathbb{Q}_p` of high

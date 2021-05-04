@@ -34,7 +34,7 @@ of a polynomial over a `p`-adic number field.
 
 from sage.all import SageObject, PolynomialRing, GaussValuation, Infinity
 from sage.rings.valuation.limit_valuation import LimitValuation
-from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
+from mclf.padic_extensions.padic_number_fields import pAdicNumberField
 from mclf.padic_extensions.fake_padic_embeddings import FakepAdicEmbedding
 from mclf.padic_extensions.fake_padic_extensions import FakepAdicExtension
 
@@ -64,7 +64,7 @@ def approximate_factorization(K, f, v0=None):
     if isinstance(K, FakepAdicExtension):
         K = K.extension_field()
     else:
-        assert isinstance(K, FakepAdicCompletion)
+        assert isinstance(K, pAdicNumberField)
     f = f.change_ring(K.number_field())
     if v0 is None:
         R = f.parent()
@@ -186,8 +186,7 @@ class ApproximatePrimeFactor(SageObject):
 
     def __init__(self, K, f):
         from sage.rings.polynomial.polynomial_element import Polynomial
-        from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
-        assert isinstance(K, FakepAdicCompletion)
+        assert isinstance(K, pAdicNumberField)
         self._base_field = K
         if isinstance(f, Polynomial):
             f = f.change_ring(K.number_field())
@@ -281,9 +280,7 @@ class ApproximatePrimeFactor(SageObject):
 
         """
         K = self.base_field()
-        _, phi = K.extension(self.approximate_polynomial(), embedding=True)
-        # phi = FakepAdicEmbedding(K, L)
-        return FakepAdicExtension(phi)
+        return K.simple_extension(self.approximate_polynomial())
 
     def base_change(self, L):
         r""" Return the factorization of the base change of this irreducible factor

@@ -92,6 +92,7 @@ class FakepAdicEmbedding(SageObject):
             # approximation is an element of L_0 close to the image of the generator
             # of K under the desired embedding
             pi = approximation
+            assert L.valuation()(pi) >= 0
             v0 = GaussValuation(R, L.valuation())
             v = v0.augmentation(R.gen() - pi, 5)
         else:
@@ -173,15 +174,19 @@ class FakepAdicEmbedding(SageObject):
             try:
                 t0 = v(phi)
             except AssertionError:
-                print("Assertion Error!")
-                print("v = ", v)
-                print()
-                print("approx: ", v._approximation)
-                print()
+                # print("Assertion Error!")
+                # print("v = ", v)
+                # print()
+                # print("approx: ", v._approximation)
+                # print()
                 t0 = v._approximation(phi)
             # this gives an error if we call weak_splitting_field(Q2, f)
             # with f = x^8 - 2*x^7 + 8*x^6 - 28*x^5 - 22*x^4 - 22*x^3 - 18*x^2 + 2
-            self._pi0 = L.reduce(-phi[0], (e*t0).ceil())
+            if t0 < Infinity:
+                t1 = (e*t0).ceil()
+                self._pi0 = L.approximation(-phi[0], t1)
+            else:
+                self._pi0 = -phi[0]
             self._t0 = t0
         if self._t0 <= t:
             # we have to improve the current approximation
@@ -190,7 +195,7 @@ class FakepAdicEmbedding(SageObject):
             while v(v._approximation.phi()) <= t:
                 v._improve_approximation()
             phi = v._approximation.phi()
-            self._pi0 = L.reduce(-phi[0], (e*t).ceil())
+            self._pi0 = L.approximation(-phi[0], (e*t).ceil())
             self._t0 = v(phi)
         return self._pi0
 
@@ -227,7 +232,7 @@ class FakepAdicEmbedding(SageObject):
         v = self.limit_valuation()
         t = max((s-v(F[i])/i) for i in range(1, F.degree() + 1))
         pi0 = self.approximate_generator(t)
-        return L.reduce(f(pi0), (e*t).ceil())
+        return L.approximation(f(pi0), (e*t).ceil())
 
     def approximate_polynomial(self, f, s):
         r""" Return an approximation of the image of a polynomial under this embedding.
