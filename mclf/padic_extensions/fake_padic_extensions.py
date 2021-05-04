@@ -9,14 +9,14 @@ compute with Galois extensions `L/K` of large degree.
 At the moment, computations with general extensions of `p`-adic fields of large
 degree are still problematic. In particular, it seems difficult to obtain results
 which are provably correct. For this reason we do not work which `p`-adic numbers at all.
-Instead, we use our own class ``FakepAdicCompletion``, in which a `p`-adic number
+Instead, we use our own class :class:`pAdicNumberField`, in which a `p`-adic number
 field is approximated by a pair `(K_0, v_K)`, where `K_0` is a suitable number field
 and `v_K` is a `p`-adic valuation on `K_0` such that `K` is the completion
 of `K_0` at `v_K`.
 
 In this module we define a class ``FakepAdicExtension``, which realizes a finite
 extension `L/K` of `p`-adic number fields. Both fields `K` and `L` are realized
-as objects in the class ``FakepAdicCompletion``, the embedding `K\to L` as
+as objects in the class :class:`pAdicNumberField`, the embedding `K\to L` as
 an object of ``FakepAdicEmbedding``.
 
 

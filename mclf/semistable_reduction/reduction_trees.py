@@ -137,7 +137,7 @@ from sage.all import ZZ, QQ, FunctionField, SageObject, Infinity
 from mclf.berkovich.berkovich_line import BerkovichLine
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
 from mclf.berkovich.affinoid_domain import ElementaryAffinoidOnBerkovichLine
-from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
+from mclf.padic_extensions.padic_number_fields import pAdicNumberField
 from mclf.padic_extensions.weak_padic_galois_extensions import WeakPadicGaloisExtension
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve, PointOnSmoothProjectiveCurve
 from mclf.curves.morphisms_of_smooth_projective_curves import MorphismOfSmoothProjectiveCurves
@@ -544,7 +544,7 @@ class InertialComponent(SageObject):
             # K must be number field for the rest to work
             # Actually, it must be QQ!
             assert K == QQ, "K must be QQ"
-            Kh = FakepAdicCompletion(K, vK)
+            Kh = pAdicNumberField(K, vK)
             if self.is_separable():
                 fiber = self.reduction_tree().curve().fiber(self.basepoint().function_field_valuation())
                 # `fiber` should be a list of points on Y

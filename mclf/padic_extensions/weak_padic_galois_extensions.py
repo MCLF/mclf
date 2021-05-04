@@ -12,7 +12,7 @@ subfields.
 At the moment, computations with large Galois extensions of `p`-adic fields are
 still problematic. In particular, it seems difficult to obtain results which are
 provably correct. For this reason we do not work which `p`-adic numbers at all.
-Instead, we use our own class ``FakepAdicCompletion``, in which a `p`-adic number
+Instead, we use our own class :class:`pAdicNumberField`, in which a `p`-adic number
 field is approximated by a pair `(K_0, v_K)`, where `K_0` is a suitable number field
 and `v_K` is a `p`-adic valuation on `K_0` such that `K` is the completion
 of `K_0` at `v_K`.
@@ -73,7 +73,7 @@ This example is from the "Database of Local Fields":  ::
 
     sage: from mclf import *
     sage: v_3 = QQ.valuation(3)
-    sage: Q_3 = FakepAdicCompletion(QQ, v_3)
+    sage: Q_3 = pAdicNumberField(QQ, v_3)
     sage: R.<x> = QQ[]
     sage: f = x^6+6*x^4+6*x^3+18
     sage: L = WeakPadicGaloisExtension(Q_3, f)
@@ -100,7 +100,7 @@ TO DO:
 
 from sage.all import PolynomialRing, Polynomial, ZZ, QQ, prod
 from sage.geometry.newton_polygon import NewtonPolygon
-from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
+from mclf.padic_extensions.padic_number_fields import pAdicNumberField
 from mclf.padic_extensions.fake_padic_extensions import FakepAdicExtension
 from mclf.padic_extensions.slope_factors import slope_factors
 
@@ -399,7 +399,7 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
                 if s == 1:        # this slope corresponds to the inertia subgroup G_0
                     # the corresponding subfield is the max. unramified ext.
                     #  we return Q_p because unramified extensions are ignored
-                    subfields[0] = FakepAdicCompletion(QQ, v_p)
+                    subfields[0] = pAdicNumberField(QQ, v_p)
                 else:
                     g = factors[-s]
                     beta = beta*(-1)**k*g(-pi)

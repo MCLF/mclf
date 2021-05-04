@@ -8,7 +8,7 @@ Let `K` and `L` be `p`-adic number fields. In this module we define a class
 `\mathbb{Q}_p`.
 
 Here the `p`-adic number fields `K` and `L` are objects of the
-class ``FakepAdicCompletion``. This means that `K` and `L` represented as pairs
+class :class:`pAdicNumberField`. This means that `K` and `L` represented as pairs
 `(K_0,v_K)` and `(L_0,v_L)`, where e.g. `K_0` is a number field and `v_K` a
 `p`-adic valuation on `K_0` such that `K` is the completion of `K_0` at `v_K`.
 In fact, we do not work with actual `p`-adic numbers.
@@ -61,7 +61,7 @@ class FakepAdicEmbedding(SageObject):
     INPUT:
 
     - ``K``, ``L`` -- two `p`-adic number fields, given as objects of
-      ``FakepAdicCompletion``
+      :class:`pAdicNumberField
     - ``approximation`` - an approximation of the desired embedding
 
     OUTPUT: an embedding of `K` into `L` which is approximated by ``approximation``.
