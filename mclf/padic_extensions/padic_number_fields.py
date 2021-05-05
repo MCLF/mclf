@@ -39,7 +39,7 @@ EXAMPLES:
 from sage.all import SageObject, ZZ, QQ, NumberField, PolynomialRing,\
     IntegerModRing, mod, prod, vector, matrix, Infinity, GaussValuation
 # from sage.geometry.newton_polygon import NewtonPolygon
-from mclf.padic_extensions.fake_padic_embeddings import FakepAdicEmbedding
+from mclf.padic_extensions.padic_embeddings import pAdicEmbedding
 
 
 class pAdicNumberField(SageObject):
@@ -582,7 +582,7 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         for j in range(m):
             alpha += v[j]*sum(A_i[i, j]*int_basis_L[i] for i in range(n))
         assert L.valuation()(alpha) >= 0, "something is wrong: alpha should be integral"
-        phi = FakepAdicEmbedding(K, L, alpha)
+        phi = pAdicEmbedding(K, L, alpha)
         self._embedding = phi
         # this computation can get ridiculously large; it would be better to do
         # over ZZ/p^N and only lift to QQ at the very end

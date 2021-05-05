@@ -35,7 +35,6 @@ of a polynomial over a `p`-adic number field.
 from sage.all import SageObject, PolynomialRing, GaussValuation, Infinity
 from sage.rings.valuation.limit_valuation import LimitValuation
 from mclf.padic_extensions.padic_number_fields import pAdicNumberField
-from mclf.padic_extensions.fake_padic_embeddings import FakepAdicEmbedding
 from mclf.padic_extensions.fake_padic_extensions import FakepAdicExtension
 
 
