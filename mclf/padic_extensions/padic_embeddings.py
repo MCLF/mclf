@@ -51,8 +51,7 @@ TO DO:
 #                  https://www.gnu.org/licenses/
 # *****************************************************************************
 
-from sage.all import SageObject, PolynomialRing
-# from sage.rings.valuation.limit_valuation import MacLaneLimitValuation, LimitValuation
+from sage.all import SageObject, IntegerModRing
 
 
 class pAdicEmbedding(SageObject):
@@ -165,7 +164,18 @@ class pAdicEmbedding(SageObject):
         self._precision = s
         return alpha
 
-    def approximate_evaluation(self, alpha, s):
+    def approximate_integral_basis(self, s):
+        r""" Return an approximation of the standard integral basis of the domain.
+
+        """
+        if hasattr(self, "_approximate_integral_basis") and self.precision() >= s:
+            return self._approximate_integral_basis
+        K = self.domain()
+        int_basis_K = K.integral_basis()
+        return [self.approximate_evaluation(a, s, polynomial=True)
+                for a in int_basis_K]
+
+    def approximate_evaluation(self, alpha, s, polynomial=False):
         r""" Return an approximation of this embedding on an element.
 
         INPUT:
@@ -185,14 +195,23 @@ class pAdicEmbedding(SageObject):
         """
         K = self.domain()
         L = self.codomain()
+        N = s.ceil()
         assert alpha in K.number_field(), "alpha must be an element of the underlying number field of the domain"
         if alpha.is_rational():
             return L.number_field()(alpha)
-        pi = K.generator()
-        f = alpha.polynomial()
-        assert f(pi) == alpha
-        pi0 = self.approximate_generator(s)
-        return L.approximation(f(pi0), s.ceil())
+        alpha = K.number_field()(alpha)
+        assert K.valuation()(alpha) >= 0, "alpha must be integral"
+        if polynomial:
+            f = alpha.polynomial()
+            pi0 = self.approximate_generator(s)
+            return L.approximation(f(pi0), N)
+        else:
+            # we evaluate via the integral basis
+            # first we write alpha as a LK of the integral basis
+            u = K.vector(alpha)
+            # u should be a vector with integral coefficients
+            approx_int_basis = self.approximate_integral_basis(s)
+            return sum(u[i]*approx_int_basis[i] for i in range(len(approx_int_basis)))
 
     def approximate_polynomial(self, f, s):
         r""" Return an approximation of the image of a polynomial under this embedding.

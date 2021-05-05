@@ -403,6 +403,22 @@ class pAdicNumberField(SageObject):
             a = self.number_field()(a)
             return S_i*a.matrix().transpose()*S
 
+    def approximate_matrix(self, a, N):
+        r""" Return an approximation of the matrix corresponding to an integral element.
+
+        INPUT:
+
+        - ``a`` -- an integral element of the number field underlying this
+                   `p`-adic number fields
+        - ``N`` -- a positive integer
+
+        OUTPUT: a square matrix over `\mathbb{Z}/p^N` which is the reduction
+        of the matrix representing `a`.
+
+        """
+        R = IntegerModRing(self.p()**N)
+        return self.matrix(a).change_ring(R)
+
     def vector(self, a):
         r"""
         Return the vector corresponding to an element of the underlying number field.
@@ -440,6 +456,21 @@ class pAdicNumberField(SageObject):
         """
         S = self.base_change_matrix()
         return self.number_field()(list(S*v))
+
+    def element_from_approximate_matrix(self, A):
+        r""" Return the element corresponding to an approximate matrix.
+
+        INPUT:
+
+        - ``A`` -- a square matrix over the ring `\mathbb{Z}/p^N`
+
+        It is assume that `A` is the reduction of a matrix corresponding to an
+        integral element `a` of the number field `K_0`.
+
+        OUTPUT: an element of the congruence class of `a` modulo `p^N`.
+
+        """
+        return self.element_from_vector(A.column(0).change_ring(QQ))
 
     def base_change_matrix(self):
         r"""
