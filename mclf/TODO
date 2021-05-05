@@ -1,13 +1,24 @@
 
+### ToDos for the branch padic_extensions ###
+
 short term
 ==========
 
-- adapt and expand documentation in affinoid_domain
+- improve fake_padic_embeddings:
+  1. replace with padic_embeddings
+  2. implement Newton approximation of generator
+  3. compute approximate evaluation via linear maps over Z/p^N
+  4. implement composition of embeddings
+
+- improve fake_padic_extensions
+  1. replace with padic_extensions
+  2. clarify hierarchy and compatibility beetween padic number fields and extensions
+  3. make sure weak splitting field is extension of the base field
+
+- base change for points on the Berkovich line
+  (needed for producing lower components of reduction tree)
+
 
 
 middle term
 ===========
-
-- use verbose messages
-
-- computation of L-factors
