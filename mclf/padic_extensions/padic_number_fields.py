@@ -599,15 +599,15 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         n = L.degree()
         int_basis_L = L.integral_basis()
         B = self._approximate_matrix_for_generator
-        # B = self.absolute_matrix(self.uniformizing_generator())
+        R = B.base_ring()
         S, S_i = L.base_change_matrices()
-        u = vector(QQ, n)
-        u[0] = QQ.one()
+        u = vector(R, n)
+        u[0] = R.one()
         columns = [u]
         for i in range(n-1):
             u = B*u
-            columns.append(u)
-        A = matrix(columns).transpose()*S
+            columns.append(u.change_ring(QQ))
+        A = matrix(QQ, columns).transpose()*S
         A_i = self.approximate_inverse_of_matrix(A)
         alpha = L.number_field().zero()
         for j in range(m):
@@ -617,7 +617,6 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         self._embedding = phi
         # this computation can get ridiculously large; it would be better to do
         # over ZZ/p^N and only lift to QQ at the very end
-        # there is also another error: sometime alpha is not integral!
         return phi
 
     def polynomial(self):
@@ -1011,7 +1010,7 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
                         v = V[0]
                 if v(f) == Infinity and v.E() == e:
                     if matrix:
-                        return (f, Ab.change_ring(QQ))
+                        return (f, Ab)
                     else:
                         return f
             self.raise_precision()
