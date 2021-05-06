@@ -145,7 +145,7 @@ class pAdicEmbedding(SageObject):
         the embedding uniquely.
 
         """
-        if t is None:
+        if t is None or t <= self.precision():
             return self._approximate_generator
         L = self.codomain()
         v_L = L.valuation()
@@ -172,8 +172,10 @@ class pAdicEmbedding(SageObject):
             return self._approximate_integral_basis
         K = self.domain()
         int_basis_K = K.integral_basis()
-        return [self.approximate_evaluation(a, s, polynomial=True)
-                for a in int_basis_K]
+        approx_int_basis = [self.approximate_evaluation(a, s, polynomial=True)
+                            for a in int_basis_K]
+        self._approximate_integral_basis = approx_int_basis
+        return approx_int_basis
 
     def approximate_evaluation(self, alpha, s, polynomial=False):
         r""" Return an approximation of this embedding on an element.
