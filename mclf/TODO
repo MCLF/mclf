@@ -5,9 +5,9 @@ short term
 ==========
 
 - improve fake_padic_embeddings:
-  1. replace with padic_embeddings
-  2. implement Newton approximation of generator
-  3. compute approximate evaluation via linear maps over Z/p^N
+  1. replace with padic_embeddings (DONE)
+  2. implement Newton approximation of generator (DONE)
+  3. compute approximate evaluation via linear maps over Z/p^N (DONE)
   4. implement composition of embeddings
 
 - improve fake_padic_extensions
