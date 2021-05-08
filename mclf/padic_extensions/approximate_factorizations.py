@@ -139,6 +139,7 @@ def weak_splitting_field(K, f):
         composition of embeddings first.
 
     """
+    from mclf.padic_extensions.padic_embeddings import pAdicEmbedding
     f = f.change_ring(K.number_field())
     f = f.radical()
     if f.is_constant():
@@ -149,12 +150,14 @@ def weak_splitting_field(K, f):
     # F is the list of approximate irreducible factors of f
     # we first get rid of all unramified factors
     F = [g for g in F if not g.is_unramified()]
-    L = K
+    ident_K = pAdicEmbedding(K, K, K.generator())
+    L = FakepAdicExtension(ident_K)
     while len(F) > 0:
-        L = F[0].stem_field()
+        L_rel = F[0].stem_field()
+        L = FakepAdicExtension(L_rel.embedding().precompose(L.embedding()))
         new_factors = []
         for g in F:
-            new_factors += g.base_change(L)
+            new_factors += g.base_change(L_rel)
         F = [g for g in new_factors if not g.is_unramified()]
     return L
 

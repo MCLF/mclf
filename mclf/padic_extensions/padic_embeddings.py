@@ -51,7 +51,7 @@ TO DO:
 #                  https://www.gnu.org/licenses/
 # *****************************************************************************
 
-from sage.all import SageObject, IntegerModRing
+from sage.all import SageObject, Infinity, QQ
 
 
 class pAdicEmbedding(SageObject):
@@ -114,11 +114,38 @@ class pAdicEmbedding(SageObject):
     def codomain(self):
         return self._codomain
 
-    def precompose_with(self, psi):
-        pass
+    def precompose(self, psi):
+        r""" Return the precompositon of this embedding with the embedding `\psi`.
 
-    def postcompose_with(self, psi):
-        pass
+        INPUT:
+
+        - ``psi`` -- an embedding of `p`a-dic number fields `\psi:M\to K`,
+                     where `K` is the domain of this embedding `\phi`.
+
+        OUTPUT: the composition `\phi\circ\psi`.
+
+        """
+        phi = self
+        # I have to think harder how to set the precision; this is just
+        # a first try:
+        s = min(phi.precision(), psi.precision())
+        if s == Infinity:
+            s = QQ(10)
+        alpha = phi.approximate_evaluation(psi.approximate_generator(s), s)
+        return pAdicEmbedding(psi.domain(), phi.codomain(), alpha)
+
+    def postcompose(self, psi):
+        r""" Return the postcompositon of this embedding with the embedding `\psi`.
+
+        INPUT:
+
+        - ``psi`` -- an embedding of `p`a-dic number fields `\psi:L\to M`,
+                     where `L` is the codomain of this embedding `\phi`.
+
+        OUTPUT: the composition `\psi\circ\phi`.
+
+        """
+        return psi.precompose(self)
 
     def precision(self):
         return self._precision
