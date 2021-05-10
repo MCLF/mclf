@@ -40,7 +40,7 @@ TO DO:
 
 from sage.all import ZZ
 from mclf.padic_extensions.padic_number_fields import pAdicNumberField
-from mclf.padic_extensions.p_adic_embeddings import ExactpAdicEmbedding, ApproximatepAdicEmbedding
+from mclf.padic_extensions.padic_embeddings import ExactpAdicEmbedding, ApproximatepAdicEmbedding
 
 
 class pAdicExtension(pAdicNumberField):
@@ -164,7 +164,12 @@ class pAdicExtension(pAdicNumberField):
         OUTPUT: the composite extension `M/K`.
 
         """
-        raise NotImplementedError()
+        assert self.extension_field() == M.base_field()
+        embedding = M.embedding().precompose(self.embedding())
+        if self.is_exact() and M.is_exact():
+            return ExactpAdicExtension(embedding)
+        else:
+            return ApproximatepAdicExtension(embedding)
 
     def subextension(self, alpha, d):
         r"""
@@ -195,7 +200,7 @@ class pAdicExtension(pAdicNumberField):
         .. NOTE::
 
             I should completely review this concept, and develop better methods
-            to determined suextensions.
+            to determined subextensions.
 
         """
         raise NotImplementedError()
@@ -228,6 +233,9 @@ class ExactpAdicExtension(pAdicExtension):
     def relative_polynomial(self):
         raise NotImplementedError()
 
+    def is_exact(self):
+        return True
+
 
 class ApproximatepAdicExtension(pAdicExtension):
     r""" An object representing a finite extension `L/K` of `p`-adic number
@@ -255,6 +263,9 @@ class ApproximatepAdicExtension(pAdicExtension):
     def relative_polynomial(self):
         raise NotImplementedError()
 
+    def is_exact(self):
+        return False
+
     def exact_extension(self, isomorphism=False):
         r""" Return an isomorphic, and exact extension.
 
@@ -269,7 +280,7 @@ class ApproximatepAdicExtension(pAdicExtension):
         `\phi:L\to L'` is an (approximate) `K`-isomorphism.
 
         """
-        from mclf.padic_extensions.approximate_factorization import approximate_factorization
+        from mclf.padic_extensions.approximate_factorizations import approximate_factorization
         if isomorphism:
             raise NotImplementedError("Computation of isomorphism not yet implemented")
         K = self.base_field()

@@ -97,7 +97,11 @@ class ExactpAdicEmbedding(pAdicEmbedding):
         L0 = L.number_field()
         if phi0 is None:
             from sage.all import Hom
-            embeddings = Hom(K0, L0).list()
+            embeddings = Hom(K0, L0)
+            if hasattr(embeddings, "list"):
+                embeddings = embeddings.list()
+            else:
+                embeddings = [embeddings.an_element()]
             if len(embeddings) == 0:
                 raise AssertionError("There is no embedding of {} into {}".format(K0, L0))
         else:
@@ -105,6 +109,11 @@ class ExactpAdicEmbedding(pAdicEmbedding):
             assert phi0.codomain() == L0
             embeddings = []
         # we have to see if one of the embedding is compatible with the valuation
+        for phi in embeddings:
+            if L.valuation()(phi(K.uniformizer())) > 0:
+                self._exact_embedding = phi
+                return
+        raise AssertionError("phi0 is not a continous embedding of {} into {}".format(K0, L0))
 
     def exact_embedding(self):
         r""" Return the embedding of number fields underlying this embedding of
@@ -127,6 +136,43 @@ class ExactpAdicEmbedding(pAdicEmbedding):
         underlying number field.
         """
         return self.exact_embedding()(a)
+
+    def precision(self):
+        return Infinity
+
+    def precompose(self, psi):
+        r""" Return the precompositon of this embedding with the embedding `\psi`.
+
+        INPUT:
+
+        - ``psi`` -- an embedding of `p`a-dic number fields `\psi:M\to K`,
+                     where `K` is the domain of this embedding `\phi`.
+
+        OUTPUT: the composition `\phi\circ\psi`.
+
+        """
+        phi = self
+        if isinstance(psi, ApproximatepAdicEmbedding):
+            alpha = phi(psi.approximate_generator())
+            return ApproximatepAdicEmbedding(psi.domain(), phi.codomain(), alpha)
+        elif isinstance(psi, ExactpAdicEmbedding):
+            composition = self.exact_embedding().precompose(psi.exact_embedding())
+            return ExactpAdicEmbedding(psi.domain(), phi.codomain(), composition)
+        else:
+            raise ValueError("psi has to be an exact or an approximate embedding")
+
+    def postcompose(self, psi):
+        r""" Return the postcompositon of this embedding with the embedding `\psi`.
+
+        INPUT:
+
+        - ``psi`` -- an embedding of `p`a-dic number fields `\psi:L\to M`,
+                     where `L` is the codomain of this embedding `\phi`.
+
+        OUTPUT: the composition `\psi\circ\phi`.
+
+        """
+        return psi.precompose(self)
 
 
 class ApproximatepAdicEmbedding(pAdicEmbedding):
@@ -192,13 +238,20 @@ class ApproximatepAdicEmbedding(pAdicEmbedding):
 
         """
         phi = self
-        # I have to think harder how to set the precision; this is just
-        # a first try:
-        s = min(phi.precision(), psi.precision())
-        if s == Infinity:
-            s = QQ(10)
-        alpha = phi.approximate_evaluation(psi.approximate_generator(s), s)
-        return pAdicEmbedding(psi.domain(), phi.codomain(), alpha)
+        if isinstance(psi, ApproximatepAdicEmbedding):
+            # I have to think harder how to set the precision; this is just
+            # a first try:
+            s = min(phi.precision(), psi.precision())
+            if s == Infinity:
+                s = QQ(10)
+            alpha = phi.approximate_evaluation(psi.approximate_generator(s), s)
+            return ApproximatepAdicEmbedding(psi.domain(), phi.codomain(), alpha)
+        elif isinstance(psi, ExactpAdicEmbedding):
+            alpha = psi(psi.domain().generator())
+            alpha = phi.approximate_evaluation(alpha)
+            return ApproximatepAdicEmbedding(psi.domain(), phi.codomain(), alpha)
+        else:
+            raise ValueError("psi has to be an exact or an approximate embedding")
 
     def postcompose(self, psi):
         r""" Return the postcompositon of this embedding with the embedding `\psi`.
@@ -270,7 +323,7 @@ class ApproximatepAdicEmbedding(pAdicEmbedding):
         self._approximate_integral_basis = approx_int_basis
         return approx_int_basis
 
-    def approximate_evaluation(self, alpha, s, polynomial=False):
+    def approximate_evaluation(self, alpha, s=None, polynomial=False):
         r""" Return an approximation of this embedding on an element.
 
         INPUT:
@@ -290,6 +343,11 @@ class ApproximatepAdicEmbedding(pAdicEmbedding):
         """
         K = self.domain()
         L = self.codomain()
+        if s is None:
+            s = self.precision()
+        # Attention! this is preliminary:
+        if s == Infinity:
+            s = QQ(10)
         N = s.ceil()
         assert alpha in K.number_field(), "alpha must be an element of the underlying number field of the domain"
         if alpha.is_rational():

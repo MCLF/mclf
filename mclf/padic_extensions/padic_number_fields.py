@@ -38,8 +38,6 @@ EXAMPLES:
 
 from sage.all import SageObject, ZZ, QQ, NumberField, PolynomialRing,\
     IntegerModRing, mod, prod, vector, matrix, Infinity, GaussValuation
-# from sage.geometry.newton_polygon import NewtonPolygon
-from mclf.padic_extensions.padic_embeddings import pAdicEmbedding
 
 
 class pAdicNumberField(SageObject):
@@ -231,6 +229,35 @@ class pAdicNumberField(SageObject):
         Return ``True`` if this is the padic-completion of the field of rational numbers.
         """
         return self.degree() == 1
+
+    def identity(self):
+        r""" Return the identity morphism of this p-adic number field.
+
+        """
+        from mclf.padic_extensions.padic_embeddings import ExactpAdicEmbedding
+        return ExactpAdicEmbedding(self, self)
+
+    def embedding_of_Qp(self):
+        r""" Return the identity map for this p-adic number field.
+
+        """
+        from mclf.padic_extensions.padic_embeddings import ExactpAdicEmbedding
+        Q_p = pAdicNumberField(QQ, self.base_valuation())
+        return ExactpAdicEmbedding(Q_p, self)
+
+    def as_extension_of_Qp(self):
+        r""" Return this `p`-adic number field as an extension of `\mathbb{Q}_p`.
+
+        """
+        from mclf.padic_extensions.padic_extensions import ExactpAdicExtension
+        return ExactpAdicExtension(self.embedding_of_Qp())
+
+    def as_identity_extension(self):
+        r""" Return this p-adic number field as an extension of itself.
+
+        """
+        from mclf.padic_extensions.padic_extensions import ExactpAdicExtension
+        return ExactpAdicExtension(self.identity())
 
     def simple_extension(self, f, exact_extension=False):
         r""" Return the extension of this number field defined by an irreducible polynomial.
@@ -538,7 +565,8 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
     INPUT:
 
     - ``K`` -- a p-adic number field
-    - ``f`` -- a monic, integral and irreducible polynomial over `K`
+    - ``f`` -- a monic, integral and irreducible polynomial over `K`, or a
+               Krasner class of such polynomials
 
     OUTPUT: a constructor for the finite extension `L:=K[x]/(f)`.
 
@@ -555,7 +583,10 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
     """
 
     def __init__(self, K, f):
+        from mclf.padic_extensions.approximate_factorizations import ApproximatePrimeFactor
         K_0 = K.number_field()
+        if isinstance(f, ApproximatePrimeFactor):
+            f = f.approximate_polynomial()
         f = f.change_ring(K_0)
         self._base_field = K
         self._polynomial = f
@@ -591,7 +622,7 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
 
         """
         from mclf.padic_extensions.padic_extensions import ApproximatepAdicExtension
-        return ApproximatepAdicExtension(self.embedding())
+        return ApproximatepAdicExtension(self.approximate_embedding())
 
     # ----------------------------------------------------------------------
 
@@ -612,7 +643,7 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
             self._approximate_matrix_for_generator = A
         return self._extension_field
 
-    def embedding(self):
+    def approximate_embedding(self):
         r""" Return the embedding of the base field into the extension field.
 
         OUTPUT: the canonical embedding `\phi:K\hookrightarrow L` of absolute
@@ -638,8 +669,9 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         which we may restrict to the subfield `K`.
 
         """
-        if hasattr(self, "_embedding"):
-            return self._embedding
+        from mclf.padic_extensions.padic_embeddings import ApproximatepAdicEmbedding
+        if hasattr(self, "_approximate_embedding"):
+            return self._approximate_embedding
         K = self.base_field()
         m = K.degree()
         v = K.vector(K.generator())
@@ -661,8 +693,8 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         for j in range(m):
             alpha += v[j]*sum(A_i[i, j]*int_basis_L[i] for i in range(n))
         assert L.valuation()(alpha) >= 0, "something is wrong: alpha should be integral"
-        phi = pAdicEmbedding(K, L, alpha)
-        self._embedding = phi
+        phi = ApproximatepAdicEmbedding(K, L, alpha)
+        self._approximate_embedding = phi
         # this computation can get ridiculously large; it would be better to do
         # over ZZ/p^N and only lift to QQ at the very end
         return phi

@@ -101,11 +101,11 @@ TO DO:
 from sage.all import PolynomialRing, Polynomial, ZZ, QQ, prod
 from sage.geometry.newton_polygon import NewtonPolygon
 from mclf.padic_extensions.padic_number_fields import pAdicNumberField
-from mclf.padic_extensions.fake_padic_extensions import FakepAdicExtension
+from mclf.padic_extensions.padic_extensions import pAdicExtension
 from mclf.padic_extensions.slope_factors import slope_factors
 
 
-class WeakPadicGaloisExtension(FakepAdicExtension):
+class WeakPadicGaloisExtension(pAdicExtension):
     r"""
     Return the weak p-adic splitting field of a polynomial.
 

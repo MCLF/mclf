@@ -35,7 +35,6 @@ of a polynomial over a `p`-adic number field.
 
 from sage.all import SageObject, PolynomialRing, GaussValuation, Infinity
 from mclf.padic_extensions.padic_number_fields import pAdicNumberField
-from mclf.padic_extensions.fake_padic_extensions import FakepAdicExtension
 
 
 def approximate_factorization(K, f, v0=None):
@@ -64,7 +63,9 @@ def approximate_factorization(K, f, v0=None):
         It may be usefull to allow `v_0` to be an *enhanced valuation*.
 
     """
-    if isinstance(K, FakepAdicExtension):
+    from mclf.padic_extensions.padic_number_fields import pAdicNumberField
+    from mclf.padic_extensions.padic_extensions import pAdicExtension
+    if isinstance(K, pAdicExtension):
         K = K.extension_field()
     else:
         assert isinstance(K, pAdicNumberField)
@@ -131,15 +132,7 @@ def weak_splitting_field(K, f):
     This means that `L/K` is a finite extension of `p`-adic number fields such
     that `f` splits into linear factors over an unramified extension of `L`.
 
-
-    .. NOTE::
-
-        At the moment, the extension that is returned is in general *not* an
-        extension of `K`! But it should, and for this we need to implement
-        composition of embeddings first.
-
     """
-    from mclf.padic_extensions.padic_embeddings import pAdicEmbedding
     f = f.change_ring(K.number_field())
     f = f.radical()
     if f.is_constant():
@@ -150,15 +143,15 @@ def weak_splitting_field(K, f):
     # F is the list of approximate irreducible factors of f
     # we first get rid of all unramified factors
     F = [g for g in F if not g.is_unramified()]
-    ident_K = pAdicEmbedding(K, K, K.generator())
-    L = FakepAdicExtension(ident_K)
+    L = K.as_identity_extension()    # K as an extension of itself
     while len(F) > 0:
-        L_rel = F[0].stem_field()
-        L = FakepAdicExtension(L_rel.embedding().precompose(L.embedding()))
+        L_new = F[0].stem_field()    # L_new is an extension of L
+        L = L.superextension(L_new)  # now L is an extension of K
         new_factors = []
         for g in F:
-            new_factors += g.base_change(L_rel)
+            new_factors += g.base_change(L_new)
         F = [g for g in new_factors if not g.is_unramified()]
+    # return L.exact_extension()
     return L
 
 
