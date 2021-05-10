@@ -87,11 +87,11 @@ class pAdicNumberField(SageObject):
         self._valuation = v_K
         self._p = p
         self._uniformizer = pi_K
-        self._generator = alpha
-        self._degree = n
-        self._ramification_degree = e
-        self._inertia_degree = f
-        self._polynomial = P
+        self._absolute_generator = alpha
+        self._absolute_degree = n
+        self._absolute_ramification_degree = e
+        self._absolute_inertia_degree = f
+        self._absolute_polynomial = P
 
     def __repr__(self):
         return "{}-adic completion of {}".format(self.p(), self.number_field())
@@ -154,19 +154,24 @@ class pAdicNumberField(SageObject):
         """
         return self._uniformizer
 
+    def absolute_generator(self):
+        r"""
+        Return the standard generator of this p-adic extension.
+        """
+        return self._absolute_generator
+
     def generator(self):
         r"""
         Return the standard generator of this p-adic extension.
         """
-        return self._generator
+        return self._absolute_generator
 
     def absolute_degree(self):
         r"""
         Return the degree of this p-adic field as an extension of `\mathbb{Q}_p`.
 
-        This is the same as :meth:`degree`.
         """
-        return self._degree
+        return self._absolute_degree
 
     def degree(self):
         r"""
@@ -174,7 +179,7 @@ class pAdicNumberField(SageObject):
 
         This is the same as :meth:`absolute_degree`.
         """
-        return self._degree
+        return self._absolute_degree
 
     def ramification_degree(self):
         r"""
@@ -182,7 +187,7 @@ class pAdicNumberField(SageObject):
 
         This is the same as :meth:`absolute_ramification_degree`.
         """
-        return self._ramification_degree
+        return self._absolute_ramification_degree
 
     def absolute_ramification_degree(self):
         r"""
@@ -190,29 +195,36 @@ class pAdicNumberField(SageObject):
 
         This is the same as :meth:`ramification_degree`.
         """
-        return self._ramification_degree
+        return self._absolute_ramification_degree
 
     def absolute_inertia_degree(self):
         r"""
         Return the absolute inertia degree of this p-adic extension.
 
-        This is the same as :meth:`inertia_degree`.
         """
-        return self._inertia_degree
+        return self._absolute_inertia_degree
 
     def inertia_degree(self):
         r"""
         Return the absolute inertia degree of this p-adic extension.
 
         This is the same as :meth:`absolute_inertia_degree`.
+
         """
-        return self._inertia_degree
+        return self._absolute_inertia_degree
+
+    def absolute_polynomial(self):
+        r""" Return the absolute minimal polynomial of the standard generator of `K`.
+        """
+        return self._absolute_polynomial
 
     def polynomial(self):
         r"""
         Return the absolute minimal polynomial of the standard generator of `K`.
+
+        This is the same as :meth:`absolute_polynomial`.
         """
-        return self._polynomial
+        return self._absolute_polynomial
 
     def is_Qp(self):
         r"""
@@ -220,20 +232,26 @@ class pAdicNumberField(SageObject):
         """
         return self.degree() == 1
 
-    def simple_extension(self, f):
+    def simple_extension(self, f, exact_extension=False):
         r""" Return the extension of this number field defined by an irreducible polynomial.
 
         INPUT:
 
         - `f` -- a monic, integral and irreducible polynomial over this p-adic
                  number field `K`, or a Krasner equivalence class of such a polynomial
+        - ``exact_extension`` -- a boolean (default: ``False``)
 
         OUTPUT: the stem field `L=K[x]/(f)`, as an extension of `p`-adic number fields.
 
+        By default, the output is an object of :class:`ApproximateExtension`.
+        If ``exact_extension`` is ``True``, it is a object of :class:`ExactpAdicExtension`.
+
         """
-        from mclf.padic_extensions.fake_padic_extensions import FakepAdicExtension
         L = SimpleExtensionOfpAdicNumberField(self, f)
-        return FakepAdicExtension(L.embedding())
+        if exact_extension:
+            return L.exact_extension()
+        else:
+            return L.approximate_extension()
 
     def purely_ramified_extension(self, n):
         r""" Return a purely ramified extension of this p-adic number field with given
@@ -515,14 +533,14 @@ class pAdicNumberField(SageObject):
 # ---------------------------------------------------------------------------
 
 class SimpleExtensionOfpAdicNumberField(SageObject):
-    r""" An object representing a finite simple extension of a p-adic number field.
+    r""" A constructor class for a finite simple extension of a p-adic number field.
 
     INPUT:
 
     - ``K`` -- a p-adic number field
     - ``f`` -- a monic, integral and irreducible polynomial over `K`
 
-    OUTPUT: an object representing the finite extension `L:=K[x]/(f)`.
+    OUTPUT: a constructor for the finite extension `L:=K[x]/(f)`.
 
     The main function of this object is to create an (absolute) p-adic number
     field `L` together with an embedding `K\hookrightarrow L` such that
@@ -531,7 +549,8 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
     .. NOTE::
 
     At some point, this class should be made a subclass of  a class
-    :class:`pAdicExtension`.
+    :class:`pAdicExtension`. Maybe it should be a subclass of both
+    ::class:`ExactpAdicExtension` and :class:`ApproximatepAdicExtension`.
 
     """
 
@@ -545,7 +564,36 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         self._precision = 10
 
     def __repr__(self):
-        return "the finite extension of {} with equation {}".format(self.base_field(), self.polynomial())
+        return "constructor for a finite extension of {} with equation {}".format(self.base_field(), self.polynomial())
+
+    def exact_extension(self):
+        r""" Return the exact extensions represented by this constructor.
+
+        OUTPUT: an object of the class :class:`ExactpAdicExtension`, representing
+        this simple extension `L/K`.
+
+        This means that the number field `L_0` underlying `L` is a (simple)
+        extension of `K_0`, the number field underlying `K`.
+
+        """
+        raise NotImplementedError()
+
+    def approximate_extension(self):
+        r""" Return the approximate extensions represented by this constructor.
+
+        OUTPUT: an object of the class :class:`ExactpAdicExtension`, representing
+        this simple extension `L/K`.
+
+        This means that the number field `K_0` underlying `K` will probably not
+        be a subfield of `L_0`, the number field underlying `L`. Therefore,
+        we don not have an exact embedding of `K` into `L`, but only an
+        *approximate* embedding.
+
+        """
+        from mclf.padic_extensions.padic_extensions import ApproximatepAdicExtension
+        return ApproximatepAdicExtension(self.embedding())
+
+    # ----------------------------------------------------------------------
 
     def base_field(self):
         return self._base_field

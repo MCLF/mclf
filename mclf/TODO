@@ -8,12 +8,12 @@ short term
   1. replace with padic_embeddings (DONE)
   2. implement Newton approximation of generator (DONE)
   3. compute approximate evaluation via linear maps over Z/p^N (DONE)
-  4. implement composition of embeddings
+  4. implement composition of embeddings (partially done)
 
 - improve fake_padic_extensions
   1. replace with padic_extensions
   2. clarify hierarchy and compatibility beetween padic number fields and extensions
-  3. make sure weak splitting field is extension of the base field
+  3. make sure weak splitting field is extension of the base field (partially done)
 
 - base change for points on the Berkovich line
   (needed for producing lower components of reduction trees)

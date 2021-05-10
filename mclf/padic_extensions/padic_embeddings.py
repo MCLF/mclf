@@ -55,6 +55,22 @@ from sage.all import SageObject, Infinity, QQ
 
 
 class pAdicEmbedding(SageObject):
+    r""" Abstract base class for an embedding of a p-adic number field into
+    another one.
+
+    """
+
+    def __repr__(self):
+        return "an embedding of {} into {}".format(self.domain(), self.codomain())
+
+    def domain(self):
+        return self._domain
+
+    def codomain(self):
+        return self._codomain
+
+
+class ExactpAdicEmbedding(pAdicEmbedding):
     r"""
     Return an embedding of two `p`-adic number fields.
 
@@ -62,7 +78,66 @@ class pAdicEmbedding(SageObject):
 
     - ``K``, ``L`` -- two `p`-adic number fields, given as objects of
       :class:`pAdicNumberField
-    - ``alpha_0`` - an approximation of the desired embedding
+    - ``phi0`` - a morphism between the number fields underlying `K` and `L`,
+                 or ``None`` (default: ``None``)
+
+    OUTPUT: the embedding of `K` into `L` which is determined by `\phi_0`. if
+    `\phi_0` does not induce and embedding of `K` into `L`, an error is raised.
+
+    If `\phi_0` is not given, then all possible embedding between the number fields
+    are tried, and the first which induces an embedding of `K` into `L` is chosen.
+    If none is found, an error is raised.
+
+    """
+
+    def __init__(self, K, L, phi0=None):
+        self._domain = K
+        self._codomain = L
+        K0 = K.number_field()
+        L0 = L.number_field()
+        if phi0 is None:
+            from sage.all import Hom
+            embeddings = Hom(K0, L0).list()
+            if len(embeddings) == 0:
+                raise AssertionError("There is no embedding of {} into {}".format(K0, L0))
+        else:
+            assert phi0.domain() == K0
+            assert phi0.codomain() == L0
+            embeddings = []
+        # we have to see if one of the embedding is compatible with the valuation
+
+    def exact_embedding(self):
+        r""" Return the embedding of number fields underlying this embedding of
+        `p`-adic number fields.
+
+        """
+        return self._exact_embedding
+
+    def __call__(self, a):
+        r""" Return the image of `a` under this embedding.
+
+        INPUT:
+
+        - ``a`` -- an element of the number field underlying the domain of this embedding.
+
+        OUTPUT: the image of `a` under this embedding - which lies in the number
+        field underlying the codoamin.
+
+        Note that we can evaluate this embedding *only* on elements of the
+        underlying number field.
+        """
+        return self.exact_embedding()(a)
+
+
+class ApproximatepAdicEmbedding(pAdicEmbedding):
+    r"""
+    Return an (approximate) embedding of two `p`-adic number fields.
+
+    INPUT:
+
+    - ``K``, ``L`` -- two `p`-adic number fields, given as objects of
+      :class:`pAdicNumberField
+    - ``alpha_0`` - an approximation of the image of the generator of the domain.
 
     OUTPUT: the embedding of `K` into `L` which is determined by `\alpha_0`.
 
@@ -104,15 +179,6 @@ class pAdicEmbedding(SageObject):
         self._equation = f
         self._derivative = fx
         self._precision = (s - t)
-
-    def __repr__(self):
-        return "an embedding of {} into {}".format(self.domain(), self.codomain())
-
-    def domain(self):
-        return self._domain
-
-    def codomain(self):
-        return self._codomain
 
     def precompose(self, psi):
         r""" Return the precompositon of this embedding with the embedding `\psi`.
