@@ -70,7 +70,7 @@ class pAdicExtension(pAdicNumberField):
         self._relative_ramification_degree = ZZ(L.absolute_ramification_degree()/K.absolute_ramification_degree())
         self._relative_degree = ZZ(L.absolute_degree()/K.absolute_degree())
         self._relative_inertia_degree = ZZ(L.absolute_inertia_degree()/K.absolute_inertia_degree())
-        assert self._relative_degree == self._relative_ramification_degree * self._relative_inertia_degree
+        # assert self._relative_degree == self._relative_ramification_degree * self._relative_inertia_degree
 
     def __repr__(self):
         return "{}, as extension of {}".format(self._extension_field, self._base_field)

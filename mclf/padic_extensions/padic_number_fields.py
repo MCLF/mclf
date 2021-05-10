@@ -57,20 +57,27 @@ class pAdicNumberField(SageObject):
     """
 
     def __init__(self, K_0, v_p):
-        assert K_0.is_absolute(), "K_0 must be an absolute number field"
+        # this is obsolete; should there be a replacement for this check?
+        # assert K_0.is_absolute(), "K_0 must be an absolute number field"
         assert v_p.domain().is_subring(K_0), "The domain of v_p must be a subfield of K_0"
         p = v_p.p()
         V = QQ.valuation(p).extensions(K_0)
         assert len(V) == 1, "the p-adic valuation on QQ must have a unique extension to K_0"
         v_K = V[0]
-        n = K_0.degree()
+        if K_0.is_absolute():
+            n = K_0.absolute_degree()
+        else:
+            n = K_0.relative_degree()
         if n > 1:
             alpha = K_0.gen()
             pi_K = v_K.uniformizer()
             e = ZZ(1/v_K(pi_K))
             F = v_K.residue_field()  # should be a finite field, therefore:
             f = F.cardinality().log(F.characteristic())  # should be the absolute degree of F
-            P = K_0.polynomial()
+            if K_0.is_absolute():
+                P = K_0.absolute_polynomial()
+            else:
+                P = K_0.relative_polynomial()
         else:
             K_0 = QQ
             pi_K = K_0(p)
@@ -79,7 +86,7 @@ class pAdicNumberField(SageObject):
             f = ZZ(1)
             R = PolynomialRing(QQ, "x")
             P = R.gen() - alpha
-        assert n == e*f
+        # assert n == e*f
         self._number_field = K_0
         self._v_p = QQ.valuation(p)
         self._valuation = v_K
@@ -607,7 +614,19 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         extension of `K_0`, the number field underlying `K`.
 
         """
-        raise NotImplementedError()
+        if hasattr(self, "_exact_extension"):
+            return self._exact_extension
+        from mclf.padic_extensions.padic_embeddings import ExactpAdicEmbedding
+        from mclf.padic_extensions.padic_extensions import ExactpAdicExtension
+        K = self.base_field()
+        K0 = K.number_field()
+        L0 = K0.extension(self.polynomial(), "alpha"+str(self.degree()))
+        v_L = K.valuation().extension(L0)
+        L = pAdicNumberField(L0, v_L)
+        phi = K0.hom(L0)
+        L_exact = ExactpAdicExtension(ExactpAdicEmbedding(K, L, phi))
+        self._exact_extension = L_exact
+        return L_exact
 
     def approximate_extension(self):
         r""" Return the approximate extensions represented by this constructor.
@@ -621,8 +640,12 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         *approximate* embedding.
 
         """
+        if hasattr(self, "_approximate_extension"):
+            return self._approximate_extension
         from mclf.padic_extensions.padic_extensions import ApproximatepAdicExtension
-        return ApproximatepAdicExtension(self.approximate_embedding())
+        phi = ApproximatepAdicExtension(self.approximate_embedding())
+        self._approximate_extension = phi
+        return phi
 
     # ----------------------------------------------------------------------
 

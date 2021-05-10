@@ -151,8 +151,7 @@ def weak_splitting_field(K, f):
         for g in F:
             new_factors += g.base_change(L_new)
         F = [g for g in new_factors if not g.is_unramified()]
-    # return L.exact_extension()
-    return L
+    return L.exact_extension()
 
 
 class ApproximatePrimeFactor(SageObject):

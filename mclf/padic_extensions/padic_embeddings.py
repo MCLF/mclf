@@ -91,8 +91,8 @@ class ExactpAdicEmbedding(pAdicEmbedding):
     """
 
     def __init__(self, K, L, phi0=None):
-        self._domain = K
-        self._codomain = L
+        self._domain = K.extension_field()
+        self._codomain = L.extension_field()
         K0 = K.number_field()
         L0 = L.number_field()
         if phi0 is None:
@@ -107,7 +107,7 @@ class ExactpAdicEmbedding(pAdicEmbedding):
         else:
             assert phi0.domain() == K0
             assert phi0.codomain() == L0
-            embeddings = []
+            embeddings = [phi0]
         # we have to see if one of the embedding is compatible with the valuation
         for phi in embeddings:
             if L.valuation()(phi(K.uniformizer())) > 0:
@@ -219,8 +219,8 @@ class ApproximatepAdicEmbedding(pAdicEmbedding):
         s = v_L(f(alpha_0))
         t = v_L(fx(alpha_0))
         assert s >= 2*t + 1, "the approximation alpha_0 does satisfy the condition of Hensel's Lemma"
-        self._domain = K
-        self._codomain = L
+        self._domain = K.extension_field()
+        self._codomain = L.extension_field()
         self._approximate_generator = alpha_0
         self._equation = f
         self._derivative = fx
