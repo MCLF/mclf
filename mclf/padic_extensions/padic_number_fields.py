@@ -45,7 +45,7 @@ class pAdicNumberField(SageObject):
 
     INPUT:
 
-    - ``K_0`` -- an absolute number field
+    - ``K_0`` -- a  number field
     - ``v_p`` -- a p-adic valuation on a subfield of `K_0`
 
     It is assumed that the valuation `v_p` is the *unique* extension of the
@@ -54,30 +54,31 @@ class pAdicNumberField(SageObject):
 
     OUTPUT: the object representing the completion `K` of `K_0` with respect to `v_K`.
 
+    .. NOTE::
+
+        For the moment, `K_0` may also be a relative number field, but this is
+        probably not a good idea.
+
     """
 
     def __init__(self, K_0, v_p):
         # this is obsolete; should there be a replacement for this check?
+        # if K_0 is a relative number field, then some things won't work properly!
         # assert K_0.is_absolute(), "K_0 must be an absolute number field"
         assert v_p.domain().is_subring(K_0), "The domain of v_p must be a subfield of K_0"
         p = v_p.p()
         V = QQ.valuation(p).extensions(K_0)
         assert len(V) == 1, "the p-adic valuation on QQ must have a unique extension to K_0"
         v_K = V[0]
-        if K_0.is_absolute():
-            n = K_0.absolute_degree()
-        else:
-            n = K_0.relative_degree()
+        n = K_0.absolute_degree()
         if n > 1:
             alpha = K_0.gen()
             pi_K = v_K.uniformizer()
             e = ZZ(1/v_K(pi_K))
             F = v_K.residue_field()  # should be a finite field, therefore:
             f = F.cardinality().log(F.characteristic())  # should be the absolute degree of F
-            if K_0.is_absolute():
-                P = K_0.absolute_polynomial()
-            else:
-                P = K_0.relative_polynomial()
+            # it is important to *not* use absolute_polynomial!
+            P = K_0.gen().absolute_minpoly()
         else:
             K_0 = QQ
             pi_K = K_0(p)
@@ -86,7 +87,7 @@ class pAdicNumberField(SageObject):
             f = ZZ(1)
             R = PolynomialRing(QQ, "x")
             P = R.gen() - alpha
-        # assert n == e*f
+        assert n == e*f
         self._number_field = K_0
         self._v_p = QQ.valuation(p)
         self._valuation = v_K
@@ -623,6 +624,7 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         L0 = K0.extension(self.polynomial(), "alpha"+str(self.degree()))
         v_L = K.valuation().extension(L0)
         L = pAdicNumberField(L0, v_L)
+        # Warning! Since L0 will be a relative number field, some things won't work properly
         phi = K0.hom(L0)
         L_exact = ExactpAdicExtension(ExactpAdicEmbedding(K, L, phi))
         self._exact_extension = L_exact

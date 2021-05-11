@@ -70,7 +70,7 @@ class pAdicExtension(pAdicNumberField):
         self._relative_ramification_degree = ZZ(L.absolute_ramification_degree()/K.absolute_ramification_degree())
         self._relative_degree = ZZ(L.absolute_degree()/K.absolute_degree())
         self._relative_inertia_degree = ZZ(L.absolute_inertia_degree()/K.absolute_inertia_degree())
-        # assert self._relative_degree == self._relative_ramification_degree * self._relative_inertia_degree
+        assert self._relative_degree == self._relative_ramification_degree * self._relative_inertia_degree
 
     def __repr__(self):
         return "{}, as extension of {}".format(self._extension_field, self._base_field)
@@ -236,6 +236,9 @@ class ExactpAdicExtension(pAdicExtension):
     def is_exact(self):
         return True
 
+    def exact_extension(self, isomorphism=False):
+        return self
+
 
 class ApproximatepAdicExtension(pAdicExtension):
     r""" An object representing a finite extension `L/K` of `p`-adic number
@@ -290,5 +293,18 @@ class ApproximatepAdicExtension(pAdicExtension):
         factors = approximate_factorization(K, f)
         factors = [g for g in factors if g.degree() == d]
         assert len(factors) > 0, "something is wrong!"
-        g = factors[0]
-        return K.simple_extension(g, exact_extension=True)
+        for g in factors:
+            M = K.simple_extension(g, exact_extension=True)
+            # the canonical generators of L and M should have equivalent
+            # absolute minimal polynomials; therefore there should be an
+            # (absolute) isomorphism between them
+            sigma = ApproximatepAdicEmbedding(L, M, M.generator())
+            # this should be an isomorphism of p-adic number field. So M
+            # is the extension we want if sigma is K-linear.
+            phi = self.embedding().postcompose(sigma)
+            # phi is an (approximate) embedding of K into M; we have to see if
+            # it agrees with the canonical embedding
+            if M.embedding().is_equal(phi):
+                return M
+        # if we get here then something went wrong
+        raise AssertionError("Something is wrong!")

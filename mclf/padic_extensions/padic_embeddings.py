@@ -51,7 +51,7 @@ TO DO:
 #                  https://www.gnu.org/licenses/
 # *****************************************************************************
 
-from sage.all import SageObject, Infinity, QQ
+from sage.all import SageObject, Infinity, QQ, ZZ
 
 
 class pAdicEmbedding(SageObject):
@@ -68,6 +68,33 @@ class pAdicEmbedding(SageObject):
 
     def codomain(self):
         return self._codomain
+
+    def degree(self):
+        return ZZ(self.codomain().absolute_degree()/self.domain().absolute_degree())
+
+    def is_isomorphism(self):
+        return self.degree() == 1
+
+    def inverse(self):
+        raise NotImplementedError()
+
+    def is_equal(self, psi):
+        r""" Return wether this embedding is equal to another one.
+
+        INPUT:
+
+        - ``psi`` -- an embedding of `K\to L`
+
+        Here `\phi:K\to L` is this emebdding.
+
+        OUTPUT: whether `\phi` and `\psi` are equal.
+
+        Since the method to check for equality depends on `\phi` and `\psi`
+        being exact or approximate, this method has to be implemented by the
+        subclasses.
+
+        """
+        pass
 
 
 class ExactpAdicEmbedding(pAdicEmbedding):
@@ -140,6 +167,27 @@ class ExactpAdicEmbedding(pAdicEmbedding):
     def precision(self):
         return Infinity
 
+    def is_equal(self, psi):
+        r""" Return wether this embedding is equal to another one.
+
+        INPUT:
+
+        - ``psi`` -- an embedding of `K\to L`
+
+        Here `\phi:K\to L` is this emebdding.
+
+        OUTPUT: whether `\phi` and `\psi` are equal.
+
+        """
+        if not (self.domain() == psi.domain() and self.codomain() == psi.codomain()):
+            return False
+        if isinstance(psi, ExactpAdicEmbedding):
+            return self.exact_embedding() == psi.exact_embedding()
+        else:
+            v_L = self.codomain().valuation()
+            alpha = self.domain().generator()
+            return v_L(self(alpha) - psi.approximate_generator()) > psi.precision()
+
     def precompose(self, psi):
         r""" Return the precompositon of this embedding with the embedding `\psi`.
 
@@ -188,9 +236,9 @@ class ApproximatepAdicEmbedding(pAdicEmbedding):
     OUTPUT: the embedding of `K` into `L` which is determined by `\alpha_0`.
 
     The element `\alpha_0\in L_0` of the number field underlying `L` is assumed
-    to be an *approximate root* of the minimal poylnomial `f\in \mathbb{Q}[x]` of
+    to be an *approximate root* of the minimal polynomial `f\in \mathbb{Q}[x]` of
     the standard generator of `K/\mathbb{Q}_p`. Here 'approximate root' means
-    that the pair `(f, \lapha_0)` satisfies the condition of Hensel's Lemma,
+    that the pair `(f, \alpha_0)` satisfies the condition of Hensel's Lemma,
     which guarantees that there exists a unique root `\alpha\in L` of `f`
     strictly closer to `\alpha_0` than any other root. The associated embedding
     is then the map
@@ -218,7 +266,19 @@ class ApproximatepAdicEmbedding(pAdicEmbedding):
         fx = f.derivative()
         s = v_L(f(alpha_0))
         t = v_L(fx(alpha_0))
-        assert s >= 2*t + 1, "the approximation alpha_0 does satisfy the condition of Hensel's Lemma"
+        if s < 2*t + 1:
+            # this means that the precison of alpha_0 is not enough
+            enough_precision = False
+            for i in range(5):
+                alpha_0 -= L.approximation(f(alpha_0)/fx(alpha_0), 6)
+                s = v_L(f(alpha_0))
+                t = v_L(fx(alpha_0))
+                if s >= 2*t + 1:
+                    enough_precision = True
+                    break
+            if not enough_precision:
+                raise AssertionError("the precision of alpha_0 was not enough")
+
         self._domain = K.extension_field()
         self._codomain = L.extension_field()
         self._approximate_generator = alpha_0
@@ -268,6 +328,24 @@ class ApproximatepAdicEmbedding(pAdicEmbedding):
 
     def precision(self):
         return self._precision
+
+    def is_equal(self, psi):
+        r""" Return wether this embedding is equal to another one.
+
+        INPUT:
+
+        - ``psi`` -- an embedding of `K\to L`
+
+        Here `\phi:K\to L` is this emebdding.
+
+        OUTPUT: whether `\phi` and `\psi` are equal.
+
+        """
+        if not (self.domain() == psi.domain() and self.codomain() == psi.codomain()):
+            return False
+        v_L = self.codomain().valuation()
+        s = max(self.precision(), psi.precision())
+        return v_L(self.approximate_generator(s) - psi.approximate_generator(s)) > s
 
     def approximate_generator(self, t=None):
         r""" Return an approximation of the image of the generator of the domain.
