@@ -298,13 +298,16 @@ class ApproximatepAdicExtension(pAdicExtension):
             # the canonical generators of L and M should have equivalent
             # absolute minimal polynomials; therefore there should be an
             # (absolute) isomorphism between them
-            sigma = ApproximatepAdicEmbedding(L, M, M.generator())
+
+            # WARNING: this may be wrong if f is not "Krasner separable"
+
+            sigma = ApproximatepAdicEmbedding(M, L, L.generator())
             # this should be an isomorphism of p-adic number field. So M
             # is the extension we want if sigma is K-linear.
-            phi = self.embedding().postcompose(sigma)
-            # phi is an (approximate) embedding of K into M; we have to see if
+            phi = M.embedding().postcompose(sigma)
+            # phi is an (approximate) embedding of K into L; we have to see if
             # it agrees with the canonical embedding
-            if M.embedding().is_equal(phi):
+            if self.embedding().is_equal(phi):
                 return M
         # if we get here then something went wrong
         raise AssertionError("Something is wrong!")

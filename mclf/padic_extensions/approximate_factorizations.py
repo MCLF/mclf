@@ -556,7 +556,12 @@ class EnhancedInductiveValuation(SageObject):
         assert v.domain().base_ring() == K.number_field()
         if self.degree() == 1:
             w0 = GaussValuation(f_L.parent(), L.valuation())
-            return [enhanced_augmentation(w0, f_L, t)]
+            F = w0.equivalence_decomposition(f_L)
+            ret = []
+            for psi, _ in F:
+                w1 = enhanced_augmentation(w0, psi, 0)
+                ret += w1.all_augmentations(f_L, t)
+            return ret
         else:
             v0 = self.precursor()
             W0 = v0.base_change(phi)

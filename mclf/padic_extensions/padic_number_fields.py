@@ -337,6 +337,9 @@ class pAdicNumberField(SageObject):
         and `m\geq 0`.
 
         """
+        if N == 0:
+            N = ZZ(1)
+        a = self.number_field()(a)
         v_p = self.base_valuation()
         p = self.p()
 
@@ -621,11 +624,12 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         from mclf.padic_extensions.padic_extensions import ExactpAdicExtension
         K = self.base_field()
         K0 = K.number_field()
-        L0 = K0.extension(self.polynomial(), "alpha"+str(self.degree()))
-        v_L = K.valuation().extension(L0)
-        L = pAdicNumberField(L0, v_L)
+        L0_rel = K0.extension(self.polynomial(), "alpha"+str(self.degree()))
+        L0 = L0_rel.absolute_field("beta"+str(self.absolute_degree()))
+        _, psi = L0.structure()  # psi is the isomorphism from L0_rel to L0
+        L = pAdicNumberField(L0, K.base_valuation())
         # Warning! Since L0 will be a relative number field, some things won't work properly
-        phi = K0.hom(L0)
+        phi = K0.hom(L0_rel).post_compose(psi)
         L_exact = ExactpAdicExtension(ExactpAdicEmbedding(K, L, phi))
         self._exact_extension = L_exact
         return L_exact

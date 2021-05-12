@@ -96,6 +96,29 @@ class pAdicEmbedding(SageObject):
         """
         pass
 
+    def approximate_polynomial(self, f, s):
+        r""" Return an approximation of the image of a polynomial under this embedding.
+
+        INPUT:
+
+        - ``f`` -- a polynomial in `K_0[x]`
+        - ``s`` -- a positive rational number
+
+        Here `K_0` is the number field underlying the domain of this embedding.
+
+        OUTPUT: a polynomial `f_0 \in L_0[x]`, where `L_0` is the number field
+        underlying the codomain of this embedding `\phi:K\to L`, such that
+
+        .. MATH::
+
+            v_L(f_0-\phi(f)) > s.
+
+        """
+        R_K = f.parent()
+        assert R_K.base_ring() == self.domain().number_field()
+        L0 = self.codomain().number_field()
+        return f.map_coefficients(lambda c: self.approximate_evaluation(c, s), L0)
+
 
 class ExactpAdicEmbedding(pAdicEmbedding):
     r"""
@@ -179,14 +202,23 @@ class ExactpAdicEmbedding(pAdicEmbedding):
         OUTPUT: whether `\phi` and `\psi` are equal.
 
         """
+        from sage.geometry.newton_polygon import NewtonPolygon
         if not (self.domain() == psi.domain() and self.codomain() == psi.codomain()):
             return False
         if isinstance(psi, ExactpAdicEmbedding):
             return self.exact_embedding() == psi.exact_embedding()
         else:
             v_L = self.codomain().valuation()
+            v_K = self.domain().valuation()
+            f = self.domain().polynomial()
             alpha = self.domain().generator()
-            return v_L(self(alpha) - psi.approximate_generator()) > psi.precision()
+            # we have f(alpha)=0
+            # test whether the approximate generator of psi is closer to alpha
+            # than any other root of the minimal polynomial
+            alpha_0 = psi.approximate_generator()
+            F = f(f.parent().gen() + alpha)
+            np = NewtonPolygon([(i, v_K(F[i])) for i in range(f.degree()+1)])
+            return v_L(f(alpha_0)) > np(1) + np.slopes()[0]
 
     def precompose(self, psi):
         r""" Return the precompositon of this embedding with the embedding `\psi`.
@@ -221,6 +253,26 @@ class ExactpAdicEmbedding(pAdicEmbedding):
 
         """
         return psi.precompose(self)
+
+    def approximate_evaluation(self, alpha, s=None, polynomial=False):
+        r""" Return an approximation of this embedding on an element.
+
+        INPUT:
+
+        - ``alpha`` -- an element of the number field `K_0`approximating the domain `K`
+        - ``s`` -- a positive rational number
+
+        OUTPUT:
+
+        an approximation `\alpha_0` of the image of `\alpha under this embedding
+        `\phi:K\to L`, with the guaranteed precision `s`. This means that
+
+        .. MATH::
+
+            v_L(\alpha_0 - \phi(\alpha)) > s.
+
+        """
+        return self.codomain().approximation(self(alpha), s.ceil())
 
 
 class ApproximatepAdicEmbedding(pAdicEmbedding):
@@ -258,19 +310,28 @@ class ApproximatepAdicEmbedding(pAdicEmbedding):
     """
 
     def __init__(self, K, L, alpha_0):
+        from sage.geometry.newton_polygon import NewtonPolygon
+        from sage.all import GaussValuation
         L_0 = L.number_field()
         v_L = L.valuation()
         alpha_0 = L_0(alpha_0)
         assert v_L(alpha_0) >= 0
         f = K.polynomial().change_ring(L_0)
+        F = f(f.parent().gen() + alpha_0)
+        np = NewtonPolygon((i, v_L(F[i])) for i in range(f.degree()+1))
+        assert F[0].is_zero() or np.slopes()[0] < np.slopes()[1], "the precision is not sufficient"
         fx = f.derivative()
         s = v_L(f(alpha_0))
         t = v_L(fx(alpha_0))
         if s < 2*t + 1:
             # this means that the precison of alpha_0 is not enough
             enough_precision = False
-            for i in range(5):
-                alpha_0 -= L.approximation(f(alpha_0)/fx(alpha_0), 6)
+            v0 = GaussValuation(f.parent(), v_L)
+            v = v0.augmentation(f.parent().gen() - alpha_0, -np.slopes()[0])
+            while s < 2*t + 1:
+                v = v.mac_lane_step(f)[0]
+                assert v.phi().degree() == 1
+                alpha_0 = - v.phi()[0]
                 s = v_L(f(alpha_0))
                 t = v_L(fx(alpha_0))
                 if s >= 2*t + 1:
@@ -304,8 +365,12 @@ class ApproximatepAdicEmbedding(pAdicEmbedding):
             s = min(phi.precision(), psi.precision())
             if s == Infinity:
                 s = QQ(10)
-            alpha = phi.approximate_evaluation(psi.approximate_generator(s), s)
-            return ApproximatepAdicEmbedding(psi.domain(), phi.codomain(), alpha)
+            while True:
+                try:
+                    alpha = phi.approximate_evaluation(psi.approximate_generator(s), s)
+                    return ApproximatepAdicEmbedding(psi.domain(), phi.codomain(), alpha)
+                except AssertionError:
+                    s += 2
         elif isinstance(psi, ExactpAdicEmbedding):
             alpha = psi(psi.domain().generator())
             alpha = phi.approximate_evaluation(alpha)
@@ -341,11 +406,24 @@ class ApproximatepAdicEmbedding(pAdicEmbedding):
         OUTPUT: whether `\phi` and `\psi` are equal.
 
         """
-        if not (self.domain() == psi.domain() and self.codomain() == psi.codomain()):
+        from sage.geometry.newton_polygon import NewtonPolygon
+        if isinstance(psi, ExactpAdicEmbedding):
+            return psi.is_equal(self)
+        phi = self
+        # now phi and psi are both approximate
+        if not (phi.domain() == psi.domain() and phi.codomain() == psi.codomain()):
             return False
-        v_L = self.codomain().valuation()
-        s = max(self.precision(), psi.precision())
-        return v_L(self.approximate_generator(s) - psi.approximate_generator(s)) > s
+        v_L = phi.codomain().valuation()
+        alpha_1 = phi.approximate_generator()
+        alpha_2 = psi.approximate_generator()
+        f = phi.domain().polynomial()
+        # we know that both alpha_1 and alpha_2 are closer to some root of f
+        # then any other root. We have to check whether alpha_1 and alpha_2
+        # belong to the same root
+        F = f(f.parent().gen() + alpha_1)
+        np = NewtonPolygon((i, v_L(F[i])) for i in range(1, f.degree()+1))
+        # the slopes of np are - the valuation of alpha_1-other roots of f
+        return v_L(alpha_1-alpha_2) > -np.slopes()[0]
 
     def approximate_generator(self, t=None):
         r""" Return an approximation of the image of the generator of the domain.
@@ -443,26 +521,3 @@ class ApproximatepAdicEmbedding(pAdicEmbedding):
             # u should be a vector with integral coefficients
             approx_int_basis = self.approximate_integral_basis(s)
             return sum(u[i]*approx_int_basis[i] for i in range(len(approx_int_basis)))
-
-    def approximate_polynomial(self, f, s):
-        r""" Return an approximation of the image of a polynomial under this embedding.
-
-        INPUT:
-
-        - ``f`` -- a polynomial in `K_0[x]`
-        - ``s`` -- a positive rational number
-
-        Here `K_0` is the number field underlying the domain of this embedding.
-
-        OUTPUT: a polynomial `f_0 \in L_0[x]`, where `L_0` is the number field
-        underlying the codomain of this embedding `\phi:K\to L`, such that
-
-        .. MATH::
-
-            v_L(f_0-\phi(f)) > s.
-
-        """
-        R_K = f.parent()
-        assert R_K.base_ring() == self.domain().number_field()
-        L0 = self.codomain().number_field()
-        return f.map_coefficients(lambda c: self.approximate_evaluation(c, s), L0)
