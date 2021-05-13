@@ -18,6 +18,19 @@ be defined over `K_0`.
 In this module we implement the concept of an *approximate irreducible* factor
 of a polynomial over a `p`-adic number field.
 
+**Definition 1**
+
+    Let `f\in K[x]` be a separable polynomial over `K`, of degree `>1`. Let `R_f`
+    denote the set of roots of `f` (in some algebraic closure of `K`).
+    The *fineness* of `f` is the positive rational number
+
+    ..MATH::
+
+        \mu(f) := \max\{ v_K(\alpha-\beta) \mid \alpha,\beta\in R_f, \alpha\neq \beta\}.
+    For polynomials of degree one we set `\mu(f):=0`.
+
+Note that `\mu(f)` is invariant under extension of the base field `K`.
+
 **Definition**
 
     Let `f,g \in K[x]` be polynomials over `K`. Assume that `g` is monic,
@@ -67,6 +80,7 @@ def approximate_factorization(K, f, v0=None):
     from mclf.padic_extensions.padic_extensions import pAdicExtension
     if isinstance(K, pAdicExtension):
         K = K.extension_field()
+        # at the moment, this doesn't do anything, I think..
     else:
         assert isinstance(K, pAdicNumberField)
     f = f.change_ring(K.number_field())
@@ -88,33 +102,40 @@ def approximate_factorization(K, f, v0=None):
         v00 = v0.augmentation(phi, t0, check=False)
         # we use v00 only for convenience; it is important not to augment it
         valuations = list(v00.valuations(f))
+        # the values of v_00 on the terms of the phi-expansion of f
         a = min(valuations)
         n = min(i for i in range(len(valuations)) if valuations[i] == a)
-        # n is the degree of f with respect to v00; n*deg(phi) is the number
-        # of roots of f inside the residue class corresponding to phi
-        np = NewtonPolygon(enumerate(valuations))
-        slopes = [mu for mu in np.slopes(repetition=False) if mu < 0]
-        if len(slopes) == 0:
-            t1 = Infinity
+        # n is the "degree" of f with respect to v00; this means that n*deg(phi)
+        # is the number of roots of f inside the residue class corresponding to phi
+        assert n > 0, "something is wrong!"
+
+        if n == 1 and phi.degree() == 1:
+            # we have isolated a linear factor of f:
+            v = enhanced_augmentation(v0, phi, t0)
+            ret.append(ApproximatePrimeFactor(K, v))
         else:
-            t1 = t0 - max(slopes)
-        # now t1 is the maximal value such that the discoid corresponding to
-        # v1=[v0, v(phi)=t1] still contains all the prime factors of f in
-        # the residue class corresponding to phi
-        # we have to see if there is a value t with t0 < t <= t1 such that
-        # v=[v0, v1(phi)=t1] is separating.
-        # This can only happen if deg(phi) > 1:
-        if phi.degree() > 1:
-            t = separating_value(v0, phi)
-            if t >= t0 and t < t1:
-                v = enhanced_augmentation(v0, phi, t)
-                # v is an enhanced valuation!
-                g = ApproximatePrimeFactor(K, v)
-                ret.append(g)
-        # We have to further look for irreducible factors of f beyond v1,
-        # unless:
-        if (n > 1 and t1 < Infinity) or (phi.degree() > 1 and t1 < Infinity and t >= t1):
-            ret += approximate_factorization(K, f, v0.augmentation(phi, t1))
+            # we find the maximal value t1 > t0 such that the discoid corresponding to
+            # v1=[v0, v(phi)=t1] still contains all the prime factors of f in
+            # the residue class corresponding to phi:
+            np = NewtonPolygon(enumerate(valuations))
+            slopes = [mu for mu in np.slopes(repetition=False) if mu < 0]
+            if len(slopes) == 0:
+                t1 = Infinity
+            else:
+                t1 = t0 - max(slopes)
+
+            # if n=1 we have to see if there is a value t with t0 <= t < t1
+            # such that v=[v0, v1(phi)=t1] is separating.
+            if n == 1:
+                t = separating_value(v0, phi)
+                if t < t1:
+                    v = enhanced_augmentation(v0, phi, max(t, t0))
+                    ret.append(ApproximatePrimeFactor(K, v))
+
+            # We have to further look for irreducible factors of f beyond v1,
+            # unless:
+            if (n > 1 and t1 < Infinity) or (phi.degree() > 1 and t1 < Infinity and t >= t1):
+                ret += approximate_factorization(K, f, v0.augmentation(phi, t1))
     return ret
 
 
@@ -164,8 +185,8 @@ class ApproximatePrimeFactor(SageObject):
     INPUT:
 
     - ``K`` -- a p-adic number field
-    - ``f`` -- data defining a Krasner equivalence class of irreducible
-               polynomials over `K`.
+    - ``f`` -- data defining an equivalence class of irreducible, monic and
+               integral polynomials over `K`
 
     The data defining `f` can be of the following form:
 
@@ -434,7 +455,8 @@ class EnhancedInductiveValuation(SageObject):
 
         """
         if self.degree() == 1:
-            return False
+            # experimental change:
+            return True
         from sage.geometry.newton_polygon import NewtonPolygon
         v = self
         phi = v.key()

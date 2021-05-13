@@ -413,6 +413,9 @@ class ApproximatepAdicEmbedding(pAdicEmbedding):
         # now phi and psi are both approximate
         if not (phi.domain() == psi.domain() and phi.codomain() == psi.codomain()):
             return False
+        if phi.domain().is_Qp():
+            # there is only one embedding of QQ_p into a p-adic number field
+            return True
         v_L = phi.codomain().valuation()
         alpha_1 = phi.approximate_generator()
         alpha_2 = psi.approximate_generator()

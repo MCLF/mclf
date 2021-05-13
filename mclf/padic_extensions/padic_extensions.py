@@ -288,6 +288,8 @@ class ApproximatepAdicExtension(pAdicExtension):
             raise NotImplementedError("Computation of isomorphism not yet implemented")
         K = self.base_field()
         L = self.extension_field()
+        if K.is_Qp():
+            return L.as_extension_of_Qp()
         d = self.relative_degree()
         f = L.absolute_polynomial()
         factors = approximate_factorization(K, f)
