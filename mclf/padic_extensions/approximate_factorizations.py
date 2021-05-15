@@ -92,7 +92,11 @@ def approximate_factorization(K, f, v0=None):
         # on the prime factors of f
 
     from sage.geometry.newton_polygon import NewtonPolygon
-    F = v0.equivalence_decomposition(f)
+    if v0.is_key(f):
+        # this is to avoid a strange error in Sage
+        F = [(f, 1)]
+    else:
+        F = v0.equivalence_decomposition(f)
     ret = []
     # each irreducible factor of the equivalence decompositon of f corresponds
     # to a residue class of v0 containing at least one prime factor of f.
@@ -629,7 +633,15 @@ class EnhancedInductiveValuation(SageObject):
             t1 = min([t1, t0 - max(slopes)])
             # now t_1 is maximal with (1) and (2)
             v1 = v0.augmentation(phi, t1)
-            F = v1.equivalence_decomposition(f)
+            try:
+                F = v1.equivalence_decomposition(f)
+            except AssertionError:
+                print("This is probably a bug in Sage's valuation code:")
+                print("f= ", f)
+                print("v1 = ", v1)
+                print("is unit: ", v1.is_equivalence_unit(f))
+                print()
+                raise AssertionError()
             ret = []
             for psi, _ in F:
                 ret += enhanced_augmentation(v1, psi, v1(psi)).all_augmentations(f, s)

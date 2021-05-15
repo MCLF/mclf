@@ -885,25 +885,32 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
     def uniformizing_generator(self):
         r""" Return an equation for a generator which is also a uniformizer.
 
-        OUTPUT: a polynomials `g\in K_0[x]` such that `\pi_L:=g(\alpha)` is a
-        uniformizer and absolute generator for this simple extension `L=K[\alpha]`.
+        OUTPUT: a polynomials `g\in K_0[x]` such that `\beta_L:=g(\alpha)` is an
+        absolute generator for this simple extension `L=K[\alpha]`.
 
-        .. NOTE::
+        ALGORITHM:
 
-            at the moment we do not test if `\pi=g(\alpha)` is really a
-            generator.
+        We use the trick from the proof of Lemma II.10.4 from Neukirch's book.
 
         """
-        K = self.base_field()
         v = self.pseudovaluation()
-        pix = v.uniformizer()
-        r = v(pix)
-        for m in range(2, 10):
-            # this may give an error if the coefficients c are not integral!
-            pix1 = pix.map_coefficients(lambda c: K.approximation(c, m))
-            if v(pix1) == r:
-                break
-        return pix1
+        if v.residue_field().is_prime_field():
+            return v.uniformizer()
+        else:
+            pi = v.uniformizer()
+            k = v.residue_field()
+            thetab = v.residue_field().gen()
+            theta = v.lift(thetab)
+            if hasattr(k, "base_field"):
+                # this probably means that k is not a true finite field
+                from mclf.curves.smooth_projective_curves import make_finite_field
+                _, phi, _ = make_finite_field(k)
+                thetab = phi(thetab)
+            f = thetab.minpoly().change_ring(QQ)
+            if v(f(theta)) == v(pi):
+                return theta
+            else:
+                return theta + pi
 
     def relative_matrix_of_generator(self):
         r""" Return the matrix representing the canonical generator of this extension.
