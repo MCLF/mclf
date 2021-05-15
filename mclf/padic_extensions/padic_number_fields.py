@@ -45,29 +45,31 @@ class pAdicNumberField(SageObject):
 
     INPUT:
 
-    - ``K_0`` -- a  number field
-    - ``v_p`` -- a p-adic valuation on a subfield of `K_0`
+    - ``K_0`` -- an absolute number field
+    - ``p`` -- a prime number, or a p-adic valuation on `K_0`
 
-    It is assumed that the valuation `v_p` is the *unique* extension of the
-    `p`-adic valution on `\mathbb{Q}` corresponding to a prime number `p`, and
-    that `v_p` has a unique extension `v_K` to `K_0`.
+    If `p` is a prime number, then it is assumed that the `p`-adic valuation
+    on `\mathbb{Q}` has a unique extension `v_K` to `K_0`. Similarly, if
+    instead of `p` a discrete valuation `v_K` on `K_0` is given, it is assumed
+    that `v_K` is the unique extension to `K_0` of the `p`-adic valuation of a
+    prime number `p`.
 
     OUTPUT: the object representing the completion `K` of `K_0` with respect to `v_K`.
 
-    .. NOTE::
-
-        For the moment, `K_0` may also be a relative number field, but this is
-        probably not a good idea.
 
     """
 
-    def __init__(self, K_0, v_p):
-        # this is obsolete; should there be a replacement for this check?
-        # if K_0 is a relative number field, then some things won't work properly!
-        # assert K_0.is_absolute(), "K_0 must be an absolute number field"
-        assert v_p.domain().is_subring(K_0), "The domain of v_p must be a subfield of K_0"
-        p = v_p.p()
-        V = QQ.valuation(p).extensions(K_0)
+    def __init__(self, K_0, p):
+        assert K_0.is_absolute(), "K_0 must be an absolute number field"
+        from sage.rings.valuation.valuation import DiscreteValuation
+        if isinstance(p, DiscreteValuation):
+            v_p = p
+            p = v_p.p()
+            assert v_p.domain().is_subring(K_0), "The domain of v_p must be a subfield of K_0"
+        else:
+            assert p.is_prime(), "p must be a prime number, or a `p`-adic valuation"
+            v_p = QQ.valuation(p)
+        V = v_p.extensions(K_0)
         assert len(V) == 1, "the p-adic valuation on QQ must have a unique extension to K_0"
         v_K = V[0]
         n = K_0.absolute_degree()
@@ -162,13 +164,13 @@ class pAdicNumberField(SageObject):
 
     def absolute_generator(self):
         r"""
-        Return the standard generator of this p-adic extension.
+        Return the standard absolute generator of this p-adic number field.
         """
         return self._absolute_generator
 
     def generator(self):
         r"""
-        Return the standard generator of this p-adic extension.
+        Return the standard absolute generator of this p-adic number field.
         """
         return self._absolute_generator
 
@@ -181,7 +183,7 @@ class pAdicNumberField(SageObject):
 
     def degree(self):
         r"""
-        Return the degree of this p-adic field as an extension of `\mathbb{Q}_p`.
+        Return the degree of this p-adic number field as an extension of `\mathbb{Q}_p`.
 
         This is the same as :meth:`absolute_degree`.
         """
@@ -189,7 +191,7 @@ class pAdicNumberField(SageObject):
 
     def ramification_degree(self):
         r"""
-        Return the absolute ramification degree of this p-adic extension.
+        Return the absolute ramification degree of this p-adic number .
 
         This is the same as :meth:`absolute_ramification_degree`.
         """
@@ -197,7 +199,7 @@ class pAdicNumberField(SageObject):
 
     def absolute_ramification_degree(self):
         r"""
-        Return the absolute ramification degree of this p-adic extension.
+        Return the absolute ramification degree of this p-adic number field.
 
         This is the same as :meth:`ramification_degree`.
         """
@@ -205,14 +207,14 @@ class pAdicNumberField(SageObject):
 
     def absolute_inertia_degree(self):
         r"""
-        Return the absolute inertia degree of this p-adic extension.
+        Return the absolute inertia degree of this p-adic number field.
 
         """
         return self._absolute_inertia_degree
 
     def inertia_degree(self):
         r"""
-        Return the absolute inertia degree of this p-adic extension.
+        Return the absolute inertia degree of this p-adic number field.
 
         This is the same as :meth:`absolute_inertia_degree`.
 
@@ -268,7 +270,7 @@ class pAdicNumberField(SageObject):
         return ExactpAdicExtension(self.identity())
 
     def simple_extension(self, f, exact_extension=False):
-        r""" Return the extension of this number field defined by an irreducible polynomial.
+        r""" Return the extension of this p-adic number field defined by an irreducible polynomial.
 
         INPUT:
 
@@ -603,7 +605,7 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         self._polynomial = f
         # this is a preliminary and ad hoc  choice; in an improved version, the precision
         # should be chosen automatically to be 'just enough'
-        self._precision = 10
+        self._precision = 5
 
     def __repr__(self):
         return "constructor for a finite extension of {} with equation {}".format(self.base_field(), self.polynomial())
@@ -628,7 +630,6 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         L0 = L0_rel.absolute_field("beta"+str(self.absolute_degree()))
         _, psi = L0.structure()  # psi is the isomorphism from L0_rel to L0
         L = pAdicNumberField(L0, K.base_valuation())
-        # Warning! Since L0 will be a relative number field, some things won't work properly
         phi = K0.hom(L0_rel).post_compose(psi)
         L_exact = ExactpAdicExtension(ExactpAdicEmbedding(K, L, phi))
         self._exact_extension = L_exact
@@ -744,7 +745,7 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
     def absolute_degree(self):
         r""" Return the degree of the extension field as an absolute p-adic number field.
         """
-        return self.degree()*self.base_field().degree()
+        return self.degree()*self.base_field().absolute_degree()
 
     def pseudovaluation(self):
         r""" Return the pseudovaluation corresponding to the equation defining this extension.
@@ -894,11 +895,6 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
 
         """
         K = self.base_field()
-        # v_K = K.valuation()
-        # f = self.polynomial()
-        # V = v_K.mac_lane_approximants(f)
-        # assert len(V) == 1, "f is not irreducible"
-        # v = LimitValuation(V[0], f)
         v = self.pseudovaluation()
         pix = v.uniformizer()
         r = v(pix)
@@ -907,8 +903,6 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
             pix1 = pix.map_coefficients(lambda c: K.approximation(c, m))
             if v(pix1) == r:
                 break
-        # assert m < 9, "m too small"
-        # I don't understand this anymore
         return pix1
 
     def relative_matrix_of_generator(self):
