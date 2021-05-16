@@ -92,11 +92,8 @@ def approximate_factorization(K, f, v0=None):
         # on the prime factors of f
 
     from sage.geometry.newton_polygon import NewtonPolygon
-    if v0.is_key(f):
-        # this is to avoid a strange error in Sage
-        F = [(f, 1)]
-    else:
-        F = v0.equivalence_decomposition(f)
+    # the option "compute_unit=False" often avoids error due to a bug in Sage
+    F = v0.equivalence_decomposition(f, compute_unit=False)
     ret = []
     # each irreducible factor of the equivalence decompositon of f corresponds
     # to a residue class of v0 containing at least one prime factor of f.
@@ -156,6 +153,12 @@ def weak_splitting_field(K, f):
 
     This means that `L/K` is a finite extension of `p`-adic number fields such
     that `f` splits into linear factors over an unramified extension of `L`.
+
+    .. NOTE::
+
+        It may be that a different strategy for computing the weak splitting field
+        is much faster. We could try to avoid computing the relative embeddings,
+        and be more careful with the choice of the next factor.
 
     """
     f = f.change_ring(K.number_field())
@@ -633,15 +636,8 @@ class EnhancedInductiveValuation(SageObject):
             t1 = min([t1, t0 - max(slopes)])
             # now t_1 is maximal with (1) and (2)
             v1 = v0.augmentation(phi, t1)
-            try:
-                F = v1.equivalence_decomposition(f)
-            except AssertionError:
-                print("This is probably a bug in Sage's valuation code:")
-                print("f= ", f)
-                print("v1 = ", v1)
-                print("is unit: ", v1.is_equivalence_unit(f))
-                print()
-                raise AssertionError()
+            # the option "compute_unit=False" often avoids an error due to a bug in the Sage code
+            F = v1.equivalence_decomposition(f, compute_unit=False)
             ret = []
             for psi, _ in F:
                 ret += enhanced_augmentation(v1, psi, v1(psi)).all_augmentations(f, s)
