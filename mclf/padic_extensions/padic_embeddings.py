@@ -310,42 +310,18 @@ class ApproximatepAdicEmbedding(pAdicEmbedding):
     """
 
     def __init__(self, K, L, alpha_0):
-        from sage.geometry.newton_polygon import NewtonPolygon
-        from sage.all import GaussValuation
         L_0 = L.number_field()
         v_L = L.valuation()
         alpha_0 = L_0(alpha_0)
         assert v_L(alpha_0) >= 0
-        f = K.polynomial().change_ring(L_0)
-        F = f(f.parent().gen() + alpha_0)
-        np = NewtonPolygon((i, v_L(F[i])) for i in range(f.degree()+1))
-        assert F[0].is_zero() or np.slopes()[0] < np.slopes()[1], "the precision is not sufficient"
-        fx = f.derivative()
-        s = v_L(f(alpha_0))
-        t = v_L(fx(alpha_0))
-        if s < 2*t + 1:
-            # this means that the precison of alpha_0 is not enough
-            enough_precision = False
-            v0 = GaussValuation(f.parent(), v_L)
-            v = v0.augmentation(f.parent().gen() - alpha_0, -np.slopes()[0])
-            while s < 2*t + 1:
-                v = v.mac_lane_step(f)[0]
-                assert v.phi().degree() == 1
-                alpha_0 = - v.phi()[0]
-                s = v_L(f(alpha_0))
-                t = v_L(fx(alpha_0))
-                if s >= 2*t + 1:
-                    enough_precision = True
-                    break
-            if not enough_precision:
-                raise AssertionError("the precision of alpha_0 was not enough")
-
+        f = K.polynomial()
+        alpha_0 = L.approximate_root(f, alpha_0, K.required_precision())
         self._domain = K.extension_field()
         self._codomain = L.extension_field()
         self._approximate_generator = alpha_0
         self._equation = f
-        self._derivative = fx
-        self._precision = (s - t)
+        # I don't understand this choice anymore; it seems to work though
+        self._precision = K.required_precision()
 
     def precompose(self, psi):
         r""" Return the precompositon of this embedding with the embedding `\psi`.
@@ -453,20 +429,11 @@ class ApproximatepAdicEmbedding(pAdicEmbedding):
         if t is None or t <= self.precision():
             return self._approximate_generator
         L = self.codomain()
-        v_L = L.valuation()
         alpha = self._approximate_generator
         f = self._equation
-        fx = self._derivative
-        f_alpha = f(alpha)
-        f_x_alpha = fx(alpha)
-        s = v_L(f_alpha) - v_L(f_x_alpha)
-        while s <= t:
-            alpha = L.approximation(alpha - f_alpha/f_x_alpha, (t+1).ceil())
-            f_alpha = f(alpha)
-            f_x_alpha = fx(alpha)
-            s = v_L(f_alpha) - v_L(f_x_alpha)
+        alpha = L.approximate_root(f, alpha, t)
         self._approximate_generator = alpha
-        self._precision = s
+        self._precision = t
         return alpha
 
     def approximate_integral_basis(self, s):
@@ -507,7 +474,7 @@ class ApproximatepAdicEmbedding(pAdicEmbedding):
         # Attention! this is preliminary:
         if s == Infinity:
             s = QQ(10)
-        N = s.ceil()
+        N = QQ(s).ceil()
         assert alpha in K.number_field(), "alpha must be an element of the underlying number field of the domain"
         if alpha.is_rational():
             return L.number_field()(alpha)

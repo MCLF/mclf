@@ -569,8 +569,144 @@ class pAdicNumberField(SageObject):
         """
         return self.base_change_matrix(), self.inverse_base_change_matrix()
 
+    def difference_polynomial(self):
+        r""" Return the difference polynomial of the polynomial defining this field.
+
+        Let `\alpha` be the absolute generator of this `p`-adic number field and
+        `f` its minimal polynomial over `\mathbb{Q}_p` (actually, `f` has integeral
+        coefficients!). The *difference polynomial* is the polynomial
+
+        .. MATH::
+
+            \Delta := f(\alpha + x)/x \in \mathbb{Z}[x].
+
+        Note that the zeroes of `\Delta` are the differences `\alpha-\beta`,
+        where `\beta` runs over the roots of `f` distinct from `\alpha`,
+        whence the name.
+
+        If this `p`-adic number field is `\mathbb{Q}_p` then we set
+        `\Delta := 1`
+
+        """
+        if not hasattr(self, "_difference_polynomial"):
+            f = self.polynomial()
+            x = f.parent().gen()
+            alpha = self.generator()
+            self._difference_polynomial = f(x + alpha).shift(-1)
+        return self._difference_polynomial
+
+    def difference_newton_polygon(self):
+        r""" Return the Newton polygon of the difference polynomial.
+
+        """
+        from sage.geometry.newton_polygon import NewtonPolygon
+        if not hasattr(self, "_difference_newton_polygon"):
+            v_K = self.valuation()
+            Delta = self.difference_polynomial()
+            self._difference_newton_polygon = NewtonPolygon(
+                [(i, v_K(Delta[i])) for i in range(1, Delta.degree() + 1)])
+        return self._difference_newton_polygon
+
+    def required_precision(self):
+        r""" Return the precision required to approximate the generator of this
+             `p`-adic number field.
+
+        OUTPUT: a positive rational number `s` with the following property. Let
+        `\alpha` denote the absolute generator of this `p`-adic number field `K`,
+        and let `f` be its absolute minimal polynomial. Let `L/K` be a finite
+        extension and `\beta\in L`. If `v_L(\alpha-\beta) > s` then
+
+        .. MATH::
+
+            K\subset \mathbb{Q}_p(\beta)`.
+
+        If this `p`-adic number field is `\mathbb{Q}_p` then we set
+        `s := 0`.
+
+
+        """
+        if not hasattr(self, "_required_precision"):
+            if self.is_Qp():
+                s = 0
+            else:
+                slopes = self.difference_newton_polygon().slopes()
+                if len(slopes) == 0:
+                    s = 0
+                else:
+                    s = -slopes[0]
+            self._required_precision = s
+        return self._required_precision
+
+    def approximate_evaluation(self, f, a, s):
+        r""" Return the approximate value of a polynomial.
+
+        INPUT:
+
+        - ``f`` -- a polynomial with integeral coefficients
+        - ``a`` -- an element of the number field underlying this `p`-adic field
+        - ``s`` -- a positive rational number
+
+        OUTPUT: the value `f(a)`, up to precision `s`.
+
+        """
+        N = QQ(s+1).floor()
+        if self.is_Qp():
+            return self.approximation(f(a), N)
+        else:
+            A = self.approximate_matrix(a, N)
+            return self.element_from_approximate_matrix(f(A))
+
+    def approximate_root(self, f, a0, s):
+        r""" Return an approximate root of a polynomial.
+
+        INPUT:
+
+        - ``f`` -- a polynomial with integral coefficients
+        - ``a0`` -- an element of the number field underlying this `p`-adic field
+        - ``s`` -- a positive rational number
+
+        It is assumed that `a_0` is integral and a sufficient approximation of
+        some root `a` of `f`. Here *sufficient* means that `a_0` is strictly
+        closer to `a` than to any other root.
+
+        OUTPUT: an element `a_1` such that `v_K(a - a_1) > s`.
+
+        """
+        v_K = self.valuation()
+        f = f.change_ring(ZZ)
+        fx = f.derivative()
+        fa0 = self.approximate_evaluation(f, a0, s)
+        fxa0 = self.approximate_evaluation(fx, a0, s)
+        t0 = v_K(fa0)
+        t1 = v_K(fxa0)
+        N = QQ(s+1).floor()
+        while t0 < Infinity and t0 <= s + t1:
+            # we have v_K(a-a_1) = t0 - t1, so this is the condition to stop
+            if t0 > 2*t1:
+                # under this condition, we can use Newton approximation
+                a0 = self.approximation(a0 - fa0/fxa0, N)
+            else:
+                # we have to use another method
+                R = f.change_ring(self.number_field()).parent()
+                x = R.gen()
+                v0 = GaussValuation(R, self.valuation())
+                t = t0 - t1
+                phi = x - a0
+                v = v0.augmentation(phi, t)
+                while t <= s:
+                    # this only works if f is monic
+                    V = v.mac_lane_step(f)
+                    assert len(V) == 1
+                    v = V[0]
+                    t = v(v.phi())
+            fa0 = self.approximate_evaluation(f, a0, s)
+            fxa0 = self.approximate_evaluation(fx, a0, s)
+            t0 = v_K(fa0)
+            t1 = v_K(fxa0)
+        return a0
 
 # ---------------------------------------------------------------------------
+
 
 class SimpleExtensionOfpAdicNumberField(SageObject):
     r""" A constructor class for a finite simple extension of a p-adic number field.
@@ -722,7 +858,13 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         alpha = L.number_field().zero()
         for j in range(m):
             alpha += v[j]*sum(A_i[i, j]*int_basis_L[i] for i in range(n))
-        assert L.valuation()(alpha) >= 0, "something is wrong: alpha should be integral"
+        # alternatively, one could only compute alpha as a vector, or matrix
+        # modulo p^N at this stage and then use a root finding procedure native
+        # to L
+        # it is also not at all transparent to which precision the matrix A_i
+        # has been computed; the required precision depends, it seems, only on
+        # the polynomial defining K, and could be computed in advance
+
         phi = ApproximatepAdicEmbedding(K, L, alpha)
         self._approximate_embedding = phi
         # this computation can get ridiculously large; it would be better to do
