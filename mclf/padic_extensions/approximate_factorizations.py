@@ -140,7 +140,7 @@ def approximate_factorization(K, f, v0=None):
     return ret
 
 
-def weak_splitting_field(K, f):
+def weak_splitting_field(K, f, minimal_ramification=1):
     r""" Return the weak splitting field of a polynomial
     over a `p`-adic number field.
 
@@ -148,11 +148,14 @@ def weak_splitting_field(K, f):
 
     - ``K`` -- a `p`-adic number field
     - ``f`` -- a polynomial `f\in K[x]`
+    - ``minimal_ramification`` -- a positive integer (default: `1`)
 
-    OUTPUT: a weak splitting field `L/K` of `f`.
+    OUTPUT: a weak splitting field `L/K` of `f`, or a purely ramified extension
+    of such a field.
 
     This means that `L/K` is a finite extension of `p`-adic number fields such
     that `f` splits into linear factors over an unramified extension of `L`.
+    Moreover, the ramification index of `L/K` is a multiple of ``minimal_ramification``.
 
     .. NOTE::
 
@@ -161,6 +164,7 @@ def weak_splitting_field(K, f):
         and be more careful with the choice of the next factor.
 
     """
+    from sage.all import ZZ
     f = f.change_ring(K.number_field())
     f = f.radical()
     if f.is_constant():
@@ -179,6 +183,12 @@ def weak_splitting_field(K, f):
         for g in F:
             new_factors += g.base_change(L_new)
         F = [g for g in new_factors if not g.is_unramified()]
+    e = ZZ(L.relative_ramification_degree())
+    E = ZZ(minimal_ramification)
+    if not E.divides(e):
+        d = ZZ(E/E.gcd(e))
+        L_new = L.purely_ramified_extension(d)
+        L = L.superextension(L_new)
     return L.exact_extension()
 
 
@@ -583,7 +593,7 @@ class EnhancedInductiveValuation(SageObject):
         t = v(f)
         f_L = phi.approximate_polynomial(f, t)
         assert v.domain().base_ring() == K.number_field()
-        if self.degree() == 1:
+        if v.is_gauss_valuation() or self.degree() == 1:
             w0 = GaussValuation(f_L.parent(), L.valuation())
             F = w0.equivalence_decomposition(f_L)
             ret = []

@@ -128,16 +128,6 @@ class WeakPadicGaloisExtension(pAdicExtension):
 
     def __init__(self, K, F, minimal_ramification=1):
         minimal_ramification = ZZ(minimal_ramification)
-        # print("entering WeakPadicGaloisExtension with")
-        # print("F = {}, over {}".format(F, K))
-        # if F is a polynomial, replace it by the list of its irreducible factors
-        # if isinstance(F, Polynomial):
-        #     F = [f for f, m in F.factor()]
-
-        # try without this restriction:
-        # assert K.is_Qp(), "for the moment, K has to be Q_p"
-
-        # assert not K.p().divides(minimal_ramification), "minimal_ramification has to be prime to p"
         if not isinstance(F, Polynomial):
             if F == []:
                 F = PolynomialRing(K.number_field(), 'x')(1)

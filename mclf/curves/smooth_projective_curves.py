@@ -1092,6 +1092,12 @@ class PointOnSmoothProjectiveCurve(SageObject):
 
     def residue_field(self):
         """ Return the residue field of the point.
+
+        .. NOTE::
+
+            This should be a relative extension of the constant base field of the curve.
+            Unfortunately, this is not true in general!
+
         """
         return self._valuation.residue_field()
 

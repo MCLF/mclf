@@ -138,7 +138,6 @@ from mclf.berkovich.berkovich_line import BerkovichLine
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
 from mclf.berkovich.affinoid_domain import ElementaryAffinoidOnBerkovichLine
 from mclf.padic_extensions.padic_number_fields import pAdicNumberField
-from mclf.padic_extensions.weak_padic_galois_extensions import WeakPadicGaloisExtension
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve, PointOnSmoothProjectiveCurve
 from mclf.curves.morphisms_of_smooth_projective_curves import MorphismOfSmoothProjectiveCurves
 
@@ -544,37 +543,34 @@ class InertialComponent(SageObject):
             as an extension of the base field.
 
         """
+        from mclf.padic_extensions.approximate_factorizations import weak_splitting_field
+        from sage.all import PolynomialRing
         if not hasattr(self, "_splitting_field"):
             vK = self.reduction_tree().base_valuation()
             K = vK.domain()
-
-            # K must be number field for the rest to work
-            # Actually, it must be QQ!
-            # try without this assumption:
-            # assert K == QQ, "K must be QQ"
-
+            R = PolynomialRing(K, "x")
             Kh = pAdicNumberField(K, vK)
             if self.is_separable():
                 fiber = self.reduction_tree().curve().fiber(self.basepoint().function_field_valuation())
                 # `fiber` should be a list of points on Y
-                F = []
+                F = R.one()
                 for xi in fiber:
                     L = xi.residue_field()
                     # L should be a (relative) number field (which may include QQ)
+                    # with base field K!! This doesn't seem to be the case
                     if not L == QQ:
-                        f = L.absolute_polynomial().change_ring(K)
-                        F += [g for g, m in f.factor()]
-                # F = self.curve().fiber_equations(self.basepoint().function_field_valuation())
+                        f = relative_polynomial(L, K)
+                        F = F*R(f)
             else:
                 L = self.basepoint().function_field_valuation().residue_field()
                 if L == QQ:
-                    F = []
+                    F = R.one()
                 else:
-                    F = [L.absolute_polynomial().change_ring(K)]
+                    F = relative_polynomial(L, K)
             e = self.type_II_point().pseudovaluation_on_polynomial_ring().E()
             # print("F = ", F)
             # print("e = ", e)
-            self._splitting_field = WeakPadicGaloisExtension(Kh, F, minimal_ramification=e)
+            self._splitting_field = weak_splitting_field(Kh, F, minimal_ramification=e)
         return self._splitting_field
 
     def upper_components(self, u=Infinity):
@@ -650,29 +646,28 @@ class InertialComponent(SageObject):
         # I have to implement base change for Berkovich lines along p-adic
         # extensions, or at least for function field valuations
         FX = self.berkovich_line().function_field()
-        L = vL.domain()      # actually, this is the number field underlying L
+        phi = L.embedding()
+        L = L.number_field()     # actually, this is the number field underlying L
         FXL = FunctionField(L, FX.variable_name())
-        # test that FX is a subring of FXL
-        assert FX.is_subring(FXL)
-        # hence there is a natural coercion morphism
         XL = BerkovichLine(FXL, vL)
         # the representation of xi as a discoid on X, which is defined
         # by an inequality v(f) >= s:
         f, s = self.type_II_point().discoid()
         # the lower components correspon to the connected components of
         # the base change to L of the discoid defining the inertial component:
-        f = FXL(f)
+        phit = FX.hom(FXL.gen(), phi)
+        f = phit(f)
         lower_valuations = [xi.valuation() for xi in XL.points_from_inequality(f, s)]
 
         # some preparation:
         v0 = self.valuation()
         F0 = self.function_field()
-        x0 = FXL(v0.lift(v0.residue_field().gen()))
+        x0 = phit(v0.lift(v0.residue_field().gen()))
         # x0 is a lift to FXL of the canonical coordinate on the
         # inertial component; we need it to find the natural map from the
         # lower components to the inertial component.
         k0 = F0.constant_base_field()
-        theta0 = FXL(v0.lift(k0.gen()))
+        theta0 = phit(v0.lift(k0.gen()))
 
         # now we construct the lower components:
         lower_components = []
@@ -1037,10 +1032,15 @@ class LowerComponent(ReductionComponent):
         v = self.valuation()
         FXL = v.domain()
         # this is the function field of X_L, on which this lower component lives
+        # we also need the embedding of the base field K into the splitting field L
+        L = self.inertial_component().splitting_field()
+        phi0 = L.embedding()
         FY = self.reduction_tree().curve().function_field()
+        FX = FY.base_field()
+        phi = FX.hom(FXL.gen(), phi0)
         # this is the function field of Y;
         # we construct the function field of Y_L, on which the upper components live:
-        G = FY.polynomial().change_ring(FXL)
+        G = FY.polynomial().map_coefficients(phi, FXL)
         FYL = FXL.extension(G, FY.variable_name())
         # now FYL = FXL(y| G(y) = 0)
 
@@ -1312,3 +1312,34 @@ def make_function_field(K):
             return F, phi, psi
         else:
             raise NotImplementedError
+
+
+def relative_polynomial(L, K):
+    r""" Return the defining polynomial of this relative number field.
+
+    INPUT:
+
+    - ``L`` -- a relative number field
+
+    - ``K`` -- a subfield of `L`
+
+    OUTPUT: an irreducible polynomial over `K` which defines the extension
+    `L/K`.
+
+    Here we assume that `K` is one of the successive base fields of `L` (the
+    base field, or the base field of the base field, ..).
+
+    This is a kind of hack.
+
+    """
+    if L.base_field() == K:
+        return L.relative_polynomial()
+    else:
+        f = L.absolute_polynomial()
+        alpha = L.absolute_generator()
+        assert f(alpha).is_zero()
+        F = f.change_ring(K).factor()
+        for g, _ in F:
+            if g(alpha).is_zero():
+                return g
+        raise AssertionError("something is wrong!")
