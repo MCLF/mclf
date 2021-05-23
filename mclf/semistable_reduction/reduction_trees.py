@@ -536,11 +536,6 @@ class InertialComponent(SageObject):
             For the moment, this only works if the basepoint is contained inside
             the closed unit disk.
 
-        .. NOTE::
-
-            Also, this only works over the base field `\mathbb{Q}_p`, unless we
-            make sure that the method `weak_splitting_field` returns a field
-            as an extension of the base field.
 
         """
         from mclf.padic_extensions.approximate_factorizations import weak_splitting_field
@@ -572,6 +567,33 @@ class InertialComponent(SageObject):
             # print("e = ", e)
             self._splitting_field = weak_splitting_field(Kh, F, minimal_ramification=e)
         return self._splitting_field
+
+    def required_precision(self):
+        r""" Return the required precision for all computations with this inertial component.
+
+        OUTPUT: a positiv rational number `s` with the following property:
+
+        """
+        from sage.all import PolynomialRing
+        from sage.geometry.newton_polygon import NewtonPolygon
+        if not hasattr(self, "_required_precision"):
+            v_FX = self.valuation()
+            FY = self.reduction_tree().curve().function_field()
+            V = v_FX.extensions(FY)
+            G = FY.polynomial()
+            R = G.parent()
+            y = R.gen()
+            S = PolynomialRing(R, "T")
+            T = S.gen()
+            GG = G(y + T).shift(-1)
+            s = QQ(0)
+            for v_FY in V:
+                np = NewtonPolygon([(i, v_FY(GG[i])) for i in range(GG.degree()+1)])
+                slopes = np.slopes()
+                if len(slopes) > 0:
+                    s = max(s, -slopes[0])
+            self._required_precision = s
+        return self._required_precision
 
     def upper_components(self, u=Infinity):
         r"""
@@ -642,9 +664,6 @@ class InertialComponent(SageObject):
         # we construct the base change of the underlying Berkovich line
         # to L:
 
-        # unfortunately, this doesn't works for an arbitrary base field yet!
-        # I have to implement base change for Berkovich lines along p-adic
-        # extensions, or at least for function field valuations
         FX = self.berkovich_line().function_field()
         phi = L.embedding()
         L = L.number_field()     # actually, this is the number field underlying L

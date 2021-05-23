@@ -324,7 +324,7 @@ class pAdicNumberField(SageObject):
         from mclf.padic_extensions.approximate_factorizations import weak_splitting_field
         return weak_splitting_field(self, f)
 
-    def approximation(self, a, N):
+    def approximation(self, a, N, int_basis=True):
         r"""
         Return an approximation of ``a`` which is correct modulo `p^N`.
 
@@ -352,7 +352,7 @@ class pAdicNumberField(SageObject):
             q = p**(N+m)
             return QQ(mod(b, q).lift()*p**(-m))
 
-        v = self.vector(a)
+        v = self.vector(a, int_basis)
         vt = []
         for i in range(len(v)):
             a = v[i]
@@ -361,7 +361,7 @@ class pAdicNumberField(SageObject):
             q = p**(N+m)
             at = mod(b, q).lift()*p**(-m)
             vt.append(at)
-        return self.element_from_vector(vector(vt))
+        return self.element_from_vector(vector(vt), int_basis)
 
     def integral_basis(self):
         r""" Return the fixed integral basis of this p-adic number field.
@@ -433,8 +433,9 @@ class pAdicNumberField(SageObject):
                 integral_basis = []
                 # we have to loop over all m=(m_1,..,m_r) such that m_1d_1+..+m_rd_r <= n
                 for m in exponents_of_phi(d):
-                    beta = prod(phi[i]**m[i] for i in range(len(m)))(alpha)
                     s = (sum(t[i]*m[i] for i in range(len(m)))).floor()
+                    beta = self.approximation(
+                        prod(phi[i]**m[i] for i in range(len(m)))(alpha), s+1, int_basis=False)
                     integral_basis.append(beta*p**(-s))
             self._integral_basis = integral_basis
         return self._integral_basis
@@ -477,7 +478,7 @@ class pAdicNumberField(SageObject):
         R = IntegerModRing(self.p()**N)
         return self.matrix(a).change_ring(R)
 
-    def vector(self, a):
+    def vector(self, a, int_basis=True):
         r"""
         Return the vector corresponding to an element of the underlying number field.
 
@@ -493,12 +494,15 @@ class pAdicNumberField(SageObject):
         """
         if self.is_Qp():
             return vector([QQ(a)])
-        else:
+        elif int_basis:
             a = self.number_field()(a)
             S_i = self.inverse_base_change_matrix()
             return S_i*a.vector()
+        else:
+            a = self.number_field()(a)
+            return a.vector()
 
-    def element_from_vector(self, v):
+    def element_from_vector(self, v, int_basis=True):
         r"""
         Return the element corresponding to a given vector.
 
@@ -512,8 +516,11 @@ class pAdicNumberField(SageObject):
         corresponding to `v`.
 
         """
-        S = self.base_change_matrix()
-        return self.number_field()(list(S*v))
+        if int_basis:
+            S = self.base_change_matrix()
+            return self.number_field()(list(S*v))
+        else:
+            return self.number_field()(list(v))
 
     def element_from_approximate_matrix(self, A):
         r""" Return the element corresponding to an approximate matrix.
@@ -699,6 +706,7 @@ class pAdicNumberField(SageObject):
                     assert len(V) == 1
                     v = V[0]
                     t = v(v.phi())
+                a0 = -v.phi()[0]
             fa0 = self.approximate_evaluation(f, a0, s)
             fxa0 = self.approximate_evaluation(fx, a0, s)
             t0 = v_K(fa0)

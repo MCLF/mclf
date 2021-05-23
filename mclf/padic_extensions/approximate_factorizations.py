@@ -523,7 +523,7 @@ class EnhancedInductiveValuation(SageObject):
             return self
         v0 = self.valuation().augmentation_chain()[1]
         phi = self.key()
-        psi = v0.equivalence_decomposition(phi)[0][0]
+        psi = v0.equivalence_decomposition(phi, compute_unit=False)[0][0]
         assert phi.degree() > v0.phi().degree()
         return EnhancedInductiveValuation(v0, psi)
 
@@ -595,7 +595,7 @@ class EnhancedInductiveValuation(SageObject):
         assert v.domain().base_ring() == K.number_field()
         if v.is_gauss_valuation() or self.degree() == 1:
             w0 = GaussValuation(f_L.parent(), L.valuation())
-            F = w0.equivalence_decomposition(f_L)
+            F = w0.equivalence_decomposition(f_L, compute_unit=False)
             ret = []
             for psi, _ in F:
                 w1 = enhanced_augmentation(w0, psi, 0)
