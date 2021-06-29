@@ -14,5 +14,5 @@ class ValuedFieldExtension(FieldExtension):
     pass
 
 
-class FiniteFieldExtension(ValuedFieldExtension, FiniteFieldExtension):
+class FiniteValuedFieldExtension(ValuedFieldExtension, FiniteFieldExtension):
     pass
