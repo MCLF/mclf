@@ -144,7 +144,7 @@ EXAMPLES::
     sage: F.<x> = FunctionField(QQ)
     sage: X = BerkovichLine(F, v_2)
     sage: X
-    Berkovich line with function field Rational function field in x over Rational Field with 2-adic valuation
+    Berkovich line over 2-adic completion of Rational Field
 
 We define a point of type II via its discoid.::
 
@@ -233,22 +233,35 @@ class BerkovichLine(SageObject):
     INPUT:
 
     - ``F`` -- a rational function field over a base field K
-    - ``vK`` -- a discrete valuation on the base field K
+    - ``vK`` -- a discrete valuation on the constant base field K of F
 
+    Instead of the valuation `v_K`, one may also give a `p`-adic number field
+    `K` (which is naturllay equipped with a discrete valuation `v_K`). Then
+    the constant base field of `F` must be the underlying number field of `K`.
     """
 
     def __init__(self, F, vK):
 
-        assert vK.domain() is F.constant_base_field()
-        self._F = F
-        self._vK = vK
-        self._K = vK.domain()
+        from mclf.padic_extensions.padic_number_fields import pAdicNumberField
+        if isinstance(vK, pAdicNumberField):
+            K = vK
+            assert F.constant_base_field() is K.number_field()
+            self._F = F
+            self._K = K
+            self._vK = K.valuation()
+        else:
+            assert vK.domain() is F.constant_base_field()
+            self._F = F
+            self._vK = vK
+            K0 = F.constant_base_field()
+            K = pAdicNumberField(K0, vK)
+            self._K = K
 
     def __repr__(self):
-        return "Berkovich line with function field {} with {}".format(self._F, self._vK)
+        return "Berkovich line over {}".format(self.constant_base_field())
 
     def constant_base_field(self):
-        return self._F.constant_base_field()
+        return self._K
 
     def base_valuation(self):
         return self._vK
@@ -862,6 +875,35 @@ class BerkovichLine(SageObject):
 
         return D
 
+    def base_change(self, L):
+        r""" Return the base change of this Berkovich line wrt a finite extension
+        of the constant base field.
+
+        INPUT:
+
+        - ``L`` -- a finite extension of the constant base field
+
+        OUTPUT: the Berkovich line over `L`.
+
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: Q_2 = pAdicNumberField(QQ, 2)
+            sage: F.<x> = FunctionField(QQ)
+            sage: X = BerkovichLine(F, Q_2)
+            sage: R.<t> = QQ[]
+            sage: K = Q_2.simple_extension(t^2 - 2)
+            sage: X.base_change(K)
+            Berkovich line over 2-adic completion of Number Field in pi2 with
+            defining polynomial x^2 + 30, as extension of 2-adic completion of Rational Field
+
+        """
+        from sage.all import FunctionField
+        assert L.base_field() is self.constant_base_field()
+        F_L = FunctionField(L.number_field(), self.function_field().variable_name())
+        return BerkovichLine(F_L, L)
+
 # -----------------------------------------------------------------------------
 
 #                             points
@@ -1466,6 +1508,20 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         assert xi0.is_leq(xi1) and xi0.is_leq(xi2), "xi0 = {}, xi1 = {}, xi2 = {}".format(xi0, xi1, xi2)
         return xi0
 
+    def base_change(self, L):
+        r""" Return the list of points above this point under the base change to
+        a finite extension of the constant base field.
+
+        INPUT:
+
+        - ``L`` -- a finite extension of the constant base field
+
+        OUTPUT: the list of points on the Berkovich line `X_L` lying over this
+        point.
+
+        """
+        pass
+
 
 # ----------------------------------------------------------------------------
 
@@ -1902,11 +1958,43 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         assert xi2.is_leq(xi1) and not xi2.is_equal(xi1), "xi2 is not less than xi1!"
         return xi2
 
+    def base_change(self, L):
+        r""" Return the list of points above this point under the base change to
+        a finite extension of the constant base field.
+
+        INPUT:
+
+        - ``L`` -- a finite extension of the constant base field
+
+        OUTPUT: the list of points on the Berkovich line `X_L` lying over this
+        point.
+
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: Q_2 = pAdicNumberField(QQ, 2)
+            sage: R.<t> = QQ[]
+            sage: K = Q_2.simple_extension(t^4 - 2)
+            sage: F.<x> = FunctionField(QQ)
+            sage: X = BerkovichLine(F, Q_2)
+            sage: xi = X.point_from_discoid(x^4-2, 5)
+            sage: xi.base_change(K)
+            [Point of type II on Berkovich line, corresponding to v(x^2 + pi4^2) >= 7/2,
+             Point of type II on Berkovich line, corresponding to v(x + 3*pi4) >= 9/4,
+             Point of type II on Berkovich line, corresponding to v(x + pi4) >= 9/4]
+
+        """
+        X_L = self.berkovich_line().base_change(L)
+        f, s = self.discoid()
+        f = X_L.function_field()(f)
+        return X_L.points_from_inequality(f, s)
 
 # -------------------------------------------------------------------------
 
 #                        auxiliary functions
 #                        ===================
+
 
 def valuation_from_discoid(vK, f, s):
     r""" Return the inductive valuation corresponding to a discoid.

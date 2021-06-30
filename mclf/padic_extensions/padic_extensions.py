@@ -90,6 +90,13 @@ class pAdicExtension(pAdicNumberField):
     def embedding(self):
         return self._embedding
 
+    def is_exact(self):
+        r""" Return whether the embedding is exact or approximate.
+
+        This method must be defined by the child class.
+        """
+        raise NotImplementedError()
+
     def relative_degree(self):
         """ Return the degree of the extension."""
         return self._relative_degree
@@ -227,14 +234,17 @@ class ExactpAdicExtension(pAdicExtension):
         assert isinstance(phi, ExactpAdicEmbedding), "phi has to be an exact embedding"
         super().__init__(phi)
 
+    def is_exact(self):
+        r""" Return whether the embedding is exact or approximate.
+
+        """
+        return True
+
     def relative_minpoly(self, a):
         raise NotImplementedError()
 
     def relative_polynomial(self):
         raise NotImplementedError()
-
-    def is_exact(self):
-        return True
 
     def exact_extension(self, isomorphism=False):
         return self
