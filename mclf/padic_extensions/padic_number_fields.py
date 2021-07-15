@@ -38,9 +38,10 @@ EXAMPLES:
 
 from sage.all import SageObject, ZZ, QQ, NumberField, PolynomialRing,\
     IntegerModRing, mod, prod, vector, matrix, Infinity, GaussValuation
+from mclf.field_extensions.valued_field_extensions import ValuedNumberField
 
 
-class pAdicNumberField(SageObject):
+class pAdicNumberField(ValuedNumberField):
     r""" An object representing an absolute p-adic number field.
 
     INPUT:
@@ -90,7 +91,7 @@ class pAdicNumberField(SageObject):
             R = PolynomialRing(QQ, "x")
             P = R.gen() - alpha
         assert n == e*f
-        self._number_field = K_0
+        self._underlying_field = K_0
         self._v_p = QQ.valuation(p)
         self._valuation = v_K
         self._p = p
@@ -122,7 +123,7 @@ class pAdicNumberField(SageObject):
         r"""
         Return the number field representing this p-adic extension.
         """
-        return self._number_field
+        return self._underlying_field
 
     def base_valuation(self):
         r"""
@@ -284,6 +285,8 @@ class pAdicNumberField(SageObject):
         If ``exact_extension`` is ``True``, it is a object of :class:`ExactpAdicExtension`.
 
         """
+        if f.degree() == 1:
+            return self.as_identity_extension()
         L = SimpleExtensionOfpAdicNumberField(self, f)
         if exact_extension:
             return L.exact_extension()
@@ -323,6 +326,38 @@ class pAdicNumberField(SageObject):
         """
         from mclf.padic_extensions.approximate_factorizations import weak_splitting_field
         return weak_splitting_field(self, f)
+
+    def extension_from_pseudovaluation(self, v, exact_extension=True):
+        r""" Return the extension of this p-adic number field given by an infinite
+        pseudovaluation on a polynomial ring.
+
+        INPUT:
+
+        - ``v`` -- an infinite pseudovaluation on `K_0[x]`.
+
+        - ``exact_extension`` -- a boolean (default: ``True``)
+
+        Here `K_0` is the number field underlying this p-adic number field `K`.
+
+        OUTPUT:
+
+        the finite extension `L/K`, on which `v` induced the unique extension of
+        the base valuation.
+
+        If ``exact_extension`` is ``True`` (the default) then `L/K` is returned
+        as an exact equation, otherwise as an approximate extension.
+
+        """
+        if hasattr(v, "_approximation"):
+            # v is apparently a limit valuation
+            from mclf.padic_extensions.approximate_factorizations import approximate_factorization
+            g_list = approximate_factorization(self, v._G, v._approximation)
+            assert len(g_list) == 1, "there must be a unique factor of G corresponding to v"
+            g = g_list[0]
+        else:
+            # otherwise v should be inductive
+            g = v.phi()
+        return self.simple_extension(g, exact_extension)
 
     def approximation(self, a, N, int_basis=True):
         r"""

@@ -236,8 +236,18 @@ class BerkovichLine(SageObject):
     - ``vK`` -- a discrete valuation on the constant base field K of F
 
     Instead of the valuation `v_K`, one may also give a `p`-adic number field
-    `K` (which is naturllay equipped with a discrete valuation `v_K`). Then
+    `K` (which is naturally equipped with a discrete valuation `v_K`). Then
     the constant base field of `F` must be the underlying number field of `K`.
+
+    .. NOTE::
+
+        There is currently the following problem: if the base field `K_0` of
+        `F` is a number field and `v_K` is a discrete valuation on `K_0`, then
+        it is required that `v_K` is the unique extension of the `p`-adic
+        valuation on `\mathbb{Q}` to `K_0`. Otherwise, initialization of the
+        constant base field of `X` as a `p`-adic number field yields an error.
+
+        I should carefully consider what input data should be allowed.
     """
 
     def __init__(self, F, vK):
@@ -254,6 +264,7 @@ class BerkovichLine(SageObject):
             self._F = F
             self._vK = vK
             K0 = F.constant_base_field()
+            # this may give an error if vK is not the unique p-adic extension to K_0
             K = pAdicNumberField(K0, vK)
             self._K = K
 
@@ -932,31 +943,76 @@ class PointOnBerkovichLine(SageObject):
     """
 
     def __init__(self):
-        pass   # Initialization depends on the type
+        # Initialization depends on the type
+        raise NotImplementedError()
+
+    def __repr__(self):
+        # Representation depends on the type
+        raise NotImplementedError()
 
     def berkovich_line(self):
         """
-        Return the Berkovich line of which this point lies.
+        Return the Berkovich line on which this point lies.
         """
-        return self._X
+        return self._berkovich_line
 
     def function_field(self):
         """
-        Return the function field of this Berkovich line.
+        Return the function field of the Berkovich line on which this point lies.
         """
-        return self._F
+        return self.berkovich_line().function_field()
 
-    def base_field(self):
+    def constant_base_field(self):
         """
-        Return the base field of this Berkovich line.
+        Return the constant base field of the Berkovich line on which this point lies.
         """
-        return self._X._vK.domain()
+        return self.berkovich_line().constant_base_field()
 
     def base_valuation(self):
         """
         Return the valuation on the base field of this Berkovich line.
         """
-        return self._X._vK
+        return self.berkovich_line().base_valuation()
+
+    def residue_field(self):
+        r""" Return the residue field of this point.
+
+        The residue field of a point `\xi` on the Berkovich line `X` is by
+        definition a complete valued field extension of the base field `K`
+        of `X`. For a point of type I, it is a finite valued field extension
+        of `K`, and therefore a `p`-adic number field. For a point of type II,
+        it is the completion of the function field `F_X=K(x)` of `X` with respect
+        to the valuation `v_\xi` defining `\xi`.
+
+        The initialization of the residue field and its storage via the attribute
+        :attr:`_residue_field` has to be done by the child class specific to the
+        type of the point.
+
+        .. WARNING::
+
+            Do not confuse the residue field of a point `\xi` with the residue
+            field of the (pseudo)valuation `v_\xi` which represents it. In fact,
+            the latter is the residue field of the former!
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: K = pAdicNumberField(QQ, QQ.valuation(2))
+            sage: FX.<x> = FunctionField(QQ)
+            sage: X = BerkovichLine(FX, K)
+            sage: X.point_from_discoid(2*x-1, 1).residue_field()
+            Rational function field in x over Rational Field with Valuation on
+            rational function field induced by [ Gauss valuation induced by 2-adic
+            valuation, v(x + 2) = 2 ] (in Rational function field in x over Rational
+            Field after x |--> 1/x), as an extension of  2-adic completion of Rational Field
+            sage: xi = X.points_from_inequality(2*x^2 + x - 5, Infinity)[0]
+            sage: xi
+            Point of type I on Berkovich space approximated by v(2*x + 1) >= 1, with equation 4*x^2 + 2*x - 10 = 0
+            sage: xi.residue_field()
+            2-adic completion of Rational Field, as extension of 2-adic completion of Rational Field
+
+        """
+        return self._residue_field
 
     @cached_method
     def is_strictly_less(self, xi1):
@@ -1045,6 +1101,7 @@ class PointOnBerkovichLine(SageObject):
             self._cache_key_value = hash(str(self))
         return self._cache_key_value
 
+
 # -----------------------------------------------------------------------------
 
 #                    points of type I
@@ -1075,8 +1132,8 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
 
     def __init__(self, X, v):
 
-        self._X = X
-        F = X._F
+        self._berkovich_line = X
+        F = X.function_field()
         x = F.gen()
 
         if isinstance(v, tuple):
@@ -1096,7 +1153,6 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
                 v0 = v0._base_valuation
             else:
                 y = x
-        self._F = F
         self._v = v
         self._v0 = v0
         self._y = y
@@ -1104,6 +1160,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             self._is_in_unit_disk = True
         else:
             self._is_in_unit_disk = False
+        self._residue_field = self.berkovich_line().constant_base_field().extension_from_pseudovaluation(v0)
 
     def __repr__(self):
 
@@ -1208,6 +1265,43 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
             F = f.parent()
             self._valuation = F.valuation(f)
         return self._valuation
+
+    def residue_field(self):
+        r""" Return the residue field of this point.
+
+        The residue field of a point `\xi` on the Berkovich line `X` is by
+        definition a complete valued field extension of the base field `K`
+        of `X`. For a point of type I, it is a finite valued field extension
+        of `K`, and therefore a `p`-adic number field.
+
+        .. WARNING::
+
+            Do not confuse the residue field of a point `\xi` with the residue
+            field of the (pseudo)valuation `v_\xi` which represents it. In fact,
+            the latter is the residue field of the former!
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: K = pAdicNumberField(QQ, QQ.valuation(2))
+            sage: FX.<x> = FunctionField(QQ)
+            sage: X = BerkovichLine(FX, K)
+            sage: X.point_from_discoid(2*x-1, 1).residue_field()
+            Rational function field in x over Rational Field with Valuation on
+            rational function field induced by [ Gauss valuation induced by 2-adic
+            valuation, v(x + 2) = 2 ] (in Rational function field in x over Rational
+            Field after x |--> 1/x), as an extension of  2-adic completion of Rational Field
+
+            sage: X.point_from_discoid(2*x-1, Infinity).residue_field()
+            2-adic completion of Rational Field, as extension of 2-adic completion of Rational Field
+        """
+        if not hasattr(self, "_residue_field"):
+            # find an (approximate) *irreducible* equation for the point
+            if self.is_limit_point():
+                pass
+            else:
+                g = self.pseudovaluation_on_polynomial_ring().phi()
+        return self._residue_field
 
     def equation(self):
         r""" Return an equation for the Galois orbit of this point.
@@ -1520,7 +1614,7 @@ class TypeIPointOnBerkovichLine(PointOnBerkovichLine):
         point.
 
         """
-        pass
+        raise NotImplementedError()
 
 
 # ----------------------------------------------------------------------------
@@ -1555,7 +1649,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
     """
 
     def __init__(self, X, v):
-        self._X = X
+        self._berkovich_line = X
         F = X._F
         x = F.gen()
         vK = X.base_valuation()
@@ -1614,8 +1708,10 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         self._is_in_unit_disk = is_in_unit_disk
         self._v1 = v0
         self._y = y
-        self._F = F
-        self._X = X
+        self._berkovich_line = X
+        from mclf.field_extensions.valued_field_extensions import ValuedFunctionField
+        K = self.berkovich_line().constant_base_field()
+        self._residue_field = ValuedFunctionField(K, F, v)
 
     def __repr__(self):
         f, s = self.discoid()
@@ -1631,7 +1727,7 @@ class TypeIIPointOnBerkovichLine(PointOnBerkovichLine):
         """
         if hasattr(self, "_is_gauss_point"):
             return self._is_gauss_point
-        x = self._X.function_field().gen()
+        x = self.berkovich_line().function_field().gen()
         if self.v(x) != 0:
             self._is_gauss_point = False
             return False

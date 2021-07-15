@@ -25,7 +25,8 @@ is useful to test for equality of points.
 A function field in Sage is always realized as a simple separable extension of a
 rational function field. Geometrically, this means that the curve `X` is implicitly
 equipped with a finite separable morphism `\phi:X\to\mathbb{P}^1_k`
-to the projective line over the base field `k`.
+to the projective line over the base field `k`. We call `\phi` the
+*structure morphism* of the curve.
 
 The base field `k` is called the *constant base field* of the curve, and it is
 part of the data. We do not assume that the extension `F_X/k` is regular (i.e.
@@ -59,7 +60,7 @@ is a finite extension of `k`.
 
 AUTHORS:
 
-- Stefan Wewers (2016-11-11): initial version
+- Stefan Wewers (2016 - 2021)
 
 
 EXAMPLES::
@@ -124,7 +125,7 @@ reduction is a smooth projective curve of the same genus: ::
 """
 
 # *****************************************************************************
-#       Copyright (C) 2016 Stefan Wewers <stefan.wewers@uni-ulm.de>
+#       Copyright (C) 2016-2021 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -164,35 +165,29 @@ class SmoothProjectiveCurve(SageObject):
     degree of the constant base field of `F` over `k`).
     """
 
-    def __init__(self, F, k=None, assume_regular=False):
+    def __init__(self, F, constant_base_field=None, assume_regular=False):
 
         from sage.rings.ring import Field
         from sage.rings.function_field.constructor import FunctionField
-        if isinstance(F, Field):
-            self._function_field = F
-        else:
+        from mclf.field_extensions.standard_field_extensions import standard_field_extension
 
+        if not isinstance(F, Field):
+            # F should be a bivariate polynomial; we turn it into a function field
             A = F.parent()
-            K = A.base_ring()
-            F0 = FunctionField(K, A.variable_names()[0])
+            k = A.base_ring()
+            F0 = FunctionField(k, A.variable_names()[0])
             R = PolynomialRing(F0, A.variable_names()[1])
             G = R(F(F0.gen(), R.gen()))
             assert G.degree() > 0, "the polynomial F must have positive degree in y"
             assert G.is_irreducible(), "the polynomial F must be irreducible"
             F = F0.extension(G.monic(), A.variable_names()[1])
-            self._function_field = F
 
         if k is not None:
             k1 = F.constant_base_field()
-            assert k.is_finite() and k1.is_finite(), "k must be finite or None"
             assert k.is_subring(k1), "k must be a subfield of the field of constants of F"
-            self._constant_base_field = k
-            self._extra_extension_degree = extension_degree(k, k1)
-            self._covering_degree = F.degree()*self._extra_extension_degree
         else:
-            self._constant_base_field = F.constant_base_field()
-            self._extra_extension_degree = ZZ(1)
-            self._covering_degree = F.degree()
+            k = F.constant_base_field()
+        self._function_field = standard_field_extension(k.hom(F))
 
         # self._coordinate_functions = self.coordinate_functions()
         if assume_regular:
@@ -212,7 +207,7 @@ class SmoothProjectiveCurve(SageObject):
         r"""
         Return the constant base field.
         """
-        return self._constant_base_field
+        return self._function_field.constant_base_field()
 
     def point(self, v):
         r""" Returns the point on the curve corresponding to ``v``.
@@ -372,7 +367,7 @@ class SmoothProjectiveCurve(SageObject):
         Return the function field of the curve ``self``.
 
         """
-        return self._function_field
+        return self._function_field.codomain()
 
     def rational_function_field(self):
         r"""
@@ -383,7 +378,7 @@ class SmoothProjectiveCurve(SageObject):
         the base field of `X`.
 
         """
-        return self._function_field.base_field()
+        return self._function_field.rational_function_field()
 
     def structure_map(self):
         r""" Return the canonical map from this curve to the projective line.
@@ -417,7 +412,7 @@ class SmoothProjectiveCurve(SageObject):
         if hasattr(self, "_coordinate_functions"):
             return self._coordinate_functions
 
-        F = self._function_field
+        F = self.function_field()
         F0 = F.base_field()
         if F0 is F:
             self._coordinate_functions = [F.gen()]
@@ -460,7 +455,7 @@ class SmoothProjectiveCurve(SageObject):
         where `P` is a point and `m` is an integer.
 
         """
-        F = self._function_field
+        F = self.function_field()
         F0 = F.base_field()
         is_rational = (F is F0)
         D = []
@@ -532,7 +527,7 @@ class SmoothProjectiveCurve(SageObject):
         method ``degree_of_inseparability``.
 
         """
-        if self._is_separable:
+        if self.is_separable():
             return self
         else:
             return self._separable_model
@@ -553,7 +548,7 @@ class SmoothProjectiveCurve(SageObject):
         OUTPUT: a field homomorphism
 
         """
-        if self._is_separable:
+        if self.is_separable():
             F = self.function_field()
             y = F.gen()
             return F.hom([y])
@@ -568,7 +563,7 @@ class SmoothProjectiveCurve(SageObject):
         function field of this curve.
 
         """
-        if self._is_separable:
+        if self.is_separable():
             return ZZ(1)
         else:
             return self._degree_of_inseparability
@@ -636,7 +631,7 @@ class SmoothProjectiveCurve(SageObject):
         the base field F0.
 
         """
-        FY = self._function_field
+        FY = self.function_field()
         K = self.constant_base_field()
         A = PolynomialRing(K, ['x', 'y'])
         x, y = A.gens()
@@ -1053,12 +1048,71 @@ class SmoothProjectiveCurve(SageObject):
         V = v0.extensions(self.function_field())
         return [PointOnSmoothProjectiveCurve(self, v) for v in V]
 
+    def base_change(self, L):
+        r""" Return the base change of this curve wrt a field extension.
+
+        If `X` is a (irreducible) smooth projective curve over a field `K`, and
+        `L/K` is a separable field extension, then the base change `X_L:=X\otimes_K L`
+        is a smooth projecitve (but not necessarily irreducible) curve over `L`.
+
+        INPUT:
+
+        - ``L`` -- a field extension of the constant base_field of this curve `X`
+
+        OUTPUT:
+
+        a list containing all the irreducible factors of the base change of `X`
+        to `L`.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: R.<t> = QQ[]
+            sage: K = NumberField(t^2+1, "i")
+            sage: S.<x,y> = QQ[]
+            sage: Y = SmoothProjectiveCurve(x^2+y^2)
+            sage: Y.base_change(K)
+            [the smooth projective curve with Function field in y defined by y - i*x,
+             the smooth projective curve with Function field in y defined by y + i*x]
+
+        """
+        from mclf.field_extensions.field_extensions import FieldExtension
+        from sage.all import FunctionField
+        F = self.function_field()
+        F_L = F.base_change(L)
+
+        K = self.constant_base_field()
+        if isinstance(L, FieldExtension):
+            assert L.base_field() is K
+        else:
+            assert L.has_coerce_map_from(K)
+            L = FieldExtension((L, K))
+        FX = self.rational_function_field()
+        FX_L = FunctionField(L.codomain(), FX.variable_name())
+        G_L = self.function_field().polynomial().change_ring(FX_L)
+        ret = []
+        for g, _ in G_L.factor():
+            ret.append(SmoothProjectiveCurve(FX_L.extension(g)))
+        return ret
+
+# ----------------------------------------------------------------------------
+
 
 class PointOnSmoothProjectiveCurve(SageObject):
     r""" A closed point on a smooth projective curve.
 
     A point on a curve `X` is identified with the corresponding
-    valuation `v_x` on the function field `F` of `X`.
+    normalized valuation `v_x` on the function field `F` of `X`.
+
+    INPUT:
+
+    - ``X`` -- a smooth projective curve
+    - ``v`` -- a discrete valuation on the function field of `X` which is trivial
+               on the constant base field
+
+    OUTPUT:
+
+    The point `x` on `X` such that `v_x` is equivalent to `v`.
 
     Alternatively, a point `x` on `X` can be represented by the vector
 
@@ -1191,6 +1245,98 @@ class PointOnSmoothProjectiveCurve(SageObject):
 
         """
         return self.coordinates() == P.coordinates()
+
+    def base_change(self, L):
+        r""" Return the list of points on the base to L above this one.
+
+        INPUT:
+
+        - ``L`` -- a finite field extension of the constant base field of the curve
+
+        OUTPUT:
+
+        the list of points on the base change `X_L` above this point.
+
+        These points are objects of the class :class:`ExtensionPointOnSmoothProjectiveCurve`.
+        (really? Why?)
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: R.<t> = QQ[]
+            sage: K = NumberField(t^2+1, "i")
+            sage: S.<x,y> = QQ[]
+            sage: Y = SmoothProjectiveCurve(y^2 - x^3 + 1)
+            sage: FX = Y.rational_function_field()
+            sage: x = FX.gen()
+            sage: v = FX.valuation(x-1)
+            sage: P = Y.fiber(v)[0]
+            sage: P
+            Point on the smooth projective curve with Function field in y defined
+            by y^2 - x^3 + 1 with coordinates (1, 0).
+            sage: P.base_change(K)
+
+        """
+        Y = self.curve()
+        x = self.base_point()  # this is the image of this point on the projective line
+        Y_L = Y.base_change(L)
+        ret = []
+        for Z in Y_L:
+            pass
+        return ret
+
+
+class ExtensionPointOnSmoothProjectiveCurve(PointOnSmoothProjectiveCurve):
+    r""" An object representing an L-point on the curve.
+
+    If `Y` is a smooth projective curve over a field `K`, and `L/K` is a field
+    extension, then we call an *`L`-point* on `Y` a closed point `y\in Y`,
+    together with a `K`-linear embedding of `L` into the residue field `k(y)`.
+
+    Note that an `L`-point `x` on `X` is the same thing as a closed point on the
+    curve `X_L`, the base change of `X` to `L`. Therefore, it corresponds to
+    a discrete, normalized valuation `v_x` on the function field of `X_L`.
+
+    One caveat: the curve `X_L` may not be irreducible anymore (something we
+    usually assume for a smooth projective curve). If this is the case then
+    the "function field" of `X_L` is a finite commutative algebra over the
+    function field of `X`. The valuation `v_x` is then a normalized valuation
+    on exactly one of the irreducible factors of this algebra, and trivial on
+    all others.
+
+    INPUT:
+
+    - ``X`` -- a smooth projective curve, with constant base field `K`
+    - ``L`` -- a finite field extension of the constant base field of `X`
+    - ``v`` -- a discrete valuation on an irreducible factor of the function
+               field of `X_L`
+
+    OUTPUT:
+
+    The `L`-point `x` on `X` given by `v`.
+
+    """
+
+    def __init__(self, X, v):
+        pass
+
+    def __repr__(self):
+        return "point on {} over {}, given by  {}".format(self.curve(), self.base_field(), self.valuation())
+
+    def curve(self):
+        return self._curve
+
+    def base_field(self):
+        return self._base_field
+
+    def valuation(self):
+        return self._valuation
+
+    def residue_field(self):
+        return self._residue_field
+
+    def base_point(self):
+        return self._base_point
 
 # ------------------------------------------------------------------------------
 

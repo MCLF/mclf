@@ -68,7 +68,7 @@ EXAMPLES::
 
 """
 
-#*****************************************************************************
+# *****************************************************************************
 #       Copyright (C) 2018 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -76,7 +76,7 @@ EXAMPLES::
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# *****************************************************************************
 
 from sage.all import SageObject
 from mclf.curves.smooth_projective_curves import PointOnSmoothProjectiveCurve
@@ -89,26 +89,16 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
 
     INPUT:
 
-    - ``Y``, ``X`` -- two smooth projective curves
+    - ``Y``, ``X`` -- two smooth projective curves,
     - ``phi`` -- a morphism from the function field of `X` into the function
-      field of `Y`, or ``None`` (default: ``None``)
+      field of `Y`.
+
+    Alternatively, the morphism `\phi` can also be given as an object of the
+    class :class:`StandardFiniteFieldExtension`.
 
     OUTPUT: the morphism `f:Y\to X` corresponding to the given morphism of
-    function fields.
+    function fields `\phi`
 
-    If no morphism of function fields is given then it is assumed that the
-    function field of `X` is the canonical rational subfield of the function
-    field of `Y`. This means that map `f:Y\to X` is the structure map of `Y` as
-    a cover of the projective line. If this is not the case then an error
-    is raised.
-
-    .. NOTE::
-
-        At the moment only the following two special cases are implemented:
-
-        * the map `Y\to X` is equal to the structural morphism of `Y` as a cover
-          of the projective line; in particular, `X` is a projective line
-        * `X` and `Y` are both projective lines
 
     EXAMPLES:
 
@@ -150,112 +140,95 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
          Point on superelliptic curve y^3 = x^4 + x + 1 over Finite Field of size 2 with coordinates (0, u1).]
     """
 
-    def __init__(self, Y, X, phi=None):
+    def __init__(self, Y, X, phi):
+
+        from mclf.field_extensions.standard_field_extensions import StandardFiniteFieldExtension
         FX = X.function_field()
-        assert FX == X.rational_function_field(), "X must be a projective line"
         FY = Y.function_field()
         self._codomain = X
         self._domain = Y
-        if phi==None:
-            assert FX == Y.rational_function_field(), "Y be a cover of the projective line X."
-            self._phi = FY.coerce_map_from(FX)
-            self._is_structure_map = True
-        else:
-            assert phi.domain() is FX, "the domain of phi must be %s"%FX
-            assert phi.codomain() is FY, "the codomain of phi must be %s"%FY
-            self._phi = phi
-            self._is_structure_map = ( phi(FX.gen()) == FY.base_field().gen())
-            assert self._is_structure_map or FY == FY.rational_function_field()
-
+        if isinstance(phi, StandardFiniteFieldExtension):
+            FY_FX = phi
+            phi = FY_FX.embedding()
+        assert phi.domain() is FX, "the domain of phi must be {}".format(FX)
+        assert phi.codomain() is FY, "the codomain of phi must be {}".format(FY)
+        self._function_field_morphism = phi
+        self._extension_of_function_fields = FY_FX
 
     def __repr__(self):
-        if self._phi == None:
-            return "morphism from %s \nto %s,\ndetermined by inclusion of function fields"%(self.domain(), self.codomain())
-        else:
-            return "morphism from %s \nto %s,\ndetermined by %s"%(self.domain(), self.codomain(), self._phi)
-
-
-    def is_structure_map(self):
-        r""" Return ``True`` if this map is the structure map of the curve `Y`.
-
-        EXAMPLES::
-
-            sage: from mclf import *
-            sage: F.<x> = FunctionField(QQ)
-            sage: X = SmoothProjectiveCurve(F)
-            sage: phi = F.hom(x^2+1)
-            sage: f = MorphismOfSmoothProjectiveCurves(X, X, phi)
-            sage: f.is_structure_map()
-            False
-            sage: phi = F.hom(x)
-            sage: f = MorphismOfSmoothProjectiveCurves(X, X, phi)
-            sage: f.is_structure_map()
-            True
-
-        """
-        return self._is_structure_map
-
+        return "morphism from {} \nto {},\ndetermined by {}".format(
+            self.domain(), self.codomain(), self._phi)
 
     def domain(self):
         r""" Return the domain of this morphism.
         """
         return self._domain
 
-
     def codomain(self):
         r""" Return the codomain of this morphism.
         """
         return self._codomain
 
-
-    def pullback_map(self):
+    def function_field_morphism(self):
         r""" Return the induced inclusion of function fields.
 
         """
-        return self._phi
+        return self._function_field_morphism
 
+    def extension_of_function_fields(self):
+        r""" Return the extension of function fields corresponding to this map.
+
+        The returned value is an object of the class
+        :class:`StandardFiniteFieldExtension`
+
+        """
+        return self._extension_of_function_fields
 
     def pullback(self, f):
         r""" Return the pullback of a function under this morphism.
 
         """
-        return self.pullback_map(f)
+        return self.function_field_morphism(f)
 
+    def __call__(self, P):
+        r""" Return the image of a point under this map.
 
-    def fiber(self, P):
+        """
+        Y = self.codomain()
+        X = self.domain()
+        assert P.curve() is Y, "the point P doesn't ly on the domain of this map"
+        FY_P = P.valued_field()
+        FY_FX = self.extension_of_function_fields()
+        FX_Q = FY_P.restriction(FY_FX)
+        return PointOnSmoothProjectiveCurve(X, FX_Q)
+
+    def fiber(self, P, multiplicities=False):
         r"""
-        Return the fiber of this map over the point `P` (without multiplicities).
+        Return the fiber of this map over the point `P`.
 
         INPUT:
 
         - ``P`` -- a point on the curve `X`, the codomain of this morphism
+        - ``multiplicities`` -- a boolean (default: ``False``)
 
-        OUTPUT: the fiber over `P`, as a list of points of `Y` (the domain of this map)
+        OUTPUT:
+
+        the fiber over `P`, as a list of points of `Y` (the domain of this map).
+        If ``multiplicities`` is ``True`` then we return a list of pairs
+        `(Q, m)`, where `m` is the multiplicity of the point `Q` as a point on
+        the fiber, considered as a divisor.
 
         """
         Y = self.domain()
         X = self.codomain()
-        assert P.curve()==X, "P must be a point on the codomain of phi"
-        FX = X.function_field()
-        FY = Y.function_field()
-        phi = self.pullback_map()
-        v = P.valuation()
-        if self.is_structure_map():
-            # FY is a finite simple extension of FX
-            return [PointOnSmoothProjectiveCurve(self.domain(), w) for w in v.extensions(FY)]
+        assert P.curve() == X, "P must be a point on the codomain of phi"
+        FY_FX = self.extension_of_function_fields()
+        FX_v = P.valued_field()
+        extensions = FX_v.extensions(FY_FX)
+        if multiplicities:
+            raise NotImplementedError()
         else:
-            # FX, FY are rational function fields
-            if v(FX.gen()) >= 0:
-                g = phi(v.uniformizer()).numerator()
-                extensions = [FY.valuation(FY(h)) for h, m in g.factor()]
-            else:
-                f = phi(FX.gen())
-                g = f.denominator()
-                extensions = [FY.valuation(h) for h, m in g.factor()]
-                if f.numerator().degree() > g.degree():
-                    extensions.append(FY.valuation(~FY.gen()))
             return [PointOnSmoothProjectiveCurve(Y, w) for w in extensions]
-
 
     def fiber_degree(self, P):
         r"""
