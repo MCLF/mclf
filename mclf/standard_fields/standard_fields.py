@@ -14,68 +14,18 @@ We call a field `K` a *standard field* if `K` is of one of the following types:
 Basically all calculations done in this project involve calculations with such
 standard fields.
 
-One problem is that is that in Sage standard fields and their extensions
-sometimes do not occur in their standard form, which makes it hard to deal with
-them in a systematic way. To solve this problem, we create a class
-:class:`StandardField`.
+One problem is that is that in Sage standard fields sometimes do not occur in
+a any kind of standard form, which makes it hard to deal with
+them in a systematic way. For instance, a number field may be represented as
+an absolute number field, or as a tower of relative number fields.
+
+To solve this problem, we create a class
+:class:`StandardField`. An object of this class represents a standard field `K`,
+which may be given in any form which provides internal access to a standard model
+of `K`.
 
 
 EXAMPLES::
-
-    sage: from mclf import *
-    sage: k0 = GF(2); k1 = GF(4)
-    sage: k1_k0 = standard_field_extension(k1, k0)
-    sage: k1_k0
-    Finite Field in z2 of size 2^2, as finite extension of Finite Field of size 2
-
-The base field and the extension field of a standard extensions can be accessed
-via the methods :meth:`domain` and :meth:`codomain`.::
-
-    sage: k1_k0.domain()
-    Finite Field of size 2
-    sage: k1_k0.codomain()
-    Finite Field in z2 of size 2^2
-
-We can check the degree and the transcendence degree of a standard extension.::
-
-    sage: k1_k0.degree()
-    2
-    sage: k1_k0.transcendence_degree()
-    0
-
-A finite standard extension has a generator and a polynomial; these define the
-standard model of the extension.::
-
-    sage: k1_k0.generator()
-    z2
-    sage: k1_k0.polynomial()
-    z2^2 + z2 + 1
-
-We can compose standard extensions, and compute subextensions with given
-generators.::
-
-    sage: k2 = GF(16)
-    sage: k2_k1 = standard_field_extension(k2, k1)
-    sage: k2_k0 = k1_k0.superextension(k2_k1)
-    sage: k2_k0
-
-    sage: k2_k0.subextension(k1.gen())
-
-We can also compute the base change of an extension with respect to another one.::
-
-    sage: k2_k0.base_change(k1_k0)
-
-
-A standard extension can also be defined via an injective field homomorphism.::
-
-    sage: K.<x> = FunctionField(k0)
-    sage: phi = K.hom([x^2+x])
-    sage: K_K = standard_field_extension(phi)
-    sage: K_K
-
-    sage: K_K.generator()
-
-    sage: K_K.polynomial()
 
 
 """
@@ -102,6 +52,14 @@ def is_standard_field(K):
     3. `K` is a function field, and the constant base field is either finite or
        a number field
 
+    EXAMPLES::
+
+        sage: from mclf import *
+        sage: is_standard_field(QQ)
+        True
+        sage: is_standard_field(RR)
+        False
+
     """
     from sage.categories.number_fields import NumberFields
     from sage.categories.function_fields import FunctionFields
@@ -111,6 +69,8 @@ def is_standard_field(K):
     elif K in FunctionFields:
         k = K.constant_base_field()
         return k.is_finite() or k in NumberFields
+    else:
+        return False
 
 
 def standard_field(K):
@@ -123,6 +83,36 @@ def standard_field(K):
     OUTPUT:
 
     the object representing `K` and its normal model.
+
+    EXAMPLES::
+
+        sage: from mclf import *
+        sage: standard_field(QQ)
+        Rational Field as a standard field
+
+        sage: R.<x> = QQ[]
+        sage: K.<a> = NumberField(x^2+x+1)
+        sage: L.<b> = K.extension(x^3+a*x+1)
+        sage: LL = standard_field(L)
+        sage: LL.underlying_field()
+        Number Field in b with defining polynomial x^3 + a*x + 1 over its base field
+        sage: LL.standard_model()
+        Number Field in b with defining polynomial x^6 - x^4 + 2*x^3 + x^2 - x + 1
+        sage: LL.to_standard_model()(b)
+        b
+
+        sage: k0 = GF(2)
+        sage: K0.<x> = FunctionField(k0)
+        sage: R.<y> = K0[]
+        sage: K.<y> = K0.extension(y^2+y+x^3+1)
+        sage: S.<z> = K[]
+        sage: L.<z> = K.extension(z^3 +y*z - x^2)
+        sage: F = standard_field(L); F
+        Function field in z defined by z^3 + y*z + x^2, as a standard field
+        sage: F.standard_model()
+        Function field in z defined by z^6 + z^4 + (x^3 + 1)*z^2 + x^2*z + x^4
+        sage: F.to_standard_model()(y)
+        1/x^2*z^5 + 1/x^2*z^3 + z^2 + ((x^3 + 1)/x^2)*z + 1
 
     """
     from sage.categories.fields import Fields
@@ -150,6 +140,33 @@ def standard_function_field(K, constant_base_field=None):
     OUTPUT:
 
     the object representing the function field `K/k` and its normal model.
+
+    .. NOTE::
+
+        At the moment, a standard model may be an extension of `k(x)` of degree
+        one; in this case, it would be better to replace it with `k(x)` itself.
+
+
+    EXAMPLES:
+
+        sage: from mclf import *
+        sage: k0 = GF(2)
+        sage: R.<t> = k0[]
+        sage: k.<a> = k0.extension(t^2+t+1)
+        sage: F0.<x> = FunctionField(k0)
+        sage: S.<y> = F0[]
+        sage: F.<y> = F0.extension(y^2+y+1)
+        sage: phi = k.hom([y], F)
+        sage: F = standard_function_field(F, phi); F
+        Function field in y defined by y^2 + y + 1, as a standard field
+
+    The standard model of `F` is a simple extension of `k(x)` of degree one.::
+
+        sage: F.standard_model()
+        Function field in y defined by y + a
+
+    Actually, the standard model should be `k(x)``!
+
     """
 
     from sage.categories.fields import Fields
@@ -162,7 +179,7 @@ def standard_function_field(K, constant_base_field=None):
         assert constant_base_field.codomain() is K, "K must be the codomain of phi"
         phi = constant_base_field
         k = phi.domain()
-    elif k is None:
+    elif constant_base_field is None:
         k = K.constant_base_field()
         phi = k.hom(K)
     else:
@@ -193,11 +210,42 @@ class StandardField(SageObject):
 
 
 class StandardFiniteField(StandardField):
-    pass
+
+    def __init__(self, K):
+        from sage.categories.fields import Fields
+        assert K in Fields, "K must be a field"
+        assert K.is_finite(), "K must be a finite field"
+        self._underlying_field = K
+        # compute the normal form of K
+        # for the moment, we pretend all finite fields are in standard form
+        self._standard_model = K
+        self._to_standard_model = identity_map(K)
+        self._from_standard_model = identity_map(K)
+
+    def _repr_(self):
+        return "{} as a standard field".format(self.underlying_field())
 
 
 class StandardNumberField(StandardField):
-    pass
+
+    def __init__(self, K):
+        from sage.categories.number_fields import NumberFields
+        assert K in NumberFields, "K must be a number field"
+        self._underlying_field = K
+        # compute the normal form of K
+        if K.is_absolute():
+            self._standard_model = K
+            self._to_standard_model = identity_map(K)
+            self._from_standard_model = identity_map(K)
+        else:
+            Ka = K.absolute_field(K.variable_name())
+            Ka_to_K, K_to_Ka = Ka.structure()
+            self._standard_model = Ka
+            self._to_standard_model = K_to_Ka
+            self._from_standard_model = Ka_to_K
+
+    def _repr_(self):
+        return "{} as a standard field".format(self.underlying_field())
 
 
 class StandardFunctionField(StandardField):
@@ -219,9 +267,9 @@ class StandardFunctionField(StandardField):
 
     def __init__(self, phi):
 
-        self._underlying_field = phi.domain()
-        self._constant_base_field = phi.codomain()
-        self._embedding = phi
+        self._underlying_field = phi.codomain()
+        self._constant_base_field = phi.domain()
+        self._embedding_of_constant_base_field = phi
         F, to_standard_model, from_standard_model = standard_model_of_function_field(phi)
         self._standard_model = F
         self._to_standard_model = to_standard_model
@@ -229,7 +277,7 @@ class StandardFunctionField(StandardField):
 
     def _repr_(self):
 
-        return "{}, with field of constants {}".format(self.codomain(), self.domain())
+        return "{}, as a standard field".format(self.underlying_field())
 
     def is_transcendential(self, t):
         r""" Return whether this element if transcendental over the base field.
@@ -351,7 +399,7 @@ def standard_model_of_function_field(phi):
             return F, L_to_F, F_to_L
         else:
             # we have to find a separable generator
-            pass
+            raise NotImplementedError("standard model of inseparable function field not yet implemented")
     else:
         # we follow the Algorithm explained above:
         # 1. find a common subfield k

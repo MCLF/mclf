@@ -19,6 +19,6 @@ from .semistable_reduction.admissible_reduction import *
 from .semistable_reduction.semistable_models import *
 from .semistable_reduction.admissible_reduction import *
 from .semistable_reduction.superp_models import *
-from .field_extensions.standard_field_extensions import *
-from .field_extensions.valued_field_extensions import *
-from .field_extensions.valuations import *
+from .standard_fields.standard_fields import *
+from .standard_fields.valued_fields import *
+from .standard_fields.finite_field_extensions import *
