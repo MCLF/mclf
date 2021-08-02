@@ -21,15 +21,19 @@ valuation to a finite extension.::
     sage: R.<y> = K[]
     sage: L.<y> = K.extension(y^2+x^3+x+1)
     sage: L_w = K_v.extensions(L)[0]; L_w
-    [Function field in y defined by y^2 + x^3 + x + 1 with (x)-adic valuation, as an extension of  Rational
-     function field in x over Rational Field with (x)-adic valuation]
+    [Function field in y defined by y^2 + x^3 + x + 1 with (x)-adic valuation,
+     as an extension of  Rational function field in x over Rational Field
+     with (x)-adic valuation]
 
-Note that the residue field of a valued field extension is again a field extension::
+Note that the residue field of a valued field extension is again
+a field extension.::
 
     sage: L_w.residue_field()
-    Number Field in u1 with defining polynomial y^2 + 1, as finite extension of Rational Field
+    Number Field in u1 with defining polynomial y^2 + 1, as finite extension
+    of Rational Field
 
-This also works for extensions obtained from an arbitrary embedding of fields.::
+This also works for extensions obtained from an arbitrary embedding
+of fields.::
 
     sage: phi = K.hom([x^2+x])
     sage: extensions = K_v.extensions(phi)
@@ -47,7 +51,8 @@ This also works for extensions obtained from an arbitrary embedding of fields.::
 
 from sage.all import SageObject
 from mclf.field_extensions.standard_field_extensions import (
-    StandardFieldExtension, StandardFiniteFieldExtension, StandardFunctionField)
+    StandardFieldExtension, StandardFiniteFieldExtension,
+    StandardFunctionField)
 
 
 def valued_field(K, v, is_complete=False):
@@ -94,7 +99,8 @@ def valued_field(K, v, is_complete=False):
     """
     from sage.categories.number_fields import NumberFields
     from mclf.padic_extensions.padic_number_fields import pAdicNumberField
-    from mclf.field_extensions.standard_field_extensions import is_standard_field
+    from mclf.field_extensions.standard_field_extensions import (
+        is_standard_field)
     assert is_standard_field(K), "K must be a standard field"
     if is_complete and K in NumberFields:
         return pAdicNumberField(K, v)
@@ -112,7 +118,8 @@ def valued_field(K, v, is_complete=False):
 
 
 def valued_function_field(F, v, k=None, is_complete=False):
-    r""" Return the valued function field `(F, v)` with constant base field `k`.
+    r""" Return the valued function field `(F, v)`
+    with constant base field `k`.
 
     By a *valued function field* we mean a pair `(F/k, v)`, where `F/k` is a
     standard function field and `v` is a valuation on `F`. We call `F` the
@@ -126,14 +133,14 @@ def valued_function_field(F, v, k=None, is_complete=False):
                or ``None`` (the default)
     - ``is_complete`` -- a boolean (default: ``False``)
 
-    The function field `F` may be given either as a field, or as an object of the
-    class :class:`StandardFunctionField`. If the second case, `k` must be ``None``,
-    as it is already internally defined by `F`.
+    The function field `F` may be given either as a field, or as an object of
+    the class :class:`StandardFunctionField`. If the second case, `k` must be
+    ``None``, as it is already internally defined by `F`.
 
     OUTPUT:
 
-    The valued function field determined by ´(F/k, v)`, as an object of the class
-    :class:`ValuedFunctionField`.
+    The valued function field determined by ´(F/k, v)`, as an object of the
+    class :class:`ValuedFunctionField`.
 
     If `k` is not given, we understand that `k` is the internally defined
     constant base field of `F`.
@@ -157,9 +164,11 @@ def valued_function_field(F, v, k=None, is_complete=False):
 
     """
     from sage.categories.function_fields import FunctionFields
-    from mclf.field_extensions.standard_field_extensions import standard_field_extension
+    from mclf.field_extensions.standard_field_extensions import (
+        standard_field_extension)
     if isinstance(F, StandardFunctionField):
-        assert k is None, "the constant base field is already defined, so k must not be given"
+        assert k is None, "the constant base field is already defined,\
+            so k must not be given"
         assert v.domain() is F.codomain(), "F must be the domain of v"
         v_k = F.restriction_of_valuation(v)
         if v_k.is_trivial():
@@ -188,7 +197,8 @@ class ValuedField(SageObject):
     """
 
     def __init__(self, K, v):
-        from mclf.field_extensions.standard_field_extensions import is_standard_field
+        from mclf.field_extensions.standard_field_extensions import (
+            is_standard_field)
         assert is_standard_field(K), "K has to be a standard field"
         self._underlying_field = K
         assert v.domain() is K, "K has to be the domain of v"
@@ -241,12 +251,14 @@ class ValuedField(SageObject):
 
         INPUT:
 
-        - ``L`` -- a finite field extension of the underlying field of this valued field
+        - ``L`` -- a finite field extension of the underlying field
+                   of this valued field
 
         `L` may be given in one of the following forms:
 
         - as an object of :class:`StandardFiniteFieldExtension`,
-        - as field with subfield `K`, the underlying field of this valued field,
+        - as field with subfield `K`, the underlying field
+          of this valued field,
         - as an embedding `\phi_K\to L`.
 
         OUTPUT:
@@ -266,12 +278,12 @@ class ValuedField(SageObject):
             sage: R.<x> = QQ[]
             sage: L = NumberField(x^2 + x + 2, "a")
             sage: Q_2.extensions(L)
-            [Number Field in a with defining polynomial x^2 + x + 2 with [ 2-adic
-             valuation, v(x + 1) = 1 ]-adic valuation, as an extension of  2-adic
-             completion of Rational Field,
-             Number Field in a with defining polynomial x^2 + x + 2 with [ 2-adic
-             valuation, v(x) = 1 ]-adic valuation, as an extension of  2-adic
-             completion of Rational Field]
+            [Number Field in a with defining polynomial x^2 + x + 2 with
+             [ 2-adic valuation, v(x + 1) = 1 ]-adic valuation, as an extension
+             of  2-adic completion of Rational Field,
+             Number Field in a with defining polynomial x^2 + x + 2 with
+              [ 2-adic valuation, v(x) = 1 ]-adic valuation, as an extension
+             of  2-adic completion of Rational Field]
 
         """
         from mclf.field_extensions.standard_field_extensions import (
@@ -297,7 +309,8 @@ class ValuedField(SageObject):
         if L_K.has_standard_form():
             W = self.valuation().extensions(L_K.codomain())
         else:
-            from mclf.field_extensions.valuations import DiscreteValuationViaIsomorphism
+            from mclf.field_extensions.valuations import (
+                DiscreteValuationViaIsomorphism)
             L1 = L_K.standard_model()
             W1 = self.valuation().extensions(L1)
             L_to_L1 = L_K.to_standard_model()
@@ -312,8 +325,8 @@ class ValuedField(SageObject):
 
         INPUT:
 
-        - ``L_K`` -- a standard field extension `L/K`, where `L` is the underlying
-                     field of this valued field `(L, w)`
+        - ``L_K`` -- a standard field extension `L/K`, where `L` is the
+                     underlying field of this valued field `(L, w)`
 
         OUTPUT:
 
@@ -400,7 +413,8 @@ class ValuedFieldExtension(ValuedField, StandardFieldExtension):
     def residue_field(self):
         r""" Return the residue field of this valued field extension.
 
-        The residue field of a valued field extension is again a field extension.
+        The residue field of a valued field extension is again a field
+        extension.
 
         The initialization of the residue field has to be done by the subclass.
 
@@ -408,11 +422,12 @@ class ValuedFieldExtension(ValuedField, StandardFieldExtension):
         return self._residue_field
 
 
-class FiniteValuedFieldExtension(ValuedFieldExtension, StandardFiniteFieldExtension):
+class FiniteValuedFieldExtension(ValuedFieldExtension,
+                                 StandardFiniteFieldExtension):
     r""" A finite extension of standard valued fields.
 
-    A *finite valued field extension* is a finite field extension `L/K`, together with
-    valuations `v` on `K` and `w` on `L` such that `w|_K = v`.
+    A *finite valued field extension* is a finite field extension `L/K`,
+    together with valuations `v` on `K` and `w` on `L` such that `w|_K = v`.
 
     INPUT:
 
@@ -421,7 +436,7 @@ class FiniteValuedFieldExtension(ValuedFieldExtension, StandardFiniteFieldExtens
     - ``w`` -- data defining a valuation on `L`, extension of the valuation `v`
                on `K`, or
 
-    Here `K_v` has to be an object of the class :class:`ValuedField`, whereas the
+    Here `K_v` has to be an object of the class :class:`ValuedField`, whereas
     the extension `L/K` can be given in one of the following forms:
 
     - as an object of :class:`StandardFieldExtension`, with domain `K`,
@@ -431,8 +446,8 @@ class FiniteValuedFieldExtension(ValuedFieldExtension, StandardFiniteFieldExtens
     The valuation `w` can either be given as an object of the class
     :class:`DiscreteValuation`, or as a triple `(w_1, s, t)`, where `w_1` is
     a discrete valuation on a field `L_1`, which is a simple extension of `K`,
-    such that `v=w_1|_K`, and `s:L\to L_1` and `t:L_1\to L` are mutually inverse,
-    `K`-linear isomorphisms.
+    such that `v=w_1|_K`, and `s:L\to L_1` and `t:L_1\to L` are mutually
+    inverse, `K`-linear isomorphisms.
 
     OUTPUT:
 
@@ -442,13 +457,15 @@ class FiniteValuedFieldExtension(ValuedFieldExtension, StandardFiniteFieldExtens
 
     def __init__(self, K_v, L_K, w):
         from sage.categories.fields import Fields
-        from mclf.field_extensions.standard_field_extensions import StandardFieldExtension, standard_field_extension
+        from mclf.field_extensions.standard_field_extensions import (
+            StandardFieldExtension, standard_field_extension)
 
         # reading the input and consistency checks
         assert isinstance(K_v, ValuedField), "K_v has to be a valued field"
         K = K_v.underlying_field()
         if isinstance(L_K, StandardFieldExtension):
-            assert L_K.domain() is K, "the domain of L_K must be the field underlying K_v"
+            assert L_K.domain() is K, "the domain of L_K must be the field\
+                underlying K_v"
         elif L_K in Fields:
             assert K.is_subring(L_K)
             L_K = standard_field_extension(L_K, K)
@@ -484,7 +501,7 @@ class ValuedFunctionField(ValuedFieldExtension, StandardFunctionField):
     - ``w`` -- data defining a valuation on `F`, extension of the valuation `v`
                on `K`
 
-    Here `K_v` has to be an object of the class :class:`ValuedField`, whereas the
+    Here `K_v` has to be an object of the class :class:`ValuedField`, whereas
     the extension `F/K` can be given in one of the following forms:
 
     - as an object of :class:`StandardFunctionField`, with domain `K`,
@@ -494,8 +511,8 @@ class ValuedFunctionField(ValuedFieldExtension, StandardFunctionField):
     The valuation `w` can either be given as an object of the class
     :class:`DiscreteValuation`, or as a triple `(w_1, s, t)`, where `w_1` is
     a discrete valuation on a field `L_1`, which is a simple extension of `K`,
-    such that `v=w_1|_K`, and `s:L\to L_1` and `t:L_1\to L` are mutually inverse,
-    `K`-linear isomorphisms.
+    such that `v=w_1|_K`, and `s:L\to L_1` and `t:L_1\to L` are mutually
+    inverse, `K`-linear isomorphisms.
 
     OUTPUT:
 
@@ -505,13 +522,15 @@ class ValuedFunctionField(ValuedFieldExtension, StandardFunctionField):
 
     def __init__(self, K_v, F_K, w):
         from sage.categories.fields import Fields
-        from mclf.field_extensions.standard_field_extensions import StandardFunctionField, standard_field_extension
+        from mclf.field_extensions.standard_field_extensions import (
+            StandardFunctionField, standard_field_extension)
 
         # reading the input and consistency checks
         assert isinstance(K_v, ValuedField), "K_v has to be a valued field"
         K = K_v.underlying_field()
         if isinstance(F_K, StandardFunctionField):
-            assert F_K.domain() is K, "the domain of F_K must be the field underlying K_v"
+            assert F_K.domain() is K, "the domain of F_K must be the field\
+                underlying K_v"
         elif F_K in Fields:
             assert K.is_subring(F_K)
             F_K = standard_field_extension(F_K, K)
@@ -541,8 +560,8 @@ class ValuedFunctionFieldWithTrivialBaseValuation(ValuedFunctionField):
     INPUT:
 
     - ``F`` -- a standard function field
-    - ``v`` -- a discrete valuation on `F` which is trivial on the constant base
-               field
+    - ``v`` -- a discrete valuation on `F` which is trivial on the constant
+               base field
 
     Here `F` should be given as an object of :class:`StandardFunctionField` and
     `v` as an object of :class:`DiscreteValuation`. The domain of `v` must be

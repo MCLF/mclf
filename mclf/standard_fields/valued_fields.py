@@ -15,7 +15,7 @@ EXAMPLES::
     sage: K_v.residue_field()
     Rational Field
 
-Valued fields have an inbuild method to compute the extensions of  their
+Valued fields have an inbuild method to compute the extensions of their
 valuation to a finite extension.::
 
     sage: R.<y> = K[]
@@ -45,8 +45,8 @@ This also works for extensions obtained from an arbitrary embedding of fields.::
 
 """
 
-from sage.all import SageObject
-from mclf.standard_fields.standard_fields import StandardFunctionField
+from mclf.standard_fields.standard_fields import (StandardField,
+                                                  StandardFiniteField, StandardNumberField, StandardFunctionField)
 
 
 def valued_field(K, v, is_complete=False):
@@ -156,8 +156,7 @@ def valued_function_field(F, v, k=None, is_complete=False):
 
     """
     from sage.categories.function_fields import FunctionFields
-    from mclf.standard_fields.standard_fields import (
-        standard_function_field, StandardFunctionField)
+    from mclf.standard_fields.standard_fields import standard_function_field
     if isinstance(F, StandardFunctionField):
         assert k is None, "the constant base field is already defined, so k must not be given"
         assert v.domain() is F.codomain(), "F must be the domain of v"
@@ -175,7 +174,7 @@ def valued_function_field(F, v, k=None, is_complete=False):
         raise ValueError("F is not of the right type")
 
 
-class ValuedField(SageObject):
+class ValuedField(StandardField):
     r""" Base class for valued fields.
 
     By a *valued field* we mean a pair `(K, v)`, where `K` is a field and
@@ -183,24 +182,14 @@ class ValuedField(SageObject):
     *valuation* of the valued field `(K, v)`.
 
     An object of this class should be created with the function
-    :func:`valued_field`, or :func:`valued_function_field`.
+    :func:`valued_field`, or :func:`valued_function_field`. It will then be
+    an instance of one of the subclasses :class:`ValuedFiniteField`,
+    :class:`ValuedNumberField` or :class:`ValuedFunctionField`.
+
+    Since this class is a subclass of :class:`StandardField`, the basic methods
+    :meth:`underlying_field` and :meth:`standard_model` are available.
 
     """
-
-    def __init__(self, K, v):
-        from mclf.field_extensions.standard_field_extensions import is_standard_field
-        assert is_standard_field(K), "K has to be a standard field"
-        self._underlying_field = K
-        assert v.domain() is K, "K has to be the domain of v"
-        self._valuation = v
-
-    def __repr__(self):
-        return "{} with {}".format(self.underlying_field(), self.valuation())
-
-    def underlying_field(self):
-        r""" Return the field underlying this valued field.
-        """
-        return self._underlying_field
 
     def valuation(self):
         r""" Return the valuation of this valued field.
@@ -338,27 +327,42 @@ class ValuedField(SageObject):
             return completion
 
 
-class ValuedFiniteField(ValuedField):
+class ValuedFiniteField(ValuedField, StandardFiniteField):
     r""" Return a finite field with trivial valuation.
 
     """
 
     def __init__(self, K):
         from sage.rings.valuation.trivial_valuation import TrivialValuation
-        assert K.is_finite(), "K has to be a finite field"
-        self._underlying_field = K
+        if isinstance(K, StandardField):
+            assert isinstance(K, StandardFiniteField)
+            self._underlying_field = K.underlying_field()
+            self._standard_model = K.standard_model()
+            self._to_standard_model = K.to_standard_model()
+            self._from_standard_model = K.from_standard_model()
+        else:
+            assert K.is_finite(), "K has to be a finite field"
+            # we use the initializations of the second parent class
+            StandardFiniteField.__init__(self, K)
         self._valuation = TrivialValuation(K)
 
 
-class ValuedNumberField(ValuedField):
+class ValuedNumberField(ValuedField, StandardNumberField):
     r""" Return a number fields equipped with a discrete valuation.
 
     """
 
     def __init__(self, K, v):
         from sage.categories.number_fields import NumberFields
-        assert K in NumberFields, "K must be a number field"
-        self._underlying_field = K
+        if isinstance(K, StandardField):
+            assert isinstance(K, StandardNumberField)
+            self._underlying_field = K.underlying_field()
+            self._standard_model = K.standard_model()
+            self._to_standard_model = K.to_standard_model()
+            self._from_standard_model = K.from_standard_model()
+        else:
+            assert K in NumberFields, "K must be a number field"
+            StandardNumberField.__init__(self, K)
         assert v.domain() is K, "K must be the domain of v"
         self._valuation = v
 
@@ -366,64 +370,30 @@ class ValuedNumberField(ValuedField):
 class ValuedFunctionField(ValuedField, StandardFunctionField):
     r""" A finite extension of standard valued fields.
 
-    A *valued function field* is a function field `F/K`, together with
-    valuations `v` on `K` and `w` on `F` such that `w|_K = v`.
+    A *valued function field* is a function field `F/k`, together with
+    a discrete pseudovaluation `v` on `F`.
 
-    INPUT:
-
-    - ``K_v`` -- a valued field `(K, v)`
-    - ``F_K`` -- a function field with constant base field `k`
-    - ``w`` -- data defining a valuation on `F`, extension of the valuation `v`
-               on `K`
-
-    Here `K_v` has to be an object of the class :class:`ValuedField`, whereas the
-    the extension `F/K` can be given in one of the following forms:
-
-    - as an object of :class:`StandardFunctionField`, with domain `K`,
-    - as a function field `F` with constant base field `K`,
-    - as an embedding `\phi:K\to F`, with `F/K` of transcendence degree one.
-
-    The valuation `w` can either be given as an object of the class
-    :class:`DiscreteValuation`, or as a triple `(w_1, s, t)`, where `w_1` is
-    a discrete valuation on a field `L_1`, which is a simple extension of `K`,
-    such that `v=w_1|_K`, and `s:L\to L_1` and `t:L_1\to L` are mutually inverse,
-    `K`-linear isomorphisms.
-
-    OUTPUT:
-
-    the object representing the valued function field `(F,w)/(K,v)`.
 
     """
 
-    def __init__(self, K_v, F_K, w):
+    def __init__(self, F):
+        # this only initializes self as the standard function field
+        # initialization of the valuation etc is done by the init method
+        # of the subclass
         from sage.categories.fields import Fields
-        from mclf.field_extensions.standard_field_extensions import StandardFunctionField, standard_field_extension
+        from mclf.field_extensions.standard_field_extensions import (
+            StandardFunctionField)
 
-        # reading the input and consistency checks
-        assert isinstance(K_v, ValuedField), "K_v has to be a valued field"
-        K = K_v.underlying_field()
-        if isinstance(F_K, StandardFunctionField):
-            assert F_K.domain() is K, "the domain of F_K must be the field underlying K_v"
-        elif F_K in Fields:
-            assert K.is_subring(F_K)
-            F_K = standard_field_extension(F_K, K)
-        elif F_K.domain() is K:
-            F_K = standard_field_extension(F_K)
-        else:
-            raise ValueError("F_K does not have the right type")
-        F = F_K.codomain()
-
-        # we use the initializations of the two parent classes
-        ValuedField.__init__(self, F, w)
-        StandardFunctionField.__init__(self, F_K.embedding())
-
-        # we still have to initialize the base field and the residue field
-        self._constant_base_field = K_v
-        # the residue field must be an object of StandardFiniteFieldExtension
-        k_v = K_v.residue_field()
-        k_w = w.residue_field()
-        phib = k_v.hom(k_w)
-        self._residue_field = StandardFunctionField(phib)
+        # initializing F as a StandardFunctionField
+        assert isinstance(F, StandardFunctionField)
+        # we just have to copy the data from F
+        self._underlying_field = F.underlying_field()
+        self._constant_base_field = F.constant_base_field()
+        self._embedding_of_constant_base_field = (
+            F._embedding_of_constant_base_field())
+        self._standard_model = F.standard_model()
+        self._to_standard_model = F.to_standard_model()
+        self._from_standard_model = F.from_standard_model()
 
 
 class ValuedFunctionFieldWithTrivialBaseValuation(ValuedFunctionField):
@@ -446,6 +416,46 @@ class ValuedFunctionFieldWithTrivialBaseValuation(ValuedFunctionField):
 
     """
 
+    def __init__(self, F, v):
+        # call the initialization of th parent, which just copies all data
+        # from F
+        ValuedFunctionField.__init__(self, F)
+        # it remains to initialize the valuation and the residue field
+        assert v.domain() is F.underlying_field()
+        self._valuation = v
+        # the residue field of v is a finite extension of the constant base
+        # field
+
 
 class ValuedFunctionFieldWithpAdicBaseValuation(ValuedFunctionField):
-    pass
+    r""" Return a function field equipped with a discrete valuation which is
+    a `p`-adic valuation on the constant base field.
+
+    INPUT:
+
+    - ``F`` -- a standard function field, whose constant base field `k`
+               is a number field
+    - ``v`` -- a discrete valuation on `F` which is `p`-adic on `k`
+    - ``v_k`` -- the restriction of `v` to `k`
+
+    Here `F` should be given as an object of :class:`StandardFunctionField` and
+    `v` and `v_k` as objects of :class:`DiscreteValuation`. The domain of `v`
+    must be identical to the underlying field of `F`.
+
+    OUTPUT:
+
+    an object representing the pair `(F/k, v)`.
+
+    """
+
+    def __init__(self, F, v, v_k):
+        # call the initialization of th parent, which just copies all data
+        # from F
+        ValuedFunctionField.__init__(self, F)
+        # it remains to initialize the valuation and the residue field
+        assert v.domain() is F.underlying_field()
+        assert v_k.domain() is F.constant_base_field()
+        self._valuation = v
+        self._base_valuation = v_k
+        # the residue field of v is a finite *valued* field extension of the
+        # constant base field
