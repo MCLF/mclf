@@ -57,6 +57,8 @@ There are some conceptional issues:
 - do we really want a distinction between FiniteFieldExtension and
   FiniteExtensionOfStandardFields ?
 - should finite fields be an exception with regards to the "relative_model"?
+- special treatment for extensions of degree one. Make sure that the
+  extension field is equal to the base field
 
 Besides these, the computation of the relative model, given an arbitrary
 embedding phi:K\to L, is not yet done.
@@ -212,11 +214,17 @@ def finite_field_extension_from_polynomial(K, f):
         K = standard_field(K)
     f = K.change_coefficients(f)
     M = K.standard_model().extension(f, f.variable_name())
-    L = standard_field(M)
-    phi = K.inclusion(L)
-    L_to_M = L.to_original_model()
-    M_to_L = L.from_original_model()
-    M, L_to_M, M_to_L = standard_model_of_finite_extension(phi)
+    if f.degree() == 1:
+        L = K
+        phi = K.inclusion(L)
+        L_to_M = L.standard_model().hom(M)
+        M_to_L = M.hom([-f[0]/f[1]], phi)
+    else:
+        L = standard_field(M)
+        phi = K.inclusion(L)
+        L_to_M = L.to_original_model()
+        M_to_L = L.from_original_model()
+        M, L_to_M, M_to_L = standard_model_of_finite_extension(phi)
     if M.is_finite():
         return FiniteExtensionOfFiniteFields(phi, M, L_to_M, M_to_L)
     elif M in NumberFields:
@@ -306,11 +314,10 @@ class FiniteExtensionOfStandardFields(StandardField):
         return self.relative_base_field().standard_model()
 
     def extension_field(self):
-        r""" Return the extension field of thsi finite extension.
+        r""" Return the extension field of this finite extension.
 
-        Actually, we return ``self``.
         """
-        return self
+        return self._extension_field
 
     def codomain(self):
         r""" Return the standard model of the extension field; it is the
@@ -436,7 +443,7 @@ class FiniteExtensionOfStandardFields(StandardField):
             sage: L = GF(4)
             sage: L_K = finite_field_extension(K.hom(L))
             sage: alpha = L_K.relative_generator()
-            sage: L_K.relative_hom(L, [alpha + L.one()])
+            sage: L_K.relative_hom(L, alpha + L.one())
 
         """
         K = self.domain()
@@ -466,24 +473,14 @@ class FiniteExtensionOfStandardFields(StandardField):
         f_M = f.map_coefficients(phi0, M)
         assert f_M(beta).is_zero(), "the homomorphism doesn't exist"
 
-        try:
-            # this may given an error:
-            from mclf.standard_fields.standard_fields import (
-                homomorphism_on_standard_field)
-            phi1 = homomorphism_on_standard_field(self.relative_model(),
-                                                  M, [beta], phi0)
-            # phi1 = self.relative_model().hom([beta], base_morphism=phi0)
-        except TypeError:
-            print("self", self)
-            print("K = ", self.relative_base_field())
-            print("alpha = ", self.relative_generator())
-            print("f = ", self.relative_polynomial())
-            print("L/K = ", self.relative_model())
-            print("L0 = ", self.relative_model().base_field())
-            print("l = ", self.relative_model().constant_base_field())
-            raise TypeError()
+        from mclf.standard_fields.standard_fields import (
+            homomorphism_on_standard_field)
+        phi1 = homomorphism_on_standard_field(self.relative_model(),
+                                              M, [beta], phi0)
         phi = self.to_relative_model().post_compose(phi1)
-        return phi
+        from mclf.standard_fields.standard_fields import (
+            embedding_of_standard_fields)
+        return embedding_of_standard_fields(phi)
 
     def composition_with_superextension(self, M_L):
         r""" Return the composition of this extension with a superextension.
@@ -916,7 +913,8 @@ def standard_model_of_finite_extension(phi):
         alpha = L.roots(g)[0]
         # now L is iso to  M:=K[alpha |g(alpha)=0]
         # we construct M and the isomorphisms
-        M = K.standard_model().extension(g, f.variable_name())
+        #M = K.standard_model().extension(g, f.variable_name())
+        M = f.parent().quotient_by_principal_ideal(f)
         M_to_L = M.hom([alpha], L.standard_model())
         L_to_M = L.standard_model().hom([M.gen()])
         return M, L_to_M, M_to_L
