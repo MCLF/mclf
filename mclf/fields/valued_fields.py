@@ -45,8 +45,8 @@ This also works for extensions obtained from an arbitrary embedding of fields.::
 
 """
 
-from mclf.standard_fields.standard_fields import (StandardField,
-                                                  StandardFiniteField, StandardNumberField, StandardFunctionField)
+from mclf.fields.standard_fields import (StandardField,
+                                         StandardFiniteField, StandardNumberField, StandardFunctionField)
 
 
 def valued_field(K, v, is_complete=False):
@@ -156,7 +156,7 @@ def valued_function_field(F, v, k=None, is_complete=False):
 
     """
     from sage.categories.function_fields import FunctionFields
-    from mclf.standard_fields.standard_fields import standard_function_field
+    from mclf.fields.standard_fields import standard_function_field
     if isinstance(F, StandardFunctionField):
         assert k is None, "the constant base field is already defined, so k must not be given"
         assert v.domain() is F.codomain(), "F must be the domain of v"
@@ -263,7 +263,7 @@ class ValuedField(StandardField):
              completion of Rational Field]
 
         """
-        from mclf.standard_fields.finite_field_extensions import (
+        from mclf.fields.finite_field_extensions import (
             FiniteFieldExtension, is_finite_extension, finite_field_extension)
         from sage.categories.fields import Fields
         K = self.underlying_field()

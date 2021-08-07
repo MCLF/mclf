@@ -126,7 +126,7 @@ A finite extension can also be defined via an injective field homomorphism.::
 
 """
 
-from mclf.standard_fields.standard_fields import (
+from mclf.fields.standard_fields import (
     standard_field, StandardField, StandardFiniteField, StandardNumberField,
     StandardFunctionField)
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
@@ -182,7 +182,7 @@ def finite_field_extension_from_embedding(phi):
 
     """
     from sage.categories.number_fields import NumberFields
-    from mclf.standard_fields.standard_fields import (
+    from mclf.fields.standard_fields import (
         EmbeddingOfStandardFields, embedding_of_standard_fields)
     if not isinstance(phi, EmbeddingOfStandardFields):
         phi = embedding_of_standard_fields(phi)
@@ -271,7 +271,7 @@ class FiniteExtensionOfStandardFields(StandardField):
     """
 
     def __init__(self, phi, M, s, t):
-        from mclf.standard_fields.standard_fields import (
+        from mclf.fields.standard_fields import (
             EmbeddingOfStandardFields)
         assert isinstance(phi, EmbeddingOfStandardFields)
         K = phi.base_field()
@@ -473,12 +473,12 @@ class FiniteExtensionOfStandardFields(StandardField):
         f_M = f.map_coefficients(phi0, M)
         assert f_M(beta).is_zero(), "the homomorphism doesn't exist"
 
-        from mclf.standard_fields.standard_fields import (
+        from mclf.fields.standard_fields import (
             homomorphism_on_standard_field)
         phi1 = homomorphism_on_standard_field(self.relative_model(),
                                               M, [beta], phi0)
         phi = self.to_relative_model().post_compose(phi1)
-        from mclf.standard_fields.standard_fields import (
+        from mclf.fields.standard_fields import (
             embedding_of_standard_fields)
         return embedding_of_standard_fields(phi)
 
@@ -567,7 +567,7 @@ class FiniteExtensionOfFiniteFields(FiniteExtensionOfStandardFields,
     """
 
     def __init__(self, phi, M, s, t):
-        from mclf.standard_fields.standard_fields import (
+        from mclf.fields.standard_fields import (
             EmbeddingOfFiniteField)
         assert isinstance(phi, EmbeddingOfFiniteField)
         K = phi.base_field()
@@ -664,7 +664,7 @@ class FiniteExtensionOfNumberFields(FiniteExtensionOfStandardFields,
     """
 
     def __init__(self, phi, M, s, t):
-        from mclf.standard_fields.standard_fields import (
+        from mclf.fields.standard_fields import (
             EmbeddingOfNumberField)
         assert isinstance(phi, EmbeddingOfNumberField)
         K = phi.base_field()
@@ -761,7 +761,7 @@ class FiniteExtensionOfFunctionFields(FiniteExtensionOfStandardFields,
     """
 
     def __init__(self, phi, M, s, t):
-        from mclf.standard_fields.standard_fields import (
+        from mclf.fields.standard_fields import (
             EmbeddingOfFunctionField)
         assert isinstance(phi, EmbeddingOfFunctionField)
         K = phi.base_field()
@@ -892,7 +892,7 @@ def standard_model_of_finite_extension(phi):
 
     """
 
-    from mclf.standard_fields.standard_fields import (
+    from mclf.fields.standard_fields import (
         embedding_of_standard_fields, EmbeddingOfStandardFields)
     if not isinstance(phi, EmbeddingOfStandardFields):
         phi = embedding_of_standard_fields(phi)
@@ -1014,7 +1014,7 @@ def standard_model_of_finite_extension_of_function_fields(phi):
 
 
     """
-    from mclf.standard_fields.standard_fields import (
+    from mclf.fields.standard_fields import (
         EmbeddingOfFunctionField, embedding_of_standard_fields)
 
     if not isinstance(phi, EmbeddingOfFunctionField):
@@ -1177,7 +1177,7 @@ def extend_embedding(phi, k, L0, L1, psi0):
         x
 
     """
-    from mclf.standard_fields.standard_fields import is_rational_function_field
+    from mclf.fields.standard_fields import is_rational_function_field
     K = phi.domain()
     L = phi.codomain()
 
@@ -1230,7 +1230,7 @@ def extend_embedding(phi, k, L0, L1, psi0):
         try:
             factorization = f.factor()
         except NotImplementedError:
-            from mclf.standard_fields.factor_polynomial_over_function_field \
+            from mclf.fields.factor_polynomial_over_function_field \
                 import factor_polynomial_over_function_field
             factorization = factor_polynomial_over_function_field(K, f)
         for g, _ in factorization:
@@ -1307,7 +1307,7 @@ def extend_standard_extension(K, k, g):
         try:
             h_roots = [beta_L for beta_L, _ in h.roots(L)]
         except NotImplementedError:
-            from mclf.standard_fields.factor_polynomial_over_function_field \
+            from mclf.fields.factor_polynomial_over_function_field \
                 import roots_of_polynomial_over_function_field
             h_roots = roots_of_polynomial_over_function_field(L, h)
         for beta_L in h_roots:
@@ -1325,7 +1325,7 @@ def extend_standard_extension(K, k, g):
         # if we get here, something went wrong
         raise AssertionError()
     else:
-        from mclf.standard_fields.standard_fields import (
+        from mclf.fields.standard_fields import (
             is_standard_function_field)
         assert is_standard_function_field(K)
         # K/k is a function field, so K1 should be a finite simple extension

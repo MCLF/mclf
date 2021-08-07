@@ -50,17 +50,7 @@ For a field `K` to be in **standard form** means the following:
   number field in standard form.
 
 We note that the constant base field `k` of a function field `K` is part of the
-data on which the standard model of `K` depends. If `K` is a function field and
-`\phi:k\to K` is an embedding of a finite field or a number field into `K`,
-then the command::
-
-    sage: Ks = standard_field(K, phi)
-
-returns an instance of :class:`StandardFunctionField` such that::
-
-    sage: Ks.constant_base_field() is phi.domain()
-
-will return ``True``.
+data on which the standard model of `K` depends.
 
 In general, our aim is to make sure that replacing any standard field `K`
 by the object ``Ks``, and then ignoring the internal realization (i.e. the
@@ -104,7 +94,7 @@ with the command::
 
     sage: phi = K.hom(L, image_gens, phi0)
 
-Here `image_gens` is an element of `L` (or a list of one or two elements of
+Here ``image_gens`` is an element of `L` (or a list of one or two elements of
 `L`) specifying the image under `\phi` of the generator(s) of the standard
 model of `K`, and `\phi_0` is the *base morphism*, i.e. the restriction of
 `\phi` to the natural subfield `K_0\subset K` such that `K/K_0` is generated
@@ -450,11 +440,6 @@ def standard_rational_function_field(k, var_name="xx"):
         sage: F = standard_rational_function_field(k, "x"); F
         Rational function field in x over Finite Field in z4 of size 2^4
         as standard rational function field
-
-Nevertheless, we can coerce elements of the original field `k` into `F`:
-::
-
-    sage: F(b)
 
     """
     if isinstance(k, StandardField):
@@ -838,7 +823,7 @@ class StandardField(SageObject):
             return []
         f = self.change_coefficients(f)
         if self.is_function_field() and not self.is_rational_function_field():
-            from mclf.standard_fields.factor_polynomial_over_function_field \
+            from mclf.fields.factor_polynomial_over_function_field \
                 import roots_of_polynomial_over_function_field
             roots_of_f = roots_of_polynomial_over_function_field(
                 self.standard_model(), f)
@@ -861,7 +846,7 @@ class StandardField(SageObject):
         """
         f = self.change_coefficients(f)
         if self.is_function_field() and not self.is_rational_function_field():
-            from mclf.standard_fields.factor_polynomial_over_function_field \
+            from mclf.fields.factor_polynomial_over_function_field \
                 import factor_polynomial_over_function_field
             factors_of_f = factor_polynomial_over_function_field(
                 self.standard_model(), f)
@@ -897,7 +882,7 @@ class StandardField(SageObject):
         f = self.change_coefficients(f)
         # we make sure that f is irreducible
         assert len(self.prime_factors(f)) == 1, "f must be irreducible"
-        from mclf.standard_fields.finite_field_extensions import (
+        from mclf.fields.finite_field_extensions import (
             finite_field_extension)
         return finite_field_extension(self, f)
 
@@ -1858,80 +1843,6 @@ class StandardFunctionField(StandardField):
                     return F1.extension_field(), F_to_F1, F1_to_F
             # if we get here, something went wrong
             raise AssertionError("Didn't find the correct factor")
-
-    # this should now be obsolete
-
-    def with_smaller_constant_base_field(self, k0):
-        r""" Return this standard function field as a function field
-        with smaller constant base field.
-
-        INPUT:
-
-        - ``k0`` -- a subfield of the constant base field `k` of this `F`
-
-        OUTPUT:
-
-        a tripel `(F_0, t, s)`, where
-
-        - `F_0` is a standard function field with constant base field `k_0`
-        - `t:F\to F_0` is an isomorphism inducing the identity on `k_0`
-        - `s:F_0\to F` is the inverse of `t`
-
-        .. WARNING::
-
-            The resulting standard function field has in general a different
-            original model! This may lead to problems and should be changed
-            at some point.
-
-        .. TODO::
-
-            Make sure the resulting standard function field has the same
-            original model.
-
-        EXAMPLES::
-
-            sage: from mclf import *
-            sage: A.<x,y> = GF(4)[]
-            sage: F = standard_function_field(y^2+x^3+1)
-            sage: F.with_smaller_constant_base_field(GF(2))
-
-        """
-        from mclf.standard_fields.finite_field_extensions import (
-            finite_field_extension)
-        F = self
-        Fb = F.rational_base_field()
-        k = F.constant_base_field()
-
-        # the new cbf is a subfield of k; we need an equation for the
-        # relative extension k/k_0
-        k_k0 = finite_field_extension(k0.hom(k))
-        f = k_k0.relative_polynomial()
-        alpha = k_k0.relative_generator()
-
-        F00 = standard_rational_function_field(k0)
-        F01 = F00.extension(f)
-
-        # now F01 is isomorphic to Fb; we construct the isomorphism
-        # in two steps
-        F00_to_Fb = F00.hom(Fb, [Fb.gen()], k_k0.embedding())
-        F01_to_Fb = F01.relative_hom(Fb, alpha, F00_to_Fb)
-
-        # now we need the inverse isomorphism
-        k_to_F01 = k_k0.relative_hom(F01, F01.relative_generator())
-        Fb_to_F01 = homomorphism_on_standard_field(
-            Fb, F01, F00.generator(), k_to_F01)
-        Fb_to_F01 = embedding_of_standard_fields(Fb_to_F01)
-
-        # finally, we construct the new ff F0 as an extension of F01,
-        # isomorphic to F/Fb
-        G = F.polynomial()
-        G_F01 = G.map_coefficients(Fb_to_F01, F01.standard_model())
-        F0 = F01.extension(G_F01)
-        F0_to_F = F0.relative_hom(F, F.generator(), F01_to_Fb)
-        Fb_to_F0 = Fb_to_F01.post_compose(F0.embedding())
-
-        F_to_F0 = F.hom(F0, [F0.generator()], Fb_to_F0)
-        return F0, F0_to_F, F_to_F0
 
     def base_change(self, phi, u=None):
         r""" Return the base change of this function field via `\phi`.
@@ -2969,72 +2880,6 @@ def homomorphism_on_standard_field(K, L, *args):
         # we need to specify the codomain! It should be L
         return K.hom(image_gens, base_morphism=phi0)
 
-# ----------------------------------------------------------------------------
-
-#                       helper functions, old version
-#                         consider this as outdated
-
-
-def is_separable_over_rational_function_field(F):
-    r""" Return whether F is a separable extension of the rational function
-    field.
-
-    INPUT:
-
-    - ``F`` -- a function field
-
-    So `F` is a finite extension of a rational function field `k(x)`
-
-    OUTPUT:
-
-    whether the extension `F/k(x)` is separable.
-
-    """
-    from sage.rings.function_field.function_field import RationalFunctionField
-    if isinstance(F, RationalFunctionField):
-        return True
-    else:
-        return (F.is_separable()
-                and is_separable_over_rational_function_field(F.base_field()))
-
-
-def common_subfield(phi):
-    r""" Return a common subfield of the domain and the codomain of a field
-    embedding.
-
-    INPUT:
-
-    - ``phi`` -- an embedding of fields `\phi:K\to L`
-
-    It is assumed that `K` and `L` are standard fields.
-
-    OUTPUT:
-
-    a tripel `(k, s, t)`, where `k` is a subfield of `L`, `s:k\to K` is an
-    embedding and `t:k\to L` is the natural inclusion.
-
-    For the moment, we choose for `k` the common prime field of `K` and `L`.
-    But it would be better to try to find the largest common subfield instead.
-
-    """
-    K = phi.domain()
-    L = phi.codomain()
-    k = L.prime_subfield()
-    return k, k.hom(K), k.hom(L)
-
-
-def smaller_constant_base_field(F, K):
-    r""" Return the standard function field `F` as a function field with
-    constant base field `K`.
-
-    INPUT:
-
-    - ``F`` -- a standard function field
-
-    """
-
-    raise NotImplementedError()
-
 
 def base_change_of_standard_function_field(F, phi, u=None):
     r""" Return the base change of the standard function field `F` wrt `\phi`.
@@ -3094,127 +2939,6 @@ def identity_map(K):
     """
     from sage.categories.homset import Hom
     return Hom(K, K).identity()
-
-
-def is_rational_function_field(L, K):
-    r""" Return whether `L` is a rational function field over K.
-
-    """
-    return L.rational_function_field() is L and L.constant_base_field() is K
-
-
-def extend_standard_extension(K, k, g):
-    r""" Return a finite extension of a standard extension.
-
-    INPUT:
-
-    - ``K`` -- a field
-    - ``k`` -- a subfield of `K` such that `K/k` is a standard extension
-    - ``g`` -- an irreducible polynomial over `K`
-
-    OUTPUT:
-
-    a tupel `(K_1,\iota, \beta)`, where
-
-    - `K_1/k` is a standard extension,
-    - `\iota:K\to K_1` is an embedding,
-    - `\beta\in K_1` is such that `K_1=\iota(K)[\beta]` and `g^\iota(\beta)=0`.
-
-
-    EXAMPLES::
-
-        sage: from mclf import *
-        sage: R.<x> = QQ[]
-        sage: K.<theta> = NumberField(x^3 + x + 1)
-        sage: g = x^2 + theta*x + 1
-        sage: g.factor()
-        x^2 + theta*x + 1
-        sage: extend_standard_extension(K, QQ, g)
-        (Number Field in theta with defining polynomial T^6 + 4*T^4 - T^3
-          + 4*T^2 + 1,
-         Ring morphism:
-           From: Number Field in theta with defining polynomial x^3 + x + 1
-           To:   Number Field in theta with defining polynomial T^6 + 4*T^4
-                   - T^3 + 4*T^2 + 1
-           Defn: theta |--> theta^5 + 4*theta^3 - theta^2 + 3*theta,
-         theta)
-
-    """
-    from mclf.standard_fields.finite_field_extensions import (
-        is_finite_extension)
-    phi = k.hom(K)
-    if is_finite_extension(phi):
-        # K/k should be simple
-        assert K.base_field() is k
-        if K is k:
-            L = k.extension(g, "T")
-            return L, k.hom(L), L.gen()
-        h = K.polynomial()
-        beta = K.gen()
-        assert h(beta).is_zero()
-        K1 = K.extension(g, "T1")
-        gamma = K1.primitive_element()
-        f = minimal_polynomial(gamma, k)
-        L = k.extension(f, K.variable_name())
-        for beta_L, _ in h.roots(L):
-            try:
-                iota = K.hom([beta_L], k.hom(L))
-            except:
-                iota = K.hom([beta_L], L)
-            g_L = g.map_coefficients(iota, L)
-            roots = g_L.roots()
-            if len(roots) > 0:
-                return L, iota, roots[0][0]
-        # if we get here, something went wrong
-        raise AssertionError()
-    else:
-        assert is_standard_function_field(K)
-        # K/k is a function field, so K1 should be a finite simple extension
-        # of the rational subfield K0 = k(x)
-        K0 = K.rational_function_field()
-        return extend_standard_extension(K, K0, g)
-
-
-def algebraic_relation(K, x, y):
-    r""" Return an algebraic relation between `x` and `y`.
-
-    INPUT:
-
-    - ``K`` -- a function field, with constant base field `k`
-    - ``x,y`` -- elements of `K`
-
-    OUTPUT:
-
-    an irreducible bivariate polynomial `f` over `k` such that `f(x,y)=0`.
-
-    EXAMPLES::
-
-        sage: from mclf import *
-        sage: K0.<x> = FunctionField(GF(2))
-        sage: R.<y> = K0[]
-        sage: K.<y> = K0.extension(y^2+x^3+1)
-        sage: algebraic_relation(K, x, y)
-        x^3 + y^2 + 1
-        sage: S.<z> = K[]
-        sage: L.<z> = K.extension(z^2+z+x+y)
-        sage: algebraic_relation(L, z+1, y)
-        x^6 + x^5 + x^4*y + x^4 + x^2*y^2 + x^3 + x^2*y + x*y^2 + y^3 + y^2 + 1
-
-    """
-    K0 = K.rational_function_field()
-    k = K0.constant_base_field()
-    f = minimal_polynomial(x, K0)
-    g = minimal_polynomial(y, K0)
-    A = PolynomialRing(k, "X, Y, T")
-    X, Y, T = A.gens()
-    F = make_bivariate(f)(T, X)
-    G = make_bivariate(g)(T, Y)
-    B = PolynomialRing(k, "x, y")
-    X, Y = B.gens()
-    h = F.resultant(G, T)(X, Y, 0).radical()
-    assert len(h.factor()) == 1, "h should be irreducible!?"
-    assert h(x, y).is_zero()
-    return h
 
 
 def make_bivariate(f):

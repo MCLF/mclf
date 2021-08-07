@@ -6,9 +6,10 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   fields
+   padic_extensions
    curves
    berkovich
-   padic_extensions
    semistable_reduction
 
 

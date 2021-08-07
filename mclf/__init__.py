@@ -19,8 +19,8 @@ from .semistable_reduction.admissible_reduction import *
 from .semistable_reduction.semistable_models import *
 from .semistable_reduction.admissible_reduction import *
 from .semistable_reduction.superp_models import *
-from .standard_fields.standard_fields import *
-from .standard_fields.valued_fields import *
-from .standard_fields.finite_field_extensions import *
-from .standard_fields.factor_polynomial_over_function_field import *
-from .standard_fields.valuations import *
+from .fields.standard_fields import *
+from .fields.valued_fields import *
+from .fields.finite_field_extensions import *
+from .fields.factor_polynomial_over_function_field import *
+from .fields.valuations import *
