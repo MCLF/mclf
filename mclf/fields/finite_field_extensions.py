@@ -33,35 +33,30 @@ creator function :func:`finite_field_extension`. It accepts as input
 
 - an embedding of fields `\phi:K\to L`. Here `K` and `L` must be standard
   fields, and `\phi` may be given either as a Sage morphism, or as an instance
-  of the mclf class :class:`EmbeddingOfStandardFields`,
+  of the mclf class
+  :class:`EmbeddingOfStandardField <mclf.fields.standard_fields.EmbeddingOfStandardFields>`,
 - a pair of standard fields `(L, K)` where `K` is a subfield of `L`, i.e. there
   is a canonical embedding from `K` into `L`. The fields may be represented as
   objects of the Sage category ``Fields`` or as instances of the mclf class
-  :class:`StandardField`,
+  :class:`StandardField <mclf.fields.standard_fields.StandardField>`,
 - a pair `(K, f)`, where `K` is a standard field and `f` is an irreducible,
   univariate polynomial over `K`. Again, the field `K` may be represented as
-  an object of ``Fields`` or as an instance of :class:`StandardField`.
+  an object of ``Fields`` or as an instance of
+  :class:`StandardField <mclf.fields.standard_fields.StandardField>`.
 
-The class :class:`FiniteExtensionOfStandardField` is a child of the class
-:class:`StandardField`. In this way, the extension `L/K` is considered as the
-standard field `L`, together with an embedding of a standard subfield `K` and
-the choice of a relative model `L_{rel}=K[x]/(f)`, or, in other words,
-as a relative extension.
+The class :class:`FiniteExtensionOfStandardFields` is a child of the class
+:class:`StandardField <mclf.fields.standard_fields.StandardField>`.
+In this way, the extension `L/K` is considered as the standard field `L`,
+together with an embedding of a standard subfield `K` and the choice of a
+relative model `L_{rel}=K[x]/(f)`, or, in other words, as a relative extension.
 
 
 
-TODO:
+TODO::
 
-There are some conceptional issues:
-
-- do we really want a distinction between FiniteFieldExtension and
-  FiniteExtensionOfStandardFields ?
-- should finite fields be an exception with regards to the "relative_model"?
-- special treatment for extensions of degree one. Make sure that the
-  extension field is equal to the base field
-
-Besides these, the computation of the relative model, given an arbitrary
-embedding phi:K\to L, is not yet done.
+    - special treatment for extensions of degree one. Make sure that the
+      extension field is equal to the base field
+    - implement superextensions and subextensions
 
 
 EXAMPLES::
@@ -213,6 +208,7 @@ def finite_field_extension_from_polynomial(K, f):
     if not isinstance(K, StandardField):
         K = standard_field(K)
     f = K.change_coefficients(f)
+    # for some finite fields, the method "ex"
     M = K.standard_model().extension(f, f.variable_name())
     if f.degree() == 1:
         L = K
@@ -224,7 +220,7 @@ def finite_field_extension_from_polynomial(K, f):
         phi = K.inclusion(L)
         L_to_M = L.to_original_model()
         M_to_L = L.from_original_model()
-        M, L_to_M, M_to_L = standard_model_of_finite_extension(phi)
+        # M, L_to_M, M_to_L = standard_model_of_finite_extension(phi)
     if M.is_finite():
         return FiniteExtensionOfFiniteFields(phi, M, L_to_M, M_to_L)
     elif M in NumberFields:
@@ -363,13 +359,13 @@ class FiniteExtensionOfStandardFields(StandardField):
         extension.
 
         """
-        return self.relative_model().polynomial()
+        return self._relative_polynomial
 
     def relative_generator(self):
         r""" Return the generator of this finite extension.
 
         """
-        return self.from_relative_model()(self.relative_model().gen())
+        return self._relative_generator
 
     def relative_minimal_polynomial(self, t):
         r""" Return the minimal polynomial of this element over the base field
@@ -423,17 +419,18 @@ class FiniteExtensionOfStandardFields(StandardField):
         OUTPUT:
 
         the homomorphism `\phi:L\to M` extending `\phi_0` sending
-        the relative generator `\alpha` of `L/K` to ``\beta`.
+        the relative generator `\alpha` of `L/K` to `\beta`.
 
         Such an embedding exists iff `\beta` is a root of the image of
-        the minmal polynomial of `\apha` under `\phi_0`. If this is not
+        the minimal polynomial of `\alpha` under `\phi_0`. If this is not
         true, an error is raised.
 
         If `\phi_0` is omitted, `K` must be a subfield of `M` and then we
         let `\phi_0:K\to M` be the natural inclusion.
 
         The field `M` may be given as a Sage field, or as an instance of
-        the mclf class :class:`EmbeddingOfStandardFields`.
+        the mclf class
+        :class:`EmbeddingOfStandardFields <mclf.fields.standard_fields.EmbeddingOfStandardFields>`.
 
 
         EXAMPLES::
@@ -444,6 +441,8 @@ class FiniteExtensionOfStandardFields(StandardField):
             sage: L_K = finite_field_extension(K.hom(L))
             sage: alpha = L_K.relative_generator()
             sage: L_K.relative_hom(L, alpha + L.one())
+            the embedding of Finite Field in z2 of size 2^2 into Finite Field
+            in z2 of size 2^2, sending z2 to z2 + 1
 
         """
         K = self.domain()
@@ -580,7 +579,8 @@ class FiniteExtensionOfFiniteFields(FiniteExtensionOfStandardFields,
         StandardFiniteField.__init__(self, L)
 
         self._relative_generator = t(M.gen())
-        self._relative_polynomial = L.change_coefficients(M.polynomial())
+        # self._relative_polynomial = L.change_coefficients(M.polynomial())
+        self._relative_polynomial = M.modulus()
         self._relative_model = M
         self._to_relative_model = s
         self._from_relative_model = t
@@ -593,9 +593,9 @@ class FiniteExtensionOfFiniteFields(FiniteExtensionOfStandardFields,
         sage: K = standard_field(GF(4))
         sage: x = K.polynomial_generator("x")
         sage: f = x^3 + x^2 + x + K.generator() + 1
-        sage: L = FiniteExtensionOfFiniteField(K, f); L
-        Finite Field in z6 of size 2^6 as a standard field, as finite
-        extension of Finite Field in z2 of size 2^2 as a standard field
+        sage: L = finite_field_extension(K, f); L
+        Finite Field in z6 of size 2^6, as finite extension of Finite Field
+        in z2 of size 2^2
 
     We may view `L` has a standard field.::
 
@@ -619,31 +619,6 @@ class FiniteExtensionOfFiniteFields(FiniteExtensionOfStandardFields,
 
     """
 
-    def to_relative_model_old(self):
-        r""" Return the isomorphism from the extension field to the
-        relative model of this finite extension.
-
-        """
-        if hasattr(self, "_to_relative_model"):
-            return self._to_relative_model
-
-        phi = self.from_relative_model()
-        # we have to find the inverse of phi
-        # for this is suffices to find the inverse image of the absolute
-        # generator of the extension field
-        L = self.extension_field()
-        alpha = self.generator()  # this is the *absolute* generator of L!
-        L_rel = L.relative_model()
-        f = L.polynomial()
-        roots = f.roots(L_rel)
-        for beta, _ in roots:
-            if phi(beta) == alpha:
-                psi = L.standard_model().hom([beta], L_rel)
-                self._to_relative_model = psi
-                return psi
-        # if we get here, something went wrong
-        raise AssertionError("We could not find the inverse image of alpha")
-
 
 class FiniteExtensionOfNumberFields(FiniteExtensionOfStandardFields,
                                     StandardNumberField):
@@ -661,6 +636,37 @@ class FiniteExtensionOfNumberFields(FiniteExtensionOfStandardFields,
 
     The finite simple extension `L/K`, with relative model `M`.
 
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: K = standard_field(CyclotomicField(3, "theta"))
+            sage: x = K.polynomial_generator("x")
+            sage: f = x^3 - K.generator()
+            sage: L = finite_field_extension(K, f); L
+            Number Field in x with defining polynomial x^6 + x^3 + 1,
+            as finite extension of Cyclotomic Field of order 3 and degree 2
+
+        We may view `L` has a standard field.::
+
+            sage: L.standard_model()
+            Number Field in x with defining polynomial x^6 + x^3 + 1
+
+            sage: L.original_model()
+            Number Field in x with defining polynomial x^3 - theta
+            over its base field
+
+        Viewing `L` as a relative extension, it is defined by its *relative base
+        field* (also identical to the *domain*), the *relative generator*, and the
+        *relative polynomial* (which is the relative minimal polynomial of the
+        relative generator).::
+
+            sage: L.relative_base_field()
+            Cyclotomic Field of order 3 and degree 2 as a standard field
+            sage: L.relative_generator()
+            x
+            sage: L.relative_polynomial()
+            x^3 - theta
+
     """
 
     def __init__(self, phi, M, s, t):
@@ -677,69 +683,10 @@ class FiniteExtensionOfNumberFields(FiniteExtensionOfStandardFields,
         StandardNumberField.__init__(self, L)
 
         self._relative_generator = t(M.gen())
-        self._relative_polynomial = L.change_coefficients(M.polynomial())
+        self._relative_polynomial = M.relative_polynomial()
         self._relative_model = M
         self._to_relative_model = s
         self._from_relative_model = t
-
-    r""" An object representing a finite extension of a number field.
-
-    This is a fusion of the two classes :class:`StandardNumberField` and
-    :class:`FiniteFieldExtension`. So an object of this class represents
-    a number field `L`, considered as a finite extension of another
-    number field `K`. Here `K` and `L` are themselves given in standard form.
-
-    INPUT:
-
-    either
-
-    - ``phi`` -- an embedding of number fields, instance of
-                 :class:`EmbeddingOfNumberField`,
-
-    or
-
-    - ``K`` -- a number field, instance of :class:`StandardNumberField`
-    - ``f`` -- an irreducible polynomial over `K`
-
-    OUTPUT:
-
-    Given an embedding `\phi:K\to L`, we return the finite extension `L/K`.
-
-    Given a pair `(K, f)`, we return the simple finite extension
-    `L:=K[x]/(f)` over `K`.
-
-    EXAMPLES::
-
-        sage: from mclf import *
-        sage: K = standard_field(CyclotomicField(3, "theta"))
-        sage: x = K.polynomial_generator("x")
-        sage: f = x^3 - K.generator()
-        sage: L = FiniteExtensionOfNumberField(K, f); L
-        Number Field in x with defining polynomial x^6 + x^3 + 1,
-        as finite extension of Cyclotomic Field of order 3 and degree 2
-
-    We may view `L` has a standard field.::
-
-        sage: L.standard_model()
-        Number Field in x with defining polynomial x^6 + x^3 + 1
-
-        sage: L.original_model()
-        Number Field in x with defining polynomial x^3 - theta
-        over its base field
-
-    Viewing `L` as a relative extension, it is defined by its *relative base
-    field* (also identical to the *domain*), the *relative generator*, and the
-    *relative polynomial* (which is the relative minimal polynomial of the
-    relative generator).::
-
-        sage: L.relative_base_field()
-        Cyclotomic Field of order 3 and degree 2 as a standard field
-        sage: L.relative_generator()
-        x
-        sage: L.relative_polynomial()
-        x^3 - theta
-
-    """
 
 
 class FiniteExtensionOfFunctionFields(FiniteExtensionOfStandardFields,
@@ -838,6 +785,9 @@ class FiniteExtensionOfFunctionFields(FiniteExtensionOfStandardFields,
 
     """
 
+# do I really need this
+# it should be a method of EmbeddingOfStandardFields
+
 
 def is_standard_finite_field_extension(phi):
     r""" Return whether `\phi` is a standard finite field extension.
@@ -913,7 +863,11 @@ def standard_model_of_finite_extension(phi):
         alpha = L.roots(g)[0]
         # now L is iso to  M:=K[alpha |g(alpha)=0]
         # we construct M and the isomorphisms
-        #M = K.standard_model().extension(g, f.variable_name())
+
+        # for some types of finite fields, the method "extension" is not
+        # available; so we create directly the quotient of a polynomial ring
+        # the problem is that M will not have the method "polynomial";
+        # we have to use "modulus" instead
         M = f.parent().quotient_by_principal_ideal(f)
         M_to_L = M.hom([alpha], L.standard_model())
         L_to_M = L.standard_model().hom([M.gen()])
@@ -1409,13 +1363,17 @@ def bivariate_equation(f):
     return F
 
 
+# --------------------------------------------------------------------------
+
+# this should be outdated, or not?
+
 def minimal_polynomial(alpha, K):
     r""" Return the minimal polynomial of `\alpha` over the field `K`.
 
     INPUT:
 
     - ``alpha`` -- an elemenent of a field `L`
-    - ``K`` -- a subfield of `L` over which `alpha` is algebraic
+    - ``K`` -- a subfield of `L` over which `\alpha` is algebraic
 
     OUTPUT: the minimal polynomial of `\alpha` over `K`.
 

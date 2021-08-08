@@ -190,6 +190,7 @@ from sage.categories.function_fields import FunctionFields
 from sage.rings.function_field.constructor import FunctionField
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 
+
 # ---------------------------------------------------------------------------
 
 #                    test functions
@@ -323,8 +324,8 @@ def is_in_standard_form(K):
                 return True
             else:
                 # we test whether K/K_0 is simple, separable and of degree >1
-                return (K.rational_function_field() is K.base_field() and
-                        K.is_separable() and K.degree() > 1)
+                return (K.rational_function_field() is K.base_field()
+                        and K.is_separable() and K.degree() > 1)
         else:
             # the constant base field is not in standard form
             return False
@@ -669,8 +670,8 @@ class StandardField(SageObject):
         # element of the standard model
         if isinstance(k, StandardField):
             k = k.standard_model()
-        return (self.standard_model().has_coerce_map_from(k) or
-                self.original_model().has_coerce_map_from(k))
+        return (self.standard_model().has_coerce_map_from(k)
+                or self.original_model().has_coerce_map_from(k))
 
     def embedding_of_subfield(self, k):
         r""" Return the embedding of a subfield into this standard field.
@@ -739,6 +740,21 @@ class StandardField(SageObject):
             return L.contains_as_subfield(self)
         else:
             return L.has_coerce_map_from(self.standard_model())
+
+    def polynomial_ring(self, var_names):
+        r""" Return a polynomial ring over this standard field.
+
+        INPUT:
+
+        - ``var_names`` -- a list of alphanumeric strings
+
+        OUTPUT:
+
+        the polynomial ring over the standard model of this field,
+        with variable names ``var_names``.
+
+        """
+        return PolynomialRing(self.standard_model(), var_names)
 
     def polynomial_generator(self, var_name):
         r""" Return the generator of a univariate  polynomial ring
@@ -902,6 +918,59 @@ class StandardField(SageObject):
 
         """
         raise NotImplementedError()
+
+    def structure(self):
+        r""" Return the structure of this standard field.
+
+        This is a presentation of this standard field `K` as a sequence of
+        simple extensions.
+
+        OUTPUT:
+
+        a list of triples `(K_i, \alpha_i, f_i)`, `i=1,\ldots,r`, such that
+
+        - `K_0\subset K_1\subset \ldots \subset K_r` is an increasing sequence
+          of subfields of (the standard model of) this field `K`, where `K_0`
+          is the prime field and `K_r=K`,
+        - `\alpha_i\in K_i` is a generator of the extension `K_i/K_{i-1}`,
+        - `f_i` is the minimal polynomial of `\alpha_i` over `K_{i-1}`,
+          or `f_i=0` if `\alpha_i` is transcendental over `K_{i-1}`.
+
+        Note that if `K` is a finite or a number fields, then `r=1`, and if `K`
+        is a function field we have `r=2` or `r=3`.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: k = standard_field(GF(4))
+            sage: k.structure()
+            [(Finite Field in z2 of size 2^2, z2, x^2 + x + 1)]
+
+            sage: x, y = k.polynomial_generators(["x", "y"])
+            sage: K = standard_function_field(x^3 + y^2)
+            sage: K.structure()
+            [(Finite Field in z2 of size 2^2, z2, x^2 + x + 1),
+             (Rational function field in x over Finite Field in z2 of size 2^2,
+               x, 0),
+             (Function field in y defined by y^2 + x^3, y, y^2 + x^3)]
+
+        """
+        K = self.standard_model()
+        if self.is_finite() or self.is_number_field():
+            return [(K, self.generator(), self.polynomial())]
+        elif self.is_function_field():
+            k = self.constant_base_field()
+            if self.is_rational_function_field():
+                x = self.generator()
+                f = self.polynomial_ring(["xx"]).zero()
+                return k.structure() + [(K, x, f)]
+            else:
+                K0 = self.rational_base_field()
+                y = self.generator()
+                f = self.polynomial()
+                return K0.structure() + [(K, y, f)]
+        else:
+            raise NotImplementedError()
 
 
 class StandardFiniteField(StandardField):
@@ -1717,6 +1786,8 @@ class StandardFunctionField(StandardField):
             z2 + 1
 
         """
+        from mclf.fields.embeddings_of_standard_fields import (
+           embedding_of_standard_fields, EmbeddingOfStandardFields)
         K = self
         K0 = K.rational_base_field()
         k = K.constant_base_field()
@@ -1789,6 +1860,8 @@ class StandardFunctionField(StandardField):
             in x0 over Number Field in t with defining polynomial t^2 + 1
 
         """
+        from mclf.fields.embeddings_of_standard_fields import (
+            embedding_of_standard_fields)
         F = self
         if is_standard_field(phi0):
             k1 = phi0
@@ -1969,652 +2042,6 @@ class StandardFunctionField(StandardField):
 
 
 # ---------------------------------------------------------------------------
-
-
-def embedding_of_standard_fields(*args):
-    r""" Return the embedding of standard fields defined by the input.
-
-    INPUT:
-
-    the input tuple ``args`` can be of the following form:
-
-    - ``phi`` -- a morphism of fields  `\phi:K\to L`
-    - `(K, L, \phi)` -- `K` and `L` are fields and `\phi` is a morphism of
-                        fields defined on an overfield of `K` such that
-                        `\phi(K)` is contained in `L`
-
-    Here `K` and `L` must be Sage fields, and `\phi` a Sage morphism.
-
-    EXAMPLES::
-
-        sage: from mclf import *
-        sage: k0 = GF(4)
-        sage: R.<x> = k0[]
-        sage: k1.<a> = k0.extension(x^3+x+1)
-        sage: phi = k0.hom(k1)
-        sage: embedding_of_standard_fields(phi)
-        the embedding of Finite Field in z2 of size 2^2 as a standard field
-        into Univariate Quotient Polynomial Ring in a over Finite Field in z2
-        of size 2^2 with modulus a^3 + a + 1 as a standard field, sending z2 to
-        z2
-        sage: embedding_of_standard_fields(GF(2), k0, phi)
-        the embedding of the field with 2 elements, as a standard field into
-        Finite Field in z2 of size 2^2 as a standard field, sending 1 to 1
-
-    """
-    if len(args) == 1:
-        phi = args[0]
-        K = standard_field(phi.domain())
-        L = standard_field(phi.codomain())
-    elif len(args) == 3:
-        K = standard_field(args[0])
-        L = standard_field(args[1])
-        phi = args[2]
-    else:
-        raise ValueError("input doesn't have the right form")
-
-    if K.is_finite():
-        return EmbeddingOfFiniteField(K, L, phi(K.generator()))
-    elif K.is_number_field():
-        return EmbeddingOfNumberField(K, L, phi(K.generator()))
-    elif K.is_function_field():
-        phi0 = embedding_of_standard_fields(
-            K.constant_base_field(), L.standard_model(), phi)
-        if K.is_rational_function_field():
-            x = phi(K.generator())
-            return EmbeddingOfFunctionField(K, L, [x], phi0)
-        else:
-            x = phi(K.generators()[0])
-            y = phi(K.generators()[1])
-            return EmbeddingOfFunctionField(K, L, [x, y], phi0)
-    else:
-        raise NotImplementedError()
-
-
-class EmbeddingOfStandardFields(SageObject):
-    r""" Base class for an embedding `\phi:K\to L` of standard fields.
-
-    The domain `K` and the codomain `L` may be either a Sage field, i.e.
-    objects of the the Sage category ``Fields``, or instance of the class
-    :class:`StandardField`. In the formeer case, `K` and `L` must be in
-    standard form.
-
-    """
-
-    def domain(self):
-        r""" Return the domain of this embedding.
-
-        The returned value is a field in standard form.
-
-        """
-        return self._domain.standard_model()
-
-    def base_field(self):
-        return self._domain
-
-    def codomain(self):
-        r""" Return the codomain of this embedding.
-
-        The returned value is a field in standard form.
-
-        """
-        return self._codomain.standard_model()
-
-    def extension_field(self):
-        return self._codomain
-
-    def prime_field(self):
-        r""" Return the common prime field of domain and codomain of this
-        embedding.
-
-        """
-        return self.domain().prime_field()
-
-    def applies_to(self, K):
-        r""" Returns whether this embedding can be applies to elements of the
-        field `K`.
-
-        INPUT:
-
-        - ``K`` -- a standard field
-
-        OUTPUT:
-
-        whether this embedding can be applied to elements of `L`.
-        More precisely, this means that this embedding can be applied to the
-        coercion `K(a)`, whenever the latter is well defined.
-
-        """
-        return self.base_field().contains_as_subfield(K)
-
-    def maps_into(self, L):
-        r""" Return whether the image of this embedding can be understood as a
-        subfield of `L`.
-
-        INPUT:
-
-        - ``L`` -- a standard field
-
-        OUTPUT:
-
-        whether any result of this embedding can be coerced into `L`.
-
-        Note that `L` may be either a Sage field or an instance of
-        :class:`StandardField`.
-
-        """
-        return self.extension_field().is_subfield_of(L)
-
-    def precompose(self, psi):
-        r""" Return the composition of `\psi` with this embedding.
-
-        INPUT:
-
-        - ``psi`` -- an embedding `\psi:M\to K` of standard fields.
-
-        Here `\phi:K\to L` is this embedding.
-
-        OUTPUT:
-
-        the embedding `\phi\circ\psi:M\to L`.
-
-        """
-        return psi.post_compose(self)
-
-    def change_coefficients(self, f):
-        r""" Return the base change of a polynomial under this embedding.
-
-        INPUT:
-
-        - ``f`` -- a polynomial over the domain of this embedding
-
-        OUTPUT:
-
-        the polynomial over the codomain, obtained by applying this embedding
-        to the coefficients of `f`.
-
-        """
-        return f.map_coefficients(self, self.codomain())
-
-    def is_standard_simple_extension(self):
-        r""" Return whether this embedding is the standard form of a finite
-        simple extension.
-
-        A positive answer means that the *original model* `M` of the extension
-        field `L` of this embedding `\phi:K\to L` is a finite simple extension
-        of `K`.
-
-        EXAMPLES::
-
-            sage: from mclf import *
-            sage: R.<x> = QQ[]
-            sage: K.<alpha> = NumberField(x^2+2)
-            sage: phi = embedding_of_standard_fields(QQ.hom(K))
-            sage: phi.is_standard_simple_extension()
-            True
-
-        """
-        K = self.domain()           # this is the base field as a bare field
-        L = self.extension_field()
-        M = L.original_model()
-        return (hasattr(M, "base_field") and hasattr(M, "polynomial") and
-                M.base_field() is K)
-
-    # the following methods have to be implemented by the appropriate subclass
-
-    def __call__(self):
-        raise NotImplementedError()
-
-    def post_compose(self, psi):
-        raise NotImplementedError()
-
-    def inverse(self):
-        raise NotImplementedError()
-
-    def is_finite(self):
-        raise NotImplementedError()
-
-    def finite_extension(self):
-        raise NotImplementedError()
-
-    def common_subfield(self):
-        r""" Return a common subfield of the domain and codomain
-        of this embedding.
-
-        .. TODO::
-
-            Provide a precise description of the desired result.
-            It is used in
-            `standard_model_of_finite_extension_of_function_fields`,
-            so maybe we only need it for function fields.
-
-        """
-        raise NotImplementedError()
-
-
-class EmbeddingOfFiniteField(EmbeddingOfStandardFields):
-    r""" Return an embedding of a finite field into another field.
-
-    INPUT:
-
-    - ``K``, ``L`` -- fields, where `K` is finite
-    - ``a`` -- an element of `L`
-
-    The fields `K,L` must be given as objects of the class
-    :class:`StandardField`.
-
-    OUTPUT:
-
-    the unique embedding `\phi:K\to L` sending the standard generator of `K`
-    to `a\in L`.
-
-    If such an embedding does not exist, an error is raised.
-    """
-
-    def __init__(self, K, L, a):
-
-        from sage.categories.fields import Fields
-        if K in Fields:
-            assert K.is_finite()
-            K = standard_field(K)
-            a = K(a)
-        else:
-            assert isinstance(K, StandardFiniteField)
-        if L in Fields:
-            L = standard_field(L)
-        else:
-            assert isinstance(L, StandardField)
-
-        assert K.polynomial()(a).is_zero()
-        self._domain = K
-        self._codomain = L
-        self._image_of_generator = a
-
-    def __repr__(self):
-        return "the embedding of {} into {}, sending {} to {}".format(
-            self.domain(), self.codomain(), self.domain().gen(),
-            self.image_of_generator())
-
-    def image_of_generator(self):
-        return self._image_of_generator
-
-    def __call__(self, a):
-        r""" Return the value of this embedding on the element `a`.
-
-        INPUT:
-
-        - ``a`` -- an element of the domain `K` of this embedding
-
-        If `a` is an element of the original model of `K`, we corce it into
-        the standard model.
-
-        OUTPUT:
-
-        the element `\phi(a)\in L`, where `\phi:K\to L` is this embedding.
-
-        """
-        # this may lead to an infinite loop; is it necessary?
-        # a = self(a)
-        return self.base_field().as_polynomial(a)(self.image_of_generator())
-
-    def post_compose(self, psi):
-        r""" Return the composition of this embedding with `\psi`.
-
-        INPUT:
-
-        - ``psi`` -- an embedding `\psi:L\to M` of standard fields.
-
-        Here `\phi:K\to L` is this embedding.
-
-        OUTPUT:
-
-        the embedding `\psi\circ\phi:K\to M`.
-
-        """
-        assert self.image_of_generator() in psi.domain(), (
-            "im_gen = {} is no in {}".format(
-                self.image_of_generator(), psi.domain()))
-        a = psi(self.image_of_generator())
-        return EmbeddingOfFiniteField(self._domain, psi._codomain, a)
-
-    def inverse(self):
-        r""" Return the inverse of this embedding of finite fields.
-
-        If ``self`` is not invertible, an error is raised.
-
-        """
-        phi = self
-        K = phi.base_field()
-        L = phi.extension_field()
-        assert K.cardinality() == L.cardinality(), (
-            "the embedding is not invertible")
-        alpha = L.generator()
-        f = L.polynomial()
-        for beta in K.roots(f):
-            if phi(beta) == alpha:
-                return L.hom(K, [beta])
-        # if we get here, something went wrong
-        raise AssertionError()
-
-
-class EmbeddingOfNumberField(EmbeddingOfStandardFields):
-    r""" Return an embedding of a number field into another field.
-
-    INPUT:
-
-    - ``K``, ``L`` -- standard fields, where `K` is a number field
-    - ``a`` -- an element of `L`
-
-    Here `K` and `L` must be either Sage fields in standard form, or instances
-    of :class:`StandardField`.
-
-    OUTPUT:
-
-    the unique embedding `\phi:K\to L` sending the standard generator of `K`
-    to `a\in L`.
-
-    If such an embedding does not exist, an error is raised.
-    """
-
-    def __init__(self, K, L, a):
-        from sage.categories.fields import Fields
-        if K in Fields:
-            K = standard_field(K)
-        assert isinstance(K, StandardNumberField)
-        if L in Fields:
-            L = standard_field(L)
-            a = L(a)
-        assert K.polynomial()(a).is_zero()
-        self._domain = K
-        self._codomain = L
-        self._image_of_generator = a
-
-    def __repr__(self):
-        return "the embedding of {} into {}, sending {} to {}".format(
-            self.domain(), self.codomain(), self.base_field().generator(),
-            self.image_of_generator())
-
-    def image_of_generator(self):
-        return self._image_of_generator
-
-    def __call__(self, a):
-        r""" Return the value of this embedding on the element `a`.
-
-        INPUT:
-
-        - ``a`` -- an element of the domain `K` of this embedding
-
-        OUTPUT:
-
-        the element `\phi(a)\in L`, where `\phi:K\to L` is this embedding.
-
-        """
-        return self.base_field().as_polynomial(a)(self.image_of_generator())
-
-    def post_compose(self, psi):
-        r""" Return the composition of this embedding with `\psi`.
-
-        INPUT:
-
-        - ``psi`` -- an embedding `\psi:L\to M` of standard fields.
-
-        Here `\phi:K\to L` is this embedding.
-
-        OUTPUT:
-
-        the embedding `\psi\circ\phi:K\to M`.
-
-        """
-        assert self.codomain() is psi.domain(), (
-            "the codomain of self and the domain of psi must be equal")
-        a = psi(self.image_of_generator())
-        return EmbeddingOfNumberField(self._domain, psi._codomain, a)
-
-    def inverse(self):
-        r""" Return the inverse of this embedding of number fields.
-
-        If ``self`` is not invertible, an error is raised.
-
-        """
-        phi = self
-        K = phi.base_field()
-        L = phi.extension_field()
-        alpha = L.generator()
-        f = L.polynomial()
-        for beta in K.roots(f):
-            if phi(beta) == alpha:
-                return L.hom(K, [beta])
-        # if we get here, phi is not invertible
-        raise ValueError("phi is not invertible")
-
-
-class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
-    r""" Return an embedding of a function field into another function field.
-
-    INPUT:
-
-    - ``K``, ``L`` -- function fields
-    - ``image_of_gens`` -- a list of elements of `L`
-    - ``phi0`` -- an embedding of standard fields
-
-    Here ``image_of_gens`` must contain exactly one element if `K` is a
-    rational function field, and exactly two elements otherwise.
-
-    It is assumed that `\phi_0:k\to l` is an embedding of the constant base
-    field `k` of `K` into a subfield of `L` (which may not be equal to the
-    constant base field).
-
-    OUTPUT:
-
-    the unique embedding `\phi:K\to L` restricting to `\phi_0` on `k` and
-    sending the standard generators of `K` to the elements of
-    ``image_of_gens``.
-
-    If such an embedding does not exist, an error is raised.
-    """
-
-    def __init__(self, K, L, image_of_gens, phi0):
-        from sage.categories.fields import Fields
-        if K in Fields:
-            K = standard_function_field(K)
-        else:
-            assert isinstance(K, StandardFunctionField)
-        if L in Fields:
-            L = standard_function_field(L)
-        else:
-            assert isinstance(L, StandardFunctionField)
-        image_of_gens = [L(a) for a in image_of_gens]
-        if isinstance(phi0, EmbeddingOfStandardFields):
-            # assert K.constant_base_field().is_subring(phi0.domain())
-            # assert phi0.codomain().is_subring(L.standard_model())
-            assert phi0.applies_to(K.constant_base_field())
-            assert phi0.maps_into(L)
-        else:
-            assert phi0.domain() is K.constant_base_field()
-            assert phi0.codomain().is_subring(L.standard_model())
-            phi0 = embedding_of_standard_fields(phi0)
-
-        self._domain = K
-        self._codomain = L
-        self._embedding_of_constant_base_field = phi0
-
-        if K.is_rational_function_field():
-            assert len(image_of_gens) == 1, "K is a rational function field,\
-                so image_of_gens must have exactly one element"
-            self._image_of_generators = [image_of_gens[0]]
-        else:
-            f = K.polynomial(bivariate=True).map_coefficients(
-                phi0, L.standard_model())
-            assert len(image_of_gens) == 2, "K is not a rational function\
-                field, so image_of_gens must have exactly two elements"
-            x = image_of_gens[0]
-            y = image_of_gens[1]
-            assert f(x, y).is_zero()
-            self._image_of_generators = [x, y]
-
-    def __repr__(self):
-        return "the embedding of {} into {}, sending {} to {}".format(
-            self.domain(), self.codomain(), self.base_field().generators(),
-            self.image_of_generators())
-
-    def image_of_generators(self):
-        return self._image_of_generators
-
-    def embedding_of_constant_base_field(self):
-        return self._embedding_of_constant_base_field
-
-    def __call__(self, f):
-        r""" Return the value of this embedding on the element `f`.
-
-        INPUT:
-
-        - ``f`` -- an element of the domain `K` of this embedding
-
-        OUTPUT:
-
-        the element `\phi(f)\in L`, where `\phi:K\to L` is this embedding.
-
-        """
-        K = self.base_field()
-        L = self.extension_field()
-        phi0 = self.embedding_of_constant_base_field()
-        if K.is_rational_function_field():
-            f = K(f)
-            num = f.numerator().map_coefficients(phi0, L.standard_model())
-            denom = f.denominator().map_coefficients(phi0,
-                                                     L.standard_model())
-            x = self.image_of_generators()[0]
-            return num(x)/denom(x)
-        else:
-            num, denom = K.as_rational_function(f)
-            num = num.map_coefficients(phi0, L.standard_model())
-            denom = denom.map_coefficients(phi0, L.standard_model())
-            return num(self.image_of_generators())/denom(
-                self.image_of_generators())
-
-    def post_compose(self, psi):
-        r""" Return the composition of this embedding with `\psi`.
-
-        INPUT:
-
-        - ``psi`` -- an embedding `\psi:L\to M` of function fields.
-
-        Here `\phi:K\to L` is this embedding. The embedding `\psi` may be
-        given as a Sage morphism, or as an instance of
-        :class:`EmbeddingOfStandardFields`.
-
-        OUTPUT:
-
-        the embedding `\psi\circ\phi:K\to M`, as an instance of
-        :class:`EmbeddingOfFunctionField`.
-
-        """
-        # we don't perform any explicit consistency check; the composition
-        # is well defined if the following commands do not produce an error.
-        tau0 = self.embedding_of_constant_base_field().post_compose(psi)
-        image_of_gens = [psi(a) for a in self.image_of_generators()]
-        return EmbeddingOfFunctionField(self.base_field(), psi.codomain(),
-                                        image_of_gens, tau0)
-
-    def inverse(self):
-        r""" Return the inverse of this embedding of function fields.
-
-        If ``self`` is not invertible, an error is raised.
-
-        EXAMPLES::
-
-            sage: from mclf import *
-            sage: R.<a> = QQ[]
-            sage: k.<a> = NumberField(a^2+1)
-            sage: A.<x,y> = k[]
-            sage: F = standard_function_field(x^4+y^4+1)
-            sage: x, y = F.generators()
-            sage: phi = F.hom(F , [-a*y, a*x])
-            sage: phi.inverse()
-
-        """
-        return self.inverse_on_subfield(self.codomain())
-
-    def inverse_on_subfield(self, M):
-        r""" Return a right inverse to this embedding, defined on a subfield.
-
-        INPUT:
-
-        - ``M`` -- a subfield of `L`, where `\phi_K\to L` is this embedding.
-
-
-        OUTPUT:
-
-        An embedding `\psi:M\to K` such that `\phi\circ\psi:M\to L`
-        is the canonical embedding of the subfield `M\subset L`.
-
-        We actually demand that `M\subset L` is a *natural subfield*. Since
-        `L` is a function field, with standard model `k(x)[y\mid f(y)=0]`,
-        `M` must be equal to `k`,  `L_0:=k(x)` or `L`.
-
-        """
-        phi = self
-        K = phi.base_field()
-        L = phi.extension_field()
-        k = L.constant_base_field()
-        L0 = L.rational_base_field()
-        if M is k:
-            # k must be GF(q) or an absolute number field
-            if k.is_prime_field():
-                return embedding_of_standard_fields(k.hom(K.standard_model()))
-            else:
-                alpha = k.gen()
-                f = k.polynomial()
-                for beta in K.roots(f):
-                    if phi(beta) == alpha:
-                        return embedding_of_standard_fields(k.hom([beta]))
-                # if we get here, the partial inverse does not exist
-                raise ValueError("the partial inverse does not exist")
-        elif M is L0:
-            psi0 = phi.inverse_on_subfield(k)
-            if K.is_rational_function_field():
-                x = phi(K.generator())
-                g = L.as_polynomial(x)
-                # we have x = g(y), where L=L0[y].
-                # By assumption, x is in L0, so g must be constant
-                assert g.degree() == 1, "the partial inverse does not exist"
-                beta = -g[0]/g[1]
-                psi = L0.hom([beta], base_map=psi0)
-                assert psi(x) == K.generator(), "something went wrong!"
-                return embedding_of_standard_fields(psi)
-            else:
-                t = L0.gen()       # we have L0=k(t)
-                x = K.generator()  # we have K/k0(x)
-                x1 = phi(x)
-                f = L.algebraic_relation(x1, t)
-                # now f(phi(x), t) = 0
-                f_K = f.map_coefficients(psi0, K.standard_model())
-                _, T = f_K.parent().gens()
-                g = f_K(K.generator(), T).polynomial(T)
-                # now g(alpha) = 0 if phi(alpha)=t
-                roots_of_g = K.roots(g)
-                for alpha in roots_of_g:
-                    if phi(alpha) == t:
-                        # we define psi:L0-->K st psi(t)=alpha
-                        psi = L0.hom([alpha], psi0)
-                        assert psi(x1) == K.generator(
-                        ), "something went wrong!"
-                        return embedding_of_standard_fields(psi)
-                # if we get here, something went wrong
-                raise AssertionError("could not find the correct root of g")
-        elif M is L.standard_model():
-            psi0 = phi.inverse_on_subfield(L0)
-            alpha = L.generator()
-            f = L.polynomial().map_coefficients(psi0, K.standard_model())
-            roots_of_f = K.roots(f)
-            for beta in roots_of_f:
-                if phi(beta) == alpha:
-                    return L.hom(K, [beta], psi0)
-            # if we get here, the partial inverse does not exist
-            raise ValueError("the partial inverse does not exist")
-        else:
-            raise ValueError("M is not a natural subfield of the codomain L")
-
 
 # ----------------------------------------------------------------------------
 
