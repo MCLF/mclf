@@ -245,8 +245,8 @@ def is_finite_extension(phi):
 
     """
     from sage.categories.function_fields import FunctionFields
-    return (phi.domain() in FunctionFields or
-            not phi.codomain() in FunctionFields)
+    return (phi.domain() in FunctionFields
+            or not phi.codomain() in FunctionFields)
 
 
 class FiniteExtensionOfStandardFields(StandardField):
@@ -305,7 +305,7 @@ class FiniteExtensionOfStandardFields(StandardField):
 
     def domain(self):
         r""" Return the standard model of the relative base field; it is the
-        doamin of the embedding defining this standard extension.
+        domain of the embedding defining this standard extension.
         """
         return self.relative_base_field().standard_model()
 
@@ -477,7 +477,7 @@ class FiniteExtensionOfStandardFields(StandardField):
         phi1 = homomorphism_on_standard_field(self.relative_model(),
                                               M, [beta], phi0)
         phi = self.to_relative_model().post_compose(phi1)
-        from mclf.fields.standard_fields import (
+        from mclf.fields.embeddings_of_standard_fields import (
             embedding_of_standard_fields)
         return embedding_of_standard_fields(phi)
 
@@ -708,7 +708,7 @@ class FiniteExtensionOfFunctionFields(FiniteExtensionOfStandardFields,
     """
 
     def __init__(self, phi, M, s, t):
-        from mclf.fields.standard_fields import (
+        from mclf.fields.embeddings_of_standard_fields import (
             EmbeddingOfFunctionField)
         assert isinstance(phi, EmbeddingOfFunctionField)
         K = phi.base_field()
@@ -738,7 +738,7 @@ class FiniteExtensionOfFunctionFields(FiniteExtensionOfStandardFields,
     either
 
     - ``phi`` -- an embedding of function fields, instance of
-                 :class:`EmbeddingOfFunctionField`,
+                 :class:`mclf.fields.embeddings_of_standard_fields.EmbeddingOfFunctionField`,
 
     or
 
@@ -813,7 +813,9 @@ def standard_model_of_finite_extension(phi):
                  extension of `K`
 
     The embedding `\phi` may be given as a Sage morphism between standard
-    fields, or as an instance of the class :class:`EmbeddingOfStandardFields`.
+    fields, or as an instance of the class
+    :class:`EmbeddingOfStandardFields <mclf.fields.\
+    embeddings_of_standard_fields.EmbeddingOfStandardFields>`.
 
     OUTPUT:
 
@@ -842,7 +844,7 @@ def standard_model_of_finite_extension(phi):
 
     """
 
-    from mclf.fields.standard_fields import (
+    from mclf.fields.embeddings_of_standard_fields import (
         embedding_of_standard_fields, EmbeddingOfStandardFields)
     if not isinstance(phi, EmbeddingOfStandardFields):
         phi = embedding_of_standard_fields(phi)
@@ -906,7 +908,8 @@ def standard_model_of_finite_extension_of_function_fields(phi):
     - ``phi`` -- an embedding of function fields `\phi:K\to L`
 
     The embedding `\phi` may be given as a Sage morphism between
-    fields, or as an instance of the class :class:`EmbeddingOfFunctionFields`.
+    fields, or as an instance of the class
+    :class:`EmbeddingOfFunctionFields <mclf.fields.embeddings_of_standard_fields.EmbeddingOfFunctionField`.
 
     OUTPUT:
 
@@ -968,7 +971,7 @@ def standard_model_of_finite_extension_of_function_fields(phi):
 
 
     """
-    from mclf.fields.standard_fields import (
+    from mclf.fields.embeddings_of_standard_fields import (
         EmbeddingOfFunctionField, embedding_of_standard_fields)
 
     if not isinstance(phi, EmbeddingOfFunctionField):

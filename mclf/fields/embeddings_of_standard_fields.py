@@ -354,6 +354,15 @@ class EmbeddingOfFiniteField(EmbeddingOfStandardFields):
 
         If ``self`` is not invertible, an error is raised.
 
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: K = standard_finite_field(4)
+            sage: phi = K.hom(K, K.generator()+1)
+            sage: phi.inverse()
+            the embedding of Finite Field in z2 of size 2^2 into Finite Field
+            in z2 of size 2^2, sending z2 to [z2 + 1]
+
         """
         phi = self
         K = phi.base_field()
@@ -447,6 +456,17 @@ class EmbeddingOfNumberField(EmbeddingOfStandardFields):
 
         If ``self`` is not invertible, an error is raised.
 
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: R.<x> = QQ[]
+            sage: K = standard_number_field(x^2-2, "a")
+            sage: phi = K.hom(K, -K.generator())
+            sage: phi.inverse()
+            the embedding of Number Field in a with defining polynomial x^2 - 2
+            into Number Field in a with defining polynomial x^2 - 2,
+            sending a to -a
+
         """
         phi = self
         K = phi.base_field()
@@ -455,7 +475,7 @@ class EmbeddingOfNumberField(EmbeddingOfStandardFields):
         f = L.polynomial()
         for beta in K.roots(f):
             if phi(beta) == alpha:
-                return L.hom(K, [beta])
+                return L.hom(K, beta)
         # if we get here, phi is not invertible
         raise ValueError("phi is not invertible")
 
@@ -603,6 +623,9 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
             sage: x, y = F.generators()
             sage: phi = F.hom(F , [-a*y, a*x])
             sage: phi.inverse()
+            the embedding of Function field in y defined by y^4 + x^4 + 1 into
+            Function field in y defined by y^4 + x^4 + 1,
+            sending [x, y] to [-a*y, a*x]
 
         """
         return self.inverse_on_subfield(self.codomain())
@@ -635,11 +658,11 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
             if k.is_prime_field():
                 return embedding_of_standard_fields(k.hom(K.standard_model()))
             else:
-                alpha = k.gen()
+                alpha = k.generator()
                 f = k.polynomial()
                 for beta in K.roots(f):
                     if phi(beta) == alpha:
-                        return embedding_of_standard_fields(k.hom([beta]))
+                        return k.hom(K, beta)
                 # if we get here, the partial inverse does not exist
                 raise ValueError("the partial inverse does not exist")
         elif M is L0:
@@ -655,8 +678,8 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
                 assert psi(x) == K.generator(), "something went wrong!"
                 return embedding_of_standard_fields(psi)
             else:
-                t = L0.gen()       # we have L0=k(t)
-                x = K.generator()  # we have K/k0(x)
+                t = L0.generator()       # we have L0=k(t)
+                x = K.generator()        # we have K/k0(x)
                 x1 = phi(x)
                 f = L.algebraic_relation(x1, t)
                 # now f(phi(x), t) = 0
@@ -668,7 +691,7 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
                 for alpha in roots_of_g:
                     if phi(alpha) == t:
                         # we define psi:L0-->K st psi(t)=alpha
-                        psi = L0.hom([alpha], psi0)
+                        psi = L0.hom(K, alpha, psi0)
                         assert psi(x1) == K.generator(
                         ), "something went wrong!"
                         return embedding_of_standard_fields(psi)
