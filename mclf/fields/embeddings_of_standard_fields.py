@@ -13,15 +13,42 @@ we can evaluate the map `\phi` simply with::
 
     sage: phi(a)
 
+EXAMPLES::
 
-.. NOTE::
+    sage: from mclf import *
+    sage: K = GF(2)
+    sage: L = GF(4)
+    sage: phi = K.hom(L); phi
+    Ring morphism:
+      From: Finite Field of size 2
+      To:   Finite Field in z2 of size 2^2
+      Defn: 1 |--> 1
 
-    Currently, the methods :meth:`domain` and :meth:`codomain` return the
-    domain and codomain of an embedding `\phi` as fields in the usual sense
-    (objects of the Sage category ``Fields``), but not as instances of the
-    class :class:`StandardField  <mclf.fields.standard_fields.StandardField>`.
-    It may be more convenient, and in any case more consistent, to change this.
+We can turn this ring homomorphism into an object of the class
+:class:`EmbeddingOfStandardFields`::
 
+    sage: phi = embedding_of_standard_fields(phi); phi
+    the embedding of Finite Field of size 2 into Finite Field in z2
+    of size 2^2, sending 1 to 1
+
+This object behaves mostly like a usual ring morphism in Sage::
+
+    sage: phi.domain()
+    Finite Field of size 2
+    sage: phi.codomain()
+    Finite Field in z2 of size 2^2
+    sage: phi(1)
+    1
+
+Note that the result of :meth:`domain` and :meth:`codomain` are objects of the
+Sage categorie ``Fields``. To obtain the corresponding objects of
+:class:`StandardField <mclf.fields.standard_fields.StandardField>`, we can use
+:meth:`Domain` and :meth:`Codomain`::
+
+    sage: phi.Domain()
+    the standard field with 2 elements
+    sage: phi.Codomain()
+    the standard field with 4 elements
 
 """
 
@@ -115,7 +142,13 @@ class EmbeddingOfStandardFields(SageObject):
         """
         return self._domain.standard_model()
 
-    def base_field(self):
+    def Domain(self):
+        r""" Return the domain of this embedding, as a standard field.
+
+        The returned value is an instance of the class
+        :class:`StandardField <mclf.fields.standard_fields.StandardField>`.
+
+        """
         return self._domain
 
     def codomain(self):
@@ -126,7 +159,13 @@ class EmbeddingOfStandardFields(SageObject):
         """
         return self._codomain.standard_model()
 
-    def extension_field(self):
+    def Codomain(self):
+        r""" Return the codomain of this embedding, as a standard field.
+
+        The returned value is an instance of the class
+        :class:`StandardField <mclf.fields.standard_fields.StandardField>`.
+
+        """
         return self._codomain
 
     def prime_field(self):
@@ -137,7 +176,7 @@ class EmbeddingOfStandardFields(SageObject):
         return self.domain().prime_field()
 
     def applies_to(self, K):
-        r""" Returns whether this embedding can be applies to elements of the
+        r""" Returns whether this embedding can be applied to elements of the
         field `K`.
 
         INPUT:
@@ -151,7 +190,7 @@ class EmbeddingOfStandardFields(SageObject):
         coercion `K(a)`, whenever the latter is well defined.
 
         """
-        return self.base_field().contains_as_subfield(K)
+        return self.Domain().contains_as_subfield(K)
 
     def maps_into(self, L):
         r""" Return whether the image of this embedding can be understood as a
@@ -169,7 +208,7 @@ class EmbeddingOfStandardFields(SageObject):
         :class:`StandardField <mclf.fields.standard_fields.StandardField>`.
 
         """
-        return self.extension_field().is_subfield_of(L)
+        return self.Codomain().is_subfield_of(L)
 
     def precompose(self, psi):
         r""" Return the composition of `\psi` with this embedding.
@@ -221,10 +260,10 @@ class EmbeddingOfStandardFields(SageObject):
 
         """
         K = self.domain()           # this is the base field as a bare field
-        L = self.extension_field()
+        L = self.Codomain()
         M = L.original_model()
         return (hasattr(M, "base_field") and hasattr(M, "polynomial")
-                and M.base_field() is K)
+                and M.Domain() is K)
 
     # the following methods have to be implemented by the appropriate subclass
 
@@ -327,7 +366,7 @@ class EmbeddingOfFiniteField(EmbeddingOfStandardFields):
         """
         # this may lead to an infinite loop; is it necessary?
         # a = self(a)
-        return self.base_field().as_polynomial(a)(self.image_of_generator())
+        return self.Domain().as_polynomial(a)(self.image_of_generator())
 
     def post_compose(self, psi):
         r""" Return the composition of this embedding with `\psi`.
@@ -365,8 +404,8 @@ class EmbeddingOfFiniteField(EmbeddingOfStandardFields):
 
         """
         phi = self
-        K = phi.base_field()
-        L = phi.extension_field()
+        K = phi.Domain()
+        L = phi.Codomain()
         assert K.cardinality() == L.cardinality(), (
             "the embedding is not invertible")
         alpha = L.generator()
@@ -412,7 +451,7 @@ class EmbeddingOfNumberField(EmbeddingOfStandardFields):
 
     def __repr__(self):
         return "the embedding of {} into {}, sending {} to {}".format(
-            self.domain(), self.codomain(), self.base_field().generator(),
+            self.domain(), self.codomain(), self.Domain().generator(),
             self.image_of_generator())
 
     def image_of_generator(self):
@@ -430,7 +469,7 @@ class EmbeddingOfNumberField(EmbeddingOfStandardFields):
         the element `\phi(a)\in L`, where `\phi:K\to L` is this embedding.
 
         """
-        return self.base_field().as_polynomial(a)(self.image_of_generator())
+        return self.Domain().as_polynomial(a)(self.image_of_generator())
 
     def post_compose(self, psi):
         r""" Return the composition of this embedding with `\psi`.
@@ -469,8 +508,8 @@ class EmbeddingOfNumberField(EmbeddingOfStandardFields):
 
         """
         phi = self
-        K = phi.base_field()
-        L = phi.extension_field()
+        K = phi.Domain()
+        L = phi.Codomain()
         alpha = L.generator()
         f = L.polynomial()
         for beta in K.roots(f):
@@ -546,7 +585,7 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
 
     def __repr__(self):
         return "the embedding of {} into {}, sending {} to {}".format(
-            self.domain(), self.codomain(), self.base_field().generators(),
+            self.domain(), self.codomain(), self.Domain().generators(),
             self.image_of_generators())
 
     def image_of_generators(self):
@@ -567,8 +606,8 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
         the element `\phi(f)\in L`, where `\phi:K\to L` is this embedding.
 
         """
-        K = self.base_field()
-        L = self.extension_field()
+        K = self.Domain()
+        L = self.Codomain()
         phi0 = self.embedding_of_constant_base_field()
         if K.is_rational_function_field():
             f = K(f)
@@ -605,7 +644,7 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
         # is well defined if the following commands do not produce an error.
         tau0 = self.embedding_of_constant_base_field().post_compose(psi)
         image_of_gens = [psi(a) for a in self.image_of_generators()]
-        return EmbeddingOfFunctionField(self.base_field(), psi.codomain(),
+        return EmbeddingOfFunctionField(self.Domain(), psi.codomain(),
                                         image_of_gens, tau0)
 
     def inverse(self):
@@ -649,8 +688,8 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
 
         """
         phi = self
-        K = phi.base_field()
-        L = phi.extension_field()
+        K = phi.Domain()
+        L = phi.Codomain()
         k = L.constant_base_field()
         L0 = L.rational_base_field()
         if M is k:

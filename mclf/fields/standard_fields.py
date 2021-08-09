@@ -893,28 +893,33 @@ class StandardField(SageObject):
             factors_of_f = f.factor()
         return [g for g, _ in factors_of_f]
 
-    def extension(self, f):
+    def extension(self, f, gen_name=None):
         r""" Return the finite extension of this field given by an irreducible
         polynomial.
 
         INPUT:
 
         - ``f`` -- an irreducible univariate polynomial over this field.
+        - ``gen_name`` -- an alphanumeric string (optional)
 
         OUTPUT:
 
         The finite simple extension `L/K` given by `f`. This is an object of
-        :class:`StandardFiniteFieldExtension`
+        :class:`StandardFiniteFieldExtension <mclf.fields.\
+        finite_field_extensions.StandardFiniteFieldExtension`.
 
 
         EXAMPLES::
 
             sage: from mclf import *
             sage: K = standard_field(QQ)
-            sage: x = K.polynomial_generator("alpha")
+            sage: x = K.polynomial_generator("x")
             sage: K.extension(x^2+2)
-            Number Field in alpha with defining polynomial alpha^2 + 2
-            as a standard field
+            Number Field in x with defining polynomial x^2 + 2,
+            as finite extension of Rational Field
+            sage: K.extension(x^2+2, "a")
+            Number Field in a with defining polynomial x^2 + 2,
+            as finite extension of Rational Field
 
         """
         # we make sure the base ring of f is the standard model
@@ -923,7 +928,7 @@ class StandardField(SageObject):
         assert len(self.prime_factors(f)) == 1, "f must be irreducible"
         from mclf.fields.finite_field_extensions import (
             finite_field_extension)
-        return finite_field_extension(self, f)
+        return finite_field_extension(self, f, gen_name)
 
     def inclusion(self, L):
         r""" Return the inclusion of this standard field into `L`.
@@ -1035,11 +1040,8 @@ class StandardFiniteField(StandardField):
             self._polynomial = f
 
     def _repr_(self):
-        if self.is_prime_field():
-            return "the standard field with {} elements".format(
-                self.characteristic())
-        else:
-            return "{} as a standard field".format(self.standard_model())
+        return "the standard field with {} elements".format(
+                self.cardinality())
 
     def is_finite(self):
         r""" Return whether this is a finite field.
@@ -1094,6 +1096,39 @@ class StandardFiniteField(StandardField):
 
         """
         return self(a).polynomial()
+
+    def minimal_polynomial(self, a, var_name="x"):
+        r""" Return the absolute minimal polynomial of a field element.
+
+        INPUT:
+
+        - ``a`` -- an element of this finite field
+        - ``var_name`` -- an alphanumeric string
+
+        OUTPUT:
+
+        the absolute minimal polynomial of `a`; this is an irreducible
+        polynomial over the prime field.
+
+        We use ``var_name`` for the name of the variable of the minimal
+        polynomial. The default value is "x".
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: K = standard_finite_field(9)
+            sage: K.minimal_polynomial(K.generator()^2 + 1)
+            x^2 + x + 2
+            sage: K.minimal_polynomial(5)
+            x + 1
+
+        """
+        a = self(a)
+        if self.is_prime_field():
+            R = PolynomialRing(self.prime_field(), var_name)
+            return R.gen() - a
+        else:
+            return a.minpoly(var_name)
 
     def hom(self, L, *a):
         r""" Return a homomorphism from this finite field to another standard
@@ -1259,6 +1294,40 @@ class StandardNumberField(StandardField):
             return R(a)
         else:
             return self(a).polynomial()
+
+    def minimal_polynomial(self, a, var_name="x"):
+        r""" Return the absolute minimal polynomial of a field element.
+
+        INPUT:
+
+        - ``a`` -- an element of this number field
+        - ``var_name`` -- an alphanumeric string
+
+        OUTPUT:
+
+        the absolute minimal polynomial of `a`; this is an irreducible
+        polynomial over `\mathbb{Q}`.
+
+        We use ``var_name`` for the name of the variable of the minimal
+        polynomial. The default value is "x".
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: R.<x> = QQ[]
+            sage: K = standard_number_field(x^3 - 2, "a")
+            sage: K.minimal_polynomial(K.generator()^2 + 1)
+            x^3 - 3*x^2 + 3*x - 5
+            sage: K.minimal_polynomial(2)
+            x - 2
+
+        """
+        a = self(a)
+        if self.is_prime_field():
+            R = PolynomialRing(self.prime_field(), var_name)
+            return R.gen() - a
+        else:
+            return a.minpoly(var_name)
 
     def hom(self, L, *a):
         r""" Return a homomorphism from this number field to another standard
@@ -1910,7 +1979,7 @@ class StandardFunctionField(StandardField):
         # now phi0 is a embedding of standard fields
 
         k = F.constant_base_field()
-        k1 = phi0.base_field()
+        k1 = phi0.Domain()
         assert k1.is_finite() or k1.is_number_field()
         assert phi0.maps_into(F)
 
