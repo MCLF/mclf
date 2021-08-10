@@ -11,7 +11,7 @@ We call a field `K` a *standard field* if `K` is of one of the following types:
    transcendence degree one of a subfield `k`, which is itself either a finite
    field or a number field.
 
-Basically all calculations done in this project involve calculations with such
+Basically all calculations done in MCLF involve calculations with such
 standard fields.
 
 One problem is that in Sage such fields do not occur in
@@ -64,12 +64,12 @@ model of `K`, then the command::
 
 coerces `a` into the standard model of `K`. Moreover, for any function `f`
 defined in this module (including the methods attached to the classes defined
-in this module), the test
+in this module), the test ::
 
     sage: f(a) == f(Ks(a))
 
 should return ``True``. Similarly, if `f` is a function receiving as input
-a standard field `K`, then
+a standard field `K`, then ::
 
     sage: f(K) == f(standard_field(K))
 
@@ -83,7 +83,7 @@ object ``Ks``. For instance, if `K` is a number field and `a` is an element of
 
 returns a polynomial `f` with rational coefficients such that::
 
-    sage: f(Ks.gen()) == Ks(a)
+    sage: f(Ks.generator()) == Ks(a)
 
 returns ``True``.
 
@@ -105,8 +105,8 @@ then `K_0` is either the constant base field, or the rational function field
 `k(x)`, both of which a part of the standard model of `K`.
 
 The output of the method :meth:`hom` is an instance of the class
-:class:`EmbeddingOfStandardFields <mclf.fields.embeddings_of_standard_fields.EmbeddingOfStandardFields>`
-and represents **embedding**, i.e. an
+:class:`EmbeddingOfStandardFields <mclf.fields.embeddings_of_standard_fields.\
+EmbeddingOfStandardFields>` and represents an **embedding**, i.e. an
 (automatically injective) field homomorphism `\phi:K\to L`.
 
 
@@ -538,6 +538,39 @@ def standard_function_field(K):
 #                   standard field classes
 
 class StandardField(SageObject):
+    r""" The base class for standard fields.
+
+    An instance of this class represents a standard field; it gives access to:
+
+    - the *original* model, i.e. the field used to initialize the object
+    - the *standard model*; this is a field in standard form isomorphic to
+      the original model. If the original model is in standard form, then both
+      models are equal.
+    - isomorphisms between the two models
+    - most of the usual functionality of a Sage field, or at least all that
+      is important for MCLF.
+
+    INPUT:
+
+    - `K` -- a standard field (which may not be in standard form)
+
+    OUTPUT:
+
+    the object representing the field `K`, and its standard model.
+
+
+    To create an instance of this class you should use the creator function
+    :func:`standard_field`::
+
+        sage: standard_field(K),
+
+    or the more specialized functions :func:`standard_finite_field`,
+    :func:`standard_number_field` or :func:`standard_function_field`.
+
+    """
+
+    def __init__(self, K):
+        raise NotImplementedError("No initialization via the base class!")
 
     def original_model(self):
         r""" Return the *original model* of this standard field.
@@ -547,63 +580,6 @@ class StandardField(SageObject):
 
         """
         return self._original_model
-
-    def underlying_field(self):
-        r""" Return the field underlying this object.
-
-        .. NOTE::
-
-            This method has changed and now returns the *standard model*
-            of this field, not the *original model*. It is kept mainly for
-            backward compatibility, but its use should be replaced by the
-            method :meth:`standard_model`.
-
-        """
-        return self._standard_model
-
-    def is_finite(self):
-        r""" Return whether this is a finite field.
-
-        This method must be implemented by the appropriate subclass.
-
-        """
-        raise NotImplementedError()
-
-    def is_number_field(self):
-        r""" Return whether this is a number field.
-
-        This method must be implemented by the appropriate subclass.
-
-        """
-        raise NotImplementedError()
-
-    def is_function_field(self):
-        r""" Return whether this is a function field.
-
-        This method must be implemented by the appropriate subclass.
-
-        """
-        raise NotImplementedError()
-
-    def characteristic(self):
-        r""" Return the characteristic of this standard field.
-
-        """
-        return self.standard_model().characteristic()
-
-    def cardinality(self):
-        r""" Return the cardinality of this standard field.
-
-        """
-        return self.standard_model().cardinality()
-
-    def is_prime_field(self):
-        r""" Return whether this standard field is a prime field,
-        i.e. either the field of rational numbers, or a field with `p`
-        elements, for a prime `p`.
-
-        """
-        return self.standard_model().is_prime_field()
 
     def standard_model(self):
         r""" Return the standard model of this field.
@@ -654,6 +630,50 @@ class StandardField(SageObject):
             return self.standard_model()(a)
         else:
             return self.from_original_model()(a)
+
+    def is_finite(self):
+        r""" Return whether this is a finite field.
+
+        This method must be implemented by the appropriate subclass.
+
+        """
+        raise NotImplementedError()
+
+    def is_number_field(self):
+        r""" Return whether this is a number field.
+
+        This method must be implemented by the appropriate subclass.
+
+        """
+        raise NotImplementedError()
+
+    def is_function_field(self):
+        r""" Return whether this is a function field.
+
+        This method must be implemented by the appropriate subclass.
+
+        """
+        raise NotImplementedError()
+
+    def characteristic(self):
+        r""" Return the characteristic of this standard field.
+
+        """
+        return self.standard_model().characteristic()
+
+    def cardinality(self):
+        r""" Return the cardinality of this standard field.
+
+        """
+        return self.standard_model().cardinality()
+
+    def is_prime_field(self):
+        r""" Return whether this standard field is a prime field,
+        i.e. either the field of rational numbers, or a field with `p`
+        elements, for a prime `p`.
+
+        """
+        return self.standard_model().is_prime_field()
 
     def contains_as_subfield(self, k):
         r""" Return whether elements of `k` can be coerced into
@@ -2370,7 +2390,7 @@ def homomorphism_on_standard_field(K, L, *args):
     if K.is_prime_field():
         # there can be only one homomorphism; we ignore the other arguments
         assert K.characteristic() == L.characteristic, "there is no \
-            homomorhism from K = {} to L = {}.".fomat(K, L)
+            homomorphism from K = {} to L = {}.".format(K, L)
         return K.hom(L)
 
     image_gens = args[0]
@@ -2419,7 +2439,15 @@ def homomorphism_on_standard_field(K, L, *args):
         return K.hom(image_gens, L)
     else:
         # we need to specify the codomain! It should be L
-        return K.hom(image_gens, base_morphism=phi0)
+        try:
+            return K.hom(image_gens, base_morphism=phi0)
+        except TypeError:
+            print(" K = ", K)
+            print(" L = ", L)
+            print(" image_gens = ", image_gens)
+            print("phi0 = ", phi0)
+            print
+            return K.hom(image_gens, base_map=phi0)
 
 
 def identity_map(K):

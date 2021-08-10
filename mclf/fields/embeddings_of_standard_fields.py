@@ -175,6 +175,22 @@ class EmbeddingOfStandardFields(SageObject):
         """
         return self.domain().prime_field()
 
+    def is_finite_extension(self):
+        r""" Return whether the codomain of this embedding is a finite
+        extension of the image.
+
+        """
+        K = self.Domain()
+        L = self.Codomain()
+        if K.is_finite():
+            return L.is_finite()
+        elif K.is_number_field():
+            return L.is_number_field()
+        elif K.is_function_field():
+            return True
+        else:
+            raise NotImplementedError()
+
     def applies_to(self, K):
         r""" Returns whether this embedding can be applied to elements of the
         field `K`.
@@ -274,9 +290,6 @@ class EmbeddingOfStandardFields(SageObject):
         raise NotImplementedError()
 
     def inverse(self):
-        raise NotImplementedError()
-
-    def is_finite(self):
         raise NotImplementedError()
 
     def finite_extension(self):
