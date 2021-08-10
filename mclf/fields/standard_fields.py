@@ -667,6 +667,25 @@ class StandardField(SageObject):
         """
         return self.standard_model().cardinality()
 
+    def prime_subfield(self):
+        r""" Return the prime subfield of this standard field.
+
+        """
+        from mclf.fields.standard_subfields import standard_subfield
+        if not hasattr(self, "_prime_subfield"):
+            k0 = self.standard_model().prime_subfield()
+            self._prime_subfield = standard_subfield(k0, self)
+        return self._prime_subfield
+
+    def as_subfield_of_itself(self):
+        r""" Return this standard field as subfield of itself.
+
+        """
+        from mclf.fields.standard_subfields import standard_subfield
+        if not hasattr(self, "_as_subfield_of_itself"):
+            self._as_subfield_of_itself = standard_subfield(self, self)
+        return self._as_subfield_of_itself
+
     def is_prime_field(self):
         r""" Return whether this standard field is a prime field,
         i.e. either the field of rational numbers, or a field with `p`
@@ -1003,22 +1022,28 @@ class StandardField(SageObject):
              (Function field in y defined by y^2 + x^3, y, y^2 + x^3)]
 
         """
-        K = self.standard_model()
-        if self.is_finite() or self.is_number_field():
-            return [(K, self.generator(), self.polynomial())]
-        elif self.is_function_field():
-            k = self.constant_base_field()
-            if self.is_rational_function_field():
-                x = self.generator()
-                f = self.polynomial_ring(["xx"]).zero()
+        K = self
+        if K.is_finite() or K.is_number_field():
+            return [(K, K.generator(), K.polynomial())]
+        elif K.is_function_field():
+            k = K.constant_base_field()
+            if K.is_rational_function_field():
+                x = K.generator()
+                f = K.polynomial_ring(["xx"]).zero()
                 return k.structure() + [(K, x, f)]
             else:
-                K0 = self.rational_base_field()
-                y = self.generator()
-                f = self.polynomial()
+                K0 = K.rational_base_field()
+                y = K.generator()
+                f = K.polynomial()
                 return K0.structure() + [(K, y, f)]
         else:
             raise NotImplementedError()
+
+    def natural_subfields(self):
+        r""" Return the list of the natural subfields of this standard field.
+
+        """
+        return [self.prime_subfield()] + [k for k, _, _ in self.structure()]
 
 
 class StandardFiniteField(StandardField):
@@ -1458,7 +1483,6 @@ class StandardFunctionField(StandardField):
         # make a copy
         if isinstance(K, StandardFunctionField):
             self._original_model = K._original_model
-            self._constant_base_field = K._constant_base_field
             self._standard_model = K._standard_model
             self._from_original_model = K._from_original_model
             self._to_original_model = K._to_original_model
@@ -1466,7 +1490,6 @@ class StandardFunctionField(StandardField):
             self._generators = K._generators
             self._polynomial = K._polynomial
             self._bivariate_polynomial = K._bivariate_polynomial
-            self._rational_base_field = K._rational_base_field
         else:
             if is_in_standard_form(K):
                 # take K as the standard model
@@ -1476,15 +1499,12 @@ class StandardFunctionField(StandardField):
             else:
                 F, K_to_F, F_to_K = standard_model_of_function_field(K)
 
-            k = standard_field(F.constant_base_field())
             self._original_model = K
-            self._constant_base_field = k
             self._standard_model = F
             self._from_original_model = K_to_F
             self._to_original_model = F_to_K
             if F.base_field() is F:
                 self._is_rational_function_field = True
-                self._rational_base_field = F
                 self._generators = [F.gen()]
                 self._polynomial = None
                 self._bivariate_polynomial = None
@@ -1492,8 +1512,6 @@ class StandardFunctionField(StandardField):
                 self._is_rational_function_field = False
                 x = F.base_field().gen()
                 y = F.gen()
-                self._rational_base_field = standard_function_field(
-                    F.base_field())
                 self._polynomial = F.polynomial()
                 self._bivariate_polynomial = make_bivariate(self._polynomial)
                 self._generators = [x, y]
@@ -1537,12 +1555,21 @@ class StandardFunctionField(StandardField):
         r""" Return the constant base field of this function field.
 
         """
+        from mclf.fields.standard_subfields import standard_subfield
+        if not hasattr(self, "_constant_base_field"):
+            k = standard_subfield(self.standard_model().constant_base_field(),
+                                  self)
+            self._constant_base_field = k
         return self._constant_base_field
 
     def rational_base_field(self):
         r""" Return the rational base field of this  function field.
 
         """
+        from mclf.fields.standard_subfields import standard_subfield
+        if not hasattr(self, "_rational_base_field"):
+            F0 = standard_subfield(self.standard_model().base_field(), self)
+            self._rational_base_field = F0
         return self._rational_base_field
 
     def generators(self):
@@ -1831,6 +1858,9 @@ class StandardFunctionField(StandardField):
         assert h(x, y).is_zero()
         return h
 
+    # this is inconsistent with the arguments for the other types;
+    # but it is important that the format of the input is uniform
+    # so K.hom(L) should also work if K is a subfield of L
     def hom(self, L, image_of_gens, *args):
         r""" Return a homomorphism from this function field to another function
         field.
@@ -2169,8 +2199,6 @@ class StandardFunctionField(StandardField):
         image_of_gens = [L(a) for a in self.generators()]
         return EmbeddingOfFunctionField(self, L, image_of_gens, phi0)
 
-
-# ---------------------------------------------------------------------------
 
 # ----------------------------------------------------------------------------
 

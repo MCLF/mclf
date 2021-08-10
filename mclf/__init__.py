@@ -21,6 +21,7 @@ from .semistable_reduction.admissible_reduction import *
 from .semistable_reduction.superp_models import *
 from .fields.standard_fields import *
 from .fields.embeddings_of_standard_fields import *
+from .fields.standard_subfields import *
 from .fields.valued_fields import *
 from .fields.finite_field_extensions import *
 from .fields.factor_polynomial_over_function_field import *
