@@ -20,29 +20,14 @@ Representing a finite extension `L/K` by a relative model makes it very
 convenient to perform certain tasks which are important for this project:
 
 - computing characteristic and minimal polynomials, norms, traces etc.
-  of elements of `L`,
-- extending and restricting valuations on `K` and `L`.
+  of elements of `L`, relative to the base field `K`,
+- extending valuations from `K` to `L`,
+- restricting valuations from `L` to  `K`.
 
 In this module we implement a class :class:`FiniteExtensionOfStandardFields`
 representing a finite extension `L/K` of two standard fields, which provides
 access to an internal relative model and methods implementing the various
 useful tasks described above.
-
-The most convenient way to create an instance of this class is via the
-creator function :func:`finite_field_extension`. It accepts as input
-
-- an embedding of fields `\phi:K\to L`. Here `K` and `L` must be standard
-  fields, and `\phi` may be given either as a Sage morphism, or as an instance
-  of the mclf class
-  :class:`EmbeddingOfStandardField <mclf.fields.standard_fields.EmbeddingOfStandardFields>`,
-- a pair of standard fields `(L, K)` where `K` is a subfield of `L`, i.e. there
-  is a canonical embedding from `K` into `L`. The fields may be represented as
-  objects of the Sage category ``Fields`` or as instances of the mclf class
-  :class:`StandardField <mclf.fields.standard_fields.StandardField>`,
-- a pair `(K, f)`, where `K` is a standard field and `f` is an irreducible,
-  univariate polynomial over `K`. Again, the field `K` may be represented as
-  an object of ``Fields`` or as an instance of
-  :class:`StandardField <mclf.fields.standard_fields.StandardField>`.
 
 The class :class:`FiniteExtensionOfStandardFields` is a child of the class
 :class:`StandardField <mclf.fields.standard_fields.StandardField>`.
@@ -50,10 +35,54 @@ In this way, the extension `L/K` is considered as the standard field `L`,
 together with an embedding of a standard subfield `K` and the choice of a
 relative model `L_{rel}=K[x]/(f)`, or, in other words, as a relative extension.
 
+There are essentially two distinct ways to create an instance of this class.
+Both are accessible via the creator function :func:`finite_field_extension`.
+This functions accepts as input
+
+- an embedding of standard fields `\phi:K\to L`, where `K` and `L` are of the
+  same dimension, or
+- a pair `(K, f)`, where `K` is a standard field and `f` is an irreducible,
+  univariate polynomial over `K`,
+
+and returns an object of :class:`FiniteExtensionOfStandardFields`.
+
+In the first variant, the new object will return the field `L` as the
+*extension field* and the field `K` as the *relative base field* of the finite
+extensions::
+
+    sage: L_K = finite_field_extension(phi)
+    sage: L_K.extension_field().is_equal(phi.Codomain())
+    True
+    sage: L_K.relative_base_field().is_equal(phi.Domain())
+    True
+    sage: L_K.embedding().is_equal(phi)
+    True
+
+The relative model of `L/K` is computed internally.
+
+In the second variant, the input `(K, f)` determines the relative base field
+`K` and the relative model `K[x]/(f)`, and the standard form of the extension
+field `L` is computed internally::
+
+    sage: L_K = finite_field_extension(K, f)
+    sage: L_K.relative_base_field().is_equal(K)
+    True
+    sage: L_K.relative_polynomial() == f
+    True
+
+This second way of creating a finite extension can also be accessed via the
+method :meth:`extension <mclf.fields.standard_fields.StandardField.extension>`
+of :class:`StandardField <mclf.fields.standard_fields.StandardField>`::
+
+    sage: K.extension(f)
 
 
-TODO::
 
+
+.. TODO::
+
+    - **urgent**: finish implementation of creating finite extension from
+      embedding!
     - special treatment for extensions of degree one. Make sure that the
       extension field is equal to the base field
     - implement superextensions and subextensions
@@ -146,12 +175,20 @@ def finite_field_extension(*args):
       alphanumeric string.
 
     Here the fields `K` and `L` are assumed to be standard fields; they may be
-    either objects of the Sage category ``Fields`` or instances of the mclf
-    class :class:`StandardField`.
+    either objects of the Sage category ``Fields`` or instances of
+    :class:`StandardField`.
 
-    In the first case, the extension is `L/K` case. In the second case, we
-    define `L:=K[x]/(f)`. In the third case, we use `a` for the name of the
-    generator.
+    In the first case, the result is the finite field extension determined by
+    `\phi`. In particular, the extension field is equal to the codomain of
+    `\phi`, whereas the relative model is computed internally.
+
+    In the second and third case, the input determines the relative base field
+    `K` and relative model `K[x]/(f)`, and the (standard form of) the extension
+    field `L` is computed internally.
+
+    In the third case, we use ``a`` for the name of the generator of the
+    relative model. If ``a`` is not given, we use the variable name of the
+    polynomial `f` instead.
 
     """
     if len(args) == 1:
@@ -165,7 +202,7 @@ def finite_field_extension(*args):
         raise TypeError("Wrong number of parameters")
 
 
-def extension_from_embedding(phi, L1=None):
+def _extension_from_embedding(phi, L1=None):
     r""" Return the finite field extension corresponding to the an embedding.
 
     INPUT:
@@ -294,8 +331,8 @@ def finite_field_extension_from_embedding(phi):
     K = phi.Domain()                # K and L are in StandardFields!
     L = phi.Codomain()
     M = K.as_extension_of_itself()  # M is a finite extension of K
-    L0 = L.prime_field()            # L0, L1 are natural subfields of L
-    L0_to_M = L0.hom(M.standard_model())
+    L0 = L.prime_subfield()         # L0, L1 are natural subfields of L
+    L0_to_M = L0.hom(M)             # there is a unique embedding
     M_to_L = phi
 
     # we walk through the tower of natural subfields of L;
@@ -409,7 +446,7 @@ def lift_embedding_to_finite_simple_extension(
             M1_to_L = M1.relative_hom(L, alpha, M_to_L)
             # there seems to be a problem with mixing bare morphisms
             # with Embeddings
-            L0_to_M1 = M1.embedding().precompose(L0_to_M)
+            L0_to_M1 = M1.embedding_of_base_field().precompose(L0_to_M)
             L1_to_M1 = homomorphism_on_standard_field(
                 L1, M1.standard_model(), M1.relative_generator(),
                 L0_to_M1)
@@ -455,7 +492,7 @@ def finite_field_extension_from_polynomial(K, f, gen_name=None):
     M = K.standard_model().extension(f, gen_name)
     if f.degree() == 1:
         L = K
-        phi = K.inclusion(L)
+        phi = K.hom(L)
         L_to_M = L.standard_model().hom(M)
         from mclf.fields.standard_fields import homomorphism_on_standard_field
         M_to_L = homomorphism_on_standard_field(M, L.standard_model(),
@@ -463,8 +500,9 @@ def finite_field_extension_from_polynomial(K, f, gen_name=None):
         # M_to_L = M.hom([-f[0]/f[1]], phi)
     else:
         L = standard_field(M)
-        phi = K.standard_model().hom(M).post_compose(L.from_original_model())
-        phi = embedding_of_standard_fields(phi)
+        phi = K.hom(L)
+        # phi = K.standard_model().hom(M).post_compose(L.from_original_model())
+        # phi = embedding_of_standard_fields(phi)
         L_to_M = L.to_original_model()
         M_to_L = L.from_original_model()
 
@@ -614,9 +652,9 @@ class FiniteExtensionOfStandardFields(StandardField):
         """
         return self.standard_model()
 
-    def embedding(self):
-        r""" Return the embedding morphism from the base field
-        to the extension field.
+    def embedding_of_base_field(self):
+        r""" Return the embedding of the base field into the extension field.
+
         """
         return self._embedding
 
@@ -876,14 +914,15 @@ class FiniteExtensionOfStandardFields(StandardField):
         K = self.relative_base_field()
         L = self.codomain()        # note: L is just a bare field, unlike K, M
         M = M_L.extension_field()
-        K_to_M = K.embedding().post_compose(M_L.embedding())
+        K_to_M = K.embedding().post_compose(M_L.embedding_of_base_field())
 
         # we first find an element gamma in M which generates M/K
         # for this we use the method `primitive_element` associated
         # to a Sage function field
         g = M_L.relative_polynomial()
         M1 = L.extension(g, g.variable_name()+"1")
-        M1_to_M = M1.hom([M_L.relative_generator()], base_map=M_L.embedding())
+        M1_to_M = M1.hom([M_L.relative_generator()],
+                         base_map=M_L.embedding_of_base_field())
         gamma = M1_to_M(M1.primitive_element())
 
         # we compute the minimal polynomial g of gamma over K

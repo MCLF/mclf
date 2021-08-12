@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 r"""
-Standard subfields
-==================
+Subfields of standard fields
+============================
 
 In this module we implement a class :class:`StandardSubfield`. Instances of
 this class are standard fields, together with an embedding into an overfield
@@ -27,6 +27,9 @@ For any embedding of standard fields, we obtain a subfield::
     sage: x = F.generator()
     sage: phi = F.hom(F, x^2+1)
     sage: FF = standard_subfield(phi); FF
+    Rational function field in x over Finite Field in z2 of size 2^2,
+    as a subfield of Rational function field in x over Finite Field in z2
+    of size 2^2
 
 The new object carries the following information::
 
@@ -37,6 +40,9 @@ The new object carries the following information::
     Rational function field in x over Finite Field in z2 of size 2^2
     as standard rational function field
     sage: FF.embedding()
+    the embedding of Rational function field in x over Finite Field in z2
+    of size 2^2 into Rational function field in x over Finite Field in z2 of
+    size 2^2, sending [x] to [x^2 + 1]
 
 If we want the sub- or overfield as ordinary fields, we use lowercases::
 
@@ -45,6 +51,17 @@ If we want the sub- or overfield as ordinary fields, we use lowercases::
     sage: FF.overfield()
     Rational function field in x over Finite Field in z2 of size 2^2
 
+We can also say something about the nature of the subfield::
+
+    sage: FF.is_prime_subfield()
+    False
+    sage: FF.is_canonical_subfield()
+    False
+    sage: FF.is_constant_base_field()
+    False
+    sage: FF.is_rational_base_field()
+    False
+    sage: FF.is_overfield()
 
 """
 
@@ -160,6 +177,36 @@ class StandardSubfield(StandardField):
         """
         return self._embedding
 
+    def is_equal_as_subfield(self, K):
+        r""" Return whether this subfield is equal to another one.
+
+        By our definition this means that the two embeddings into the
+        overfield are equal as embeddings.
+
+        """
+        assert isinstance(K, StandardSubfield)
+        return self.embedding().is_equal(K.embedding())
+
+    def is_prime_subfield(self):
+        r""" Return whether this standard subfield is the prime subfield
+        of its overfield.
+
+        """
+        return self.is_prime_field()
+
+    def is_overfield(self):
+        r""" Return whether this standard subfield is equal to its overfield.
+
+        """
+        return self.embedding().is_surjective()
+
+    def is_canonical_subfield(self):
+        r""" Return whether the embedding of this subfield into its overfield
+        is a *canonical* embedding of standard fields.
+
+        """
+        return self.embedding().is_canonical_embedding()
+
 
 class FiniteSubfield(StandardSubfield, StandardFiniteField):
     r""" A finite field as a subfield of a standard field.
@@ -264,3 +311,17 @@ class FunctionSubfield(StandardSubfield, StandardFunctionField):
         self._subfield = K
         self._overfield = L
         self._embedding = phi
+
+    def is_constant_base_field(self):
+        r""" Return whether this subfield is the constant base field
+        of its overfield.
+
+        """
+        return self.is_equal(self.Overfield().constant_base_field())
+
+    def is_rational_base_field(self):
+        r""" Return whether this subfield is the rational base field
+        of its overfield.
+
+        """
+        return self.is_equal(self.Overfield().rational_base_field())

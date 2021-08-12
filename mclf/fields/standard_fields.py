@@ -3,7 +3,8 @@ r"""
 Standard fields
 ===============
 
-We call a field `K` a *standard field* if `K` is of one of the following types:
+We call a field `K` a **standard field** if `K` is of one of the following
+types:
 
 1. `K` is a *finite field*,
 2. `K` is a *number field* (i.e. a finite extension of `\mathbb{Q}`),
@@ -25,13 +26,17 @@ To solve this problem, we create a class :class:`StandardField`.
 An instance of this class represents a standard field `K`, which provides
 internal access to a standard model of `K`. So if `K` is a standard field
 (given as an object of the Sage category ``Rings`` such that ``K.is_field()``
-is ``True``), we can define a new object ``Ks`` with the command::
+is ``True``), we can define a new object ``Ks`` with the function
+:func:`standard_field`. ::
 
-    sage: Ks = standard_field(K)
+    sage: K = standard_field(QQ); K
+    Rational Field as a standard field
 
-The new object ``Ks`` represents the field `K` in two ways: firstly, its
-**original model** and secondly its **standard model**. Here the standard model
-of `K` is a field which is isomorphic to `K` and is given in *standard form*.
+The object ``K`` represents the field `K` in two ways: by its
+**original model** and by its **standard model**. The original model is simply
+the field used as an input when creating `K`. The standard model
+of `K` is a field which is isomorphic to the original model and is in
+*standard form*.
 
 For a field `K` to be in **standard form** means the following:
 
@@ -49,46 +54,97 @@ For a field `K` to be in **standard form** means the following:
   simple and separable extension of `k(x)`, where `k` is a finite field or a
   number field in standard form.
 
-We note that the constant base field `k` of a function field `K` is part of the
-data on which the standard model of `K` depends.
+For example::
 
-In general, our aim is to make sure that replacing any standard field `K`
-by the object ``Ks``, and then ignoring the internal realization (i.e. the
-distinction between the original model and the standard model), does not lead
-to confusion or an error.
+    sage: K = standard_field(GF(4, "a"))
+    sage: K.original_model()
+    Finite Field in a of size 2^2
+    sage: K.standard_model()
+    Finite Field in z2 of size 2^2
 
-For instance, if `a` is a field element which can be coerced into the original
-model of `K`, then the command::
+
+Coercion, equality and operations on field elements
+---------------------------------------------------
+
+In general, our aim is to make sure that replacing a standard field `K`
+by the corresponding object of :class:`StandardField` does not lead
+to confusion or errors. Handling these new objects should be very similar to
+handling ordinary fields in Sage.
+
+There is no extra element class for standard fields. However, if `a` is a field
+element which can be coerced into the original model of `K`, then the
+command ::
 
     sage: Ks(a)
 
-coerces `a` into the standard model of `K`. Moreover, for any function `f`
-defined in this module (including the methods attached to the classes defined
-in this module), the test ::
+coerces `a` into the standard model of `K`. An element of the standard model
+is kept as it is. Therefore, ::
+
+    sage: Ks(Ks(a)) == Ks(a)
+    True
+
+always returns ``True`` (or raises an error if `a` is of the wrong type).
+
+For any function `f` defined in this module (e.g. all the methods of
+:class:`StandardField`), the test ::
 
     sage: f(a) == f(Ks(a))
 
-should return ``True``. Similarly, if `f` is a function receiving as input
-a standard field `K`, then ::
+should return ``True`` (or raise an error). Similarly, if `f` is a function
+receiving as input a standard field `K`, which is not necessarily an instance
+of :class:`StandardField`, then ::
 
     sage: f(K) == f(standard_field(K))
 
-should also return ``True``.
+also returns ``True``.
 
-Operations on field elements should be perfomed via methods attached to the
-object ``Ks``. For instance, if `K` is a number field and `a` is an element of
-(the original model or the standard model), then the command::
+Instances of :class:`StandardField` are not *unique objects*. For instance, if
+we create two instances from the same input, we get two distinct Sage objects::
 
-    sage: f = Ks.polynomial(a)
+    sage: K1 = standard_field(QQ)
+    sage: K2 = standard_field(QQ)
+    sage: K1 == K2
+    False
+
+As a partial remedy, standard fields have a method
+:meth:`is_equal <StandardField.is_equal>`. We then have ::
+
+    sage: K1.is_equal(K2)
+    True
+
+This test is equivalent to ::
+
+    sage: K1.standard_model() == K2.standard_model()
+    True
+
+Operations on
+field elements should be perfomed via methods attached to the class
+:class:`StandardField` or one of its subclasses. For instance, if `K` is an
+instance of :class:`StandardField` representing a number field and `a` is an
+element of `K` (so actually, an element of the original model or the standard
+model of `K`), then the command ::
+
+    sage: f = K.polynomial(a)
 
 returns a polynomial `f` with rational coefficients such that::
 
-    sage: f(Ks.generator()) == Ks(a)
+    sage: f(K.generator()) == K(a)
 
-returns ``True``.
+returns ``True``. If `a` is actually an element of the *standard model* of `K`,
+we have ::
 
-A special role is played by the method :meth:`hom`. If `K` and `L` are
-standard fields, and at least `K` is represented by an instance of
+    sage: K.polynomial(a) == a.polynomial()
+    True
+
+It is preferable to use the first option, though, because the result is
+more reliable and predictable.
+
+
+Embeddings
+----------
+
+A special role is played by the method :meth:`hom <StandardField.hom>`. If `K`
+and `L` are standard fields, and at least `K` is represented by an instance of
 :class:`StandardField`, we can define a field homomorphism `\phi:K\to L`
 with the command::
 
@@ -109,11 +165,105 @@ The output of the method :meth:`hom` is an instance of the class
 EmbeddingOfStandardFields>` and represents an **embedding**, i.e. an
 (automatically injective) field homomorphism `\phi:K\to L`.
 
+See
+:doc:`Embeddings of standard fields <embeddings_of_standard_fields>`.
+
+
+Subfields of standard fields
+----------------------------
+
+Given an embedding of standard fields `\phi:K\hookrightarrow L`, the image
+`\phi(K)` is a subfield of `L`, isomorphic to `K`. It is often convenient
+to identify `K` with its image `\phi(K)` and hide the identificaton (which
+depends on `\phi`) from the notation. For this purpose we have a class
+:class:`StandardSubfield <mclf.fields.standard_subfields.StandardSubfield>`.
+An instance of this class represents a standard field `K`, together with a
+fixed embedding `\phi:K\hookrightarrow L` into another standard field `L`.
+
+Note that
+:class:`StandardSubfield <mclf.fields.standard_subfields.StandardSubfield>` is
+a subclass of :class:`StandardField`. Therefore, a standard subfield `K`
+inherits all methods from this class and can thus be treated like any other
+standard field. The fixed embedding into its overfield is available via the
+method
+:meth:`embedding <mclf.fields.standard_subfields.StandardSubfield.embedding>`.
+
+See :doc:`Subfields of standard fields <standard_subfields>`.
+
+If `K` is a standard field, it has certain *natural subfields*; these are:
+
+- the *prime subfield* of `K` (`\mathbb{Q}` or `\mathbb{F}_p`, depending on
+  the characteristic of `K`),
+- the field `K` itself,
+- if `K` is a function field, in standard form `K=k(x)[y]/(f)`,
+
+    * the *constant base field* `k` and
+    * the *rational base field* `k(x)`.
+
+When `K` is realized as an instance of :class:`StandardField`, we automatically
+create instances of
+:class:`StandardSubfield <mclf.fields.standard_subfields.StandardSubfield>`
+representing these natural subfields.
+
+
+Finite extensions of standard fields
+------------------------------------
+
+In practise, interesting standard fields are constructed as finite extensions
+of simpler standard fields. For instance, any number field `K` is (in a unique
+way!) a finite extension of the field of rational numbers `\mathbb{Q}`. A
+particular important example for us are function fields: these are usually
+presented as a finite extension of a rational function field. Such a
+presentation is not unique, but is often part of the data we keep fixed.
+
+More generally, if `\phi:K\hookrightarrow L` is any embedding of standard
+fields, where `K` and `L` are either both function fields or not, `L` is a
+finite extension of `\phi(K)`.
+
+We model this situation with the class
+:class:`FiniteExtensionOfStandardFields <mclf.fields.finite_field_extensions.\
+FiniteExtensionOfStandardFields>`. An instance of this class represents a
+standard field `L`, together with an embedding `\phi:K\to L` which makes `L`
+a finite extension of `K`.
+
+As for
+:class:`StandardSubfield <mclf.fields.standard_subfields.StandardSubfield>`,
+the class
+:class:`FiniteExtensionOfStandardFields <mclf.fields.finite_field_extensions.\
+FiniteExtensionOfStandardFields>` is a subclass of :class:`StandardField`.
+However, here we consider the *extension field* `L` as the main object, and its
+presentation as a finite extension of the *base field* `K` as the additional
+information.
+
+It is an important fact that a finite extension `L/K` of standard fields is
+automatically *simple*, i.e. generated by one element. Choosing such a
+generator `\alpha\in L` we obtain a presentation
+
+.. MATH::
+
+    L\cong K[x]/(f),
+
+where `f` is the minimal polynomial of `\alpha` over `K`. We call such a
+presentation of a finite extension `L/K` a **relative model**. Internally,
+an instance of
+:class:`FiniteExtensionOfStandardFields <mclf.fields.finite_field_extensions.\
+FiniteExtensionOfStandardFields>` has a fixed relative model, which is used for
+all the important calculations.
+
+See :doc:`Finite field extensions <finite_field_extensions>`
+
+
+Valuations on standard fields
+-----------------------------
+
+todo
 
 .. TODO::
 
     Many things, e.g.
 
+    - base change for function fields is not yet fully implemented
+    - so far, the condition *separable* in *standard field* is ignored
 
 
 EXAMPLES::
@@ -131,7 +281,7 @@ function fields over `k` do not work. We therefore compute its
 standard model.::
 
     sage: k = standard_field(k1); k
-    Finite Field in z6 of size 2^6 as a standard field
+    the standard field with 64 elements
 
 This new object contains the original field, and a standard model.::
 
@@ -155,16 +305,6 @@ It works similarly for number fields and function fields.::
     sage: F = standard_function_field(F); F
     Function field in y_ defined by y_^3 + x_^2 + z6^3 + z6^2 + z6
     as standard function field
-
-We can replace the constant base field of a standard function field.::
-
-    sage: F_k0, _, _ = F.with_new_constant_base_field(k0); F_k0
-    Function field in y_ defined by y_^9 + y_^8 + (x_0^2 + 1)*y_^6
-      + (x_0^2 + 1)*y_^4 + (x_0^4 + (z2 + 1)*x_0^2)*y_^3
-      + (x_0^4 + z2*x_0^2 + 1)*y_^2 + (x_0^4 + (z2 + 1)*x_0^2 + 1)*y_
-      + x_0^6 + (z2 + 1)*x_0^2 + 1 as standard function field
-    sage: F_k0.constant_base_field()
-    Finite Field in z2 of size 2^2 as a standard field
 
 """
 
@@ -394,6 +534,17 @@ def standard_field(K):
         return StandardNumberField(K)
     else:
         return standard_function_field(K)
+
+
+def standard_prime_field(p):
+    r""" Return the prime field of characteristic `p`, as a standard field.
+
+    """
+    if p == 0:
+        from sage.all import QQ
+        return standard_field(QQ)
+    else:
+        return standard_finite_field(p)
 
 
 def standard_finite_field(q):
@@ -667,15 +818,117 @@ class StandardField(SageObject):
         """
         return self.standard_model().cardinality()
 
+    def degree(self):
+        r""" Return the degree of this standard field.
+
+        A standard field `K` may be considered as a finite extension of its
+        base field `K_0` - which is either the prime subfield  of `K` (if
+        `K` is a finite or a number field), or the rational base field if
+        `K` is a function field.
+
+        The **degree** of `K` is the degree `[K:K_0]`.
+
+        """
+        return self.polynomial().degree()
+
+    def is_natural_subfield_of(self, L):
+        r""" Return whether this standard field is the natural subfield of
+        another standard field.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: K = standard_finite_field(4)
+            sage: L = standard_finite_field(16)
+
+        Even though `K` can be embedded into `L`, it is not a
+        *natural subfield* ::
+
+            sage: K.is_natural_subfield_of(L)
+            False
+            sage: L.is_natural_subfield_of(L)
+            True
+
+        """
+        assert isinstance(L, StandardField)
+        return any(K.is_equal(self) for K in L.natural_subfields())
+
+    def natural_embedding(self, L):
+        r""" Return the natural embedding of this standard field into another
+        standard field.
+
+        If no such embedding exists, we return ``None``.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: K = standard_field(QQ)
+            sage: x = K.polynomial_generator("x")
+            sage: L = standard_number_field(x^2 - 2, "a")
+            sage: K.natural_embedding(L)
+            the natural embedding of Rational Field into Number Field in a
+            with defining polynomial x^2 - 2
+        """
+        assert isinstance(L, StandardField)
+        for K in L.natural_subfields():
+            if K.is_equal(self):
+                return K.embedding()
+        return None
+
+    def embedding_of_prime_subfield(self):
+        r""" Return the embedding of the prime subfield into this standard
+        field.
+
+        """
+        from mclf.fields.embeddings_of_standard_fields import (
+            EmbeddingOfPrimeSubfield)
+        if not hasattr(self, "_embedding_of_prime_subfield"):
+            self._embedding_of_prime_subfield = EmbeddingOfPrimeSubfield(self)
+        return self._embedding_of_prime_subfield
+
     def prime_subfield(self):
         r""" Return the prime subfield of this standard field.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: K = standard_prime_field(0)
+            sage: K.prime_subfield()
+            Rational Field, as a subfield of Rational Field
+
+            sage: x = K.polynomial_generator("x")
+            sage: K = standard_number_field(x^2 - 2, "a")
+            sage: K.prime_subfield()
+            Rational Field, as a subfield of Number Field in a
+            with defining polynomial x^2 - 2
 
         """
         from mclf.fields.standard_subfields import standard_subfield
         if not hasattr(self, "_prime_subfield"):
-            k0 = self.standard_model().prime_subfield()
-            self._prime_subfield = standard_subfield(k0, self)
+            iota = self.embedding_of_prime_subfield()
+            self._prime_subfield = standard_subfield(iota)
         return self._prime_subfield
+
+    def identity(self):
+        r""" Return the identity map of this standard field.
+
+        """
+        if not hasattr(self, "_identity"):
+            from mclf.fields.embeddings_of_standard_fields import (
+                IdentityEmbedding)
+            self._identity = IdentityEmbedding(self)
+        return self._identity
+
+    def embedding(self):
+        r""" Return the embedding of this standard field into itself.
+
+        This method is equivalent to :meth:`identity <StandardField.identity>`.
+
+        It is defined for compatibility with the subclass
+        :class:`StandardSubfield <mclf.fields.standard_subfields.\
+        StandardSubfield>`.
+        """
+        return self.identity()
 
     def as_subfield_of_itself(self):
         r""" Return this standard field as subfield of itself.
@@ -683,8 +936,35 @@ class StandardField(SageObject):
         """
         from mclf.fields.standard_subfields import standard_subfield
         if not hasattr(self, "_as_subfield_of_itself"):
-            self._as_subfield_of_itself = standard_subfield(self, self)
+            id = self.identity()
+            self._as_subfield_of_itself = standard_subfield(id)
         return self._as_subfield_of_itself
+
+    def as_extension_of_itself(self):
+        r""" Return this field as a finite extension of itself.
+
+        Output:
+
+        the object of
+        :class:`FiniteFieldExtension <mclf.fields.finite_field_extension.\
+        FiniteFieldExtension>` whose embedding is the identity map on this
+        standard field.
+
+        """
+        raise NotImplementedError()
+
+    def as_extension_of_prime_field(self):
+        r""" Return this field as a finite extension of its prime subfield.
+
+        Output:
+
+        the object of
+        :class:`FiniteFieldExtension <mclf.fields.finite_field_extension.\
+        FiniteFieldExtension>` whose embedding is the natural embedding of the
+        prime subfield into this standard field.
+
+        """
+        raise NotImplementedError()
 
     def is_prime_field(self):
         r""" Return whether this standard field is a prime field,
@@ -693,6 +973,35 @@ class StandardField(SageObject):
 
         """
         return self.standard_model().is_prime_field()
+
+    def is_equal(self, L):
+        r""" Return whether this standard field is equal to `L`.
+
+        INPUT:
+
+        - ``L`` -- another standard field
+
+        OUTPUT:
+
+        whether this standard field `K` is equal to `L`. By our definition,
+        this means that the standard models of the two fields are equal,
+        i.e. ::
+
+            sage: K.standard_model() == L.standard_model()
+
+        returns ``True``.
+
+        """
+        assert isinstance(L, StandardField), "L must be a standard field"
+        return self.standard_model() == L.standard_model()
+
+    def is_element(self, a):
+        r""" Return whether `a` is an element of this standard field.
+
+        """
+        K = a.parent()
+        return (self.standard_model().has_coerce_map_from(K)
+                or self.original_model().has_coerce_map_from(K))
 
     def contains_as_subfield(self, k):
         r""" Return whether elements of `k` can be coerced into
@@ -715,6 +1024,11 @@ class StandardField(SageObject):
         this field via::
 
             sage: K.embedding_of_subfield(k)
+
+        .. WARNING::
+
+            The above is not quit true; at the moment we only allow *natural*
+            subfields to be considered as subfields.
 
 
         EXAMPLES::
@@ -767,41 +1081,6 @@ class StandardField(SageObject):
         if not isinstance(k, StandardField):
             k = standard_field(k)
         return k.hom(self)
-
-    def is_subfield_of(self, L):
-        r""" Return whether elements of this standard field can be coerced
-        into `L`.
-
-        INPUT:
-
-        - ``L`` -- a standard field
-
-        OUTPUT:
-
-        whether any element of (the standard model of) this field can be
-        coerced into `L`.
-
-        If this is true then we can define the natural embedding of this field
-        `K` into `L` via::
-
-            sage: K.hom(L)
-
-
-        EXAMPLES::
-
-            sage: from mclf import *
-            sage: K0 = GF(4)
-            sage: R.<t> = K0[]
-            sage: K.<a> = K0.extension(t^2+t+K0.gen())
-            sage: Ks = standard_field(K)
-            sage: Ks.is_subfield_of(K)
-            False
-
-        """
-        if isinstance(L, StandardField):
-            return L.contains_as_subfield(self)
-        else:
-            return L.has_coerce_map_from(self.standard_model())
 
     def polynomial_ring(self, var_names):
         r""" Return a polynomial ring over this standard field.
@@ -969,23 +1248,6 @@ class StandardField(SageObject):
             finite_field_extension)
         return finite_field_extension(self, f, gen_name)
 
-    def inclusion(self, L):
-        r""" Return the inclusion of this standard field into `L`.
-
-        INPUT:
-
-        ``L`` -- another standard field
-
-        OUTPUT:
-
-        the natural inclusion `\phi:K\to L` of this standard field `K` into
-        `L`, provided there is one. If not, an error is raised.
-
-        This must be realized by the subclass.
-
-        """
-        raise NotImplementedError()
-
     def structure(self):
         r""" Return the structure of this standard field.
 
@@ -1016,10 +1278,13 @@ class StandardField(SageObject):
             sage: x, y = k.polynomial_generators(["x", "y"])
             sage: K = standard_function_field(x^3 + y^2)
             sage: K.structure()
-            [(Finite Field in z2 of size 2^2, z2, x^2 + x + 1),
+            [(Finite Field in z2 of size 2^2, as a subfield of Rational
+             function field in x over Finite Field in z2 of size 2^2, z2,
+             x^2 + x + 1),
              (Rational function field in x over Finite Field in z2 of size 2^2,
-               x, 0),
-             (Function field in y defined by y^2 + x^3, y, y^2 + x^3)]
+              as a subfield of Function field in y defined by y^2 + x^3, x, 0),
+             (Function field in y defined by y^2 + x^3 as standard function
+              field, y, y^2 + x^3)]
 
         """
         K = self
@@ -1044,6 +1309,44 @@ class StandardField(SageObject):
 
         """
         return [self.prime_subfield()] + [k for k, _, _ in self.structure()]
+
+# --------------------------------------------------------------------------
+
+#            these methods must be implemented by each subclass
+
+    def hom(self, L, image_gens, phi0):
+        r""" Return a homomorphism from this standard field to another standard
+        field.
+
+        INPUT:
+
+        - ``L`` -- a standard field
+        - ``image_gens`` -- an element, or a list of elements, of `L`
+        - ``phi0`` -- an embedding of a subfield `K_0` of this field `K`
+          into `L`
+
+        If this field `K` is finite or a number field, then ``image_gens``
+        must consist of a single element of `L`, and the domain `K_0` of
+        `\phi_0` is the prime subfield of `K`.
+
+        If `K` is a function field, then ``image_gens`` may contain one or two
+        elements of `L`, and `K_0` may be either the constant base field or
+        the rational base field of `K`; see :meth:`StandardFunctionField.hom`
+        for the exact rules.
+
+        OUTPUT:
+
+        the embedding `\phi:K\to L` which extends `\phi_0` and maps the
+        generators of `K/K_0` to the elements of ``image_gens``.
+
+        The result is an instance of the class
+        :class:`EmbeddingOfStandardFields <mclf.fields.\
+        embeddings_of_standard_fields.EmbeddingOfStandardFields>`.
+
+        This method must be implemented by each terminal subclass.
+
+        """
+        raise NotImplementedError()
 
 
 class StandardFiniteField(StandardField):
@@ -1106,19 +1409,27 @@ class StandardFiniteField(StandardField):
         """
         return False
 
+    def is_rational_function_field(self):
+        r""" Return whether this is a rational function field.
+
+        """
+        return False
+
     def generator(self):
         r""" Return the standard generator of this finite field.
 
         """
         return self._generator
 
-    def generators(self):
+    def generators(self, include_base_field=True):
         r""" Return the standard generators of this finite field.
 
-        Since there is only one generator, we return a tuple with one element.
+        Since there is only one generator, we return a list with one element.
+
+        The flag ``include_base_field`` can be ignored.
 
         """
-        return (self._generator, )
+        return [self.generator()]
 
     def polynomial(self):
         r""" Return the minimal polynomial of the standard generator over the
@@ -1175,7 +1486,7 @@ class StandardFiniteField(StandardField):
         else:
             return a.minpoly(var_name)
 
-    def hom(self, L, *a):
+    def hom(self, L, *args):
         r""" Return a homomorphism from this finite field to another standard
         field.
 
@@ -1183,6 +1494,8 @@ class StandardFiniteField(StandardField):
 
         - ``L`` -- a standard field
         - ``a`` -- an element of `L` (optional)
+        - ``psi0`` -- the embedding of the prime field of this field `K`
+                      into `L` (optional)
 
         OUTPUT:
 
@@ -1192,51 +1505,49 @@ class StandardFiniteField(StandardField):
         If `a` is not given, there must be a canonical embedding of `K`
         into `L`. If not, an error is raised.
 
+        The optional argument ``psi0`` is allowed for compatibility reasons.
+        It is not needed because either there is a unique embedding of the
+        prime field of `K` into `L`, ot the desired embedding `\phi` doesn't
+        exist anyway.
+
         The result is an instance of the class :class:`EmbeddingOfFiniteField`.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: K = standard_finite_field(4)
+            sage: L = standard_finite_field(16)
+            sage: K.hom(L)
+            the embedding of Finite Field in z2 of size 2^2 into Finite Field
+            in z4 of size 2^4, sending z2 to z4^2 + z4
+
+            sage: a = K.generator()
+            sage: K.hom(L, a + 1)
+            the embedding of Finite Field in z2 of size 2^2 into Finite Field
+            in z4 of size 2^4, sending z2 to z4^2 + z4 + 1
+
         """
         if not isinstance(L, StandardField):
             assert is_standard_field(L), "L must be a standard field"
             L = standard_field(L)
         assert self.characteristic() == L.characteristic(), (
             "K and L must have the same characteristic")
-        if len(a) == 0:
-            assert self.is_subfield_of(L)
+        if len(args) == 0:
+            assert L.contains_as_subfield(self)
             a = L(self.generator())
-        elif len(a) == 1:
-            a = a[0]
+        elif len(args) == 1:
+            a = L(args[0])
+        elif len(args) == 2:
+            a = L(args[0])
+            phi0 = args[1]
+            # even though phi0 is useless, we test whether it is the right
+            # thing:
+            assert phi0.is_equal(L.prime_subfield().embedding())
         else:
             raise ValueError("wrong number of arguments")
         from mclf.fields.embeddings_of_standard_fields import (
             EmbeddingOfFiniteField)
         return EmbeddingOfFiniteField(self, L, a)
-
-    def inclusion(self, L):
-        r""" Return the inclusion of this finite field into `L`.
-
-        INPUT:
-
-        ``L`` -- a standard field
-
-        OUTPUT:
-
-        the natural inclusion `\phi:K\to L` of this finite field `K` into
-        `L`, provided there is one. If not, an error is raised.
-
-        EXAMPLES::
-
-            sage: from mclf import *
-            sage: K = standard_field(GF(4))
-            sage: L = standard_field(GF(16))
-            sage: K.inclusion(L)
-            the embedding of Finite Field in z2 of size 2^2 into Finite Field
-            in z4 of size 2^4, sending z2 to z4^2 + z4
-
-        """
-        if not isinstance(L, StandardField):
-            L = standard_field(L)
-        assert self.standard_model().is_subring(L.standard_model())
-        phi = self.standard_model().hom(L.standard_model())
-        return self.hom(L, phi(self.generator()))
 
 
 class StandardNumberField(StandardField):
@@ -1300,19 +1611,27 @@ class StandardNumberField(StandardField):
         """
         return False
 
+    def is_rational_function_field(self):
+        r""" Return whether this is a rational function field.
+
+        """
+        return False
+
     def generator(self):
         r""" Return the standard generator of this number field.
 
         """
         return self._generator
 
-    def generators(self):
+    def generators(self, include_constant_base_field=True):
         r""" Return the standard generators of this number field.
 
         Since there is only one generator, we return a list with one element.
 
+        The flag ``include_constant_base_field`` can be ignored.
+
         """
-        return [self._generator]
+        return [self.generator()]
 
     def polynomial(self):
         r""" Return the minimal polynomial of the standard generator over the
@@ -1374,7 +1693,7 @@ class StandardNumberField(StandardField):
         else:
             return a.minpoly(var_name)
 
-    def hom(self, L, *a):
+    def hom(self, L, *args):
         r""" Return a homomorphism from this number field to another standard
         field.
 
@@ -1382,6 +1701,8 @@ class StandardNumberField(StandardField):
 
         - ``L`` -- a standard field
         - ``a`` -- an element of `L` (optional)
+        - ``phi0`` -- the unique embedding of the prime field of `K`
+                      into `L` (optional)
 
         OUTPUT:
 
@@ -1391,57 +1712,54 @@ class StandardNumberField(StandardField):
         If `a` is not given, there must be a canonical embedding of `K`
         into `L`. If not, an error is raised.
 
+        The argument ``psi0`` is useless and only allowed for compatibility
+        reasons: there either exists a unique embedding of the prime field
+        of `K` into `L`, or the desired embedding `\phi` does not exist anyway.
+
         The result is an instance of the class
         :class:`EmbeddingOfNumberField <mclf.fields.\
         embeddings_of_standard_fields.EmbeddingOfNumberField>`.
+
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: K0 = standard_field(QQ)
+            sage: x = K0.polynomial_generator("x")
+            sage: K1 = standard_number_field(x^2 - 2, "a")
+            sage: K0.hom(K1)
+            the embedding of Rational Field into Number Field in a with
+            defining polynomial x^2 - 2, sending 1 to 1
+
+            sage: K2 = standard_number_field(x^4 - 2, "b")
+            sage: b = K2.generator()
+            sage: K1.hom(K2, b^2)
+            the embedding of Number Field in a with defining polynomial x^2 - 2
+            into Number Field in b with defining polynomial x^4 - 2,
+            sending a to b^2
+
         """
         if not isinstance(L, StandardField):
             assert is_standard_field(L), "L must be a standard field"
             L = standard_field(L)
         assert self.characteristic() == L.characteristic(), (
             "K and L must have the same characteristic")
-        if len(a) == 0:
-            assert self.is_subfield_of(L)
+        if len(args) == 0:
+            assert L.contains_as_subfield(self)
             a = L(self.generator())
-        elif len(a) == 1:
-            a = L(a[0])
+        elif len(args) == 1:
+            a = L(args[0])
+        elif len(args) == 2:
+            a = L(args[0])
+            phi0 = args[1]
+            # even though phi0 is useless, we test whether it is the right
+            # thing:
+            assert phi0.is_equal(L.prime_subfield().embedding())
         else:
             raise ValueError("wrong number of arguments")
         from mclf.fields.embeddings_of_standard_fields import (
             EmbeddingOfNumberField)
         return EmbeddingOfNumberField(self, L, a)
-
-    def inclusion(self, L):
-        r""" Return the inclusion of this number field into `L`.
-
-        INPUT:
-
-        ``L`` -- a standard field
-
-        OUTPUT:
-
-        the natural inclusion `\phi:K\to L` of this number field `K` into
-        `L`, provided there is one. If not, an error is raised.
-
-        EXAMPLES::
-
-            sage: from mclf import *
-            sage: R.<x> = QQ[]
-            sage: K = NumberField(x^2+2, "a")
-            sage: L = K.extension(x^2-K.gen(), "b")
-            sage: K = standard_field(K)
-            sage: K.inclusion(L)
-            the embedding of Number Field in a with defining polynomial x^2 + 2
-            into Number Field in b with defining polynomial x^4 + 2,
-            sending a to b^2
-
-        """
-        if not isinstance(L, StandardField):
-            L = standard_field(L)
-        # assert self.standard_model().is_subring(L.standard_model())
-        from mclf.fields.embeddings_of_standard_fields import (
-            EmbeddingOfNumberField)
-        return EmbeddingOfNumberField(self, L, L(self.generator()))
 
 
 class StandardFunctionField(StandardField):
@@ -1551,28 +1869,93 @@ class StandardFunctionField(StandardField):
         """
         return self._is_rational_function_field
 
+    def embedding_of_constant_base_field(self):
+        r""" Return the embedding of the constant base field into this
+        function field.
+
+        """
+        if not hasattr(self, "_embedding_of_constant_base_field"):
+            from mclf.fields.embeddings_of_standard_fields import (
+                EmbeddingOfConstantBaseField)
+            self._embedding_of_constant_base_field = (
+                EmbeddingOfConstantBaseField(self))
+        return self._embedding_of_constant_base_field
+
     def constant_base_field(self):
         r""" Return the constant base field of this function field.
+
+        EXAMPLES:
+
+            sage: from mclf import *
+            sage: k = standard_finite_field(2)
+            sage: F0 = standard_rational_function_field(k, "x")
+            sage: F0.constant_base_field()
+            Finite Field of size 2, as a subfield of Rational function field
+            in x over Finite Field of size 2
+
+            sage: x = F0.generator()
+            sage: y = F0.polynomial_generator("y")
+            sage: F = F0.extension(y^2 + x^3 + 1, "y")
+            sage: F.constant_base_field()
+            Finite Field of size 2, as a subfield of Function field in y
+            defined by y^2 + x^3 + 1
 
         """
         from mclf.fields.standard_subfields import standard_subfield
         if not hasattr(self, "_constant_base_field"):
-            k = standard_subfield(self.standard_model().constant_base_field(),
-                                  self)
+            k = standard_subfield(self.embedding_of_constant_base_field())
             self._constant_base_field = k
         return self._constant_base_field
+
+    def embedding_of_rational_base_field(self):
+        r""" Return the embedding of the rational base field into this
+        function field.
+
+        """
+        if not hasattr(self, "_embedding_of_rational_base_field"):
+            if self.is_rational_function_field():
+                from mclf.fields.embeddings_of_standard_fields import(
+                    IdentityEmbedding)
+                iota = IdentityEmbedding(self)
+            else:
+                from mclf.fields.embeddings_of_standard_fields import (
+                    EmbeddingOfRationalBaseField)
+                iota = EmbeddingOfRationalBaseField(self)
+            self._embedding_of_rational_base_field = iota
+        return self._embedding_of_rational_base_field
 
     def rational_base_field(self):
         r""" Return the rational base field of this  function field.
 
+        EXAMPLES:
+
+            sage: from mclf import *
+            sage: k = standard_finite_field(2)
+            sage: F0 = standard_rational_function_field(k, "x")
+            sage: F0.rational_base_field()
+            Rational function field in x over Finite Field of size 2,
+            as a subfield of Rational function field in x over Finite Field
+            of size 2
+
+            sage: x = F0.generator()
+            sage: y = F0.polynomial_generator("y")
+            sage: F = F0.extension(y^2 + x^3 + 1, "y")
+            sage: F.rational_base_field()
+            Rational function field in x over Finite Field of size 2,
+            as a subfield of Function field in y defined by y^2 + x^3 + 1
+
         """
         from mclf.fields.standard_subfields import standard_subfield
         if not hasattr(self, "_rational_base_field"):
-            F0 = standard_subfield(self.standard_model().base_field(), self)
-            self._rational_base_field = F0
+            if self.is_rational_function_field():
+                self._rational_base_field = self.as_subfield_of_itself()
+            else:
+                F0 = standard_subfield(
+                    self.embedding_of_rational_base_field())
+                self._rational_base_field = F0
         return self._rational_base_field
 
-    def generators(self):
+    def generators(self, include_constant_base_field=False):
         r""" Return the standard generators of this function field.
 
         In its standard form, this function field `K/k` is of the form
@@ -1582,8 +1965,15 @@ class StandardFunctionField(StandardField):
         If `K` is a rational function field, i.e.\ its standard form is
         `k(x)`, then we only return the standard generator `x`.
 
+        If ``include constant_base_field``, and the constant base field `k`
+        is not the prime field, then we add the generator of `k` to the
+        beginning of the list.
+
         """
-        return self._generators
+        if include_constant_base_field:
+            return [self.constant_base_field().generator()] + self._generators
+        else:
+            return self._generators
 
     def generator(self):
         r""" Return the standard generator of this function field.
@@ -1858,48 +2248,50 @@ class StandardFunctionField(StandardField):
         assert h(x, y).is_zero()
         return h
 
-    # this is inconsistent with the arguments for the other types;
-    # but it is important that the format of the input is uniform
-    # so K.hom(L) should also work if K is a subfield of L
-    def hom(self, L, image_of_gens, *args):
+    def hom(self, L, *args):
         r""" Return a homomorphism from this function field to another function
         field.
 
         INPUT:
 
         - ``L`` -- a standard function field
-        - ``image_of_gens`` -- a list of elements of `L`
-        - ``phi0`` -- an embedding of a subfield of `K` into `L` (optional)
-
-        1. If `K` is a rational function field, then ``image_gens`` must
-        contain exactly one element, and the domain of `\psi_0:k\to L` must be
-        the constant base field of `K`.
-
-        2. Otherwise, ``image_gens`` may contain one or two elements. In the
-        first case, the domain of `\psi_0` must be the rational base field of
-        `L`, in the second case it must be the constant base field.
-
-        If `\psi_0` is not given, we assume that there is a natural embedding
-        of `k` into `L`, which we then call `\psi_0`.
+        - ``args`` -- additional arguments
 
         OUTPUT:
 
-        The embedding `\phi:K\to L` extending `\phi_0` and sending the standard
-        generators of `K` to the elements of specified by ``image_of_gens``
-        (and possibly `\psi_0`). More precisely, if `x` resp. `x, y` are the
-        standard generators of `K`, and `u` resp. `u, v` are the elements of
-        ``image_of_gens``, then
+        the embedding `\phi:K\to L` of this standard function field `K`
+        into the given standard function field `L`, determined by the
+        additional data ``args``, which must be in one of the following forms:
 
-        1. We have `\phi(x)=u` if `K=k(x)` is a rational function field,
-        2. We have `\phi(x)=u` and `\phi(y)=v` if `K` is not a rational
-           function field and `u, v` are given,
-        3. We have `\phi=\psi_0` on `k(x)` and `\phi(y)=u` otherwise.
+        - empty,
+        - ``image_gens``: an element `\alpha` of `L`, or a list of one or two
+          elements of `L`,
+        - (``image_gens``, ``base_map``): here ``imega_gens`` is as above, and
+          ``base_map`` is an embedding `\phi_0:K_0\to L` of a subfield `K_0`
+          of `K`, which must be either the constant base field, or the rational
+          base field.
+
+        The embedding `\phi:K\to L` is determined as follows:
+
+        1. If ``args`` is empty, `K` must be a natural subfield of `L`, in
+           which case we return the natural inclusion.
+        2. If ``base_map`` is not given, then the subfield `K_0` must also have
+           a natural embedding into `L`, which we then choose for `\phi_0`.
+           The embedding `\phi` is an extension of `\phi_0` determined by
+           ``image_gens``.
+        3. If `K` is a rational function field, the ``image_gens`` must consist
+           of a single element `\alpha\in L`. In this case, `K_0` is the
+           constant base field of `K`, and `\phi` sends the standard generator
+           of `K/K_0` to `\alpha`.
+        4. If `K` is not a rational function field and ``image_gens`` consists
+           of a single element `\alpha\in L` then the subfield `K_0` must be
+           the rational base field of `K_0`. The embedding `\phi` sends the
+           standard generator of `K/K_0` to `\alpha`.
+        5. If ``image_gens`` is a list of two elements `\alpha, \beta \in L`
+           then `K_0` must be the constant base field of `K`, and `\phi` sends
+           the two standard generators `x, y` of `K/K_0` to `\alpha, \beta`.
 
         If no such embedding exists, an error is raised.
-
-        If `\phi_0` is not given, we assume that we are in Case 1 or 2, and
-        that there is a canonical embedding of the constant base field `k`
-        into `L`.  If not, an error is raised.
 
         The result is an instance of
         :class:`EmbeddingOfFunctionField <mclf.fields.\
@@ -1908,21 +2300,19 @@ class StandardFunctionField(StandardField):
         EXAMPLES::
 
             sage: from mclf import *
-            sage: K = standard_field(FunctionField(QQ, "x"))
+            sage: K = standard_rational_function_field(QQ, "x")
             sage: x = K.generator()
             sage: phi = K.hom(K, [x^2 + x]); phi
             the embedding of Rational function field in x over Rational Field
-            as standard rational function field into Rational function field
-            in x over Rational Field as standard rational function field,
-            sending x to (x^2 + x,)
+            into Rational function field in x over Rational Field,
+            sending [x] to [x^2 + x]
             sage: phi(x^3)
             x^6 + 3*x^5 + 3*x^4 + x^3
 
             sage: y = K.polynomial_generator("y")
             sage: L = K.extension(y^2 + x^3 +1); L
-            Function field in y1 defined by y1^2 + x^3 + 1,
-            as finite extension of Rational function field in x over
-            Rational Field
+            Function field in y defined by y^2 + x^3 + 1, as finite extension
+            of Rational function field in x over Rational Field
             sage: y = L.generator()
             sage: L.hom(L, [x, -y])
             the embedding of Function field in y defined by y^2 + x^3 + 1
@@ -1944,36 +2334,50 @@ class StandardFunctionField(StandardField):
         from mclf.fields.embeddings_of_standard_fields import (
            embedding_of_standard_fields, EmbeddingOfStandardFields)
         K = self
-        K0 = K.rational_base_field()
-        k = K.constant_base_field()
         if not isinstance(L, StandardFunctionField):
             L = standard_function_field(L)
         assert self.characteristic() == L.characteristic(), (
             "K and L must have the same characteristic")
-        if not type(image_of_gens) is list:
-            image_of_gens = [L(image_of_gens)]
-        else:
-            image_of_gens = [L(a) for a in image_of_gens]
+
         if len(args) == 0:
-            assert k.is_subfield_of(L)
-            phi0 = k.hom(L)
-            if len(image_of_gens) == 1:
-                assert K.is_rational_function_field(), "wrong input"
-        elif len(args) == 1 and len(image_of_gens) == 1:
-            phi0 = args[0]
-            if not isinstance(phi0, EmbeddingOfStandardFields):
-                phi0 = embedding_of_standard_fields(phi0)
-            assert phi0.maps_into(L)
-            if not K.is_rational_function_field():
-                image_of_gens = [phi0(K0.generator())] + image_of_gens
-        elif len(args) == 1 and len(image_of_gens) == 2:
-            phi0 = args[0]
-            assert phi0.applies_to(k)
+            assert L.contains_as_subfield(K), "K must be a subfield of L"
+            phi0 = K.constant_base_field().hom(L)
+            image_gens = [L(a) for a in K.generators()]
+        elif len(args) == 1:
+            image_gens = args[0]
+            phi0 = None
+        elif len(args) == 2:
+            image_gens = args[0]
+            phi0 = args[1]
         else:
-            raise ValueError("wrong type of arguments")
+            raise TypeError("wrong number of arguments")
+
+        if not type(image_gens) is list:
+            assert L.is_element(image_gens), "image_gens must be an element \
+                of L or a list of elements"
+            image_gens = [L(image_gens)]
+        else:
+            image_gens = [L(a) for a in image_gens]
+
+        if len(image_gens) == 1:
+            if K.is_rational_function_field():
+                K0 = K.constant_base_field()
+            else:
+                K0 = K.rational_base_field()
+        elif len(image_gens) == 2:
+            K0 = K.constant_base_field()
+        else:
+            raise TypeError("image_gens must have one or two elements")
+
+        if phi0 is None:
+            assert L.contains_as_subfield(K0), "K0 is not a subfield of L"
+            phi0 = K0.hom(L)
+        else:
+            assert phi0.applies_to(K0), "base map is not defined on K0"
+
         from mclf.fields.embeddings_of_standard_fields import (
             EmbeddingOfFunctionField)
-        return EmbeddingOfFunctionField(self, L, image_of_gens, phi0)
+        return EmbeddingOfFunctionField(self, L, image_gens, phi0)
 
     def with_new_constant_base_field(self, phi0):
         r""" Return this standard function field, with a new constant
@@ -2002,33 +2406,57 @@ class StandardFunctionField(StandardField):
 
             sage: from mclf import *
             sage: R.<t> = QQ[]
-            sage: k0 = standard_field(QQ)
-            sage: k = k0.extension(t^2+1)
+            sage: k = standard_number_field(t^2+1, "i")
             sage: x, y = k0.polynomial_generators(["x", "y"])
             sage: F = standard_function_field(x^2+y^2); F
             Function field in y defined by y^2 + x^2 as standard function field
 
-            sage: i = k.relative_generator()
+            sage: i = k.generator()
             sage: x, y = F.generators()
-            sage: phi = k.relative_hom(F, x/y)
+            sage: phi = k.hom(F, x/y)
             sage: F1, _, _ = F.with_new_constant_base_field(phi); F1
-            Rational function field in x0 over Number Field in t with defining
+            Rational function field in x0 over Number Field in i with defining
             polynomial t^2 + 1, as finite extension of Rational function field
-            in x0 over Number Field in t with defining polynomial t^2 + 1
+            in x0 over Number Field in i with defining polynomial t^2 + 1
+
+        Note that `F_1` is returned as a finite extension. We can get the
+        field with this extra information as follows::
+
+            sage: F1.extension_field()
+            Rational function field in x0 over Number Field in i with defining
+            polynomial t^2 + 1 as standard rational function field
+
+            sage: k0 = standard_finite_field(4)
+            sage: a = k0.generator()
+            sage: t = k0.polynomial_generator("t")
+            sage: k1 = k0.extension(t^3 + t^2 + t + a, "b")
+            sage: F0 = standard_rational_function_field(k1, "x")
+            sage: x = F0.generator()
+            sage: y = F0.polynomial_generator("y")
+            sage: F = F0.extension(y^2+x^3+a)
+            sage: F_k0, _, _ = F.with_new_constant_base_field(k0); F_k0
+            Function field in y_ defined by y_^9 + (x0_^2 + z2 + 1)*y_^6
+              + (x0_^4 + z2)*y_^3 + x0_^6 + (z2 + 1)*x0_^4 + z2*x0_^2 + z2 + 1
+            as standard function field
 
         """
         from mclf.fields.embeddings_of_standard_fields import (
             embedding_of_standard_fields, EmbeddingOfStandardFields)
         F = self
+        k = F.constant_base_field()
+
         if is_standard_field(phi0):
+            # we demand that K1 is a natural subfield of k
+            # there are only two possibilities
             k1 = phi0
-            assert F.contains_as_subfield(k1)
-            phi0 = F.embedding_of_subfield(k1)
+            if not isinstance(k1, StandardField):
+                k1 = standard_field(k1)
+            assert k.contains_as_subfield(k1)
+            phi0 = k1.hom(k)
         elif not isinstance(phi0, EmbeddingOfStandardFields):
             phi0 = embedding_of_standard_fields(phi0)
         # now phi0 is a embedding of standard fields
 
-        k = F.constant_base_field()
         k1 = phi0.Domain()
         assert k1.is_finite() or k1.is_number_field()
         assert phi0.maps_into(F)
@@ -2163,46 +2591,13 @@ class StandardFunctionField(StandardField):
                         F_K_to_F = F_K.hom(F, F.generators(), u)
                         return F_K, F_to_F_K, F_K_to_F
                 # if we get here, something is wrong
-                raise AssertionError("couldn't fing the right factor")
-
-    def inclusion(self, L):
-        r""" Return the inclusion of this function field into `L`.
-
-        INPUT:
-
-        ``L`` -- a standard field
-
-        OUTPUT:
-
-        the natural inclusion `\phi:K\to L` of this number field `K` into
-        `L`, provided there is one. If not, an error is raised.
-
-        EXAMPLES::
-
-            sage: from mclf import *
-            sage: F0.<x> = FunctionField(QQ)
-            sage: R.<y> = F0[]
-            sage: F = F0.extension(y^2-x^3-1, "y")
-            sage: F0 = standard_field(F0)
-            sage: F0.inclusion(F)
-            the embedding of Rational function field in x over Rational Field
-            into Function field in y defined by y^2 - x^3 - 1,
-            sending [x] to [x]
-
-        """
-        from mclf.fields.embeddings_of_standard_fields import (
-            EmbeddingOfFunctionField)
-        if not isinstance(L, StandardField):
-            L = standard_field(L)
-        k = self.constant_base_field()
-        phi0 = k.hom(L.constant_base_field())
-        image_of_gens = [L(a) for a in self.generators()]
-        return EmbeddingOfFunctionField(self, L, image_of_gens, phi0)
+                raise AssertionError("couldn't find the right factor")
 
 
 # ----------------------------------------------------------------------------
 
 #                       helper functions, new version
+
 
 def standard_model_of_function_field(K):
     r""" Return a standard model of a function field.
@@ -2281,11 +2676,6 @@ def standard_model_of_function_field(K):
         K_to_F3 = K_to_F2.post_compose(F2_to_F3)
         F3_to_K = F3_to_F2.post_compose(F2_to_K)
         return F3, K_to_F3, F3_to_K
-
-
-#  this should be obsolete; it is only used when initializing a finite
-# field as a standard field.
-# however, the class "EmbeddingOfStandardField" has a method "inverse"
 
 
 def inverse_of_field_isomorphism(phi):
@@ -2516,4 +2906,5 @@ def make_bivariate(f):
     d = lcm([f[i].denominator() for i in range(f.degree() + 1)])
     f = d*f
     F = sum(f[i].numerator()(t)*x**i for i in range(f.degree() + 1))
+    return F
     return F

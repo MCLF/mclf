@@ -64,6 +64,10 @@ from mclf.fields.standard_fields import (standard_field, StandardField,
                                          StandardNumberField,
                                          StandardFunctionField)
 
+# -------------------------------------------------------------------------
+
+#                     constructor functions
+
 
 def embedding_of_standard_fields(*args):
     r""" Return the embedding of standard fields defined by the input.
@@ -124,13 +128,108 @@ def embedding_of_standard_fields(*args):
         raise NotImplementedError()
 
 
+def natural_embedding(K, L):
+    r""" Return the natural inclusion of a standard field into an overfield.
+
+    INPUT:
+
+    - ``K``, ``L`` -- standard fields
+
+    It is assumed that `K` is a natural subfield of `L`. If not, an error
+    is raised.
+
+    OUTPUT:
+
+    the natural embedding `K\hookrightarrow L`, as an instance of the class
+    :class:`NaturalEmbedding`.
+
+    Let `L` be a standard field. Its **natural subfields** are the following:
+
+    - the prime subfield of `L`
+    - the field `L` itself
+    - if `L` is a function field:
+
+        * the constant base field of `L`
+        * the rational base field of `L`
+
+    Of course, these possibilities are *not* mutually exclusive.
+
+    So `K` has to be one of the above fields.
+
+    """
+    if not isinstance(K, StandardField):
+        K = standard_field(K)
+    if not isinstance(L, StandardField):
+        L = standard_field(L)
+    # the embedding of a natural subfield of a standard fiel is
+    # actually done by the correpsonding method of the field itself.
+    if L.prime_subfield().is_equal(K):
+        return L.embedding_of_prime_subfield()
+    elif L.is_equal(K):
+        return L.identity()
+    elif L.is_function_field() and L.constant_base_field().is_equal(K):
+        return L.embedding_of_constant_base_field()
+    elif L.is_function_field() and L.rational_base_field().is_equal(K):
+        return L.embedding_of_rational_base_field()
+    else:
+        raise TypeError("K is not a natural subfield of L")
+
+
+def identity_embedding(K):
+    r""" Return the identity embedding of a standard field.
+
+    INPUT:
+
+    - ``K`` -- a standard field
+
+    OUTPUT:
+
+    the identity morphism `K\to K`, as an instance of the class
+    :class:`IdentityEmbedding()`, subclass of
+    :class:`EmbeddingOfStandardFields`
+
+    EXAMPLES::
+
+        sage: from mclf import *
+        sage: K = standard_field(QQ)
+        sage: id_K = identity_embedding(K); id_K
+        the identity map on Rational Field
+        sage: id_K.Domain()
+        Rational Field as a standard field
+        sage: id_K(5)
+        5
+        sage: id_K.inverse()
+        the identity map on Rational Field
+        sage: x = K.polynomial_generator("x")
+        sage: L = standard_number_field(x^2 - 2, "a")
+        sage: id_L = identity_embedding(L)
+        sage: iota = K.hom(L)
+        sage: id_K.post_compose(iota)
+        the embedding of Rational Field into Number Field in a with
+        defining polynomial x^2 - 2, sending 1 to 1
+        sage: id_L.precompose(iota)
+        the embedding of Rational Field into Number Field in a with
+        defining polynomial x^2 - 2, sending 1 to 1
+
+    """
+    if not isinstance(K, StandardField):
+        K = standard_field(K)
+    # the identity morphism was aleady created with the standard field K;
+    # we don't have to do that again
+    # not that therefore, the initialization of StandardField *must not*
+    # use this function!!
+    return K.identity()
+
+# --------------------------------------------------------------------------
+
+
 class EmbeddingOfStandardFields(SageObject):
     r""" Base class for an embedding `\phi:K\to L` of standard fields.
 
-    The domain `K` and the codomain `L` may be either a Sage field, i.e.
-    objects of the the Sage category ``Fields``, or instance of the class
-    :class:`StandardField <mclf.fields.standard_fields.StandardField>`.
-    In the former case, `K` and `L` must be in standard form.
+    For creating an instance of this class one can use the function
+    :func:`embedding_of_standard_fields`.
+
+    The actual initialization will be done by the appropriate subclass.
 
     """
 
@@ -168,12 +267,54 @@ class EmbeddingOfStandardFields(SageObject):
         """
         return self._codomain
 
-    def prime_field(self):
-        r""" Return the common prime field of domain and codomain of this
-        embedding.
+    def is_identity(self):
+        r""" Return whether this embedding is the identity on its domain.
 
         """
-        return self.domain().prime_field()
+        K = self.Domain()
+        L = self.Codomain()
+        return K.is_equal(L) and all(self(a) == a for a in K.generators(
+            include_constant_base_field=True))
+
+    def is_canonical_embedding(self):
+        r""" Return whether this embedding is the natural inclusion of its
+        domain as a subfield of its subdomain.
+
+        """
+        K = self.Domain()
+        L = self.Codomain()
+        return K.is_subfield_of(L) and all(self(a) == a for a in K.generators(
+            include_constant_base_field=True))
+
+    def is_injective(self):
+        r""" Return whether this embedding is injective.
+
+        Since the domain is field, it is automatically injective, so this
+        method always returns ``True``.
+
+        """
+        return True
+
+    def is_invertible(self):
+        r""" Return whether this embedding is invertible, i.e. an isomorphism.
+
+        This is equivalent to :meth:`is_surjective`.
+
+        """
+        return self.is_surjective()
+
+    def is_equal(self, psi):
+        r""" Return whether this embedding is equal to another one.
+
+        """
+        assert isinstance(psi, EmbeddingOfStandardFields)
+        phi = self
+        if (phi.Domain().is_equal(psi.Domain())
+                and phi.Codomain().is_equal(psi.Codomain())):
+            gens = phi.Domain().generators(include_constant_base_field=True)
+            return all(phi(a) == psi(a) for a in gens)
+        else:
+            return False
 
     def is_finite_extension(self):
         r""" Return whether the codomain of this embedding is a finite
@@ -220,11 +361,11 @@ class EmbeddingOfStandardFields(SageObject):
 
         whether any result of this embedding can be coerced into `L`.
 
-        Note that `L` may be either a Sage field or an instance of
+        Here `L` must be an instance of
         :class:`StandardField <mclf.fields.standard_fields.StandardField>`.
 
         """
-        return self.Codomain().is_subfield_of(L)
+        return L.contains_as_subfield(self.Codomain())
 
     def precompose(self, psi):
         r""" Return the composition of `\psi` with this embedding.
@@ -242,12 +383,16 @@ class EmbeddingOfStandardFields(SageObject):
         """
         return psi.post_compose(self)
 
-    def change_coefficients(self, f):
+    def change_coefficients(self, f, codomain=None):
         r""" Return the base change of a polynomial under this embedding.
 
         INPUT:
 
         - ``f`` -- a polynomial over the domain of this embedding
+        - ``codomain`` -- a standard field (default: ``None``)
+
+        If ``codomain`` is given, it must be a standard field containing
+        the codomain of this embedding as a subfield.
 
         OUTPUT:
 
@@ -255,7 +400,12 @@ class EmbeddingOfStandardFields(SageObject):
         to the coefficients of `f`.
 
         """
-        return f.map_coefficients(self, self.codomain())
+        if codomain is None:
+            codomain = self. codomain()
+        else:
+            assert isinstance(codomain, StandardField)
+            codomain = codomain.standard_model()
+        return f.map_coefficients(self, codomain)
 
     def is_standard_simple_extension(self):
         r""" Return whether this embedding is the standard form of a finite
@@ -289,6 +439,12 @@ class EmbeddingOfStandardFields(SageObject):
     def post_compose(self, psi):
         raise NotImplementedError()
 
+    def is_surjective(self):
+        r""" Return whether this embedding is surjective.
+
+        """
+        raise NotImplementedError()
+
     def inverse(self):
         raise NotImplementedError()
 
@@ -313,6 +469,366 @@ class EmbeddingOfStandardFields(SageObject):
             so maybe we only need it for function fields.
 
         """
+        raise NotImplementedError()
+
+
+class NaturalEmbedding(EmbeddingOfStandardFields):
+    r""" Base class for natural embedding of a subfield of a standard field.
+
+    A standard field `K` has the following **natural subfields**:
+
+    - the prime subfield
+    - the field `K` itself
+    - if `K` is a function field:
+
+        * the constant base field
+        * the rational base field
+
+    If `K_0\subset K` is one of the above, the inclusion morphism
+    `K_0\hookrightarrow K` is represented by an instance of the appropriate
+    subclass of this base class.
+
+    .. NOTE::
+
+        The initialization is done by the subclass. It is important that these
+        initializations are called only once, by the initialization process
+        of the standard field `K`, and by no other function.
+
+    """
+
+    def __repr__(self):
+        return "the natural embedding of {} into {}".format(self.domain(),
+                                                            self.codomain())
+
+    def is_canonical_embedding(self):
+        r""" Return whether this embedding is the natural inclusion of its
+        domain as a subfield of its subdomain.
+
+        """
+        return True
+
+    def __call__(self, a):
+        r""" Return the value of this embedding on an element of the domain.
+
+        """
+        assert self.Domain().contains_as_subfield(a.parent()), "the element\
+            a does not coerce into the domain of this map"
+        return self.Codomain()(a)
+
+
+class IdentityEmbedding(NaturalEmbedding):
+    r""" Return the identity embedding of a standard field.
+
+    INPUT:
+
+    ``K`` -- a standard field
+
+    `K` must be given as an instance of :class:`StandardField`
+
+    OUTPUT:
+
+    the identity morphism on `K`, as an instance of the class
+    :class:`EmbeddingOfStandardFields`.
+
+    .. NOTE::
+
+        The initialization of this class must be called *only* during
+        the initialization of the standard field `K`. At this moment,
+        the instance `K` of
+        :class:`StandardField <mclf.fields.standard_fields.StandardField>`
+        already exist, the identity map is created (with input `K`) and then
+        we attach this map to ``K._identity``.
+
+    """
+
+    def __init__(self, K):
+        assert isinstance(K, StandardField)
+        self._domain = K
+        self._codomain = K
+
+    def __repr__(self):
+        return "the identity map on {}".format(self.domain())
+
+    def is_identity(self):
+        r""" Return whether this embedding is the identity on its domain.
+
+        """
+        return True
+
+    def is_finite_extension(self):
+        r""" Return whether the codomain of this embedding is a finite
+        extension of the image.
+
+        """
+        return True
+
+    def precompose(self, psi):
+        r""" Return the composition of `\psi` with the identity map.
+
+        INPUT:
+
+        - ``psi`` -- an embedding `\psi:M\to K` of standard fields.
+
+        Here `K` is the domain and codomain of this identity map.
+
+        OUTPUT:
+
+        the embedding `\psi\circ\psi:M\to K` itself.
+
+        """
+        assert psi.maps_into(self.Domain())
+        return psi
+
+    def change_coefficients(self, f):
+        r""" Return the base change of a polynomial under this identity map.
+
+        INPUT:
+
+        - ``f`` -- a polynomial over the domain of this identity map.
+
+        OUTPUT:
+
+        the polynomial `f` itself.
+
+        """
+        assert self.Domain().contains_as_subfield(f.base_ring())
+        return f
+
+    def is_standard_simple_extension(self):
+        r""" Return whether this identity map is the standard form of a finite
+        simple extension.
+
+        The answer is yes.
+        """
+        return True
+
+    def __call__(self, a):
+        r""" Return the value of this identity map on an element of the domain.
+
+        """
+        assert self.Domain().contains_as_subfield(a.parent()), "the element\
+            a does not coerce into the domain of this map"
+        return self.Domain()(a)
+
+    def post_compose(self, psi):
+        assert self.maps_into(psi.Domain())
+        return psi
+
+    def is_surjective(self):
+        r""" Return whether this embedding is surjective.
+
+        """
+        return True
+
+    def inverse(self):
+        return self
+
+    def finite_extension(self):
+        raise NotImplementedError()
+
+
+class EmbeddingOfPrimeSubfield(NaturalEmbedding):
+    r""" Return the embedding of the prime subfield of a standard field.
+
+    INPUT:
+
+    ``K`` -- a standard field
+
+    `K` must be given as an instance of :class:`StandardField`
+
+    OUTPUT:
+
+    the embedding `K_0\hookrightarrow K` of the prime subfield `K_0` of `K`,
+    as an instance of the class :class:`EmbeddingOfStandardFields`.
+
+    .. NOTE::
+
+        The initialization of this class must be called *only* by the method
+        :meth:`embedding_of_prime_subfield <mclf.fields.standard_fields.\
+        StandardField.embedding_of_prime_subfield>` of the standard field `K`.
+
+        this guarantiees that no unneccessary copies of the embdding float
+        around.
+
+    """
+
+    def __init__(self, K):
+        assert isinstance(K, StandardField)
+        from mclf.fields.standard_fields import standard_prime_field
+        self._domain = standard_prime_field(K.characteristic())
+        self._codomain = K
+
+    def is_identity(self):
+        r""" Return whether this embedding is the identity on its domain.
+
+        """
+        return self.Codomain().is_prime_field()
+
+    def post_compose(self, psi):
+        r""" Return the composition of this embedding with another one.
+
+        INPUT:
+
+        - ``\psi`` -- an embedding `\psi:K\to L` of standard fields
+
+        Here `K` is the field of which this is the embedding of the prime
+        subfield.
+
+        OUTPUT:
+
+        The embedding of the prime subfield into `L`.
+
+        """
+        assert self.maps_into(psi.Domain())
+        return psi.Codomain().embedding_of_prime_subfield()
+
+    def precompose(self, psi):
+        r""" Return the composition of `\psi` with the identity map.
+
+        INPUT:
+
+        - ``psi`` -- an embedding `\psi:M\to K_0` of standard fields.
+
+        Here `K_0` is the prime subfield being embedded into its overfield.
+
+        OUTPUT:
+
+        this embedding itself (as `\psi` is necessarily the identity map).
+
+        """
+        assert psi.maps_into(self.Domain())
+        return self
+
+    def is_surjective(self):
+        r""" Return whether this embedding is surjective.
+
+        """
+        return self.Codomain().is_prime_field()
+
+    def inverse(self):
+        if self.is_identity():
+            return self
+        else:
+            raise AssertionError("This embedding is not invertibel")
+
+    def finite_extension(self):
+        raise NotImplementedError()
+
+
+class EmbeddingOfConstantBaseField(NaturalEmbedding):
+    r""" Return the embedding of the constant base field of a standard
+    function field.
+
+    INPUT:
+
+    ``K`` -- a standard function field
+
+    `K` must be given as an instance of :class:`StandardFunctionField \
+    <mclf.fields.standard_fields.StandardFunctionField>`.
+
+    OUTPUT:
+
+    the embedding `k\hookrightarrow K` of the constant base field `k` of `K`,
+    as an instance of the class :class:`EmbeddingOfStandardFields`.
+
+    .. NOTE::
+
+        The initialization of this class must be called *only* by the method
+        :meth:`embedding_of_constant_base_field <mclf.fields.standard_fields.\
+        StandardFunctionField.embedding_of_constant_base_field>` of the
+        standard function field `K`.
+
+        This guarantees that no unneccessary copies of the embdding float
+        around.
+
+    """
+
+    def __init__(self, K):
+        from mclf.fields.standard_fields import (standard_prime_field,
+                                                 StandardFunctionField)
+        assert isinstance(K, StandardFunctionField)
+        self._domain = standard_field(
+            K.standard_model().constant_base_field())
+        self._codomain = K
+
+    def is_identity(self):
+        r""" Return whether this embedding is the identity on its domain.
+
+        """
+        return False
+
+    def is_surjective(self):
+        r""" Return whether this embedding is surjective.
+
+        """
+        return False
+
+    def inverse(self):
+        raise AssertionError("This embedding is not invertibel")
+
+    def finite_extension(self):
+        raise NotImplementedError()
+
+
+class EmbeddingOfRationalBaseField(NaturalEmbedding):
+    r""" Return the embedding of the rational base field of a standard
+    function field.
+
+    INPUT:
+
+    ``K`` -- a standard function field, which is *not* a rational function
+             field
+
+    `K` must be given as an instance of :class:`StandardFunctionField \
+    <mclf.fields.standard_fields.StandardFunctionField>`.
+
+    OUTPUT:
+
+    the embedding `K_0\hookrightarrow K` of the rational base field `K_0` of
+    `K`, as an instance of the class :class:`EmbeddingOfStandardFields`.
+
+    .. NOTE::
+
+        - The initialization of this class must be called *only* by the method
+          :meth:`embedding_of_rational_base_field <mclf.fields.standard_fields.\
+          StandardFunctionField.embedding_of_rational_base_field>` of the
+          standard function field `K`.
+
+          This guarantees that no unneccessary copies of the embdding float
+          around.
+
+        - for a rational function field, the embedding of its rational base
+          field is simply the identity map; therefore, we make the assumption
+          that `K` is not a rational function field.
+
+    """
+
+    def __init__(self, K):
+        from mclf.fields.standard_fields import (standard_field,
+                                                 StandardFunctionField)
+        assert isinstance(K, StandardFunctionField)
+        assert not K.is_rational_function_field(), "K must not be a rational \
+            function field"
+        self._domain = standard_field(
+            K.standard_model().base_field())
+        self._codomain = K
+
+    def is_identity(self):
+        r""" Return whether this embedding is the identity on its domain.
+
+        """
+        return False
+
+    def is_surjective(self):
+        r""" Return whether this embedding is surjective.
+
+        """
+        return False
+
+    def inverse(self):
+        raise AssertionError("This embedding is not invertibel")
+
+    def finite_extension(self):
         raise NotImplementedError()
 
 
@@ -401,10 +917,11 @@ class EmbeddingOfFiniteField(EmbeddingOfStandardFields):
         a = psi(self.image_of_generator())
         return EmbeddingOfFiniteField(self._domain, psi._codomain, a)
 
-    def inverse(self):
+    def inverse(self, check=False):
         r""" Return the inverse of this embedding of finite fields.
 
-        If ``self`` is not invertible, an error is raised.
+        If ``self`` is not invertible, an error is raised - unless ``check``
+        is ``True``; then we return ``None``.
 
         EXAMPLES::
 
@@ -428,6 +945,14 @@ class EmbeddingOfFiniteField(EmbeddingOfStandardFields):
                 return L.hom(K, [beta])
         # if we get here, something went wrong
         raise AssertionError()
+
+    def is_surjective(self):
+        r""" Return whether this embedding of a finite field is surjective.
+
+        """
+        K = self.Domain()
+        L = self.Codomain()
+        return L.is_finite() and K.cardinality() == L.cardinality()
 
 
 class EmbeddingOfNumberField(EmbeddingOfStandardFields):
@@ -503,23 +1028,34 @@ class EmbeddingOfNumberField(EmbeddingOfStandardFields):
         a = psi(self.image_of_generator())
         return EmbeddingOfNumberField(self._domain, psi._codomain, a)
 
-    def inverse(self):
+    def inverse(self, check=False):
         r""" Return the inverse of this embedding of number fields.
 
-        If ``self`` is not invertible, an error is raised.
+        If ``self`` is not invertible, an error is raised - unless ``check``
+        is ``True``; then we return ``None``.
 
         EXAMPLES::
 
             sage: from mclf import *
             sage: R.<x> = QQ[]
             sage: K = standard_number_field(x^2-2, "a")
-            sage: phi = K.hom(K, -K.generator())
+            sage: a = K.generator()
+            sage: phi = K.hom(K, -a)
             sage: phi.inverse()
             the embedding of Number Field in a with defining polynomial x^2 - 2
             into Number Field in a with defining polynomial x^2 - 2,
             sending a to -a
 
+        We can use the method to test whether an embedding is invertible,
+        by using the flag ``check``. ::
+
+            sage: L = K.extension(x^2 - a, "b")
+            sage: phi = L.embedding_of_base_field()
+            sage: phi.inverse(check=True)
+
         """
+        if check and not self.is_invertible():
+            return None
         phi = self
         K = phi.Domain()
         L = phi.Codomain()
@@ -531,6 +1067,14 @@ class EmbeddingOfNumberField(EmbeddingOfStandardFields):
         # if we get here, phi is not invertible
         raise ValueError("phi is not invertible")
 
+    def is_surjective(self):
+        r""" Return whether this embedding of a number field is surjective.
+
+        """
+        K = self.Domain()
+        L = self.Codomain()
+        return L.is_number_field() and K.degree() == L.degree()
+
 
 class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
     r""" Return an embedding of a function field into another function field.
@@ -541,20 +1085,44 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
     - ``image_of_gens`` -- a list of elements of `L`
     - ``phi0`` -- an embedding of standard fields
 
-    Here ``image_of_gens`` must contain exactly one element if `K` is a
-    rational function field, and exactly two elements otherwise.
-
-    It is assumed that `\phi_0:k\to l` is an embedding of the constant base
-    field `k` of `K` into a subfield of `L` (which may not be equal to the
-    constant base field).
-
     OUTPUT:
 
-    the unique embedding `\phi:K\to L` restricting to `\phi_0` on `k` and
-    sending the standard generators of `K` to the elements of
-    ``image_of_gens``.
+    the unique embedding `\phi:K\to L`  determined by ``image_gens``
+    and ``phi0``.
 
-    If such an embedding does not exist, an error is raised.
+    The list ``image_of_gens`` may have one element `\alpha\in L` or two
+    elements `\alpha,\beta\in L`. The embedding `\phi_0:K_0\to L` is defined
+    on a certain subfield `K_0\subset K`, and the resulting embedding `\phi`
+    is an extension of `\phi_0` to `K`.
+
+    There are three cases:
+
+    1. `K` is a rational function field `k(x)`. In this case `K_0=k` is the
+       constant base field of `K` and ``image_of_gens`` must contain exactly one
+       element `\alpha`. The embedding `\phi:K\to L` is the unique extension
+       of `\phi_0` such that `\phi(x)=\alpha`.
+
+    2. `K` is a finite simple extension of a rational function `k(x)` (its
+       *rational base field*), and ``image_of_gens`` contains exactly one
+       element `\alpha`. Then `K_0=k(x)` is the rational base field of `K` and
+       `\phi` is the unique extension of `\phi_0` sending the generator of
+       `K/K_0` to `\alpha`.
+
+    3. `K` is a finite simple extension of its rational base field `k(x)`,
+       and ``image_of_gens`` contains exactly two elements `\alpha, \beta`.
+       Then `K_0=k` is the constant base field of `K` and
+       `\phi` is the unique extension of `\phi_0` sending `x` to `\alpha` and
+       the generator of `K/K_0` to `\beta`.
+
+    If such an embedding `\phi:K\to L` does not exist, an error is raised.
+
+    EXAMPLES::
+
+        sage: from mclf import *
+        sage: k = standard_finite_field(2)
+        sage: F0 = standard_rational_function_field(k, "x")
+        sage: phi0 = EmbeddingOfFunctionField(F0, F0, [-x], k.hom(F0))
+
     """
 
     def __init__(self, K, L, image_of_gens, phi0):
@@ -564,37 +1132,69 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
         else:
             assert isinstance(K, StandardFunctionField)
         if L in Fields:
+            from mclf.fields.standard_fields import standard_function_field
             L = standard_function_field(L)
         else:
             assert isinstance(L, StandardFunctionField)
         image_of_gens = [L(a) for a in image_of_gens]
-        if isinstance(phi0, EmbeddingOfStandardFields):
-            # assert K.constant_base_field().is_subring(phi0.domain())
-            # assert phi0.codomain().is_subring(L.standard_model())
-            assert phi0.applies_to(K.constant_base_field())
-            assert phi0.maps_into(L)
-        else:
-            assert phi0.domain() is K.constant_base_field()
-            assert phi0.codomain().is_subring(L.standard_model())
-            phi0 = embedding_of_standard_fields(phi0)
 
         self._domain = K
         self._codomain = L
-        self._embedding_of_constant_base_field = phi0
 
-        if K.is_rational_function_field():
-            assert len(image_of_gens) == 1, "K is a rational function field,\
-                so image_of_gens must have exactly one element"
-            self._image_of_generators = [image_of_gens[0]]
+        if not isinstance(phi0, EmbeddingOfStandardFields):
+            phi0 = embedding_of_standard_fields(phi0)
+        assert phi0.maps_into(L)
+
+        k = K.constant_base_field()
+        K0 = K.rational_base_field()
+
+        if len(image_of_gens) == 1 and K.is_rational_function_field():
+            assert phi0.applies_to(k), "phi0 is not of the right type"
+            alpha = image_of_gens[0]
+            self._restriction_to_constant_base_field = phi0
+            self._image_of_generator = alpha
+            self._image_of_generators = [alpha]
+            # no need to test
+
+        elif len(image_of_gens) == 1 and not K.is_rational_function_field():
+            assert phi0.applies_to(K0)
+            alpha = image_of_gens[0]
+            self._restriction_to_constant_base_field = phi0
+            self._restriction_to_rational_base_field = phi0
+            self._image_of_generator = alpha
+            self._image_of_generators = image_of_gens
+            # test:
+            f = phi0.change_coefficients(K.polynomial(), L)
+            try:
+                f(alpha)
+            except TypeError:
+                print("K = ", K)
+                print("K0 = ", K0)
+                print("phi0 = ", phi0)
+                print("alpha = ", alpha)
+                print("in ", alpha.parent())
+                print("image_of_gens = ", image_of_gens)
+                print("f = ", f)
+                print()
+                raise TypeError()
+            assert f(alpha).is_zero(), "the embedding does not exist"
+
+        elif len(image_of_gens) == 2:
+            alpha = image_of_gens[0]
+            beta = image_of_gens[1]
+            assert not K.is_rational_function_field(), "wrong type of input"
+            assert phi0.applies_to(k), "phi0 is not of the right type"
+            self._restriction_to_constant_base_field = phi0
+            phi1 = K0.hom(L, alpha, phi0)
+            self._restriction_to_rational_base_field = phi1
+            self._image_of_generator = beta
+            self._image_of_generators = [alpha, beta]
+            # test:
+            f = phi1.change_coefficients(K.polynomial())
+            assert f(beta).is_zero(), "the embedding does not exist"
+
         else:
-            f = K.polynomial(bivariate=True).map_coefficients(
-                phi0, L.standard_model())
-            assert len(image_of_gens) == 2, "K is not a rational function\
-                field, so image_of_gens must have exactly two elements"
-            x = image_of_gens[0]
-            y = image_of_gens[1]
-            assert f(x, y).is_zero()
-            self._image_of_generators = [x, y]
+            raise TypeError("wrong number of parameters")
 
     def __repr__(self):
         return "the embedding of {} into {}, sending {} to {}".format(
@@ -604,8 +1204,22 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
     def image_of_generators(self):
         return self._image_of_generators
 
-    def embedding_of_constant_base_field(self):
-        return self._embedding_of_constant_base_field
+    def restriction_to_constant_base_field(self):
+        r""" Return the restriction of this embedding of a function field
+        to the constant base field.
+
+        """
+        return self._restriction_to_constant_base_field
+
+    def restriction_to_rational_base_field(self):
+        r""" Return the restriction of this embedding of a function field
+        to the rational base field.
+
+        """
+        if self.is_rational_function_field():
+            return self
+        else:
+            return self._restriction_to_rational_base_field
 
     def __call__(self, f):
         r""" Return the value of this embedding on the element `f`.
@@ -621,7 +1235,7 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
         """
         K = self.Domain()
         L = self.Codomain()
-        phi0 = self.embedding_of_constant_base_field()
+        phi0 = self.restriction_to_constant_base_field()
         if K.is_rational_function_field():
             f = K(f)
             num = f.numerator().map_coefficients(phi0, L.standard_model())
@@ -660,17 +1274,19 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
         return EmbeddingOfFunctionField(self.Domain(), psi.codomain(),
                                         image_of_gens, tau0)
 
-    def inverse(self):
+    def inverse(self, check=False):
         r""" Return the inverse of this embedding of function fields.
 
-        If ``self`` is not invertible, an error is raised.
+        If ``self`` is not invertible, then an error is raised, unless
+        ``check`` is ``True``, and then we return ``None``.
 
         EXAMPLES::
 
             sage: from mclf import *
-            sage: R.<a> = QQ[]
-            sage: k.<a> = NumberField(a^2+1)
-            sage: A.<x,y> = k[]
+            sage: R.<x> = QQ[]
+            sage: k = standard_number_field(x^2 + 1, "a")
+            sage: a = k.generator()
+            sage: x, y = k.polynomial_generators(["x", "y"])
             sage: F = standard_function_field(x^4+y^4+1)
             sage: x, y = F.generators()
             sage: phi = F.hom(F , [-a*y, a*x])
@@ -680,14 +1296,129 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
             sending [x, y] to [-a*y, a*x]
 
         """
-        return self.inverse_on_subfield(self.codomain())
+        phi = self
+        K = phi.Domain()
+        L = phi.Codomain()
+        L0 = L.prime_subfield()
+        psi0 = L0.hom(K)          # there is a unique map!
+        if K.is_prime_field():
+            return psi0
 
-    def inverse_on_subfield(self, M):
+        # we lift psi0 step by step
+        subfields_of_L = L.natural_subfields()[1:]
+        for L1 in subfields_of_L:
+            if L1.is_rational_function_field():
+                # L1 is the rational base field of L and L0 is the
+                # constant base field
+                assert L0.is_equal(L.constant_base_field())
+                psi = phi.lift_right_inverse_to_rational_base_field(psi0)
+            else:
+                # L1/L0 is finite, alpha is a generator with minpoly f
+                psi = phi.lift_right_inverse_to_finite_simple_extension(
+                    psi0, L0, L1)
+            if psi is None:
+                # there is no right inverse
+                if check:
+                    return None
+                else:
+                    raise AssertionError("phi is not invertible")
+            else:
+                L0 = L1
+                psi0 = psi
+        # if we get here, psi is the inverse of phi
+        assert psi.post_compose(phi).is_identity()
+        return psi
+
+    def lift_right_inverse_to_rational_base_field(self, psi0):
+        r""" Return a lift of a right inverse of this embedding from the
+        constant base field to the rational base field.
+
+        INPUT:
+
+        - ``psi0`` -- an embedding `\psi_0:L_0\to K`, from the constant base
+                      field `L_0` of the codomain `L` of this embedding
+                      `\phi:K\to L` to the domain `K`
+
+        It is assumed that `\psi_0` is a right inverse of `\phi`, i.e. the
+        composition `\phi\circ\psi_0:L_0\to L` is the canonical embedding.
+
+        OUTPUT:
+
+        A lift `\psi:L_1\to K` of `\psi_0` the the rational base field
+        `L_1` of `L`, which is also a right inverse of `\phi`.
+
+        If no such lift exist, we return ``None``.
+
+        """
+        phi = self
+        K = phi.Domain()
+        L = phi.Codomain()
+        L0 = L.constant_base_field()
+        L1 = L.rational_base_field()
+        t = L1.generator()
+        x = K.generators()[0]
+        x1 = phi(x)
+        f = L.algebraic_relation(x1, t)
+        f_K = psi0.change_coefficients(f)
+        # we have f(phi(x), t) = 0
+        # if there is beta in K such that phi(beta) = t, then we would have
+        # f_K(x, beta) = 0; this leaves only finitely many possibilities
+        # for beta
+        _, T = f_K.parent().gens()
+        g = f_K(x, T).univariate_polynomial()
+        for beta in K.roots(g):
+            if phi(beta) == t:
+                psi = L1.hom(K, beta, psi0)
+                assert psi.post_compose(phi).is_equal(L1.embedding())
+                return psi
+        # if we get here, the right inverse psi does not exist
+        return None
+
+    def lift_right_inverse_to_finite_simple_extension(self, psi0, L0, L1):
+        r""" Return a lift of a right inverse of this embedding along a finite
+        simple extension of subfields.
+
+        INPUT:
+
+        - ``psi0`` -- an embedding `\psi_0:L_0\to K`, from the constant base
+                      field `L_0` of the codomain `L` of this embedding
+                      `\phi:K\to L` to the domain `K`,
+        - ``L0`` -- the domain of `\psi_0`, as a natural subfield of `L`,
+        - ``L1`` -- the natural subfield of `L` above `L_0` such that
+                    `L_1/L_0` is a finite simple extension,
+
+        It is assumed that `\psi_0` is a right inverse of `\phi`, i.e. the
+        composition `\phi\circ\psi_0:L_0\to L` is the canonical embedding.
+
+        OUTPUT:
+
+        A lift `\psi:L_1\to K` of `\psi_0` from `L_0` to the rational base
+        field `L_1` of `L`, which is also a right inverse of `\phi`.
+
+        If no such lift exist, we return ``None``.
+
+        """
+        phi = self
+        K = phi.Domain()
+        L = phi.Codomain()
+        alpha = L(L1.generator())
+        f = L1.polynomial()
+        f_K = psi0.change_coefficients(f)
+        for beta in K.roots(f_K):
+            if phi(beta) == alpha:
+                psi1 = L1.hom(K, beta, psi0)
+                assert psi1.post_compose(phi).is_equal(L1.embedding())
+                return psi1
+        # if we get here, there is no right inverse
+        return None
+
+    def inverse_on_subfield(self, M, check=False):
         r""" Return a right inverse to this embedding, defined on a subfield.
 
         INPUT:
 
         - ``M`` -- a subfield of `L`, where `\phi_K\to L` is this embedding.
+        - ``check`` -- a boolean (default: ``False``)
 
 
         OUTPUT:
@@ -699,16 +1430,25 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
         `L` is a function field, with standard model `k(x)[y\mid f(y)=0]`,
         `M` must be equal to `k`,  `L_0:=k(x)` or `L`.
 
+        If there is no right inverse `\psi` then an error is raise - unless
+        ``check`` is ``True``; then we return ``None``.
+
         """
         phi = self
         K = phi.Domain()
         L = phi.Codomain()
         k = L.constant_base_field()
         L0 = L.rational_base_field()
-        if M is k:
+        from mclf.fields.standard_subfields import (StandardSubfield,
+                                                    standard_subfield)
+        if not isinstance(M, StandardSubfield):
+            M = standard_subfield(M, L)
+
+        if M.is_equal(k):
+            # M is the constant base field k of L
             # k must be GF(q) or an absolute number field
             if k.is_prime_field():
-                return embedding_of_standard_fields(k.hom(K.standard_model()))
+                return k.inclusion(K)
             else:
                 alpha = k.generator()
                 f = k.polynomial()
@@ -716,15 +1456,28 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
                     if phi(beta) == alpha:
                         return k.hom(K, beta)
                 # if we get here, the partial inverse does not exist
-                raise ValueError("the partial inverse does not exist")
-        elif M is L0:
-            psi0 = phi.inverse_on_subfield(k)
+                if check:
+                    # if we return None we signal that the map is not
+                    # invertible
+                    return None
+                else:
+                    raise ValueError("the partial inverse does not exist")
+        elif M.is_equal(L0):
+            # M is the rational base field L0 of L
+            psi0 = phi.inverse_on_subfield(k, check)
             if K.is_rational_function_field():
                 x = phi(K.generator())
+                # warning: this does not make sense if L is also a rational
+                # function field
                 g = L.as_polynomial(x)
                 # we have x = g(y), where L=L0[y].
                 # By assumption, x is in L0, so g must be constant
-                assert g.degree() == 1, "the partial inverse does not exist"
+                if not g.degree() == 1:
+                    if check:
+                        return None
+                    else:
+                        raise AssertionError(
+                            "the partial inverse does not exist")
                 beta = -g[0]/g[1]
                 psi = L0.hom([beta], base_map=psi0)
                 assert psi(x) == K.generator(), "something went wrong!"
@@ -748,9 +1501,12 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
                         ), "something went wrong!"
                         return embedding_of_standard_fields(psi)
                 # if we get here, something went wrong
-                raise AssertionError("could not find the correct root of g")
+                if check:
+                    return None
+                else:
+                    raise AssertionError("the inverse does not exist")
         elif M is L.standard_model():
-            psi0 = phi.inverse_on_subfield(L0)
+            psi0 = phi.inverse_on_subfield(L0, check)
             alpha = L.generator()
             f = L.polynomial().map_coefficients(psi0, K.standard_model())
             roots_of_f = K.roots(f)
@@ -758,6 +1514,21 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
                 if phi(beta) == alpha:
                     return L.hom(K, [beta], psi0)
             # if we get here, the partial inverse does not exist
-            raise ValueError("the partial inverse does not exist")
+            if check:
+                return None
+            else:
+                raise ValueError("the partial inverse does not exist")
         else:
             raise ValueError("M is not a natural subfield of the codomain L")
+
+    def is_surjective(self):
+        r""" Return whether this embedding of function fields is surjective.
+
+        """
+        if self.is_canonical_embedding():
+            return self.Domain().is_equal(self.Codomain())
+        else:
+            # for the moment, we know of no better way that trying to
+            # compute the inverse
+            inverse = self.inverse()
+            return inverse is not None
