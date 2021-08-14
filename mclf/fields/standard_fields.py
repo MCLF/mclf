@@ -72,15 +72,17 @@ to confusion or errors. Handling these new objects should be very similar to
 handling ordinary fields in Sage.
 
 There is no extra element class for standard fields. However, if `a` is a field
-element which can be coerced into the original model of `K`, then the
-command ::
+element which can be coerced into the original model of `K`, we can coerce it
+into the standard model a follows::
 
-    sage: Ks(a)
+    sage: a = K.original_model().gen(); a
+    a
+    sage: K(a)
+    z2
 
-coerces `a` into the standard model of `K`. An element of the standard model
-is kept as it is. Therefore, ::
+An element of the standard model is kept as it is. Therefore, ::
 
-    sage: Ks(Ks(a)) == Ks(a)
+    sage: K(K(a)) == K(a)
     True
 
 always returns ``True`` (or raises an error if `a` is of the wrong type).
@@ -88,13 +90,14 @@ always returns ``True`` (or raises an error if `a` is of the wrong type).
 For any function `f` defined in this module (e.g. all the methods of
 :class:`StandardField`), the test ::
 
-    sage: f(a) == f(Ks(a))
+    f(a) == f(K(a))
 
 should return ``True`` (or raise an error). Similarly, if `f` is a function
 receiving as input a standard field `K`, which is not necessarily an instance
-of :class:`StandardField`, then ::
+of :class:`StandardField`, then the result should be the same as when we apply
+it to the corresponding object of :class:`StandardField`::
 
-    sage: f(K) == f(standard_field(K))
+    f(K) == f(standard_field(K))
 
 also returns ``True``.
 
@@ -124,20 +127,19 @@ instance of :class:`StandardField` representing a number field and `a` is an
 element of `K` (so actually, an element of the original model or the standard
 model of `K`), then the command ::
 
-    sage: f = K.polynomial(a)
+    f = K.polynomial(a)
 
 returns a polynomial `f` with rational coefficients such that::
 
-    sage: f(K.generator()) == K(a)
+    f(K.generator()) == K(a)
 
 returns ``True``. If `a` is actually an element of the *standard model* of `K`,
-we have ::
+then ::
 
-    sage: K.polynomial(a) == a.polynomial()
-    True
+    K.polynomial(a) == a.polynomial()
 
-It is preferable to use the first option, though, because the result is
-more reliable and predictable.
+also return  ``True``. It is preferable to use the first option, though,
+because the result is more reliable and predictable.
 
 
 Embeddings
@@ -148,7 +150,7 @@ and `L` are standard fields, and at least `K` is represented by an instance of
 :class:`StandardField`, we can define a field homomorphism `\phi:K\to L`
 with the command::
 
-    sage: phi = K.hom(L, image_gens, phi0)
+    phi = K.hom(L, image_gens, phi0)
 
 Here ``image_gens`` is an element of `L` (or a list of one or two elements of
 `L`) specifying the image under `\phi` of the generator(s) of the standard
@@ -205,6 +207,19 @@ create instances of
 :class:`StandardSubfield <mclf.fields.standard_subfields.StandardSubfield>`
 representing these natural subfields.
 
+.. NOTE::
+
+    By convention, a standard field `K` is considered a subfield of itself.
+    Therefore, instances of :class:`StandardField` have the method
+    :meth:`embedding <StandardField.embedding>`, which return the identity
+    map of this field. This makes standard fields a bit consistent with
+    instances of
+    :class:`StandardSubfield <mclf.fields.standard_subfields.StandardSubfield>`.
+
+    To turn a standard field into a proper instance of this subclass, one can
+    use the method
+    :meth:`as_subfield_of_itself <StandardField.as_subfield_of_itself>`.
+
 
 Finite extensions of standard fields
 ------------------------------------
@@ -252,11 +267,22 @@ all the important calculations.
 
 See :doc:`Finite field extensions <finite_field_extensions>`
 
+.. NOTE::
+
+    By convention, a standard field is considered as a finite extension of
+    itself. Therefore, instances of :class:`StandardField` have a number of
+    methods which emulate methods with the same name belonging to the class
+    :class:`FiniteExtensionOfStandardFields <mclf.fields.\
+    finite_field_extensions.FiniteExtensionOfStandardFields>`
+
+    For instance,
 
 Valuations on standard fields
 -----------------------------
 
 todo
+
+
 
 .. TODO::
 
@@ -392,7 +418,7 @@ def is_in_standard_form(K):
 
     The result should be equivalent to::
 
-        sage: K is standard_field(K).standard_model()
+        K is standard_field(K).standard_model()
 
     EXAMPLES::
 
@@ -488,7 +514,8 @@ def standard_field(K):
         sage: R.<x> = GF(2)[]
         sage: k.<z> = GF(2).extension(x^3+x^2+1)
         sage: k = standard_field(k); k
-        Finite Field in z of size 2^3 as a standard field
+        the standard field with 8 elements
+
         sage: k.generator()
         z3
         sage: k.polynomial()
@@ -518,9 +545,12 @@ def standard_field(K):
         sage: S.<z> = K[]
         sage: L.<z> = K.extension(z^3 +y*z - x^2)
         sage: F = standard_field(L); F
-        Function field in z defined by z^3 + y*z + x^2, as a standard field
+        Function field in z defined by z^6 + z^4 + (x^3 + 1)*z^2 + x^2*z + x^4
+        as standard function field
+
         sage: F.standard_model()
         Function field in z defined by z^6 + z^4 + (x^3 + 1)*z^2 + x^2*z + x^4
+
         sage: F.from_original_model()(y)
         1/x^2*z^5 + 1/x^2*z^3 + z^2 + ((x^3 + 1)/x^2)*z + 1
 
@@ -710,13 +740,17 @@ class StandardField(SageObject):
     the object representing the field `K`, and its standard model.
 
 
-    To create an instance of this class you should use the creator function
+    To create an instance of this class you should use the constructor function
     :func:`standard_field`::
 
-        sage: standard_field(K),
+        standard_field(K),
 
     or the more specialized functions :func:`standard_finite_field`,
     :func:`standard_number_field` or :func:`standard_function_field`.
+
+    The following methods must be implemented by the appropriate subclass:
+
+    - :class:`hom <StandardField.hom>`
 
     """
 
@@ -817,6 +851,84 @@ class StandardField(SageObject):
 
         """
         return self.standard_model().cardinality()
+
+    def generator(self):
+        r""" Return the standard generator of this standard field.
+
+        OUTPUT:
+
+        an element of this standard field `K` which generates the simple
+        extension `K/K_0`. Here the subfield `K_0` is
+
+        - the prime subfield if `K` is a finite or a number field,
+        - the constant base field if `K` is a rational function field,
+        - the rational base field if `K` is a nonrational function field
+
+        """
+        return self._generator
+
+    def gen(self):
+        r""" Return the standard generator of this standard field.
+
+        OUTPUT:
+
+        an element of this standard field `K` which generates the simple
+        extension `K/K_0`. Here the subfield `K_0` is
+
+        - the prime subfield if `K` is a finite or a number field,
+        - the constant base field if `K` is a rational function field,
+        - the rational base field if `K` is a nonrational function field
+
+        This is equivalent to :meth:`generator <StandardField.generator>`.
+
+        """
+        return self._generator
+
+    def generators(self):
+        r""" Return the list of the standard generators of this standard field.
+
+        OUTPUT:
+
+        a list of elements of this standard field `K` which generates the
+        extension `K/K_0`, where the subfield `K_0` is
+
+        - the prime subfield if `K` is finite or a number field
+        - the constant base field if `K` is a function field.
+
+        If `K` is a nonrational function field, then this list contains
+        exactly two elements:
+
+        1. the standard generator of the rational base field `K_0` of `K`,
+        2. the standard generator of the finite extension `K/K_0`.
+
+        In all other cases, the list contains exactly one element, the standard
+        generator of `K`.
+
+        """
+        if self.is_function_field() and not self.is_rational_function_field():
+            return [self.rational_base_field().generator(), self.generator()]
+        else:
+            return [self.generator()]
+
+    def absolute_generators(self):
+        r""" Return the list of absolute generators of this standard field.
+
+        OUTPUT:
+
+        a list of elements of the standard model of this field, which generates
+        the field over its prime subfield.
+
+        If this standard field `K` is a finite field or a number field, this
+        method is equavalent to :meth:`generators <StandardField.generators>`.
+        For function field, we may have to add the generator of the constant
+        base field.
+
+        """
+        if (self.is_finite() or self.is_number_field()
+                or self.constant_base_field().is_prime_field()):
+            return self.generators()
+        else:
+            return [self.constant_base_field().generator()] + self.generators()
 
     def degree(self):
         r""" Return the degree of this standard field.
@@ -951,7 +1063,10 @@ class StandardField(SageObject):
         standard field.
 
         """
-        raise NotImplementedError()
+        from mclf.fields.finite_field_extensions import trivial_extension
+        if not hasattr(self, "_as_extension_of_itself"):
+            self._as_extension_of_itself = trivial_extension(self)
+        return self._as_extension_of_itself
 
     def as_extension_of_prime_field(self):
         r""" Return this field as a finite extension of its prime subfield.
@@ -987,7 +1102,7 @@ class StandardField(SageObject):
         this means that the standard models of the two fields are equal,
         i.e. ::
 
-            sage: K.standard_model() == L.standard_model()
+            K.standard_model() == L.standard_model()
 
         returns ``True``.
 
@@ -1023,7 +1138,7 @@ class StandardField(SageObject):
         If this method returns ``True`` we can define the embedding of `k` into
         this field via::
 
-            sage: K.embedding_of_subfield(k)
+            K.embedding_of_subfield(k)
 
         .. WARNING::
 
@@ -1273,7 +1388,7 @@ class StandardField(SageObject):
             sage: from mclf import *
             sage: k = standard_field(GF(4))
             sage: k.structure()
-            [(Finite Field in z2 of size 2^2, z2, x^2 + x + 1)]
+            [(the standard field with 4 elements, z2, x^2 + x + 1)]
 
             sage: x, y = k.polynomial_generators(["x", "y"])
             sage: K = standard_function_field(x^3 + y^2)
@@ -1307,8 +1422,50 @@ class StandardField(SageObject):
     def natural_subfields(self):
         r""" Return the list of the natural subfields of this standard field.
 
+        OUTPUT:
+
+        a list of subfields of this standard field `K`.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: k = standard_finite_field(4)
+            sage: k.natural_subfields()
+            [Finite Field of size 2, as a subfield of Finite Field in z2
+             of size 2^2,
+             Finite Field in z2 of size 2^2, as a subfield of Finite Field
+             in z2 of size 2^2]
+
+            sage: K0 = standard_rational_function_field(k, "x")
+            sage: K0.natural_subfields()
+            [Finite Field of size 2, as a subfield of Rational function field
+             in x over Finite Field in z2 of size 2^2,
+             Finite Field in z2 of size 2^2, as a subfield of Rational function
+             field in x over Finite Field in z2 of size 2^2,
+             Rational function field in x over Finite Field in z2 of size 2^2,
+             as a subfield of Rational function field in x over Finite Field
+             in z2 of size 2^2]
+
+            sage: y = K0.polynomial_generator("y")
+            sage: K = K0.extension(y^2+y+K0.generator())
+            sage: L = K.natural_subfields()
+
         """
-        return [self.prime_subfield()] + [k for k, _, _ in self.structure()]
+        if self.is_prime_field():
+            return [self.as_subfield_of_itself()]
+        elif self.is_finite() or self.is_number_field():
+            return [self.prime_subfield(), self.as_subfield_of_itself()]
+        elif self.is_function_field():
+            ret = [self.prime_subfield()]
+            k = self.constant_base_field()
+            if not k.is_prime_field():
+                ret.append(k)
+            if not self.is_rational_function_field():
+                ret.append(self.rational_base_field())
+            ret.append(self.as_subfield_of_itself())
+            return ret
+        else:
+            raise NotImplementedError()
 
 # --------------------------------------------------------------------------
 
@@ -1414,22 +1571,6 @@ class StandardFiniteField(StandardField):
 
         """
         return False
-
-    def generator(self):
-        r""" Return the standard generator of this finite field.
-
-        """
-        return self._generator
-
-    def generators(self, include_base_field=True):
-        r""" Return the standard generators of this finite field.
-
-        Since there is only one generator, we return a list with one element.
-
-        The flag ``include_base_field`` can be ignored.
-
-        """
-        return [self.generator()]
 
     def polynomial(self):
         r""" Return the minimal polynomial of the standard generator over the
@@ -1587,7 +1728,7 @@ class StandardNumberField(StandardField):
                 self._standard_model = Ka
                 self._from_original_model = K_to_Ka
                 self._to_original_model = Ka_to_K
-                self._generator = Ka_to_K(Ka.gen())
+                self._generator = Ka.gen()
                 self._polynomial = Ka.polynomial()
 
     def _repr_(self):
@@ -1616,22 +1757,6 @@ class StandardNumberField(StandardField):
 
         """
         return False
-
-    def generator(self):
-        r""" Return the standard generator of this number field.
-
-        """
-        return self._generator
-
-    def generators(self, include_constant_base_field=True):
-        r""" Return the standard generators of this number field.
-
-        Since there is only one generator, we return a list with one element.
-
-        The flag ``include_constant_base_field`` can be ignored.
-
-        """
-        return [self.generator()]
 
     def polynomial(self):
         r""" Return the minimal polynomial of the standard generator over the
@@ -1805,7 +1930,7 @@ class StandardFunctionField(StandardField):
             self._from_original_model = K._from_original_model
             self._to_original_model = K._to_original_model
             self._is_rational_function_field = K._is_rational_function_field
-            self._generators = K._generators
+            self._generator = K._generator
             self._polynomial = K._polynomial
             self._bivariate_polynomial = K._bivariate_polynomial
         else:
@@ -1823,7 +1948,7 @@ class StandardFunctionField(StandardField):
             self._to_original_model = F_to_K
             if F.base_field() is F:
                 self._is_rational_function_field = True
-                self._generators = [F.gen()]
+                self._generator = F.gen()
                 self._polynomial = None
                 self._bivariate_polynomial = None
             else:
@@ -1832,7 +1957,7 @@ class StandardFunctionField(StandardField):
                 y = F.gen()
                 self._polynomial = F.polynomial()
                 self._bivariate_polynomial = make_bivariate(self._polynomial)
-                self._generators = [x, y]
+                self._generator = y
 
     def __repr__(self):
         if self.is_rational_function_field():
@@ -1954,40 +2079,6 @@ class StandardFunctionField(StandardField):
                     self.embedding_of_rational_base_field())
                 self._rational_base_field = F0
         return self._rational_base_field
-
-    def generators(self, include_constant_base_field=False):
-        r""" Return the standard generators of this function field.
-
-        In its standard form, this function field `K/k` is of the form
-        `K=k(x)[y \mid f(y)=0]`. The *standard generators* of `K/k` is the
-        pair of elements `x,y\in K`.
-
-        If `K` is a rational function field, i.e.\ its standard form is
-        `k(x)`, then we only return the standard generator `x`.
-
-        If ``include constant_base_field``, and the constant base field `k`
-        is not the prime field, then we add the generator of `k` to the
-        beginning of the list.
-
-        """
-        if include_constant_base_field:
-            return [self.constant_base_field().generator()] + self._generators
-        else:
-            return self._generators
-
-    def generator(self):
-        r""" Return the standard generator of this function field.
-
-        OUTPUT:
-
-        If this function field `K=k(x)` is rational, we return `x`. Otherwise,
-        the standard form is `K=k(x)[y \mid f(y)=0]`, and then we return `y`.
-
-        """
-        if self.is_rational_function_field():
-            return self.generators()[0]
-        else:
-            return self.generators()[1]
 
     def variable_names(self):
         r""" Return the name of the standard generators.
@@ -2405,6 +2496,7 @@ class StandardFunctionField(StandardField):
         EXAMPLES::
 
             sage: from mclf import *
+            sage: k0 = standard_field(QQ)
             sage: R.<t> = QQ[]
             sage: k = standard_number_field(t^2+1, "i")
             sage: x, y = k0.polynomial_generators(["x", "y"])
@@ -2532,14 +2624,17 @@ class StandardFunctionField(StandardField):
 
         .. WARNING::
 
-            The resulting standard function field has in general a different
-            original model! This may lead to problems and should be changed
-            at some point.
+            - this has not yet been properly implemented
+
+            - The resulting standard function field has in general a different
+              original model! This may lead to problems and should be changed
+              at some point.
 
         .. TODO::
 
-            Make sure the resulting standard function field has the same
-            original model.
+            - finish implementation
+            - Make sure the resulting standard function field has the same
+              original model.
 
         EXAMPLES::
 
@@ -2550,20 +2645,25 @@ class StandardFunctionField(StandardField):
             sage: t = k.polynomial_generator("t")
             sage: K = k.extension(t^2 + 1)
             sage: phi = k.hom(K)
-            sage: F.base_change(phi)[0][0]
-            Function field in y defined by y + t*x as standard function field
+            sage: F.base_change(phi)
+            Traceback (most recent call last):
+            ...
+            AttributeError: 'FiniteField_prime_modn_with_category' object has no attribute 'is_equal'
 
             sage: x = F.generators()[0]
             sage: y = F.generators()[1]
-            sage: u = K.hom(F, [x/y - 1])
+            sage: u = K.hom(F, x/y - 1)
             sage: F.base_change(phi, u)[0]
-            Function field in y defined by y + 2*t*x as standard function field
+            Traceback (most recent call last):
+            ...
+            AttributeError: 'FiniteField_prime_modn_with_category' object has no attribute 'is_equal'
+
 
         """
         from sage.all import FunctionField
         F = self
         k = F.constant_base_field()
-        assert phi.domain() is k, "the domain of phi\
+        assert phi.domain().is_equal(k), "the domain of phi\
             has to be the constant base field of F"
         K = phi.codomain()
         if F.is_rational_function_field():
@@ -2804,7 +2904,10 @@ def homomorphism_on_standard_field(K, L, *args):
     if len(args) == 0:
         assert K.is_subring(L), "if no further arguments are given, K = {} \
             must be a subfield of L = {}".format(K, L)
-        return K.hom(L)
+        try:
+            return K.hom(L)
+        except TypeError:
+            return L.coerce_map_from(K)
     if K.is_prime_field():
         # there can be only one homomorphism; we ignore the other arguments
         assert K.characteristic() == L.characteristic, "there is no \
@@ -2860,11 +2963,6 @@ def homomorphism_on_standard_field(K, L, *args):
         try:
             return K.hom(image_gens, base_morphism=phi0)
         except TypeError:
-            print(" K = ", K)
-            print(" L = ", L)
-            print(" image_gens = ", image_gens)
-            print("phi0 = ", phi0)
-            print
             return K.hom(image_gens, base_map=phi0)
 
 
