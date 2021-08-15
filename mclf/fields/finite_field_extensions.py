@@ -13,7 +13,7 @@ generator, we obtain a `K`-linear isomorphism
     L \cong L_{\rm rel} := K[x]/(f),
 
 where `f\in K[x]` is the minimal polynomial of `\alpha` over `K`. We call
-`K_{\rm rel}` the **relative model** of the finite extension `L/K` (depending
+`L_{\rm rel}` the **relative model** of the finite extension `L/K` (depending
 on the choice of the **relative generator** `\alpha`).
 
 Representing a finite extension `L/K` by a relative model makes it very
@@ -380,13 +380,13 @@ def finite_field_extension_from_embedding(phi):
         if L1.is_function_field() and L1.is_rational_function_field():
             assert L1.constant_base_field().is_equal(L0)
             # L1/L0 is a rational function field
-            M1, L1_to_M1, M1_to_L = lift_embedding_to_rational_function_field(
+            M1, L1_to_M1, M1_to_L = _lift_embedding_to_rational_function_field(
                 M, L0_to_M, L1, M_to_L)
         else:
             f = L1.polynomial()
             alpha = L1.generator()
             # L1/L0 is finite, f the minimal polynomial of the gen alpha
-            M1, L1_to_M1, M1_to_L = lift_embedding_to_finite_simple_extension(
+            M1, L1_to_M1, M1_to_L = _lift_embedding_to_finite_simple_extension(
                 M, L0_to_M, L1, alpha, f, M_to_L)
             # now M1/k is a finite simple extension
         # replace M/K with M1/M/K
@@ -398,10 +398,10 @@ def finite_field_extension_from_embedding(phi):
     # end of loop; L0 = L, so M and M_to_L are what we want; moreover:
     L_to_M = L0_to_M
 
-    return new_model_of_finite_field_extension(phi, M, L_to_M, M_to_L)
+    return _new_model_of_finite_field_extension(phi, M, L_to_M, M_to_L)
 
 
-def new_model_of_finite_field_extension(phi, M, s, t):
+def _new_model_of_finite_field_extension(phi, M, s, t):
     r""" Helper function.
 
     INPUT:
@@ -428,7 +428,7 @@ def new_model_of_finite_field_extension(phi, M, s, t):
         sage: s = L.hom(M, M.generator()+2)
         sage: t = s.inverse()
         sage: phi = L.embedding_of_base_field()
-        sage: N = new_model_of_finite_field_extension(phi, M, s, t)
+        sage: N = _new_model_of_finite_field_extension(phi, M, s, t)
         sage: N.relative_generator()
         z3 + 1
 
@@ -449,7 +449,7 @@ def new_model_of_finite_field_extension(phi, M, s, t):
         raise NotImplementedError()
 
 
-def lift_embedding_to_rational_function_field(
+def _lift_embedding_to_rational_function_field(
         K, L0_to_K, L1, K_to_L):
     r""" Helper function for :meth:`finite_field_extension_from_embedding`.
 
@@ -483,7 +483,7 @@ def lift_embedding_to_rational_function_field(
         sage: phi0 = K.hom(K, x^2 + x)
         sage: psi0 = k.hom(K)
         sage: L = K.as_subfield_of_itself()
-        sage: M, psi, phi = lift_embedding_to_rational_function_field(K, psi0, L, phi0)
+        sage: M, psi, phi = _lift_embedding_to_rational_function_field(K, psi0, L, phi0)
         sage: M
         Function field in y defined by y^2 + y + x, as finite extension of
         Rational function field in x over Finite Field of size 2
@@ -515,7 +515,7 @@ def lift_embedding_to_rational_function_field(
     raise AssertionError()
 
 
-def lift_embedding_to_finite_simple_extension(
+def _lift_embedding_to_finite_simple_extension(
         M, L0_to_M, L1, alpha, f, M_to_L):
     r""" Helper function for :meth:`finite_field_extension_from_embedding`.
 
@@ -553,7 +553,7 @@ def lift_embedding_to_finite_simple_extension(
         sage: L0_to_M = K.hom(M)
         sage: L1 = M
         sage: M_to_L = M.hom(M, -a)
-        sage: M1, psi1, phi1 = lift_embedding_to_finite_simple_extension(M, L0_to_M, L1, a, f, M_to_L)
+        sage: M1, psi1, phi1 = _lift_embedding_to_finite_simple_extension(M, L0_to_M, L1, a, f, M_to_L)
         sage: psi1
         the embedding of Number Field in a with defining polynomial x^2 - 2
         into Number Field in a with defining polynomial x^2 - 2,
