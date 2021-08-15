@@ -50,24 +50,40 @@ In the first variant, the new object will return the field `L` as the
 *extension field* and the field `K` as the *relative base field* of the finite
 extensions::
 
-    sage: L_K = finite_field_extension(phi)
-    sage: L_K.extension_field().is_equal(phi.Codomain())
+    sage: from mclf import *
+    sage: K = standard_rational_function_field(QQ, "x")
+    sage: x = K.generator()
+    sage: phi = K.hom(K, x^2 + 1)
+    sage: L = finite_field_extension(phi); L
+    Rational function field in x over Rational Field, as finite extension of
+    Rational function field in x over Rational Field
+
+    sage: L.extension_field().is_equal(phi.Codomain())
     True
-    sage: L_K.relative_base_field().is_equal(phi.Domain())
+    sage: L.relative_base_field().is_equal(phi.Domain())
     True
-    sage: L_K.embedding().is_equal(phi)
+    sage: L.embedding_of_base_field().is_equal(phi)
     True
 
-The relative model of `L/K` is computed internally.
+The relative model of `L/K` is computed and used only internally::
+
+    sage: L.relative_model()
+    Function field in T defined by T^2 - x + 1
+
 
 In the second variant, the input `(K, f)` determines the relative base field
 `K` and the relative model `K[x]/(f)`, and the standard form of the extension
 field `L` is computed internally::
 
-    sage: L_K = finite_field_extension(K, f)
-    sage: L_K.relative_base_field().is_equal(K)
+    sage: y = K.polynomial_generator("y")
+    sage: f = y^2 + x^3 + 1
+    sage: M = finite_field_extension(K, f); M
+    Function field in y defined by y^2 + x^3 + 1, as finite extension of
+    Rational function field in x over Rational Field
+
+    sage: M.relative_base_field().is_equal(K)
     True
-    sage: L_K.relative_polynomial() == f
+    sage: M.relative_polynomial() == f
     True
 
 This second way of creating a finite extension can also be accessed via the
@@ -75,6 +91,8 @@ method :meth:`extension <mclf.fields.standard_fields.StandardField.extension>`
 of :class:`StandardField <mclf.fields.standard_fields.StandardField>`::
 
     sage: K.extension(f)
+    Function field in y defined by y^2 + x^3 + 1, as finite extension of
+    Rational function field in x over Rational Field
 
 
 Towers of finite extensions
@@ -102,30 +120,23 @@ as a class.
 
 We can construct the total extension `K_2/K_0` via ::
 
-    sage: K2.as_extension_of(K0)
-
-The method :meth:`as_extension_of <FiniteExtensionOfStandardFields.\
-as_extension_of>` any step of the extension tower below `K_2`. The possible
-candidates can be obtained via the method
-:meth:`iterated_relative_base_fields <FiniteExtensionOfStandardFields.\
-iterated_relative_base_fields>`::
-
-    sage: K2.iterated_relative_base_fields()
-    [Number Field in a with defining polynomial x^2 - 2, as finite extension of
-     Rational Field,
-     Rational Field as a standard field]
+    sage: L, s, t = K1.composition_with_superextension(K2)
+    sage: L
+    Number Field in x with defining polynomial x^4 - 2, as finite extension of
+    Rational Field
 
 
 .. TODO::
 
-    - implement superextensions and subextensions; in particular, the method
-      :meth:`as_extension_of`
+    - complete implementation of superextensions and subextensions;
+      in particular, the method :meth:`as_extension_of`
 
 
 EXAMPLES::
 
     sage: from mclf import *
-    sage: k0 = GF(2); k1 = GF(4)
+    sage: k0 = standard_finite_field(2)
+    sage: k1 = standard_finite_field(4)
     sage: k1_k0 = finite_field_extension(k0.hom(k1))
     sage: k1_k0
     Finite Field in z2 of size 2^2, as finite extension of Finite Field
@@ -155,23 +166,23 @@ standard model of the extension.::
 We can compose finite extensions, and compute subextensions with given
 generators.::
 
-    sage: k2 = GF(16)
-    sage: k2_k1 = finite_field_extension(k1.hom(k2))
-    sage: k2_k0 = k1_k0.superextension(k2_k1)
+    sage: a = k1.generator()
+    sage: x = k1.polynomial_generator("x")
+    sage: k2_k1 = k1_k0.extension(x^2 + x + a)
+
+We can compute the total extension as follows::
+
+    sage: k2_k0, s, t = k1_k0.composition_with_superextension(k2_k1)
     sage: k2_k0
-
-    sage: k2_k0.subextension(k1.gen())
-
-We can also compute the base change of an extension with respect to another
-one.::
-
-    sage: k2_k0.base_change(k1_k0)
+    Finite Field in z4 of size 2^4, as finite extension of
+    Finite Field of size 2
 
 
 A finite extension can also be defined via an injective field homomorphism.::
 
-    sage: K.<x> = FunctionField(k0)
-    sage: phi = K.hom([x^2+x])
+    sage: K = standard_rational_function_field(k0, "x")
+    sage: x = K.generator()
+    sage: phi = K.hom(K, x^2+x)
     sage: K_K = finite_field_extension(phi)
     sage: K_K
     Rational function field in x over Finite Field of size 2,
@@ -269,7 +280,6 @@ def trivial_extension(K):
         K = standard_field(K)
     T = K.polynomial_generator("T")
     return finite_field_extension_from_polynomial(K, T - 1)
-    raise NotImplementedError()
 
 
 def finite_field_extension_from_embedding(phi):
@@ -388,12 +398,53 @@ def finite_field_extension_from_embedding(phi):
     # end of loop; L0 = L, so M and M_to_L are what we want; moreover:
     L_to_M = L0_to_M
 
+    return new_model_of_finite_field_extension(phi, M, L_to_M, M_to_L)
+
+
+def new_model_of_finite_field_extension(phi, M, s, t):
+    r""" Helper function.
+
+    INPUT:
+
+    - ``phi`` -- an embedding of standard fields `\phi:K\to L`
+    - ``M`` -- a finite extension of `K`, `M/K`,
+    - ``s`` -- a `K`-linear isomorphism `s:L\to M`
+    - ``t`` -- the inverse of `s`
+
+    OUTPUT:
+
+    the finite extension `L/K` with embedding morphism `\phi`, and with the
+    same relative model as `M`.
+
+    This is a helper function for :func:`finite_field_extension_from_embedding`
+
+    EXAMPLES::
+
+        sage: from mclf import *
+        sage: K = standard_finite_field(2)
+        sage: x = K.polynomial_generator("x")
+        sage: L = K.extension(x^3+x+1, "a")
+        sage: M = K.extension(x^3+x^2+1, "b")
+        sage: s = L.hom(M, M.generator()+2)
+        sage: t = s.inverse()
+        sage: phi = L.embedding_of_base_field()
+        sage: N = new_model_of_finite_field_extension(phi, M, s, t)
+        sage: N.relative_generator()
+        z3 + 1
+
+    """
+    K = phi.Domain()
+    L = phi.Codomain()
+    M_rel = M.relative_model()
+    s = s.sage_morphism().post_compose(M.to_relative_model())
+    t = M.from_relative_model().post_compose(t.sage_morphism())
+
     if K.is_finite():
-        return FiniteExtensionOfFiniteFields(phi, M, L_to_M, M_to_L)
+        return FiniteExtensionOfFiniteFields(phi, M_rel, s, t)
     elif K.is_number_field():
-        return FiniteExtensionOfNumberFields(phi, M, L_to_M, M_to_L)
+        return FiniteExtensionOfNumberFields(phi, M_rel, s, t)
     elif K.is_function_field():
-        return FiniteExtensionOfFunctionFields(phi, M, L_to_M, M_to_L)
+        return FiniteExtensionOfFunctionFields(phi, M_rel, s, t)
     else:
         raise NotImplementedError()
 
@@ -432,8 +483,7 @@ def lift_embedding_to_rational_function_field(
         sage: phi0 = K.hom(K, x^2 + x)
         sage: psi0 = k.hom(K)
         sage: L = K.as_subfield_of_itself()
-        sage: M, psi, phi = lift_embedding_to_rational_function_field(K,
-            psi0, L, phi0)
+        sage: M, psi, phi = lift_embedding_to_rational_function_field(K, psi0, L, phi0)
         sage: M
         Function field in y defined by y^2 + y + x, as finite extension of
         Rational function field in x over Finite Field of size 2
@@ -503,8 +553,7 @@ def lift_embedding_to_finite_simple_extension(
         sage: L0_to_M = K.hom(M)
         sage: L1 = M
         sage: M_to_L = M.hom(M, -a)
-        sage: M1, psi1, phi1 = lift_embedding_to_finite_simple_extension(
-            M, L0_to_M, L1, a, f, M_to_L)
+        sage: M1, psi1, phi1 = lift_embedding_to_finite_simple_extension(M, L0_to_M, L1, a, f, M_to_L)
         sage: psi1
         the embedding of Number Field in a with defining polynomial x^2 - 2
         into Number Field in a with defining polynomial x^2 - 2,
@@ -562,7 +611,7 @@ def finite_field_extension_from_polynomial(K, f, gen_name=None):
     if gen_name is None:
         gen_name = f.variable_name()
 
-    M = K.standard_model().extension(f, gen_name)
+    M = make_extension(K.standard_model(), f, gen_name)
     if f.degree() == 1:
         L = K
         phi = K.hom(L)
@@ -598,12 +647,17 @@ class FiniteExtensionOfStandardFields(StandardField):
     - ``s`` -- a `K`-linear isomorphism `s:L\to M`
     - ``t`` -- the inverse of `s`, `t:M\to L`
 
+    Here `M` is a Sage field equipped with the method :meth:`base_field`,
+    and its base field has to a equal to the standard model of the domain
+    `K` of `\phi`.
+
     OUTPUT:
 
     The finite simple extension `L/K`, with relative model `M`.
 
     To create an instance of this class you should use the function
     :func:`finite_field_extension`.
+
 
     EXAMPLES::
 
@@ -648,18 +702,16 @@ class FiniteExtensionOfStandardFields(StandardField):
             phi = embedding_of_standard_fields(phi)
         K = phi.Domain()
         L = phi.Codomain()
+
         self._relative_base_field = K
         self._extension_field = L
         self._embedding = phi
 
-        # we initialize this extension as a standard field
-        if K.is_finite():
-            StandardFiniteField.__init__(self, L)
-        elif K.is_number_field():
-            StandardNumberField.__init__(self, L)
-        elif K.is_function_field():
-            StandardFunctionField.__init__(self, L)
-
+        assert hasattr(M, "base_ring"), "M = {} does not have the attribute \
+            `base_ring`".format(M)
+        assert M.is_field(), "M = {} is not a field".format(M)
+        assert M.base_ring() == K.standard_model(), "the base field of M={} \
+            must be equal to K = {}".format(M, K.standard_model())
         self._relative_generator = t(M.gen())
         if hasattr(M, "relative_polynomial"):
             self._relative_polynomial = M.relative_polynomial()
@@ -668,10 +720,18 @@ class FiniteExtensionOfStandardFields(StandardField):
         elif hasattr(M, "modulus"):
             self._relative_polynomial = M.modulus()
         else:
-            raise TypeError("M is not of the correct type")
+            raise TypeError("M = {} is not of the correct type".format(M))
         self._relative_model = M
         self._to_relative_model = s
         self._from_relative_model = t
+
+        # we initialize this extension as a standard field
+        if K.is_finite():
+            StandardFiniteField.__init__(self, L)
+        elif K.is_number_field():
+            StandardNumberField.__init__(self, L)
+        elif K.is_function_field():
+            StandardFunctionField.__init__(self, L)
 
     def __repr__(self):
         return "{}, as finite extension of {}".format(self.codomain(),
@@ -857,6 +917,7 @@ class FiniteExtensionOfStandardFields(StandardField):
             sage: phi = F.hom(F, x^2 + 1)
             sage: FF = finite_field_extension(phi)
             sage: FF.relative_charpoly(x)
+            T^2 + x + 1
 
         """
         return self.to_relative_model()(a).charpoly().\
@@ -1035,8 +1096,11 @@ class FiniteExtensionOfStandardFields(StandardField):
         M1_to_M = homomorphism_on_standard_field(M1, M.standard_model(),
                                                  M.relative_generator(),
                                                  L_rel_to_M)
-        # M1_to_M = M1.hom([M.relative_generator()], base_map=L_to_M)
-        gamma = M1_to_M(M1.primitive_element())
+        # this doesn't always work
+        # we need our own function "primitive_element"
+        from mclf.fields.standard_fields import primitive_element
+        gamma = M1_to_M(primitive_element(M1))
+        # gamma = M1_to_M(M1.primitive_element())
 
         # we compute the minimal polynomial g of gamma over K
         f = M.minimal_polynomial(gamma)  # the minpoly over the prime field
@@ -1195,432 +1259,24 @@ class FiniteExtensionOfFunctionFields(FiniteExtensionOfStandardFields,
 # ----------------------------------------------------------------------------
 
 
-def relative_model_of_finite_extension(phi):
-    r""" Return the relative model of a finite field extension.
+def make_extension(K, f, gen_name):
+    r""" Return the finite extension of a standard field with given equation.
 
     INPUT:
 
-    - ``phi`` -- an embedding of fields `\phi:K\to L` which makes `L` a finite
-                 extension of `K`
-
-    The embedding `\phi` must be an instance of the class
-    :class:`EmbeddingOfStandardFields <mclf.fields.\
-    embeddings_of_standard_fields.EmbeddingOfStandardFields>`.
+    - ``K`` -- a standard field
+    - ``f`` -- an irreducible univariate polynomial over `K`
+    - ``var_name`` -- an alphanumeric string
 
     OUTPUT:
-
-    a tripel `(M, s, t)`, where `M` is a finite simple field extension of `K`,
-    `s:L\to M` is a `K`-linear isomorphism, and `t:M\to L` is the inverse
-    of `s`.
-
-    Note that `M` is a base Sage field, not an instance of
-    :class:`StandardField <mclf.fields.standard_fields.StandardField`.
-    So `L` above refers to the standard model of the standard field `L`.
-
-    EXAMPLES::
-
-        sage: from mclf import *
-        sage: K = standard_finite_field(4)
-        sage: L = standard_finite_field(16)
-        sage: phi = K.hom(L)
-        sage: M, s, t = relative_model_of_finite_extension(phi)
-        sage: M
-        Univariate Quotient Polynomial Ring in xbar over Finite Field
-        of size 2 with modulus x^4 + x + 1
-
-        sage: K = standard_field(CyclotomicField(3))
-        sage: L = standard_field(CyclotomicField(9))
-        sage: phi = K.hom(L)
-        sage: M, s, t = relative_model_of_finite_extension(phi)
-        sage: M
-        Number Field in x with defining polynomial x^3 - zeta3
-        over its base field
+    The finite simple extension of `K` with equation `f` and generator name
+    ``gen_name``.
 
     """
-    K = phi.Domain()       # K and L are in `StandardField` !
-    L = phi.Codomain()
-
-    if K.is_finite():
-        assert L.is_finite(), "If the domain is finite,\
-                the codomain must be, too"
-        # Since L has one absolute generator, we can use it as a relative
-        # generator, too. We just have to find the correct irreducible factor g
-        # of its minimal polynomial f over K.
-        # However, for finite fields any factor will do! This is because
-        # f completely splits over L, and we can take any root of the factor g
-        # as a relative generator.
-        f = L.polynomial()
-        g = K.prime_factors(f)[0]
-        alpha = L.roots(g)[0]
-        # now L is iso to  M:=K[alpha |g(alpha)=0]
-        # we construct M and the isomorphisms
-
-        # for some types of finite fields, the method "extension" is not
-        # available; so we create directly the quotient of a polynomial ring
-        # the problem is that M will not have the method "polynomial";
-        # we have to use "modulus" instead
-        M = f.parent().quotient_by_principal_ideal(f)
-        M_to_L = M.hom([alpha], L.standard_model())
-        L_to_M = L.standard_model().hom([M.gen()])
-        return M, L_to_M, M_to_L
-
-    elif K.is_number_field():
-        assert L.is_number_field(), "If the domain is a number field,\
-            the codomain must be, too"
-        # Again we let f be the minimal pol of the fixed absolute generator
-        alpha = L.generator()
-        f = L.polynomial()
-        factors_of_f = K.prime_factors(f)
-        # we find the factor which has alpha as a root and use it construct
-        # the relative model of L/K
-        for g in factors_of_f:
-            g_L = g.map_coefficients(phi, L.standard_model())
-            if g_L(alpha).is_zero():
-                M = K.standard_model().extension(g, f.variable_name())
-                M_to_L = M.hom([alpha], L.standard_model())
-                L_to_M = L.standard_model().hom([M.gen()])
-                return M, L_to_M, M_to_L
-        # if we get here, something went wrong
-        raise AssertionError("Couldn't find the correct irreducible factor")
-
-    elif K.is_function_field():
-        assert L.is_function_field(), "If the domain is a function field,\
-            the codomain must be, too"
-        return relative_model_of_finite_extension_of_function_fields(phi)
-
-
-def relative_model_of_finite_extension_of_function_fields(phi):
-    r""" Return the relative model of a finite extension of function fields.
-
-    INPUT:
-
-    - ``phi`` -- an embedding of function fields `\phi:K\to L`
-
-    The embedding `\phi` may be given as a Sage morphism between
-    fields, or as an instance of the class
-    :class:`EmbeddingOfFunctionFields <mclf.fields.\
-    embeddings_of_standard_fields.EmbeddingOfFunctionField`.
-
-    OUTPUT:
-
-    a tripel `(M, s, t)`, where `M` is a finite simple field extension of `K`,
-    `s:L\to M` is a `K`-linear isomorphism, and `t:M\to L` is the inverse
-    of `s`.
-
-    EXAMPLES::
-
-        sage: from mclf import *
-        sage: k0 = standard_field(QQ)
-        sage: K = standard_rational_function_field(k0, "x")
-        sage: k = standard_field(CyclotomicField(5))
-        sage: zeta = k.generator()
-        sage: L = standard_rational_function_field(k, "y")
-        sage: y = L.generator()
-        sage: phi = K.hom(L, [y^2+y + zeta])
-        sage: M, s, t = relative_model_of_finite_extension(phi)
-        sage: M
-        (Function field in T defined by zeta1^8 + 4*zeta1^7 +
-        (-4*x + 5)*zeta1^6 + (-12*x + 1)*zeta1^5 + (6*x^2 - 9*x - 1)*zeta1^4
-         + (12*x^2 + 2*x + 1)*zeta1^3 + (-4*x^3 + 3*x^2 + x)*zeta1^2 +
-         (-4*x^3 - 3*x^2 - 2*x - 1)*zeta1 + x^4 + x^3 + x^2 + x + 1,
-         Function Field morphism:
-           From: Rational function field in y over Cyclotomic Field of order 5 and degree 4
-           To:   Function field in zeta1 defined by zeta1^8 + 4*zeta1^7 + (-4*x + 5)*zeta1^6 + (-12*x + 1)*zeta1^5 + (6*x^2 - 9*x -
-         1)*zeta1^4 + (12*x^2 + 2*x + 1)*zeta1^3 + (-4*x^3 + 3*x^2 + x)*zeta1^2 + (-4*x^3 - 3*x^2 - 2*x - 1)*zeta1 + x^4 + x^3
-         + x^2 + x + 1
-            Defn: y |--> zeta1
-               zeta |--> zeta1,
-         Function Field morphism:
-           From: Function field in zeta1 defined by zeta1^8 + 4*zeta1^7 + (-4*x + 5)*zeta1^6 + (-12*x + 1)*zeta1^5 + (6*x^2 - 9*x -
-         1)*zeta1^4 + (12*x^2 + 2*x + 1)*zeta1^3 + (-4*x^3 + 3*x^2 + x)*zeta1^2 + (-4*x^3 - 3*x^2 - 2*x - 1)*zeta1 + x^4 + x^3
-         + x^2 + x + 1
-           To:   Rational function field in y over Cyclotomic Field of order 5 and degree 4
-           Defn: zeta1 |--> y
-                 zeta1 |--> zeta
-                 x |--> y^2 + y + zeta)
-
-    The following caused an error in a previous version. The fix is not very
-    satisfying, though. The introduction of the new variable a1 is quite
-    superfluous.::
-
-        sage: R.<a> = QQ[]
-        sage: K.<a> = NumberField(a^2-2)
-        sage: F.<x> = FunctionField(K)
-        sage: phi = F.hom([x])
-        sage: relative_model_of_finite_extension(phi)
-        (Function field in a1 defined by a1 - x,
-         Function Field morphism:
-           From: Rational function field in x over Number Field in a
-                 with defining polynomial a^2 - 2
-           To:   Function field in a1 defined by a1 - x
-           Defn: x |--> x
-                 a |--> a,
-         Function Field morphism:
-           From: Function field in a1 defined by a1 - x
-           To:   Rational function field in x over Number Field in a
-                 with defining polynomial a^2 - 2
-           Defn: a1 |--> x
-                 a1 |--> a
-                  x |--> x)
-
-
-    """
-    K = phi.Domain()       # K and L are in `StandardFunctionField` !
-    L = phi.Codomain()
-
-    # what do I need precisely here?
-    # k, k_to_K, k_to_L = phi.common_subfield()
-    # k is a subfield of L!
-
-    L0 = L.prime_field()
-    M = K.standard_model()
-    M_to_L = phi
-    L0_to_M = L0.hom(M)
-    for L1, _, _ in L.structure():
-        M, iota, M_to_L, L1_to_M = extend_embedding(
-            M_to_L, K, L0, L1, L0_to_M)
-        L0 = L1
-        L0_to_M = L1_to_M
-    return M, L0_to_M, M_to_L
-
-
-def first_subextension(K0, K):
-    r""" Return the smallest nontrivial subextension of K/K_0.
-
-    INPUT:
-
-    - ``K0``, ``K`` -- fields, where `K/K_0` is a finitely generated, nontrivial
-                       extension
-
-    OUTPUT:
-
-    a subfield `K_1` of `K`, where `K_1/K_0` the smallest nontrivial subextension
-    of `K/K_0` in the internal representation.
-
-    EXAMPLES::
-
-        sage: from mclf import *
-        sage: K.<x> = FunctionField(GF(2))
-        sage: first_subextension(GF(2), K)
-        Rational function field in x over Finite Field of size 2
-        sage: R.<t> = QQ[]
-        sage: K.<alpha> = NumberField(t^2+t+1)
-        sage: L.<beta> = K.extension(t^3 + alpha)
-        sage: first_subextension(QQ, L)
-        Number Field in alpha with defining polynomial t^2 + t + 1
-
-    """
-    assert K0.is_subring(K)
-    assert K is not K0
-    if K.base_field() is K0:
-        return K
-    elif hasattr(K, "rational_function_field") and K.rational_function_field() is K:
-        if K.constant_base_field() is K0:
-            return K
-        else:
-            return first_subextension(K0, K.constant_base_field())
-    else:
-        return first_subextension(K0, K.base_field())
-
-
-# should be replaced by a method of "EmbeddingOfStandardField"
-def extend_embedding(phi, k, L0, L1, psi0):
-    r""" Return an extension of the embedding `\phi` one step.
-
-    INPUT:
-
-    - ``phi`` -- a field embedding `phi:K\to L`
-    - ``k`` -- a subfield of `K` such that `K/k` is a standard extension.
-    - ``L_0``, ``L_1`` -- subfields of `L` such that `L_1/L_0` is a simple extension
-    - ``psi0`` -- an embedding `\psi_0:L_0\to K` which is a right inverse of `\phi`
-
-    OUTPUT:
-
-    a tupel `(K_1, \iota, \phi_1, \psi_1)`, where
-
-    - `K_1/k` is a standard extension
-    - `\iota:K\to K_1` is a `k`-linear embedding
-    - `\phi_1:K_1\to L` is an extension of `\phi`, i.e. `\phi_1\circ\iota=\phi`
-    - \psi_1:L_1\to K_1` is an extension of `\psi_0`.
-
-    Moreover, the extension `\psi_1` is a right inverse of `\phi_1`, i.e.
-    `\phi_1\circ\psi_1` is the identity on `L_1`.
-
-
-    EXAMPLES::
-
-        sage: from mclf import *
-        sage: k = GF(2)
-        sage: K.<x> = FunctionField(k)
-        sage: phi = K.hom([x^2+x], K)
-        sage: K1, iota, phi1, psi1 = extend_embedding(phi, k, k, K, k.hom(K))
-        sage: K1
-        Function field in T defined by T^2 + T + x
-        sage: phi1(x)
-        x^2 + x
-        sage: phi1(K1.gen())
-        x
-
-    """
-    from mclf.fields.standard_fields import is_rational_function_field
-    K = phi.domain()
-    L = phi.codomain()
-
-    if is_finite_simple_extension(L1, L0):
-        alpha = L1.gen()
-        f = L1.polynomial()
-        assert f(alpha).is_zero()
-        for g, _ in f.map_coefficients(psi0, K).factor():
-            if g.map_coefficients(phi, L)(alpha).is_zero():
-                # K1, iota, beta = extend_standard_extension(K, k, g)
-                # K1/k is a standard extension, iota:K->K1 is an embedding,
-                # beta in K1 is a zero of g generating K1/K
-
-                # define K1, iota and phi1
-                K2 = K.extension(g, L1.variable_name() + "1")
-                phi2 = K2.hom([alpha], phi)
-                k_to_K2 = k.hom(K2)
-                K1, K2_to_K1, K1_to_K2 = standard_model_of_finite_extension(
-                    k_to_K2)
-                phi1 = K1_to_K2.post_compose(phi2)
-                iota = K.hom(K2).post_compose(K2_to_K1)
-                # we also need a root of g generating K1/K
-                beta = K2_to_K1(K2.gen())
-
-                # for defn of psi1 we have the problem that the method "hom"
-                # requires different input, depending on the type of field.
-                # Using try/except is a somewhat dirty but pragmatic solution
-                try:
-                    psi1 = L1.hom([beta], K1, psi0)
-                except TypeError:
-                    psi1 = L1.hom([beta], K1)
-                return K1, iota, phi1, psi1
-        # if we get here, something went wrong
-        raise AssertionError()
-
-    elif is_rational_function_field(L1, L0):
-        # then K/k must also be a function field
-        t = L1.gen()
-        x = K.rational_function_field().gen()
-        f = algebraic_relation(L, phi(x), t)
-        r, s = f.parent().gens()
-        # f is an irreducible bivariate polynomial over L0 such that
-        # f(phi(x),t)=0
-        assert f(phi(x), t).is_zero()
-        # we substitute r:=x and consider f as an univariate polynomial
-        # in s over K
-        f = f.map_coefficients(psi0, K)
-        _, s = f.parent().gens()
-        f = f(x, s).polynomial(s).change_ring(K)
-        try:
-            factorization = f.factor()
-        except NotImplementedError:
-            from mclf.fields.factor_polynomial_over_function_field \
-                import factor_polynomial_over_function_field
-            factorization = factor_polynomial_over_function_field(K, f)
-        for g, _ in factorization:
-            if g.map_coefficients(phi, L)(t).is_zero():
-                K1, iota, beta = extend_standard_extension(K, k, g)
-                phi1 = K1.hom([t], phi)
-                psi1 = L1.hom([beta], psi0)
-                return K1, iota, phi1, psi1
-        # if we get here, something went wrong
-        raise AssertionError()
-
-    else:
-        raise NotImplementedError()
-
-
-# should soon be obsolete; it is only used in "extend_standard_extension" which
-# will probably replace by a method of "FiniteExtensionOfStandardFields"
-def is_finite_simple_extension(L, K):
-    r""" Return whether `L/K` is a finite simple extension of fields.
-
-    """
-    return L.base_field() is K and hasattr(L, "polynomial")
-
-
-# should be replaced by a method (superextension?) of
-# FiniteExtensionOfStandardFields
-def extend_standard_extension(K, k, g):
-    r""" Return a finite extension of a standard extension.
-
-    INPUT:
-
-    - ``K`` -- a field
-    - ``k`` -- a subfield of `K` such that `K/k` is a standard extension
-    - ``g`` -- an irreducible polynomial over `K`
-
-    OUTPUT:
-
-    a tupel `(K_1,\iota, \beta)`, where
-
-    - `K_1/k` is a standard extension,
-    - `\iota:K\to K_1` is an embedding,
-    - `\beta\in K_1` is such that `K_1=\iota(K)[\beta]` and `g^\iota(\beta)=0`.
-
-
-    EXAMPLES::
-
-        sage: from mclf import *
-        sage: R.<x> = QQ[]
-        sage: K.<theta> = NumberField(x^3 + x + 1)
-        sage: g = x^2 + theta*x + 1
-        sage: g.factor()
-        x^2 + theta*x + 1
-        sage: extend_standard_extension(K, QQ, g)
-        (Number Field in theta with defining polynomial
-         T^6 + 4*T^4 - T^3 + 4*T^2 + 1,
-         Ring morphism:
-           From: Number Field in theta with defining polynomial x^3 + x + 1
-           To:   Number Field in theta with defining polynomial
-                 T^6 + 4*T^4 - T^3 + 4*T^2 + 1
-           Defn: theta |--> theta^5 + 4*theta^3 - theta^2 + 3*theta,
-         theta)
-
-    """
-    phi = k.hom(K)
-    if is_finite_extension(phi):
-        # K/k should be simple
-        assert K.base_field() is k
-        if K is k:
-            L = k.extension(g, "T")
-            return L, k.hom(L), L.gen()
-        h = K.polynomial()
-        beta = K.gen()
-        assert h(beta).is_zero()
-        K1 = K.extension(g, "T1")
-        gamma = K1.primitive_element()
-        f = minimal_polynomial(gamma, k)
-        L = k.extension(f, K.variable_name())
-        try:
-            h_roots = [beta_L for beta_L, _ in h.roots(L)]
-        except NotImplementedError:
-            from mclf.fields.factor_polynomial_over_function_field \
-                import roots_of_polynomial_over_function_field
-            h_roots = roots_of_polynomial_over_function_field(L, h)
-        for beta_L in h_roots:
-            try:
-                iota = K.hom([beta_L], k.hom(L))
-            except:
-                iota = K.hom([beta_L])
-            g_L = g.map_coefficients(iota, L)
-            try:
-                roots = [a for a, _ in g_L.roots()]
-            except NotImplementedError:
-                roots = roots_of_polynomial_over_function_field(L, g_L)
-            if len(roots) > 0:
-                return L, iota, roots[0]
-        # if we get here, something went wrong
-        raise AssertionError()
-    else:
-        from mclf.fields.standard_fields import (
-            is_standard_function_field)
-        assert is_standard_function_field(K)
-        # K/k is a function field, so K1 should be a finite simple extension
-        # of the rational subfield K0 = k(x)
-        K0 = K.rational_function_field()
-        return extend_standard_extension(K, K0, g)
+    L = K.extension(f, gen_name)
+    assert L.is_field(), "L = {} is not a field!".format(L)
+    assert hasattr(L, "base_ring") and L.base_ring() is K
+    return L
 
 
 def algebraic_relation(K, x, y):

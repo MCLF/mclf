@@ -9,7 +9,7 @@ this class are standard fields, together with an embedding into an overfield
 
 For instance, if `K` is a standard field, then the command ::
 
-    sage: K.natural_subfields()
+    K.natural_subfields()
 
 produces a list of instances of this class.
 
@@ -19,7 +19,8 @@ EXAMPLES::
     sage: k = standard_finite_field(4)
     sage: k.natural_subfields()
     [Finite Field of size 2, as a subfield of Finite Field in z2 of size 2^2,
-     the standard field with 4 elements]
+     Finite Field in z2 of size 2^2, as a subfield of Finite Field in z2 of
+     size 2^2]
 
 For any embedding of standard fields, we obtain a subfield::
 
@@ -55,13 +56,10 @@ We can also say something about the nature of the subfield::
 
     sage: FF.is_prime_subfield()
     False
-    sage: FF.is_canonical_subfield()
-    False
     sage: FF.is_constant_base_field()
     False
     sage: FF.is_rational_base_field()
-    False
-    sage: FF.is_overfield()
+    True
 
 """
 

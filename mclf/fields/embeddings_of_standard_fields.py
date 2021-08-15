@@ -11,7 +11,7 @@ instances of this class have methods identical or very similar to usual
 morphisms between fields in Sage. For instance, given an element `a` of `K`,
 we can evaluate the map `\phi` simply with::
 
-    sage: phi(a)
+    phi(a)
 
 
 Subclasses, initialization and inheritance
@@ -123,11 +123,8 @@ def embedding_of_standard_fields(*args):
         sage: phi = k0.hom(k1)
         sage: embedding_of_standard_fields(phi)
         the embedding of Finite Field in z2 of size 2^2 into Finite Field in z6
-        of size 2^6, sending z2 to z2
+        of size 2^6, sending z2 to z6^3 + z6^2 + z6 + 1
 
-        sage: embedding_of_standard_fields(GF(2), k0, phi)
-        the embedding of Finite Field of size 2 into Finite Field in z2
-        of size 2^2, sending 1 to 1
 
     """
     if len(args) == 1:
@@ -303,6 +300,14 @@ class EmbeddingOfStandardFields(SageObject):
 
         """
         return self._codomain
+
+    def sage_morphism(self):
+        r""" Return the sage morphism of this embedding.
+
+        """
+        if not hasattr(self, "_sage_morphism"):
+            raise NotImplementedError()
+        return self._sage_morphism
 
     def is_identity(self):
         r""" Return whether this embedding is the identity on its domain.
@@ -489,7 +494,7 @@ class EmbeddingOfStandardFields(SageObject):
         L = self.Codomain()
         M = L.original_model()
         return (hasattr(M, "base_field") and hasattr(M, "polynomial")
-                and M.Domain() is K)
+                and M.base_field() == K)
 
     # the following methods have to be implemented by the appropriate subclass
 
@@ -632,6 +637,8 @@ class IdentityEmbedding(NaturalEmbedding):
         assert isinstance(K, StandardField)
         self._domain = K
         self._codomain = K
+        from mclf.fields.standard_fields import identity_map
+        self._sage_morphism = identity_map(K.standard_model())
 
     def __repr__(self):
         return "the identity map on {}".format(self.domain())
@@ -742,8 +749,10 @@ class EmbeddingOfPrimeSubfield(NaturalEmbedding):
     def __init__(self, K):
         assert isinstance(K, StandardField)
         from mclf.fields.standard_fields import standard_prime_field
-        self._domain = standard_prime_field(K.characteristic())
+        K0 = standard_prime_field(K.characteristic())
+        self._domain = K0
         self._codomain = K
+        self._sage_morphism = K0.standard_model().hom(K.standard_model())
 
     def is_identity(self):
         r""" Return whether this embedding is the identity on its domain.
@@ -834,9 +843,10 @@ class EmbeddingOfConstantBaseField(NaturalEmbedding):
         from mclf.fields.standard_fields import (standard_prime_field,
                                                  StandardFunctionField)
         assert isinstance(K, StandardFunctionField)
-        self._domain = standard_field(
-            K.standard_model().constant_base_field())
+        k = standard_field(K.standard_model().constant_base_field())
+        self._domain = k
         self._codomain = K
+        self._sage_morphism = k.standard_model().hom(K.standard_model())
 
     def is_identity(self):
         r""" Return whether this embedding is the identity on its domain.
@@ -893,9 +903,10 @@ class EmbeddingOfRationalBaseField(NaturalEmbedding):
         assert isinstance(K, StandardFunctionField)
         assert not K.is_rational_function_field(), "K must not be a rational \
             function field"
-        self._domain = standard_field(
-            K.standard_model().base_field())
+        K0 = standard_field(K.standard_model().base_field())
+        self._domain = K0
         self._codomain = K
+        self._sage_morphism = K0.standard_model().hom(K.standard_model())
 
     def is_identity(self):
         r""" Return whether this embedding is the identity on its domain.
@@ -941,7 +952,6 @@ class EmbeddingOfFiniteField(EmbeddingOfStandardFields):
         if K in Fields:
             assert K.is_finite()
             K = standard_field(K)
-            a = K(a)
         else:
             assert isinstance(K, StandardFiniteField)
         if L in Fields:
@@ -949,10 +959,14 @@ class EmbeddingOfFiniteField(EmbeddingOfStandardFields):
         else:
             assert isinstance(L, StandardField)
 
+        a = L(a)
         assert K.polynomial()(a).is_zero()
         self._domain = K
         self._codomain = L
         self._image_of_generator = a
+        from mclf.fields.standard_fields import homomorphism_on_standard_field
+        self._sage_morphism = homomorphism_on_standard_field(
+            K.standard_model(), L.standard_model(), a)
 
     def __repr__(self):
         return "the embedding of {} into {}, sending {} to {}".format(
@@ -1010,7 +1024,7 @@ class EmbeddingOfFiniteField(EmbeddingOfStandardFields):
             sage: phi = K.hom(K, K.generator()+1)
             sage: phi.inverse()
             the embedding of Finite Field in z2 of size 2^2 into Finite Field
-            in z2 of size 2^2, sending z2 to [z2 + 1]
+            in z2 of size 2^2, sending z2 to z2 + 1
 
         """
         phi = self
@@ -1022,7 +1036,7 @@ class EmbeddingOfFiniteField(EmbeddingOfStandardFields):
         f = L.polynomial()
         for beta in K.roots(f):
             if phi(beta) == alpha:
-                return L.hom(K, [beta])
+                return L.hom(K, beta)
         # if we get here, something went wrong
         raise AssertionError()
 
@@ -1066,6 +1080,9 @@ class EmbeddingOfNumberField(EmbeddingOfStandardFields):
         self._domain = K
         self._codomain = L
         self._image_of_generator = a
+        from mclf.fields.standard_fields import homomorphism_on_standard_field
+        self._sage_morphism = homomorphism_on_standard_field(
+            K.standard_model(), L.standard_model(), a)
 
     def __repr__(self):
         return "the embedding of {} into {}, sending {} to {}".format(
@@ -1271,6 +1288,50 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
             self.domain(), self.codomain(), self.Domain().generators(),
             self.image_of_generators())
 
+    def sage_morphism(self):
+        r"""
+
+        OUTPUT:
+
+        the underlying sage morphism between the standard models of the domain
+        and the codomain of this embedding.
+
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: k = standard_finite_field(9)
+            sage: phi0 = k.hom(k, k.generator()^3)
+            sage: K1 = standard_rational_function_field(k, "x")
+            sage: x = K1.generator()
+            sage: phi1 = K1.hom(K1, -x)
+            sage: y = K1.polynomial_generator("y")
+            sage: K = K1.extension(y^3 - x)
+            sage: y = K.generator()
+            sage: phi = K.relative_hom(K, -y, phi1)
+            sage: psi = phi.sage_morphism()
+            sage: phi.is_equal(embedding_of_standard_fields(psi))
+            True
+
+        """
+        from mclf.fields.standard_fields import homomorphism_on_standard_field
+        if not hasattr(self, "_sage_morphism"):
+            K = self.domain()
+            L = self.codomain()
+            phi0 = self.restriction_to_constant_base_field().sage_morphism()
+            if self.Domain().is_rational_function_field():
+                phi = homomorphism_on_standard_field(K, L,
+                                                     self._image_of_generator,
+                                                     phi0)
+            else:
+                K1 = K.base_field()
+                phi1 = self.restriction_to_rational_base_field().sage_morphism()
+                phi = homomorphism_on_standard_field(K, L,
+                                                     self._image_of_generator,
+                                                     phi1)
+            self._sage_morphism = phi
+        return self._sage_morphism
+
     def image_of_generators(self):
         return self._image_of_generators
 
@@ -1286,7 +1347,7 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
         to the rational base field.
 
         """
-        if self.is_rational_function_field():
+        if self.Domain().is_rational_function_field():
             return self
         else:
             return self._restriction_to_rational_base_field
@@ -1527,5 +1588,6 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
             # for the moment, we know of no better way that trying to
             # compute the inverse
             inverse = self.inverse()
+            return inverse is not None
             return inverse is not None
             return inverse is not None

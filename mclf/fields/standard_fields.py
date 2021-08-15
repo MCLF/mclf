@@ -269,13 +269,19 @@ See :doc:`Finite field extensions <finite_field_extensions>`
 
 .. NOTE::
 
-    By convention, a standard field is considered as a finite extension of
-    itself. Therefore, instances of :class:`StandardField` have a number of
+    By convention, a standard field `K` is considered as a finite extension of
+    its **base field**, which is
+    - the prime subfield if `K` is a finite or a number field,
+    - the rational base field `k(x)\subset K`.
+
+    Therefore, instances of :class:`StandardField` have a number of
     methods which emulate methods with the same name belonging to the class
     :class:`FiniteExtensionOfStandardFields <mclf.fields.\
     finite_field_extensions.FiniteExtensionOfStandardFields>`
 
     For instance,
+
+      todo
 
 Valuations on standard fields
 -----------------------------
@@ -290,6 +296,10 @@ todo
 
     - base change for function fields is not yet fully implemented
     - so far, the condition *separable* in *standard field* is ignored
+    - clarify the convention about the base field of a standard field
+
+    But these things may be done by and by. The most important missing piece
+    are valuations!
 
 
 EXAMPLES::
@@ -2910,7 +2920,7 @@ def homomorphism_on_standard_field(K, L, *args):
             return L.coerce_map_from(K)
     if K.is_prime_field():
         # there can be only one homomorphism; we ignore the other arguments
-        assert K.characteristic() == L.characteristic, "there is no \
+        assert K.characteristic() == L.characteristic(), "there is no \
             homomorphism from K = {} to L = {}.".format(K, L)
         return K.hom(L)
 
@@ -2956,7 +2966,16 @@ def homomorphism_on_standard_field(K, L, *args):
         assert K0.is_subring(L), "the base field K0 = {} of K must be \
             a subfield of L = {}".format(K0, L)
         phi0 = K0.hom(L)
-    if K.is_finite() or (hasattr(K, "is_absolute") and K.is_absolute()):
+    if K.base_ring().is_prime_field() or (
+                hasattr(K, "is_absolute") and K.is_absolute()):
+        try:
+            K.hom(image_gens, L)
+        except ValueError:
+            print("error in K.hom(image_gens, L):")
+            print("K = ", K)
+            print("image_gens = ", image_gens)
+            print("L = ", L)
+            raise ValueError()
         return K.hom(image_gens, L)
     else:
         # we need to specify the codomain! It should be L
@@ -3006,3 +3025,25 @@ def make_bivariate(f):
     F = sum(f[i].numerator()(t)*x**i for i in range(f.degree() + 1))
     return F
     return F
+
+
+def primitive_element(K):
+    r""" Return a primitive element for a tower of finite extensions.
+
+    INPUT:
+
+    - ``K`` -- a standard sage field
+
+    OUTPUT:
+
+    a primitive element for the extension `K/K_0`, where `K_0` is either the
+    prime subfield (if `K` is finite or a number field) or the rationa base
+    field if `K` is a function field.
+
+    """
+    if hasattr(K, "primitive_element"):
+        return K.primitive_element()
+    elif hasattr(K, "absolute_generator"):
+        return K.absolute_generator()
+    else:
+        return standard_field(K).generator()
