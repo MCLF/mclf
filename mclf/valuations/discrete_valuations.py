@@ -3,13 +3,509 @@ r"""
 Valuations on standard fields
 =============================
 
+In this module we implement a class :class:`DiscreteValuationOnStandardField`.
+For an instance `v` of this class, its **domain** is a standard field (as an
+instance of :class:`StandardField <mclf.fields.standard_fields.StandardField>`).
+
+Formally, `v` can be treated more or less like a usual valuation in Sage. The
+advantages of this new class of objects are:
+
+
+.. NOTE::
+
+    A crucial choice is whether the new class
+    :class:`DiscreteValuationOnStandardField` should be a subclass of
+    :class:`DiscreteValuation` and thus inherit all the method from the
+    valuation machinery in Sage.
 
 """
 
-from sage.all import QQ
+from sage.all import SageObject, QQ, Infinity
 from sage.rings.valuation.valuation import DiscreteValuation
 from sage.rings.valuation.mapped_valuation import MappedValuation_base
 from sage.rings.valuation.valuation_space import DiscretePseudoValuationSpace
+
+
+def discrete_valuation_on_standard_field(v):
+    r""" Return the discrete valuation object.
+
+    INPUT:
+
+    ``v`` -- a discrete valuation on a standard field
+
+    OUTPUT:
+
+    the object of :class:`DiscreteValuationOnStandardField`
+    corresponding to `v`.
+
+    """
+    raise NotImplementedError()
+
+
+def extensions_of_discrete_valuation(v, L):
+    r""" Return the list of all extensions of a discrete valuation to a
+    finite field extensions.
+
+    INPUT:
+
+    - ``v`` -- a discrete valuation on a standard field `K`
+    - ``L`` -- a finite field extension of `K`
+
+    OUTPUT:
+
+    the list of all extensions `w` of `v` to `L`.
+
+    """
+    raise NotImplementedError()
+
+
+def restriction_of_discrete_valuation(w, K):
+    r""" Return the restriction of a discrete valuation to a subfield.
+
+    INPUT:
+
+    - ``w`` -- a discrete valuation on a standard field `L`
+    - ``K`` -- a subfield of `L`
+
+    OUTPUT:
+
+    the discrete valuation `v:=w|_K`.
+
+    """
+    raise NotImplementedError()
+
+
+class DiscreteValuationOnStandardField(SageObject):
+    r""" Base class for a discrete valuation on a standard field.
+
+    """
+
+    def Domain(self):
+        r""" Return the domain of this discrete valuation, as a standard field.
+
+        """
+        return self._domain
+
+    def domain(self):
+        r""" Return the domain of this discrete valuation, as a sage field.
+
+        """
+        return self.Domain().standard_model()
+
+    def Residue_field(self):
+        r""" Return the residue field of this discrete valuation, as a
+        standard field.
+
+        """
+        return self._residue_field
+
+    def residue_field(self):
+        r""" Return the residue field  of this discrete valuation, as a
+        Sage field.
+
+        """
+        return self.Residue_field().standard_model()
+
+    def __call_(self, a):
+        r""" Return the value of this valuation on a field element.
+
+        INPUT:
+
+        - ``a`` -- an element of the domain of this valuation.
+
+        OUTPUT:
+
+        the rational number `v(a)`, where `v` is this valuation.
+
+        If `a` is an element of the original model it is first transformed to
+        an element of the standard model of the domain.
+
+        """
+        return self.valuation()(self(a))
+
+    def valuation(self):
+        r""" Return this discrete valuation, as a valuation on the standard
+        model.
+
+        """
+        return self._valuation
+
+    def is_equal_to(self, w):
+        r""" Return whether this valuation is equal to `w`.
+
+        INPUT:
+
+        - ``w`` -- another discrete valuation on the domain of this
+          valuation `v`
+
+        OUTPUT:
+
+        whether `v = w`.
+
+        """
+        v = self
+        if not isinstance(w, DiscreteValuationOnStandardField):
+            w = discrete_valuation_on_standard_field(w)
+        assert v.Domain().is_equal(w.Domain()), "v and w do not have the \
+            same domain"
+        if v.is_equivalent_to(w):
+            return v.value_group() == w.value_group()
+        else:
+            return False
+
+    def is_equivalent_to(self, w):
+        r""" Return whether thsi valuation is equal to `w`.
+
+        INPUT:
+
+        - ``w`` -- another discrete valuation on the domain of this
+          valuation `v`
+
+        OUTPUT:
+
+        whether `v = w`.
+
+        This method must be implemented by the subclass.
+
+        .. WARNING:
+
+            Do not confuse this method with the method :meth:`is_equivalent`,
+            which has a very different meaning and purpose.
+
+        """
+        v = self
+        if not isinstance(w, DiscreteValuationOnStandardField):
+            w = discrete_valuation_on_standard_field(w)
+        assert v.Domain().is_equal(w.Domain()), "v and w do not have the \
+            same domain"
+        raise NotImplementedError()
+
+    def is_trivial(self):
+        r""" Return whether this discrete valuation is trivial.
+
+        For a valuation `v` on a field `K` being *trivial* means that
+        `v(a)=0` for all `a\in K^\times`.
+
+        """
+        return self._is_trivial
+
+    def completion(self):
+        r""" Return the completion of the domain at this discrete valuation.
+
+        """
+        raise NotImplementedError()
+
+
+class TrivialDiscreteValuation(DiscreteValuationOnStandardField):
+    r""" Return a trivial valuation on a standard field.
+
+    INPUT:
+
+    - ``K`` -- a standard field
+
+    OUTPUT:
+
+    the trivial valuation `v` on `K`, such that
+
+    .. MATH::
+
+        v(a) = 0,
+
+    for all `a\in K^\times`.
+
+    """
+
+    def __repr__(self):
+        return "the trivial valuation on {}".format(self.domain())
+
+    def __call__(self, a):
+        r""" Return the value of this trivial valuation on a field element.
+
+        INPUT:
+
+        - ``a`` -- an element of the domain of this valuation.
+
+        OUTPUT:
+
+        the rational number `v(a)`, where `v` is this valuation.
+
+        Actually, since this valuation is trivial, we return `\infty` if
+        `a=0` and `0` otherwise.
+
+        """
+        a = self(a)
+        if a.is_zero():
+            return Infinity
+        else:
+            return QQ.zero()
+
+    def is_trivial(self):
+        r""" Return whether this discrete valuation is trivial.
+
+        Since the domain of this valuation is a finite field, the answer is
+        clearly *yes*.
+
+        """
+        return True
+
+    def is_equal_to(self, w):
+        r""" Return whether this discrete valuation is equal to `w`.
+
+        """
+        if isinstance(w, DiscreteValuationOnFiniteField):
+            assert self.Domain().is_equal(w.Domain()), "w is not defined on \
+                the same domain as this valuation"
+        else:
+            # I have to test f the domain of w is correct
+            raise NotImplementedError()
+        return w.is_trivial()
+
+    def is_equivalent_to(self, w):
+        r""" Return whether this discrete valuation is equivalent to `w`.
+
+        Since all valuations on a finite field are trivial, they are also
+        all equavalent.
+
+        """
+        if isinstance(w, DiscreteValuationOnFiniteField):
+            assert self.Domain().is_equal(w.Domain()), "w is not defined on \
+                the same domain as this valuation"
+        else:
+            # I have to test f the domain of w is correct
+            raise NotImplementedError()
+        return w.is_trivial()
+
+
+class pAdicValuationOnNumberField(DiscreteValuationOnStandardField):
+    r""" A class for p-adic valuations on number fields.
+
+    INPUT:
+
+    either
+
+    - ``v`` -- a nontrivial Sage valuation on a number field `K`,
+
+    or
+
+    - ``K`` -- a number field
+    - ``v_p`` -- a p-adic valuation on `\mathbb{Q}`
+    - ``data`` -- a list of pairs `(a, t)`, with `a\in K` and `t\in\mathbb{Q}`
+
+    OUTPUT:
+
+    the valuation `v` on the number field `K` determined by the input
+
+    If a Sage valuation `v` is given, we simply transform `v` into an instance
+    of :class:`DiscreteValuationOnNumberField`.
+
+    If the input is of the form `(K, v_p, [(a_i,t_i)])`, then the unique
+    discrete valuation `v` is returned whose restriction to `\mathbb{Q}` is
+    equivalent to `v_p` (i.e.\ `v(p) > 0`) and such that
+
+    .. MATH::
+
+        v(a_i) = t_i, \quad i=1,..,n.
+
+    It is assumed that `v` with this properties exists and is unique. If this
+    is not the case, an error is raised.
+
+    """
+
+    def __int__(self, *args):
+        raise NotImplementedError()
+
+    def __repr__(self):
+        if self.is_trivial():
+            return "trivial valuation on {}".format(self.domain())
+        else:
+            return "discrete {}-adic valuation on {}".format(self.domain())
+
+    def residue_characteristic(self):
+        r""" Return the residue characteristique of this discrete valuation.
+
+        """
+        return self._p
+
+    def is_equivalent_to(self, w):
+        r""" Return whether this valuation is equal to `w`.
+
+        INPUT:
+
+        - ``w`` -- another discrete valuation on the domain of this
+          valuation `v` (a number field)
+
+        OUTPUT:
+
+        whether `v` is equivalent to `w`, i.e. these discrete valuations are
+        equal up to scaling.
+
+        .. WARNING:
+
+            Do not confuse this method with the method :meth:`is_equivalent`,
+            which has a very different meaning and purpose.
+
+        """
+        v = self
+        if not isinstance(w, DiscreteValuationOnStandardField):
+            w = discrete_valuation_on_standard_field(w)
+        assert v.Domain().is_equal(w.Domain()), "v and w do not have the \
+            same domain"
+        if v.is_trivial():
+            return w.is_trivial()
+        elif w.is_trivial():
+            return False
+
+        # now v and v are both nontrivial
+        # w is equivalent to v if
+        # 1. they restrict to a p-adic valuation with the same prime p
+        # 2. they agree up to the scaling factor on a list of test elements
+        p = v.residue_characteristic()
+        if not w.residue_characteristic() == p:
+            return False
+        # now v and w have the same residue characteristic p
+        s = v(p)/w(p)
+        return all(v(a) == s*w(a) for a in v.test_elements())
+
+    def test_elements(self):
+        r""" Return a list of test elements for this discrete valuation.
+
+        """
+        raise NotImplementedError()
+
+    def completion(self):
+        r""" Return the completion of the domain at this discrete valuation.
+
+        OUTPUT:
+
+        the `p`-adic number field `\hat{K}_v`, as an instance of
+        :class:`pAdicNumberField <mclf.padic_extensions.padic_number_fields.\
+        pAdicNumberField>`
+
+        """
+        raise NotImplementedError()
+
+
+# --------------------------------------------------------------------------
+
+#                 discrete valuations on function fields
+
+#                (maybe move this to its own submodule?)
+
+class DiscreteValuationOnFunctionField(DiscreteValuationOnStandardField):
+    r""" Base class for discrete valuations on function fields.
+
+    We have the following graph of subclasses:
+
+
+    where:
+
+    1. :class:`DiscreteValuationOnRationalFunctionField`
+    2. :class:`DiscreteValuationOnNonrationalFunctionField`
+    3. :class:`pAdicValuationOnFunctionField`
+    4. :class:`pAdicValuationOnRationalFunctionField`
+    5. :class:`pAdicValuationOnNonrationalFunctionField`
+
+    """
+
+
+class DiscreteValuationOnRationalFunctionField(
+        DiscreteValuationOnFunctionField):
+    r""" A class for discrete valuations on a rational function field.
+
+    """
+
+    def is_equivalent_to(self, w):
+        r""" Return whether thsi valuation is equal to `w`.
+
+        INPUT:
+
+        - ``w`` -- another discrete valuation on the domain of this
+          valuation `v`
+
+        OUTPUT:
+
+        whether `v = w`.
+
+        This method must be implemented by the subclass.
+
+        .. WARNING:
+
+            Do not confuse this method with the method :meth:`is_equivalent`,
+            which has a very different meaning and purpose.
+
+        """
+        v = self
+        if not isinstance(w, DiscreteValuationOnStandardField):
+            w = discrete_valuation_on_standard_field(w)
+        assert v.Domain().is_equal(w.Domain()), "v and w do not have the \
+            same domain"
+        raise NotImplementedError()
+
+
+class DiscreteValuationOnNonrationalFunctionField(
+        DiscreteValuationOnFunctionField):
+    r""" Discrete valuation on a nonrational function field.
+
+    """
+
+    def is_equivalent_to(self, w):
+        r""" Return whether thsi valuation is equal to `w`.
+
+        INPUT:
+
+        - ``w`` -- another discrete valuation on the domain of this
+          valuation `v`
+
+        OUTPUT:
+
+        whether `v = w`.
+
+        This method must be implemented by the subclass.
+
+        .. WARNING:
+
+            Do not confuse this method with the method :meth:`is_equivalent`,
+            which has a very different meaning and purpose.
+
+        """
+        v = self
+        if not isinstance(w, DiscreteValuationOnStandardField):
+            w = discrete_valuation_on_standard_field(w)
+        assert v.Domain().is_equal(w.Domain()), "v and w do not have the \
+            same domain"
+        raise NotImplementedError()
+
+
+# --------------------------------------------------------------------------
+
+#          p-adic valuations on function fields
+
+
+class pAdicValuationOnFunctionField(DiscreteValuationOnFunctionField):
+    r""" A class for `p`-adic valuations on function fields.
+
+    """
+
+
+class pAdicValuationOnRationalFunctionField(
+        DiscreteValuationOnRationalFunctionField,
+        pAdicValuationOnFunctionField):
+    r""" A class for p-adic valuations on rational function fields.
+
+    """
+
+
+class pAdicValuationOnNonrationalFunctionField(
+        DiscreteValuationOnNonrationalFunctionField,
+        pAdicValuationOnFunctionField):
+    r""" A class for p-adic valuations on nonrational function fields.
+
+    """
+
+
+# -------------------------------------------------------------------------
+
+# do I really need this?
 
 
 class DiscreteValuationViaIsomorphism(MappedValuation_base, DiscreteValuation):

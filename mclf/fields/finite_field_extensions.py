@@ -196,8 +196,8 @@ A finite extension can also be defined via an injective field homomorphism.::
 """
 
 from mclf.fields.standard_fields import (
-    standard_field, StandardField, StandardFiniteField, StandardNumberField,
-    StandardFunctionField)
+    standard_field, StandardField, StandardFiniteField, StandardNumberField)
+from mclf.fields.standard_function_fields import StandardFunctionField
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.all import lcm
 

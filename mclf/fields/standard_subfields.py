@@ -65,8 +65,8 @@ We can also say something about the nature of the subfield::
 
 
 from mclf.fields.standard_fields import (StandardField, StandardFiniteField,
-                                         StandardNumberField,
-                                         StandardFunctionField)
+                                         StandardNumberField)
+from mclf.fields.standard_function_fields import StandardFunctionField
 from mclf.fields.embeddings_of_standard_fields import (
     EmbeddingOfStandardFields)
 

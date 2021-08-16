@@ -92,8 +92,8 @@ from sage.rings.function_field.constructor import FunctionField
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from mclf.fields.standard_fields import (standard_field, StandardField,
                                          StandardFiniteField,
-                                         StandardNumberField,
-                                         StandardFunctionField)
+                                         StandardNumberField)
+from mclf.fields.standard_function_fields import StandardFunctionField
 
 # -------------------------------------------------------------------------
 
@@ -840,8 +840,8 @@ class EmbeddingOfConstantBaseField(NaturalEmbedding):
     """
 
     def __init__(self, K):
-        from mclf.fields.standard_fields import (standard_prime_field,
-                                                 StandardFunctionField)
+        from mclf.fields.standard_fields import standard_prime_field
+        from mclf.fields.standard_function_fields import StandardFunctionField
         assert isinstance(K, StandardFunctionField)
         k = standard_field(K.standard_model().constant_base_field())
         self._domain = k
@@ -898,8 +898,8 @@ class EmbeddingOfRationalBaseField(NaturalEmbedding):
     """
 
     def __init__(self, K):
-        from mclf.fields.standard_fields import (standard_field,
-                                                 StandardFunctionField)
+        from mclf.fields.standard_fields import standard_field
+        from mclf.fields.standard_function_fields import StandardFunctionField
         assert isinstance(K, StandardFunctionField)
         assert not K.is_rational_function_field(), "K must not be a rational \
             function field"
@@ -1229,7 +1229,7 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
         else:
             assert isinstance(K, StandardFunctionField)
         if L in Fields:
-            from mclf.fields.standard_fields import standard_function_field
+            from mclf.fields.standard_function_fields import standard_function_field
             L = standard_function_field(L)
         else:
             assert isinstance(L, StandardFunctionField)
