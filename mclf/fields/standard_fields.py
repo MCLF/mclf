@@ -340,8 +340,8 @@ It works similarly for number fields and function fields.::
     sage: F.<y> = F0.extension(y^2+x^3+a); F
     Function field in y defined by y^2 + x^3 + a
     sage: F = standard_function_field(F); F
-    Function field in y_ defined by y_^3 + x_^2 + z6^3 + z6^2 + z6
-    as standard function field
+    standard function field in [x_, y_] over Finite Field in z6 of size 2^6,
+    with equation y_^3 + x_^2 + (z6^3 + z6^2 + z6)
 
 """
 
@@ -556,8 +556,8 @@ def standard_field(K):
         sage: S.<z> = K[]
         sage: L.<z> = K.extension(z^3 +y*z - x^2)
         sage: F = standard_field(L); F
-        Function field in z defined by z^6 + z^4 + (x^3 + 1)*z^2 + x^2*z + x^4
-        as standard function field
+        standard function field in [x, z] over Finite Field of size 2,
+        with equation z^6 + x^3*z^2 + x^4 + z^4 + x^2*z + z^2
 
         sage: F.standard_model()
         Function field in z defined by z^6 + z^4 + (x^3 + 1)*z^2 + x^2*z + x^4
@@ -1304,12 +1304,12 @@ class StandardField(SageObject):
             sage: K = standard_function_field(x^3 + y^2)
             sage: K.structure()
             [(Finite Field in z2 of size 2^2, as a subfield of Rational
-             function field in x over Finite Field in z2 of size 2^2, z2,
-             x^2 + x + 1),
+             function field in x over Finite Field in z2 of size 2^2,
+             z2, x^2 + x + 1),
              (Rational function field in x over Finite Field in z2 of size 2^2,
-              as a subfield of Function field in y defined by y^2 + x^3, x, 0),
-             (Function field in y defined by y^2 + x^3 as standard function
-              field, y, y^2 + x^3)]
+             as a subfield of Function field in y defined by y^2 + x^3, x, 0),
+             (standard function field in [x, y] over Finite Field in z2
+             of size 2^2, with equation x^3 + y^2, y, y^2 + x^3)]
 
         """
         K = self

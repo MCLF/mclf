@@ -7,6 +7,7 @@ Contents:
    :maxdepth: 2
 
    fields
+   valuations
    padic_extensions
    curves
    berkovich

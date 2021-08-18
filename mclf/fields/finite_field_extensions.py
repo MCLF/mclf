@@ -197,7 +197,9 @@ A finite extension can also be defined via an injective field homomorphism.::
 
 from mclf.fields.standard_fields import (
     standard_field, StandardField, StandardFiniteField, StandardNumberField)
-from mclf.fields.standard_function_fields import StandardFunctionField
+from mclf.fields.standard_function_fields import (
+    StandardFunctionField, StandardRationalFunctionField,
+    StandardNonrationalFunctionField)
 from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from sage.all import lcm
 
@@ -439,12 +441,15 @@ def _new_model_of_finite_field_extension(phi, M, s, t):
     s = s.sage_morphism().post_compose(M.to_relative_model())
     t = M.from_relative_model().post_compose(t.sage_morphism())
 
-    if K.is_finite():
+    if L.is_finite():
         return FiniteExtensionOfFiniteFields(phi, M_rel, s, t)
-    elif K.is_number_field():
+    elif L.is_number_field():
         return FiniteExtensionOfNumberFields(phi, M_rel, s, t)
-    elif K.is_function_field():
-        return FiniteExtensionOfFunctionFields(phi, M_rel, s, t)
+    elif L.is_function_field():
+        if L.is_rational_function_field():
+            return FiniteExtensionOfFunctionFieldsRational(phi, M_rel, s, t)
+        else:
+            return FiniteExtensionOfFunctionFieldsNonrational(phi, M_rel, s, t)
     else:
         raise NotImplementedError()
 
@@ -631,7 +636,12 @@ def finite_field_extension_from_polynomial(K, f, gen_name=None):
     elif K.is_number_field():
         return FiniteExtensionOfNumberFields(phi, M, L_to_M, M_to_L)
     elif K.is_function_field():
-        return FiniteExtensionOfFunctionFields(phi, M, L_to_M, M_to_L)
+        if L.is_rational_function_field():
+            return FiniteExtensionOfFunctionFieldsRational(
+                phi, M, L_to_M, M_to_L)
+        else:
+            return FiniteExtensionOfFunctionFieldsNonrational(
+                phi, M, L_to_M, M_to_L)
     else:
         raise NotImplementedError()
 
@@ -726,12 +736,15 @@ class FiniteExtensionOfStandardFields(StandardField):
         self._from_relative_model = t
 
         # we initialize this extension as a standard field
-        if K.is_finite():
+        if L.is_finite():
             StandardFiniteField.__init__(self, L)
-        elif K.is_number_field():
+        elif L.is_number_field():
             StandardNumberField.__init__(self, L)
-        elif K.is_function_field():
-            StandardFunctionField.__init__(self, L)
+        elif L.is_function_field():
+            if L.is_rational_function_field():
+                StandardRationalFunctionField.__init__(self, L)
+            else:
+                StandardNonrationalFunctionField.__init__(self, L)
 
     def __repr__(self):
         return "{}, as finite extension of {}".format(self.codomain(),
@@ -1255,6 +1268,62 @@ class FiniteExtensionOfFunctionFields(FiniteExtensionOfStandardFields,
         StandardFunctionField>`.
 
     """
+
+
+class FiniteExtensionOfFunctionFieldsRational(FiniteExtensionOfStandardFields,
+                                              StandardRationalFunctionField):
+    r""" An object representing a finite extension of a function field,
+    which is itself a rational funciton field.
+
+    INPUT:
+
+    - ``phi`` -- an embedding of standard fields `\phi:K\to L`,
+                 such that `L` is a rational function field and `L/K` is finite
+    - ``M`` -- a simple extension of `K`
+    - ``s`` -- a `K`-linear isomorphism `s:L\to M`
+    - ``t`` -- the inverse of `s`, `t:M\to L`
+
+    OUTPUT:
+
+    The finite simple extension `L/K`, with relative model `M`.
+
+    .. NOTE::
+
+        This class is only defined so that its instances inherit methods from
+        both its two parent classes, :class:`FiniteExtensionOfStandardFields`
+        and :class:`StandardRationalFunctionField <mclf.fields.\
+        standard_function_fields.StandardRationalFunctionField>`.
+
+    """
+
+
+class FiniteExtensionOfFunctionFieldsNonrational(
+        FiniteExtensionOfStandardFields, StandardNonrationalFunctionField):
+    r""" An object representing a finite extension of a function field,
+    which is itself a nonrational function field.
+
+    INPUT:
+
+    - ``phi`` -- an embedding of standard fields `\phi:K\to L`,
+                 such that `L` is a nonrational function field
+                 and `L/K` is finite
+    - ``M`` -- a simple extension of `K`
+    - ``s`` -- a `K`-linear isomorphism `s:L\to M`
+    - ``t`` -- the inverse of `s`, `t:M\to L`
+
+    OUTPUT:
+
+    The finite simple extension `L/K`, with relative model `M`.
+
+    .. NOTE::
+
+        This class is only defined so that its instances inherit methods from
+        both its two parent classes, :class:`FiniteExtensionOfStandardFields`
+        and :class:`StandardNonrationalFunctionField <mclf.fields.\
+        standard_function_fields.StandardNonrationalFunctionField>`.
+
+    """
+
 
 # ----------------------------------------------------------------------------
 

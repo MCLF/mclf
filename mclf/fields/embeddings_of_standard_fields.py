@@ -1263,7 +1263,7 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
             # test:
             f = phi0.change_coefficients(K.polynomial(), L)
             assert f(alpha).is_zero(), "the embedding does not exist"
-            f = phi0.change_coefficients(K.polynomial(bivariate=True), L)
+            f = phi0.change_coefficients(K.bivariate_polynomial(), L)
             assert f(self.image_of_generators()).is_zero()
 
         elif len(image_of_gens) == 2:

@@ -46,14 +46,16 @@ def standard_function_field(K):
         sage: F.<y> = F0.extension(y^2+y+1); F
         Function field in y defined by y^2 + y + 1
         sage: standard_function_field(F)
-        Function field in y defined by y^2 + y + 1 as standard function field
+        standard function field in [x, y] over Finite Field of size 2,
+        with equation y^2 + y + 1
 
     We can also define a standard function field by an equation:
     ::
 
         sage: A.<x,y> = k[]
         sage: standard_function_field(y^2+x^3+1)
-        Function field in y defined by y^2 + x^3 + 1 as standard function field
+        standard function field in [x, y] over Finite Field of size 2,
+        with equation x^3 + y^2 + 1
 
     """
 
@@ -68,7 +70,12 @@ def standard_function_field(K):
         assert G.degree() > 0, "the polynomial f must have positive degree in y"
         assert G.is_irreducible(), "the polynomial F must be irreducible"
         K = K0.extension(G.monic(), A.variable_names()[1])
-    return StandardFunctionField(K)
+    # now K should be a function field
+    F, K_to_F, F_to_K = standard_model_of_function_field(K)
+    if F.base_field() is F:
+        return StandardRationalFunctionField(K_to_F, F_to_K)
+    else:
+        return StandardNonrationalFunctionField(K_to_F, F_to_K)
 
 
 def standard_rational_function_field(k, var_name="xx"):
@@ -89,8 +96,8 @@ def standard_rational_function_field(k, var_name="xx"):
 
         sage: from mclf import *
         sage: standard_rational_function_field(QQ)
-        Rational function field in xx over Rational Field
-        as standard rational function field
+        standard rational function field in xx over Rational Field
+
 
     Note that the constant base field of the output is the standard model
     of `k`:
@@ -102,8 +109,8 @@ def standard_rational_function_field(k, var_name="xx"):
         Univariate Quotient Polynomial Ring in b over Finite Field in a
         of size 2^2 with modulus b^2 + b + a
         sage: F = standard_rational_function_field(k, "x"); F
-        Rational function field in x over Finite Field in z4 of size 2^4
-        as standard rational function field
+        standard rational function field in x over Finite Field in z4
+        of size 2^4
 
     """
     if isinstance(k, StandardField):
@@ -115,8 +122,9 @@ def standard_rational_function_field(k, var_name="xx"):
             or a number field."
         from mclf.fields.standard_fields import standard_field
         k = standard_field(k).standard_model()
+    from sage.all import FunctionField
     F = FunctionField(k, var_name)
-    return StandardFunctionField(F)
+    return StandardRationalFunctionField(F)
 
 
 class StandardFunctionField(StandardField):
@@ -124,7 +132,7 @@ class StandardFunctionField(StandardField):
 
     INPUT:
 
-    - ``K`` -- a function field `k` whose constant base field is finite
+    - ``K`` -- a function field `K` whose constant base field is finite
                or a number field
 
     OUTPUT:
@@ -152,47 +160,6 @@ class StandardFunctionField(StandardField):
 
     """
 
-    def __init__(self, K):
-
-        from mclf.fields.standard_fields import (is_in_standard_form,
-                                                 identity_map)
-        # if K is already an instance of StandardField, we simply
-        # make a copy
-        if isinstance(K, StandardFunctionField):
-            self._original_model = K._original_model
-            self._standard_model = K._standard_model
-            self._from_original_model = K._from_original_model
-            self._to_original_model = K._to_original_model
-            self._is_rational_function_field = K._is_rational_function_field
-            self._generator = K._generator
-            self._polynomial = K._polynomial
-            self._bivariate_polynomial = K._bivariate_polynomial
-        else:
-            if is_in_standard_form(K):
-                # take K as the standard model
-                F = K
-                F_to_K = identity_map(K)
-                K_to_F = identity_map(K)
-            else:
-                F, K_to_F, F_to_K = standard_model_of_function_field(K)
-
-            self._original_model = K
-            self._standard_model = F
-            self._from_original_model = K_to_F
-            self._to_original_model = F_to_K
-            if F.base_field() is F:
-                self._is_rational_function_field = True
-                self._generator = F.gen()
-                self._polynomial = None
-                self._bivariate_polynomial = None
-            else:
-                self._is_rational_function_field = False
-                x = F.base_field().gen()
-                y = F.gen()
-                self._polynomial = F.polynomial()
-                self._bivariate_polynomial = make_bivariate(self._polynomial)
-                self._generator = y
-
     def __repr__(self):
         if self.is_rational_function_field():
             return "{} as standard rational function field".format(
@@ -218,15 +185,6 @@ class StandardFunctionField(StandardField):
 
         """
         return True
-
-    def is_rational_function_field(self):
-        r""" Return whether this field is a rational function field.
-
-        This means that the standard model of this field is of the form
-        `k(x)`, where `k` is the constant base field.
-
-        """
-        return self._is_rational_function_field
 
     def embedding_of_constant_base_field(self):
         r""" Return the embedding of the constant base field into this
@@ -265,195 +223,6 @@ class StandardFunctionField(StandardField):
             k = standard_subfield(self.embedding_of_constant_base_field())
             self._constant_base_field = k
         return self._constant_base_field
-
-    def embedding_of_rational_base_field(self):
-        r""" Return the embedding of the rational base field into this
-        function field.
-
-        """
-        if not hasattr(self, "_embedding_of_rational_base_field"):
-            if self.is_rational_function_field():
-                from mclf.fields.embeddings_of_standard_fields import(
-                    IdentityEmbedding)
-                iota = IdentityEmbedding(self)
-            else:
-                from mclf.fields.embeddings_of_standard_fields import (
-                    EmbeddingOfRationalBaseField)
-                iota = EmbeddingOfRationalBaseField(self)
-            self._embedding_of_rational_base_field = iota
-        return self._embedding_of_rational_base_field
-
-    def rational_base_field(self):
-        r""" Return the rational base field of this  function field.
-
-        EXAMPLES:
-
-            sage: from mclf import *
-            sage: k = standard_finite_field(2)
-            sage: F0 = standard_rational_function_field(k, "x")
-            sage: F0.rational_base_field()
-            Rational function field in x over Finite Field of size 2,
-            as a subfield of Rational function field in x over Finite Field
-            of size 2
-
-            sage: x = F0.generator()
-            sage: y = F0.polynomial_generator("y")
-            sage: F = F0.extension(y^2 + x^3 + 1, "y")
-            sage: F.rational_base_field()
-            Rational function field in x over Finite Field of size 2,
-            as a subfield of Function field in y defined by y^2 + x^3 + 1
-
-        """
-        from mclf.fields.standard_subfields import standard_subfield
-        if not hasattr(self, "_rational_base_field"):
-            if self.is_rational_function_field():
-                self._rational_base_field = self.as_subfield_of_itself()
-            else:
-                F0 = standard_subfield(
-                    self.embedding_of_rational_base_field())
-                self._rational_base_field = F0
-        return self._rational_base_field
-
-    def variable_names(self):
-        r""" Return the name of the standard generators.
-
-        """
-        if self.is_rational_function_field():
-            return [self.rational_base_field().variable_name()]
-        else:
-            return list(
-                self.polynomial(bivariate=True).parent().variable_names())
-
-    def variable_name(self):
-        r""" Return the name of the standard generator of this function field.
-
-        OUTPUT:
-
-        If this function field `K=k(x)` is rational, we return the name of `x`.
-        Otherwise, the standard form is `K=k(x)[y \mid f(y)=0]`, and then we
-        return the name of `y`.
-
-        """
-        if self.is_rational_function_field():
-            return self.variable_names()[0]
-        else:
-            return self.variable_names()[1]
-
-    def polynomial(self, bivariate=False):
-        r""" Return the minimal polynomial of the standard generator over the
-        rational base field.
-
-        This is the irreducible, monic and univariate polynomial `f` over the
-        rational function field `k(x)` such that the standard form of this
-        function field is `F = k(x)[y\mid f(y)=0]`.
-
-        If `K` is a rational function field, then an error is raised.
-
-        If ``bivariate`` is ``True`` an irreducible bivariate polynomial
-        `g` is returned such that `g(x,y)=0`.
-
-        """
-        if self.is_rational_function_field():
-            raise AssertionError("K is a rational function field")
-        if bivariate:
-            return self._bivariate_polynomial
-        else:
-            return self._polynomial
-
-    def as_polynomial(self, f, bivariate=False):
-        r""" Return the polynomial representing the field element `f`.
-
-        INPUT:
-
-        - ``f`` -- an element of this function field `K`
-        - ``bivariate`` -- a boolean (default: ``False``)
-
-        OUTPUT:
-
-        a polynomial `\tilde{f}` over the rational base field `k(x)` of `K`
-        such that `f=\tilde{f}(y)`, where `y` is the standard generator of `K`
-        over `k(x)`.
-
-        If `K=k(x)` is a rational function field then we simply return `f`,
-        which we may consider as a constant polynomial.
-
-        """
-        if self.is_rational_function_field():
-            # we consider f as a constant polynomial
-            return self(f)
-        else:
-            R = self.polynomial().parent()
-            ft = R(self.from_original_model()(f).list())
-            if bivariate:
-                ft = make_bivariate(ft)
-            return ft
-
-    def as_rational_function(self, f):
-        r""" Return the representation of `f` as a bivariate rational function.
-
-        INPUT:
-
-        - ``f`` -- an element of this function field `K`
-
-        OUTPUT:
-
-        a pair `(g, h)` of bivariate polynomials over the constant base field
-        `k` of `K` such that `f=g(x,y)/h(x,y)`, where `x, y` are the standard
-        generators of `K` over `k`.
-
-        If `K=k(x)` is a rational function field then `g,h` are univariate
-        polynomials such that `f=g(x)/h(x)`, where `x` is the standard
-        generator of `K/k`.
-
-        EXAMPLES::
-
-            sage: from mclf import *
-            sage: K0.<x> = FunctionField(QQ)
-            sage: R.<y> = K0[]
-            sage: K.<y> = K0.extension(y^2-x^3-1)
-            sage: K = standard_field(K)
-            sage: K.as_rational_function(x+y/x)
-            (x^2 + y, x)
-
-        """
-        from sage.all import PolynomialRing, lcm
-        if self.is_rational_function_field():
-            f = self(f)
-            return (f.numerator(), f.denominator())
-        else:
-            f = self.as_polynomial(f)
-            # now f is a polynomial over the rational function field k(x)
-            R = f.parent()
-            K0 = R.base_ring()
-            k = K0.constant_base_field()
-            A = PolynomialRing(k, [K0.variable_name(), R.variable_name()])
-            if f.is_zero():
-                return (A.zero(), A.one())
-            x, y = A.gens()
-            h = lcm([f[i].denominator() for i in range(f.degree() + 1)])
-            f = h*f
-            g = sum(f[i].numerator()(x)*y**i for i in range(f.degree() + 1))
-            return (g, h(x))
-
-    def is_constant(self, a):
-        r""" Return whether the element `a` is a constant element
-        of this function field.
-
-        By definition, `a` is a constant element of the function field `F/k`
-        if `a` is algebraic over the constant base field `k`.
-
-        """
-        # the element is constant if and only if the minimal polynomial of a
-        # over the rational base field k(x) is constant, i.e has coefficients
-        # in k
-        f = self.minimal_polynomial(a)
-
-        def rational_function_is_constant(g):
-            return (g.numerator().degree() == 1
-                    and g.denominator().degree() == 1)
-
-        return all(rational_function_is_constant(f[i])
-                   for i in range(f.degree()+1))
 
     def is_transcendential(self, t):
         r""" Return whether this element is transcendental over the constant
@@ -561,7 +330,6 @@ class StandardFunctionField(StandardField):
 
         """
         K = self
-        K0 = K.rational_base_field()
         k = K.constant_base_field()
         f = K.minimal_polynomial(x)
         g = K.minimal_polynomial(y)
@@ -679,8 +447,8 @@ class StandardFunctionField(StandardField):
             raise TypeError("wrong number of arguments")
 
         if not type(image_gens) is list:
-            assert L.is_element(image_gens), "image_gens must be an element \
-                of L or a list of elements"
+            assert L.is_element(image_gens), "image_gens={} must be an element \
+            of L = {} or a list of elements".format(image_gens, L)
             image_gens = [L(image_gens)]
         else:
             image_gens = [L(a) for a in image_gens]
@@ -736,7 +504,8 @@ class StandardFunctionField(StandardField):
             sage: k = standard_number_field(t^2+1, "i")
             sage: x, y = k0.polynomial_generators(["x", "y"])
             sage: F = standard_function_field(x^2+y^2); F
-            Function field in y defined by y^2 + x^2 as standard function field
+            standard function field in [x, y] over Rational Field,
+            with equation x^2 + y^2
 
             sage: i = k.generator()
             sage: x, y = F.generators()
@@ -750,8 +519,8 @@ class StandardFunctionField(StandardField):
         field with this extra information as follows::
 
             sage: F1.extension_field()
-            Rational function field in x0 over Number Field in i with defining
-            polynomial t^2 + 1 as standard rational function field
+            standard rational function field in x0 over Number Field in i
+            with defining polynomial t^2 + 1
 
             sage: k0 = standard_finite_field(4)
             sage: a = k0.generator()
@@ -762,9 +531,10 @@ class StandardFunctionField(StandardField):
             sage: y = F0.polynomial_generator("y")
             sage: F = F0.extension(y^2+x^3+a)
             sage: F_k0, _, _ = F.with_new_constant_base_field(k0); F_k0
-            Function field in y_ defined by y_^9 + (x0_^2 + z2 + 1)*y_^6
-              + (x0_^4 + z2)*y_^3 + x0_^6 + (z2 + 1)*x0_^4 + z2*x0_^2 + z2 + 1
-            as standard function field
+            standard function field in [x0_, y_] over Finite Field in z2 of
+            size 2^2, with equation y_^9 + x0_^2*y_^6 + x0_^4*y_^3 + x0_^6
+             + (z2 + 1)*y_^6 + (z2 + 1)*x0_^4 + (z2)*y_^3 + (z2)*x0_^2
+             + (z2 + 1)
 
         """
         from mclf.fields.standard_fields import (is_standard_field,
@@ -931,6 +701,432 @@ class StandardFunctionField(StandardField):
                 raise AssertionError("couldn't find the right factor")
 
 
+class StandardRationalFunctionField(StandardFunctionField):
+    r""" Return a rational function field.
+
+    INPUT:
+
+    either
+
+    - ``K`` -- a rational function field,
+
+    or
+
+    - ``s`` -- an isomorphism of Sage function field `s:K\to F`,
+      where `F` is a rational function field in standard form
+    - ``t`` -- the inverse of `s`
+
+    OUTPUT:
+
+    the standard rational function field corresponding to the input.
+
+    If a `K` is given as an instance of :class:`StandardRationalFunctionField`,
+    we simply make a copy of all the data defining `K`.
+
+    If the mutually inverse isomorphisms `s` and `t` are given, we take the
+    domain of `s` as the original model, and the codoamin as the standard model.
+
+    """
+
+    def __init__(self, *args):
+        if len(args) == 1 and isinstance(args[0],
+                                         StandardRationalFunctionField):
+            K = args[0].original_model()
+            F = args[0].standard_model()
+            K_to_F = args[0].from_original_model()
+            F_to_K = args[0].to_original_model()
+        elif len(args) == 1:
+            K = args[0]
+            # test input:
+            assert is_standard_rational_function_field(K), "K is not \
+                a rational function field in standard form"
+            F = K
+            from mclf.fields.standard_fields import identity_map
+            F_to_K = identity_map(K)
+            K_to_F = F_to_K
+        elif len(args) == 2:
+            K_to_F = args[0]
+            F_to_K = args[1]
+            K = K_to_F.domain()
+            F = K_to_F.codomain()
+        else:
+            raise TypeError("wrong number of parameters")
+
+        self._original_model = K
+        self._standard_model = F
+        self._from_original_model = K_to_F
+        self._to_original_model = F_to_K
+
+    def __repr__(self):
+        return "standard rational function field in {} over {}".format(
+            self.variable_name(), self.constant_base_field().subfield())
+
+    def is_rational_function_field(self):
+        r""" Return whether this field is a rational function field.
+
+        This means that the standard model of this field is of the form
+        `k(x)`, where `k` is the constant base field.
+
+        """
+        return True
+
+    def embedding_of_rational_base_field(self):
+        r""" Return the embedding of the rational base field into this
+        function field.
+
+        For a rational function field, this embedding is the identity.
+
+        """
+        if not hasattr(self, "_embedding_of_rational_base_field"):
+            from mclf.fields.embeddings_of_standard_fields import(
+                IdentityEmbedding)
+            self._embedding_of_rational_base_field = IdentityEmbedding(self)
+        return self._embedding_of_rational_base_field
+
+    def rational_base_field(self):
+        r""" Return the rational base field of this  function field.
+
+        EXAMPLES:
+
+            sage: from mclf import *
+            sage: k = standard_finite_field(2)
+            sage: F0 = standard_rational_function_field(k, "x")
+            sage: F0.rational_base_field()
+            Rational function field in x over Finite Field of size 2,
+            as a subfield of Rational function field in x over Finite Field
+            of size 2
+
+        """
+        if not hasattr(self, "_rational_base_field"):
+            self._rational_base_field = self.as_subfield_of_itself()
+        return self._rational_base_field
+
+    def generator(self):
+        r""" Return the standard generator of this rational base field.
+
+        """
+        return self.standard_model().gen()
+
+    def generators(self):
+        r""" Return the standard generators of this function field.
+
+        Since this is a rational function field, we return a list with one
+        element, the stnadard generator.
+
+        """
+        return [self.generator()]
+
+    def variable_name(self):
+        r""" Return the name of the standard generator of this rational
+        function field.
+
+        """
+        return self.standard_model().variable_name()
+
+    def variable_names(self):
+        r""" Return the list of names of the standard generators of this
+        function field.
+
+        Since this is a rational function field, we return a list with one
+        element, the name of the standard generator.
+
+        """
+        return [self.variable_name()]
+
+    def is_constant(self, a):
+        r""" Return whether the element `a` is a constant element
+        of this rational function field.
+
+        """
+        return (a.numerator().degree() == 0
+                and a.denominator().degree() == 0)
+
+
+class StandardNonrationalFunctionField(StandardFunctionField):
+    r""" Return a nonrational function field.
+
+    A function field `K` is called *nonrational* if its standard model is a
+    finite extension of its rational base field of degree `>1`.
+
+    INPUT:
+
+    either
+
+    - ``K`` -- a nonrational function field,
+
+    or
+
+    - ``s`` -- an isomorphism of Sage function field `s:K\to F`,
+      where `F` is a nonrational function field in standard form
+    - ``t`` -- the inverse of `s`
+
+    OUTPUT:
+
+    the standard nonrational function field corresponding to the input.
+
+    If a `K` is given as an instance of
+    :class:`StandardNonrationalFunctionField`,
+    we simply make a copy of all the data defining `K`.
+
+    If the mutually inverse isomorphisms `s` and `t` are given, we take the
+    domain of `s` as the original model, and the codoamin as the standard model.
+
+    """
+
+    def __init__(self, *args):
+        if len(args) == 1 and isinstance(args[0],
+                                         StandardNonrationalFunctionField):
+            K = args[0].original_model()
+            F = args[0].standard_model()
+            K_to_F = args[0].from_original_model()
+            F_to_K = args[0].to_original_model()
+        elif len(args) == 1:
+            K = args[0]
+            # test input:
+            assert is_rational_function_field(K), "K is not \
+                a function field in standard form"
+            F = K
+            from mclf.fields.standard_fields import identity_map
+            F_to_K = identity_map(K)
+            K_to_F = F_to_K
+        elif len(args) == 2:
+            K_to_F = args[0]
+            F_to_K = args[1]
+            K = K_to_F.domain()
+            F = K_to_F.codomain()
+        else:
+            raise TypeError("wrong number of parameters")
+
+        self._original_model = K
+        self._standard_model = F
+        self._from_original_model = K_to_F
+        self._to_original_model = F_to_K
+
+    def __repr__(self):
+        return "standard function field in {} over {}, with equation {}".format(
+            self.generators(), self.constant_base_field().subfield(),
+            self.bivariate_polynomial())
+
+    def is_rational_function_field(self):
+        r""" Return whether this field is a rational function field.
+
+        This means that the standard model of this field is of the form
+        `k(x)`, where `k` is the constant base field.
+
+        """
+        return False
+
+    def embedding_of_rational_base_field(self):
+        r""" Return the embedding of the rational base field into this
+        function field.
+
+        """
+        if not hasattr(self, "_embedding_of_rational_base_field"):
+            from mclf.fields.embeddings_of_standard_fields import (
+                EmbeddingOfRationalBaseField)
+            iota = EmbeddingOfRationalBaseField(self)
+            self._embedding_of_rational_base_field = iota
+        return self._embedding_of_rational_base_field
+
+    def rational_base_field(self):
+        r""" Return the rational base field of this  function field.
+
+        EXAMPLES:
+
+            sage: from mclf import *
+            sage: k = standard_finite_field(2)
+            sage: F0 = standard_rational_function_field(k, "x")
+            sage: x = F0.generator()
+            sage: y = F0.polynomial_generator("y")
+            sage: F = F0.extension(y^2 + x^3 + 1, "y")
+            sage: F.rational_base_field()
+            Rational function field in x over Finite Field of size 2,
+            as a subfield of Function field in y defined by y^2 + x^3 + 1
+
+        """
+        from mclf.fields.standard_subfields import standard_subfield
+        if not hasattr(self, "_rational_base_field"):
+            F0 = standard_subfield(self.embedding_of_rational_base_field())
+            self._rational_base_field = F0
+        return self._rational_base_field
+
+    def generator(self):
+        r""" Return the standard generator of this nonrational function field.
+
+        The standard model of this function field is of the form
+
+        .. MATH::
+
+            F = k(x)[y | f(x,y)=0].
+
+        We return the element `y` of `F`.
+
+        """
+        return self.standard_model().gen()
+
+    def generators(self):
+        r""" Return the standard generators of this nonrational function field.
+
+        The standard model of this function field is of the form
+
+        .. MATH::
+
+            F = k(x)[y | f(x,y)=0].
+
+        We return the list of elements [`x`, `y`] of `F`.
+
+        """
+        return [self.rational_base_field().generator(), self.generator()]
+
+    def variable_names(self):
+        r""" Return the name of the standard generators.
+
+        The standard model of this function field is of the form
+
+        .. MATH::
+
+            F = k(x)[y | f(x,y)=0].
+
+        We return the list of names of the elements `x, y` of `F`.
+
+        """
+        return [self.rational_base_field().variable_name(),
+                self.variable_name()]
+
+    def variable_name(self):
+        r""" Return the name of the standard generator of this function field.
+
+        OUTPUT:
+
+        The vraible name for the standard generator of this function field over
+        its rational base field.
+
+        """
+        return self.standard_model().variable_name()
+
+    def polynomial(self):
+        r""" Return the minimal polynomial of the standard generator over the
+        rational base field.
+
+        This is the irreducible, monic and univariate polynomial `f` over the
+        rational base field `k(x)` such that the standard form of this
+        function field is `F = k(x)[y\mid f(y)=0]`.
+
+        """
+        return self.standard_model().polynomial()
+
+    def bivariate_polynomial(self):
+        r""" Return the equation between the two standard generators of this
+        function field.
+
+        OUTPUT:
+
+        the irreducible bivariate polynomial `f` defining the standard model,
+
+        .. MATH::
+
+            F = k(x)[ y | f(x,y)=0].
+
+        """
+        if not hasattr(self, "_bivariate_polynomial"):
+            self._bivariate_polynomial = make_bivariate(self.polynomial())
+        return self._bivariate_polynomial
+
+    def as_polynomial(self, f, bivariate=False):
+        r""" Return the polynomial representing the field element `f`.
+
+        INPUT:
+
+        - ``f`` -- an element of this function field `K`
+        - ``bivariate`` -- a boolean (default: ``False``)
+
+        OUTPUT:
+
+        a polynomial `\tilde{f}` over the rational base field `k(x)` of `K`
+        such that `f=\tilde{f}(y)`, where `y` is the standard generator of `K`
+        over `k(x)`.
+
+        """
+        R = self.polynomial().parent()
+        ft = R(self.from_original_model()(f).list())
+        if bivariate:
+            ft = make_bivariate(ft)
+        return ft
+
+    def as_rational_function(self, f):
+        r""" Return the representation of `f` as a bivariate rational function.
+
+        INPUT:
+
+        - ``f`` -- an element of this function field `K`
+
+        OUTPUT:
+
+        a pair `(g, h)` of bivariate polynomials over the constant base field
+        `k` of `K` such that `f=g(x,y)/h(x,y)`, where `x, y` are the standard
+        generators of `K` over `k`.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: K0.<x> = FunctionField(QQ)
+            sage: R.<y> = K0[]
+            sage: K.<y> = K0.extension(y^2-x^3-1)
+            sage: K = standard_field(K)
+            sage: K.as_rational_function(x+y/x)
+            (x^2 + y, x)
+
+        """
+        from sage.all import PolynomialRing, lcm
+        f = self.as_polynomial(f)
+        # now f is a polynomial over the rational function field k(x)
+        R = f.parent()
+        K0 = R.base_ring()
+        k = K0.constant_base_field()
+        A = PolynomialRing(k, [K0.variable_name(), R.variable_name()])
+        if f.is_zero():
+            return (A.zero(), A.one())
+        x, y = A.gens()
+        h = lcm([f[i].denominator() for i in range(f.degree() + 1)])
+        f = h*f
+        g = sum(f[i].numerator()(x)*y**i for i in range(f.degree() + 1))
+        return (g, h(x))
+
+    def is_constant(self, a):
+        r""" Return whether the element `a` is a constant element
+        of this function field.
+
+        By definition, `a` is a constant element of the function field `F/k`
+        if `a` is algebraic over the constant base field `k`.
+
+        To check this, we compute the mnimal polynomial of `a` over the
+        rational base field and check whether all of its coefficients are
+        constant.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: k = standard_finite_field(2)
+            sage: x, y = k.polynomial_generators(["x", "y"])
+            sage: K = standard_function_field(x^2 + y^3)
+            sage: x, y = K.generators()
+            sage: K.is_constant(x^2 + y^3 + 1)
+            True
+            sage: K.is_constant(y + x)
+            False
+            sage: K.is_constant(1/x)
+            False
+
+        """
+        K0 = self.rational_base_field()
+        f = self.minimal_polynomial(a)
+        return all(K0.is_constant(f[i]) for i in range(f.degree()+1))
+
+
+# ---------------------------------------------------------------------------
+
+#                        helper functions
+
 def standard_model_of_function_field(K):
     r""" Return a standard model of a function field.
 
@@ -966,7 +1162,8 @@ def standard_model_of_function_field(K):
         z_
 
     """
-    from mclf.fields.standard_fields import standard_field, is_in_standard_form
+    from mclf.fields.standard_fields import (standard_field,
+                                             is_in_standard_form, identity_map)
     if is_in_standard_form(K):
         return K, identity_map(K), identity_map(K)
     if K.rational_function_field() is K:
@@ -1009,6 +1206,16 @@ def standard_model_of_function_field(K):
         K_to_F3 = K_to_F2.post_compose(F2_to_F3)
         F3_to_K = F3_to_F2.post_compose(F2_to_K)
         return F3, K_to_F3, F3_to_K
+
+
+def is_standard_rational_function_field(K):
+    r""" Return whether `K` is a rational function field in standard form.
+
+    """
+    from sage.categories.function_fields import FunctionFields
+    from mclf.fields.standard_fields import is_in_standard_form
+    return (K in FunctionFields() and K.base_field() is K
+            and is_in_standard_form(K))
 
 
 def make_bivariate(f):
