@@ -869,7 +869,7 @@ class StandardNonrationalFunctionField(StandardFunctionField):
     we simply make a copy of all the data defining `K`.
 
     If the mutually inverse isomorphisms `s` and `t` are given, we take the
-    domain of `s` as the original model, and the codoamin as the standard model.
+    domain of `s` as the original model, and the codomain as the standard model.
 
     """
 
@@ -901,6 +901,14 @@ class StandardNonrationalFunctionField(StandardFunctionField):
         self._standard_model = F
         self._from_original_model = K_to_F
         self._to_original_model = F_to_K
+
+        # as factoring of polynomials over nonrational function fields
+        # is not implemented in Sage, we add our own implementation
+        # to the standard model of our function field:
+        from mclf.fields.factor_polynomial_over_function_field import (
+            factor_polynomial_over_function_field)
+        F._factor_univariate_polynomial = (
+            lambda f: factor_polynomial_over_function_field(f.base_ring(), f))
 
     def __repr__(self):
         return "standard function field in {} over {}, with equation {}".format(

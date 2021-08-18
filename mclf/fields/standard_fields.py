@@ -1225,15 +1225,21 @@ class StandardField(SageObject):
         The list of monic irreducible factors of the base change of `f`
         to this standard field.
 
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: k = standard_finite_field(4)
+            sage: a = k.generator()
+            sage: x, y = k.polynomial_generators(["x", "y"])
+            sage: F = standard_function_field(y^2 + x^3 + 1)
+            sage: T = F.polynomial_generator("T")
+            sage: f = (T - a + x)*(T + y + 1)
+            sage: F.prime_factors(f)
+            [T + x + z2, T + y + 1]
+
         """
         f = self.change_coefficients(f)
-        if self.is_function_field() and not self.is_rational_function_field():
-            from mclf.fields.factor_polynomial_over_function_field \
-                import factor_polynomial_over_function_field
-            factors_of_f = factor_polynomial_over_function_field(
-                self.standard_model(), f)
-        else:
-            factors_of_f = f.factor()
+        factors_of_f = f.factor()
         return [g for g, _ in factors_of_f]
 
     def extension(self, f, gen_name=None):
