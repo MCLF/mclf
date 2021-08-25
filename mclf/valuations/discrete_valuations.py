@@ -4,15 +4,28 @@ Discrete valuations on standard fields
 ======================================
 
 In this module we implement a class :class:`DiscreteValuationOnStandardField`.
-For an instance `v` of this class, its **domain** is a standard field (as an
-instance of :class:`StandardField <mclf.fields.standard_fields.StandardField>`).
+An instance `v` of this class can be treated more or less like a usual valuation
+in Sage. The main difference is that it build on top of our notion of
+:doc:`standard fields <standard_fields>`.
 
-Formally, `v` can be treated more or less like a usual valuation in Sage. The
-advantages of this new class of objects are:
+For instance, ::
 
-- give examples
-- ...
+    v.domain()
 
+return the domain of `v`, which is the standard model of an instance of
+:class:`StandardField <mclf.fields.standard_fields.StandardField>` and which can
+be obtain like so::
+
+    v.Domain()
+
+Similarly, the commands ::
+
+    v.residue_field()
+    v.Residue_field()
+
+return the residue field as a Sage field, and as an instance of
+:class:`StandardField <mclf.fields.standard_fields.StandardField>`,
+respectively.
 
 
 .. _normalization:
@@ -65,7 +78,7 @@ field are
     consequences for restrictions and extensions of valuations:
 
     - The property of being `p`-adically normalized is automatically preserved
-      restriction to a subfield and extension to an overfield. Thus, if we say that
+      by restriction to a subfield and extension to an overfield. Thus, if we say that
       `w` is an extension of `v` to a field extension `L/K` (or that `v` is the
       restricition of `w` to the subfield `K\subset L`) we mean that
       `v=w|_K`.
@@ -102,6 +115,48 @@ The base class and the corresponding subclasses are defined in the submodule
 :mod:`discrete_valuations_on_function_fields <mclf.valuations.\
 discrete_valuations_on_function_fields>`.
 
+EXAMPLES::
+
+    sage: from mclf import *
+    sage: v = discrete_valuation_on_standard_field(QQ.valuation(2)); v
+    2-adic valuation on Rational Field
+
+    sage: v.domain()
+    Rational Field
+
+    sage: v.Domain()
+    Rational Field as a standard field
+
+    sage: v.residue_field()
+    Finite Field of size 2
+
+    sage: v.Residue_field()
+    the standard field with 2 elements
+
+    sage: R.<x> = QQ[x]
+    sage: K = v.Domain().extension(x^4 + 1, "zeta8")
+    sage: w = v.extensions(K)[0]; w
+    2-adic valuation on Number Field in zeta8 with defining polynomial x^4 + 1
+
+    sage: zeta8 = K.generator()
+    sage: L = v.Domain().extension(x^2 + 1, "i")
+    sage: i = L.generator()
+    sage: phi = L.hom(K, zeta8^2)
+    sage: u = w.restriction(phi); u
+    2-adic valuation on Number Field in i with defining polynomial x^2 + 1
+
+    sage: u(i+1)
+    1/2
+
+    sage: u.uniformizer()
+    i + 1
+
+    sage: u.reduce(i)
+    1
+
+    sage: u.lift(u.residue_field().one())
+    1
+
 
 AUTHORS:
 
@@ -125,8 +180,31 @@ def discrete_valuation_on_standard_field(v):
     the object of :class:`DiscreteValuationOnStandardField`
     corresponding to `v`.
 
+    .. NOTE::
+
+        For the moment, we require that the domain of `v` is a standard field
+        *in standard form*. It may be useful to drop this assumption in the
+        future. But then we would have to reconstruct the valuation `v` on the
+        standard model of the domain.
+
     """
-    raise NotImplementedError()
+    from sage.rings.valuation.valuation import DiscreteValuation
+    from mclf.fields.standard_fields import standard_field, is_in_standard_form
+    from mclf.valuations.discrete_valuations_on_function_fields import (
+        discrete_valuation_on_function_field)
+    assert isinstance(v, DiscreteValuation), "v is not a discrete valuation"
+    K = v.domain()
+    assert is_in_standard_form(K), "the domain of v has to be in standard form"
+    K = standard_field(K)
+    # because of the assumption, K.standard_model() is now the domain of v
+    if v.is_trivial():
+        return TrivialDiscreteValuation(K)
+    elif K.is_number_field():
+        return pAdicValuationOnNumberField(K, v)
+    elif K.is_function_field():
+        return discrete_valuations_on_function_field(v)
+    else:
+        raise NotImplementedError()
 
 
 def trivial_valuation_on_standard_field(K):
@@ -151,7 +229,7 @@ class DiscreteValuationOnStandardField(SageObject):
     - :class:`TrivialDiscreteValuation`
     - :class:`pAdicValuationOnNumberField`
     - :class:`DiscreteValuationOnFunctionField <mclf.valuations.\
-      discrete_valuations_on_function_field.DiscreteValuationOnFunctionField>`
+      discrete_valuations_on_function_fields.DiscreteValuationOnFunctionField>`
 
     The first two are primitive classes, the latter has a rather complicated
     graph of subclasses.
@@ -160,9 +238,7 @@ class DiscreteValuationOnStandardField(SageObject):
     every instance of this base class:
 
     - :meth:`_domain`
-    - :meth:`_residue_field`
     - :meth:`_sage_valuation`
-    - :meth:`_uniformizer`
 
 
     """
@@ -180,10 +256,33 @@ class DiscreteValuationOnStandardField(SageObject):
         return self.Domain().standard_model()
 
     def Residue_field(self):
-        r""" Return the residue field of this discrete valuation, as a
-        standard field.
+        r""" Return the standard residue field of this discrete valuation.
+
+        The standard residue field of this valuation is constructed as follows:
+        let `v` be the underlying Sage valuation. Then its residue field
+        will be a standard field, which may not be in standard form.
+
+        The standard residue field is then constructed by applying the function
+        :func:`standard_field <mclf.fields.standard_fields.standard_field>`.
+        As a result, the residue field von `v` is the original model of the
+        standard residue field.
+
+        .. NOTE::
+
+            For discrete valuations on function fields this method has to be
+            overwritten. The reason is that we want the residue field of a
+            discrete valuation on a function field to be an extension of the
+            residue field of the constant base field.
+
+            **Question:** What if the domain is a subfield or a finite
+            extension? Then we probably want something similar.
 
         """
+        if not hasattr(self, "_residue_field"):
+            from mclf.fields.standard_fields import standard_field
+            v = self.sage_valuation()
+            k = standard_field(v.residue_field())
+            self._residue_field = k
         return self._residue_field
 
     def residue_field(self):
@@ -193,7 +292,7 @@ class DiscreteValuationOnStandardField(SageObject):
         """
         return self.Residue_field().standard_model()
 
-    def __call_(self, a):
+    def __call__(self, a):
         r""" Return the value of this valuation on a field element.
 
         INPUT:
@@ -208,11 +307,11 @@ class DiscreteValuationOnStandardField(SageObject):
         an element of the standard model of the domain.
 
         """
-        return self.sage_valuation()(self(a))
+        return self.sage_valuation()(self.Domain()(a))
 
     def reduce(self, a):
         r""" Return the reduction of an element of the domain to the
-        rasie field of this discrete valuation.
+        residue field of this discrete valuation.
 
         INPUT:
 
@@ -224,7 +323,9 @@ class DiscreteValuationOnStandardField(SageObject):
 
 
         """
-        raise NotImplementedError()
+        a = self.Domain()(a)
+        assert self(a) >= 0, "a is not integral"
+        return self.sage_valuation().reduce(a)
 
     def lift(self, a):
         r""" Return a lift of an element of the residue field.
@@ -236,10 +337,15 @@ class DiscreteValuationOnStandardField(SageObject):
         OUTPUT:
 
         a unit element in the domain of this valuation, whose image in the
-        resdue field is equal to `a`.
+        resdue field is equal to `a`
 
         """
-        raise NotImplementedError()
+        Kb = self.Residue_field()
+        # note that the residue field of the Sage valuation of v is the
+        # original model of the Residue field
+        if a not in Kb.original_model():
+            a = Kb.to_original_model()(a)
+        return self.sage_valuation().lift(a)
 
     def sage_valuation(self):
         r""" Return this discrete valuation, as a Sage valuation on the
@@ -248,11 +354,17 @@ class DiscreteValuationOnStandardField(SageObject):
         """
         return self._sage_valuation
 
+    def value_group(self):
+        r""" Return the value group of this discrete valuation.
+
+        """
+        return self.sage_valuation().value_group()
+
     def uniformizer(self):
-        return self._uniformizer
+        return self.sage_valuation().uniformizer()
 
     def min_value(self):
-        if not hasattr(self, "min_value"):
+        if not hasattr(self, "_min_value"):
             self._min_value = self(self.uniformizer())
         return self._min_value
 
@@ -287,7 +399,7 @@ class DiscreteValuationOnStandardField(SageObject):
             return False
 
     def is_equivalent_to(self, w):
-        r""" Return whether thsi valuation is equal to `w`.
+        r""" Return whether this valuation is equal to `w`.
 
         INPUT:
 
@@ -338,6 +450,8 @@ class DiscreteValuationOnStandardField(SageObject):
 
         the list of all extensions of `v` to `L`.
 
+        This method has to be implemented by an appropriate subclass.
+
         """
         raise NotImplementedError()
 
@@ -352,6 +466,8 @@ class DiscreteValuationOnStandardField(SageObject):
         OUTPUT:
 
         the discrete valuation `v|_K`.
+
+        This method has to be implemented by an appropriate subclass.
 
         """
         raise NotImplementedError()
@@ -453,12 +569,12 @@ class pAdicValuationOnNumberField(DiscreteValuationOnStandardField):
 
     either
 
-    - ``v`` -- a nontrivial Sage valuation on a number field `K`,
+    - ``K`` -- a standard number field
+    - ``v`` -- a nontrivial Sage valuation on the standard model of  `K`,
 
     or
 
-    - ``K`` -- a number field
-    - ``v_p`` -- a p-adic valuation on `\mathbb{Q}`
+    - ``K`` -- a standard number field
     - ``data`` -- a list of pairs `(a, t)`, with `a\in K` and `t\in\mathbb{Q}`
 
     OUTPUT:
@@ -468,27 +584,45 @@ class pAdicValuationOnNumberField(DiscreteValuationOnStandardField):
     If a Sage valuation `v` is given, we simply transform `v` into an instance
     of :class:`DiscreteValuationOnNumberField`.
 
-    If the input is of the form `(K, v_p, [(a_i,t_i)])`, then the unique
-    discrete valuation `v` is returned whose restriction to `\mathbb{Q}` is
-    equivalent to `v_p` (i.e.\ `v(p) > 0`) and such that
+    If a list `[(a_i,t_i)])` is given, then the unique
+    discrete valuation `v` is returned  such that
 
     .. MATH::
 
         v(a_i) = t_i, \quad i=1,..,n.
 
-    It is assumed that `v` with this properties exists and is unique. If this
-    is not the case, an error is raised.
+    It is assumed that `a_0=p` is a prime number and that `t_0>0`. As a
+    consequence, the valuation `v` will be `p`-adic for the given prime `p`.
+    It is furthermore assumed that `v` with this properties exists and is
+    unique. If this is not the case, an error is raised.
 
     """
 
-    def __int__(self, *args):
-        raise NotImplementedError()
+    def __init__(self, K, v):
+        from sage.rings.valuation.valuation import DiscreteValuation
+        from mclf.fields.standard_fields import StandardNumberField
+        assert isinstance(K, StandardNumberField)
+        if isinstance(v, DiscreteValuation):
+            assert v.domain() == K.standard_model()
+            assert not v.is_trivial(), "v must not be trivial"
+            self._domain = K
+            self._sage_valuation = v
+        elif type(v) is list:
+            V = valuations_on_number_field_with_given_values(K, v)
+            if len(V) == 0:
+                raise ValueError("there is no valuation with the given values")
+            elif len(V) > 1:
+                raise ValueError("the valuation is not uniquely determined \
+                    by the given values")
+            else:
+                self._domain = K
+                self._sage_valuation = V[0]
+        else:
+            raise TypeError("Input v = {} is of wrong type".format(v))
 
     def __repr__(self):
-        if self.is_trivial():
-            return "trivial valuation on {}".format(self.domain())
-        else:
-            return "discrete {}-adic valuation on {}".format(self.domain())
+        return "{}-adic valuation on {}".format(self.p(),
+                                                self.domain())
 
     def is_trivial(self):
         r""" Return whether this valuation is trivial.
@@ -503,7 +637,13 @@ class pAdicValuationOnNumberField(DiscreteValuationOnStandardField):
         r""" Return the residue characteristique of this discrete valuation.
 
         """
-        return self._p
+        return self.sage_valuation().p()
+
+    def p(self):
+        r""" Return the residue characteristique of this discrete valuation.
+
+        """
+        return self.residue_characteristic()
 
     def is_equivalent_to(self, w):
         r""" Return whether this valuation is equal to `w`.
@@ -523,33 +663,244 @@ class pAdicValuationOnNumberField(DiscreteValuationOnStandardField):
             Do not confuse this method with the method :meth:`is_equivalent`,
             which has a very different meaning and purpose.
 
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: R.<x> = QQ[]
+            sage: K = standard_number_field(x^4 - 6, "a")
+            sage: V = K.valuations(5)
+            sage: v = V[0]
+            sage: [v.is_equivalent_to(V[i]) for i in range(len(V))]
+            [True, False, False, False]
+
         """
         v = self
         if not isinstance(w, DiscreteValuationOnStandardField):
             w = discrete_valuation_on_standard_field(w)
         assert v.Domain().is_equal(w.Domain()), "v and w do not have the \
             same domain"
-        if v.is_trivial():
-            return w.is_trivial()
-        elif w.is_trivial():
+        if w.is_trivial():
             return False
+        return all(w(a) == t for a, t in v.test_values())
 
-        # now v and v are both nontrivial
-        # w is equivalent to v if
-        # 1. they restrict to a p-adic valuation with the same prime p
-        # 2. they agree up to the scaling factor on a list of test elements
-        p = v.residue_characteristic()
-        if not w.residue_characteristic() == p:
-            return False
-        # now v and w have the same residue characteristic p
-        s = v(p)/w(p)
-        return all(v(a) == s*w(a) for a in v.test_elements())
+    def test_values(self):
+        r""" Return a list of test values for this `p`-adic valuation.
 
-    def test_elements(self):
-        r""" Return a list of test elements for this discrete valuation.
+        OUTPUT:
+
+        a list of pairs `(a_i, t_i)`, where `a_i` is an element of the domain
+        `K` of this `p`-adic valuation `v` and `t_i` is a rational number, with
+        the following property:
+
+        for any normalized `p`-adic valuation `w` on `K` we have
+
+        .. MATH::
+
+            v = w \quad\Leftrightarrow\quad w(a_i)=t_i,\forall i.
+
+        as `v` is a normalized `p`-adic valuation, the first element of this
+        list is `(p, 1)`. If `K\neq \mathbb{Q}`, the list will contain exactly
+        one more pair `(a, t)`, which we compute using the internal
+        representation of `v` as an inductive or a limit valuation.
+
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: K0 = standard_field(QQ)
+            sage: v_2 = K0.valuations(2)[0]
+            sage: v_2.test_values()
+            [(2, 1)]
+
+            sage: x = K0.polynomial_generator("x")
+            sage: K = K0.extension(x^3 + x^2 + 2, "a")
+            sage: V = K.valuations(2)
+            sage: V[0].test_values()
+            [(2, 1), (a + 1, 1)]
+
+            sage: V[1].test_values()
+            [(2, 1), (a^2 + 2, 3/2)]
 
         """
-        raise NotImplementedError()
+        p = self.p()
+        ret = [(p, QQ(1))]
+        K = self.Domain()
+        if K.degree() > 1:
+            f, t = self.discoid_representation()
+            ret.append((f(K.generator()), t))
+        assert all(self(a) == t for a, t in ret)
+        return ret
+
+    def discoid_representation(self):
+        r""" Return a discoid representation of this `p`-adic valuation.
+
+        OUTPUT:
+
+        a par `(f, t)`, where `f` is a polynomial over `\mathbb{Q}` and `t`
+        is a rational number, or `\infty`, which determine this `p`-adic
+        valuation `v` on the number field `K` in the following way.
+
+        Let `\alpha\in K` be the standard absolute generator, and let `p` be
+        the residue characteristic of `v`. Then `v` is the unique `p`-adic
+        valuation on `K` with `v(p)=1` and
+
+        .. MATH::
+
+            v(f(\alpha)) \geq t.
+
+        Moreover, we also guarantee that `v(f(\alpha))=t`.
+
+        If `v` is the only `p`-adic valuation on `K` with `v(p)=1`, then
+        the algorithm will return `(f, \infty)`, where `f` is the absolute
+        minimal polynomial of `\alpha`.
+
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: R.<x> = QQ[]
+            sage: K = standard_number_field(x^4 + 2*x^2 + 4, "a")
+            sage: v = K.valuations(2)[0]
+            sage: v.discoid_representation()
+            (x^4 + 2*x^2 + 4, +Infinity)
+
+            sage: V = K.valuations(5)
+            sage: V[0].discoid_representation()
+            (x^2 + 2*x + 3, 1)
+
+            sage: V[1].discoid_representation()
+            (x^2 + 3*x + 3, 1)
+
+        """
+        if not hasattr(self, "_discoid_representation"):
+            K = self.Domain()
+            if K.degree() == 1:
+                # so K = QQ
+                from sage.all import Infinity
+                return (self.Domain().polynomial(), Infinity)
+            else:
+                v = self.sage_valuation()._base_valuation
+                if hasattr(v, "_approximation"):
+                    # v is a limit valuation
+                    va = v._approximation
+                    G = v._G
+                    if va.effective_degree(G) > 1:
+                        v._improve_approximation()
+                        va = v._approximation
+                    v = va
+                return (v.phi(), v(v.phi()))
+        return self._discoid_respresentation
+
+    def extensions(self, L):
+        r""" Return the list of extensions of this `p`-adic valuation to a
+        finite extension of the domain.
+
+        INPUT:
+
+        - ``L`` -- a finite field extension of the domain of this valuation.
+
+        OUTPUT:
+
+        the list of all extensions of `v` to `L`.
+
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: R.<x> = QQ[]
+            sage: K = standard_number_field(x^2 - 2, "a")
+            sage: a = K.generator()
+            sage: v = K.valuations(2)[0]
+            sage: L = K.extension(x^3 + a*x + 2)
+            sage: v.extensions(L)
+            [2-adic valuation on Number Field in x with defining polynomial
+             x^6 + 4*x^3 - 2*x^2 + 4,
+             2-adic valuation on Number Field in x with defining polynomial
+             x^6 + 4*x^3 - 2*x^2 + 4]
+
+        """
+        from mclf.fields.finite_field_extensions import (
+            FiniteExtensionOfNumberFields)
+        v = self
+        assert isinstance(L, FiniteExtensionOfNumberFields)
+        assert v.Domain().is_equal(L.relative_base_field())
+        G = L.relative_polynomial()
+        W = v.sage_valuation().mac_lane_approximants(G,
+                                                     assume_squarefree=True,
+                                                     require_incomparability=True)
+        ret = []
+        p = v.p()
+        alpha = L.relative_model().gen()
+        for w in W:
+            phi = w.phi()
+            t = w(phi)
+            a = L.from_relative_model()(phi(alpha))
+            values = [(p, 1), (a, t)]
+            U = valuations_on_number_field_with_given_values(L, values)
+            assert len(U) == 1, "something went wrong"
+            ret.append(pAdicValuationOnNumberField(L, U[0]))
+        return ret
+
+    def restriction(self, phi):
+        r""" Return the restriction of this `p`-adic valuation to a subfield.
+
+        INPUT:
+
+        - ``phi`` -- an embedding `\phi:K\to L` of a number fields `K` into
+          the domain `L` of this `p`-adic valuation `w`,
+
+        or
+
+        - ``L_K`` -- a finite extension of number fields `L/K`, where `L` is
+          the domain of this `p`-adic valuation
+
+        OUTPUT:
+
+        the `p`-adic valuation `v:=w\circ\phi` resp. `v:=w|_K`.
+
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: R.<x> = QQ[]
+            sage: K = standard_number_field(x^2 + 6, "a")
+            sage: a = K.generator()
+            sage: L = standard_number_field(x^4 + 6, "b")
+            sage: b = L.generator()
+            sage: phi = K.hom(L, b^2)
+            sage: w = L.valuations(5)[0]
+            sage: w.restriction(phi)
+            5-adic valuation on Number Field in a with defining polynomial
+            x^2 + 6
+
+        """
+        from mclf.fields.embeddings_of_standard_fields import (
+            EmbeddingOfNumberField)
+        from mclf.fields.finite_field_extensions import (
+            FiniteExtensionOfNumberFields, finite_field_extension)
+
+        w = self
+        L = w.Domain()
+        if isinstance(phi, EmbeddingOfNumberField):
+            L_K = finite_field_extension(phi)
+        elif isinstance(phi, FiniteExtensionOfNumberFields):
+            L_K = phi
+            phi = L_K.embedding_of_base_field()
+        else:
+            raise TypeError("phi is not of the right type")
+        K = L_K.relative_base_field()
+        assert w.Domain().is_equal(L)
+        test_values_for_w = w.test_values()
+        n = L_K.relative_degree()
+        test_values_for_v = [(L_K.relative_norm(a), n*t)
+                             for a, t in test_values_for_w]
+        V = valuations_on_number_field_with_given_values(K, test_values_for_v)
+        assert len(V) == 1, "something went wrong!"
+        v = discrete_valuation_on_standard_field(V[0])
+        # we test if v is correct:
+        assert all(w(phi(a)) == t for a, t in v.test_values()), (
+            "something went wrong")
+        return v
 
     def completion(self):
         r""" Return the completion of the domain at this discrete valuation.
@@ -558,10 +909,64 @@ class pAdicValuationOnNumberField(DiscreteValuationOnStandardField):
 
         the `p`-adic number field `\hat{K}_v`, as an instance of
         :class:`pAdicNumberField <mclf.padic_extensions.padic_number_fields.\
-        pAdicNumberField>`
+        pAdicNumberField>`.
+
 
         """
-        raise NotImplementedError()
+        from mclf.padic_extensions.padic_number_fields import pAdicNumberField
+        return pAdicNumberField(self.standard_model(), self.sage_valuation())
+
+
+# ----------------------------------------------------------------------------
+
+#                          helper functions
+
+
+def valuations_on_number_field_with_given_values(K, values):
+    r""" Return the list of discrete valuations on a number field with
+    given values.
+
+    INPUT:
+
+    - ``K`` -- a number field
+    - ``values`` -- a list of pairs `(a, t)`, where `a` is a nonzero element
+      of `K` and `t` is a rational number
+
+    OUTPUT:
+
+    the list of all discrete valuations `v` on `K` such that `v(a)=t` for all
+    pairs `(a,t)` in ``values``.
+
+    In order for this list to be finite it is necessary and sufficient that
+    there is at least one pair `(a, t)` with `t\neq 0`.
+
+
+    EXAMPLES::
+
+        sage: from mclf import *
+        sage: R.<x> = QQ[]
+        sage: K.<a> = NumberField(x^7 + 2*x + 1)
+        sage: valuations_on_number_field_with_given_values(K, [(2, 1)])
+        [[ 2-adic valuation, v(x + 1) = 1 ]-adic valuation,
+         [ 2-adic valuation, v(x^3 + x + 1) = 1 ]-adic valuation,
+         [ 2-adic valuation, v(x^3 + x^2 + 1) = 1 ]-adic valuation]
+
+        sage: valuations_on_number_field_with_given_values(K, [(2, 1), (a+1, 1)])
+        [[ 2-adic valuation, v(x + 1) = 1 ]-adic valuation]
+
+    """
+    from sage.all import gcd
+    from mclf.fields.standard_fields import StandardNumberField, standard_field
+    if not isinstance(K, StandardNumberField):
+        K = standard_field(K)
+        assert K.is_number_field()
+    values = [(K(a), t) for a, t in values]
+    q = gcd(a.absolute_norm() for a, _ in values)
+    V = []
+    for p, _ in q.factor():
+        v_p = QQ.valuation(p)
+        V += v_p.extensions(K.standard_model())
+    return [v for v in V if all(v(a) == t for a, t in values)]
 
 
 def equivalence_of_valuations(v, w):

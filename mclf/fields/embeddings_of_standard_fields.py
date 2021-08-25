@@ -1187,38 +1187,50 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
     the unique embedding `\phi:K\to L`  determined by ``image_gens``
     and ``phi0``.
 
-    The list ``image_of_gens`` may have one element `\alpha\in L` or two
-    elements `\alpha,\beta\in L`. The embedding `\phi_0:K_0\to L` is defined
-    on a certain subfield `K_0\subset K`, and the resulting embedding `\phi`
-    is an extension of `\phi_0` to `K`.
+    The list ``image_of_gens`` may have between one to three elements. The
+    embedding `\phi_0:K_0\to L` is defined on a certain subfield `K_0\subset K`,
+    and the resulting embedding `\phi` is an extension of `\phi_0` to `K`.
 
-    There are three cases:
+    The subfield `K_0` must be the unique natural subfield of `K` such that
+    the number of natural generators of `K/K_0` is equal to the number of
+    elements of ``image_of_gens``. There are the following possibilities for
+    `K_0` and the generators:
 
-    1. `K` is a rational function field `k(x)`. In this case `K_0=k` is the
-       constant base field of `K` and ``image_of_gens`` must contain exactly one
-       element `\alpha`. The embedding `\phi:K\to L` is the unique extension
-       of `\phi_0` such that `\phi(x)=\alpha`.
+    1. `K_0` is the prime field of `K`, and it is a *proper* subfield of the
+       constant base field `k` of `K`. Then there are either 2 or 3 generators,
+       namely `a, x` or `a, x, y`. Here `a` is the absolute generator of `k`,
+       `x` is the generator of the rational base field `k(x)`, and `y` is the
+       generator of `K/k(x)` (if `K` is not equal to `k(x)`.
+    2. `K_0=k` is the constant base field. Then there are either one or two
+       generators, namely `x`, or `x, y`.
+    3. `K_0=k(x)` is the rational base field, which is not equal to `K` itself.
+       Then there is exactly one generators `y` of `K/K_0`.
 
-    2. `K` is a finite simple extension of a rational function `k(x)` (its
-       *rational base field*), and ``image_of_gens`` contains exactly one
-       element `\alpha`. Then `K_0=k(x)` is the rational base field of `K` and
-       `\phi` is the unique extension of `\phi_0` sending the generator of
-       `K/K_0` to `\alpha`.
-
-    3. `K` is a finite simple extension of its rational base field `k(x)`,
-       and ``image_of_gens`` contains exactly two elements `\alpha, \beta`.
-       Then `K_0=k` is the constant base field of `K` and
-       `\phi` is the unique extension of `\phi_0` sending `x` to `\alpha` and
-       the generator of `K/K_0` to `\beta`.
+    The embedding `\phi:K\to L` is determined as the unique extension of
+    `\phi_0` which sends the generators of `K/K_0` to the elements of
+    ``image_of_gens``.
 
     If such an embedding `\phi:K\to L` does not exist, an error is raised.
 
     EXAMPLES::
 
         sage: from mclf import *
-        sage: k = standard_finite_field(2)
+        sage: k = standard_finite_field(4)
+        sage: a = k.generator()
         sage: F0 = standard_rational_function_field(k, "x")
-        sage: phi0 = EmbeddingOfFunctionField(F0, F0, [-x], k.hom(F0))
+        sage: x = F0.generator()
+        sage: y = F0.polynomial_generator("y")
+        sage: F = F0.extension(y^2 + y + x + a)
+        sage: y = F.generator()
+        sage: EmbeddingOfFunctionField(F, F, [x + 1, y + a], k.hom(F0))
+        the embedding of Function field in y defined by y^2 + y + x + z2
+        into Function field in y defined by y^2 + y + x + z2,
+        sending [x, y] to [x + 1, y + z2]
+
+        sage: EmbeddingOfFunctionField(F, F, [a + 1, x + 1, y], k.prime_subfield().hom(F))
+        the embedding of Function field in y defined by y^2 + y + x + z2
+        into Function field in y defined by y^2 + y + x + z2,
+        sending [x, y] to [x + 1, y]
 
     """
 
@@ -1242,44 +1254,68 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
             phi0 = embedding_of_standard_fields(phi0)
         assert phi0.maps_into(L)
 
+        k0 = K.prime_subfield()
         k = K.constant_base_field()
         K0 = K.rational_base_field()
 
         if len(image_of_gens) == 1 and K.is_rational_function_field():
             assert phi0.applies_to(k), "phi0 is not of the right type"
-            alpha = image_of_gens[0]
+            x = image_of_gens[0]
             self._restriction_to_constant_base_field = phi0
-            self._image_of_generator = alpha
-            self._image_of_generators = [alpha]
+            self._image_of_generator = x
+            self._image_of_generators = [x]
             # no need to test
 
         elif len(image_of_gens) == 1 and not K.is_rational_function_field():
             assert phi0.applies_to(K0)
-            alpha = image_of_gens[0]
+            y = image_of_gens[0]
             self._restriction_to_constant_base_field = phi0
             self._restriction_to_rational_base_field = phi0
-            self._image_of_generator = alpha
-            self._image_of_generators = [L(phi0(K0.generator())), alpha]
+            self._image_of_generator = y
+            self._image_of_generators = [L(phi0(K0.generator())), y]
             # test:
             f = phi0.change_coefficients(K.polynomial(), L)
-            assert f(alpha).is_zero(), "the embedding does not exist"
+            assert f(y).is_zero(), "the embedding does not exist"
             f = phi0.change_coefficients(K.bivariate_polynomial(), L)
             assert f(self.image_of_generators()).is_zero()
 
         elif len(image_of_gens) == 2:
-            alpha = image_of_gens[0]
-            beta = image_of_gens[1]
-            assert not K.is_rational_function_field(), "wrong type of input"
-            assert phi0.applies_to(k), "phi0 is not of the right type"
+            if K.is_rational_function_field():
+                a = image_of_gens[0]
+                x = image_of_gens[1]
+                assert not k.is_prime_field(), "wrong number of parameters"
+                phi0 = k.hom(L, a)
+                self._restriction_to_constant_base_field = phi0
+                self._image_of_generator = x
+                self._image_of_generators = [x]
+                # no need to test
+            else:
+                x = image_of_gens[0]
+                y = image_of_gens[1]
+                assert phi0.applies_to(k), "phi0 is not of the right type"
+                self._restriction_to_constant_base_field = phi0
+                phi1 = K0.hom(L, x, phi0)
+                self._restriction_to_rational_base_field = phi1
+                self._image_of_generator = y
+                self._image_of_generators = [x, y]
+                # test:
+                f = phi1.change_coefficients(K.polynomial())
+                assert f(y).is_zero(), "the embedding does not exist"
+        elif len(image_of_gens) == 3:
+            assert (not K.is_rational_function_field()
+                    and not k.is_prime_field()), "wrong number of parameters"
+            a = image_of_gens[0]
+            x = image_of_gens[1]
+            y = image_of_gens[2]
+            phi0 = k.hom(L, a)
+            phi1 = K0.hom(L, x, phi0)
             self._restriction_to_constant_base_field = phi0
-            phi1 = K0.hom(L, alpha, phi0)
             self._restriction_to_rational_base_field = phi1
-            self._image_of_generator = beta
-            self._image_of_generators = [alpha, beta]
+            self._image_of_generator = y
+            self._image_of_generators = [x, y]
             # test:
             f = phi1.change_coefficients(K.polynomial())
-            assert f(beta).is_zero(), "the embedding does not exist"
-
+            assert f(y).is_zero(), "the embedding does not exist"
         else:
             raise TypeError("wrong number of parameters")
 

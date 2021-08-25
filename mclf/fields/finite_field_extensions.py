@@ -875,8 +875,23 @@ class FiniteExtensionOfStandardFields(StandardField):
             sage: L.relative_norm(a)
             z2
 
+            sage: R.<x> = QQ[]
+            sage: K = standard_number_field(x^2 - 2, "a")
+            sage: a = K.generator()
+            sage: L = K.extension(x^3 + a*x + 2, "b")
+            sage: b = L.generator()
+            sage: L.relative_norm(b)
+            -2
+
         """
-        return self.to_relative_model()(a).norm()
+        a = self.to_relative_model()(a)
+        if hasattr(a, "relative_norm"):
+            b = a.relative_norm()
+        elif hasattr(a, "norm"):
+            b = a.norm()
+        else:
+            raise AssertionError()
+        return b
 
     def relative_trace(self, a):
         r""" Return the trace of an element under this finite field extension.

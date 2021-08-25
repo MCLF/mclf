@@ -1421,6 +1421,16 @@ class StandardField(SageObject):
         """
         raise NotImplementedError()
 
+    def valuations(self, *args):
+        r""" Return the list of valuations on this standard field determined
+        by the input.
+
+        This method must be implemented by the appropriate subclass; the
+        possible formats of the input will depend on this implementation.
+
+        """
+        raise NotImplementedError()
+
 
 class StandardFiniteField(StandardField):
 
@@ -1550,7 +1560,7 @@ class StandardFiniteField(StandardField):
         INPUT:
 
         - ``L`` -- a standard field
-        - ``a`` -- an element of `L` (optional)
+        - ``a`` -- an element of `L`, or a list with one element (optional)
         - ``psi0`` -- the embedding of the prime field of this field `K`
                       into `L` (optional)
 
@@ -1593,9 +1603,15 @@ class StandardFiniteField(StandardField):
             assert L.contains_as_subfield(self)
             a = L(self.generator())
         elif len(args) == 1:
-            a = L(args[0])
+            if type(args[0]) is list:
+                a = L(args[0][0])
+            else:
+                a = L(args[0])
         elif len(args) == 2:
-            a = L(args[0])
+            if type(args[0]) is list:
+                a = L(args[0][0])
+            else:
+                a = L(args[0])
             phi0 = args[1]
             # even though phi0 is useless, we test whether it is the right
             # thing:
@@ -1605,6 +1621,18 @@ class StandardFiniteField(StandardField):
         from mclf.fields.embeddings_of_standard_fields import (
             EmbeddingOfFiniteField)
         return EmbeddingOfFiniteField(self, L, a)
+
+    def valuations(self, *args):
+        r""" Return the list of valuations on this standard field determined
+        by the input.
+
+        Any valuation on a finite field is trivial. So we ignore the input
+        and return the list with one element, the trivial valuation on this
+        finite field.
+
+        """
+        from mclf.valuations.discrete_valuations import TrivialDiscreteValuation
+        return [TrivialValuation(self)]
 
 
 class StandardNumberField(StandardField):
@@ -1801,6 +1829,52 @@ class StandardNumberField(StandardField):
         from mclf.fields.embeddings_of_standard_fields import (
             EmbeddingOfNumberField)
         return EmbeddingOfNumberField(self, L, a)
+
+    def valuations(self, p, *test_value):
+        r""" Return the list of valuations on this number field determined
+        by the input.
+
+        INPUT:
+
+        - ``p`` -- a prime number
+
+        - ``test_value`` -- a pair `(a, t)`, where `a` is an element of this
+          number field `K` and `t` is a rational number (optional)
+
+        OUTPUT:
+
+        the list of all `p`-adic valuations `v` on `K` with `v(p)=1` and
+        `v(a)=t`.
+
+        If ``test_value`` is not given, the last condition is ignored.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: R.<x> = QQ[]
+            sage: K = standard_number_field(x^2+2, "a")
+            sage: a = K.generator()
+            sage: K.valuations(3)
+            [3-adic valuation on Number Field in a with defining polynomial
+             x^2 + 2,
+             3-adic valuation on Number Field in a with defining polynomial
+             x^2 + 2]
+
+            sage: K.valuations(3, (a+2, 1))
+            [3-adic valuation on Number Field in a with defining polynomial
+             x^2 + 2]
+
+        """
+        from sage.all import QQ
+        from mclf.valuations.discrete_valuations import (
+            pAdicValuationOnNumberField)
+        v_p = QQ.valuation(p)
+        V = v_p.extensions(self.standard_model())
+        if len(test_value) > 0:
+            a = test_value[0][0]
+            t = test_value[0][1]
+            V = [v for v in V if v(a) == t]
+        return [pAdicValuationOnNumberField(self, v) for v in V]
 
 
 # ----------------------------------------------------------------------------

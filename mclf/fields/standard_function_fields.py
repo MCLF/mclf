@@ -358,7 +358,7 @@ class StandardFunctionField(StandardField):
         additional data ``args``, which must be in one of the following forms:
 
         - empty,
-        - ``image_gens``: an element `\alpha` of `L`, or a list of one or two
+        - ``image_gens``: an element `\alpha` of `L`, or a list of one to three
           elements of `L`,
         - (``image_gens``, ``base_map``): here ``imega_gens`` is as above, and
           ``base_map`` is an embedding `\phi_0:K_0\to L` of a subfield `K_0`
@@ -373,17 +373,15 @@ class StandardFunctionField(StandardField):
            a natural embedding into `L`, which we then choose for `\phi_0`.
            The embedding `\phi` is an extension of `\phi_0` determined by
            ``image_gens``.
-        3. If `K` is a rational function field, the ``image_gens`` must consist
-           of a single element `\alpha\in L`. In this case, `K_0` is the
-           constant base field of `K`, and `\phi` sends the standard generator
-           of `K/K_0` to `\alpha`.
-        4. If `K` is not a rational function field and ``image_gens`` consists
-           of a single element `\alpha\in L` then the subfield `K_0` must be
-           the rational base field of `K_0`. The embedding `\phi` sends the
-           standard generator of `K/K_0` to `\alpha`.
-        5. If ``image_gens`` is a list of two elements `\alpha, \beta \in L`
-           then `K_0` must be the constant base field of `K`, and `\phi` sends
-           the two standard generators `x, y` of `K/K_0` to `\alpha, \beta`.
+        3. `\phi` is the unique extension of `\phi_0` which sends the natural
+           generators of `K/K_0` to the elements of ``image_gens``.
+        4. The subfield `K_0\subset K` is the unique natural subfield of `K`
+           such that the number of generators of `K/K_0` is equal to the number
+           of elements in ``image_gens``. For instance, if `K=k(x)` is a
+           rational function field and `K_0=k` is the constant base field, then
+           `K/K_0` has one natural generator, `x`. But if `K_0` is the prime
+           subfield which is a proper subfield of `k`, then `K/K_0` has
+           two generators, `a,x`, where `a` is the absolute generator of `k`.
 
         If no such embedding exists, an error is raised.
 
@@ -459,7 +457,15 @@ class StandardFunctionField(StandardField):
             else:
                 K0 = K.rational_base_field()
         elif len(image_gens) == 2:
-            K0 = K.constant_base_field()
+            if K.is_rational_function_field():
+                K0 = K.prime_subfield()
+                assert not K0.is_equal(K.constant_base_field())
+            else:
+                K0 = K.constant_base_field()
+        elif len(image_gens) == 3:
+            assert not K.is_rational_function_field()
+            K0 = K.prime_subfield()
+            assert not K0.is_equal(K.constant_base_field())
         else:
             raise TypeError("image_gens must have one or two elements")
 
@@ -840,6 +846,16 @@ class StandardRationalFunctionField(StandardFunctionField):
         """
         return (a.numerator().degree() == 0
                 and a.denominator().degree() == 0)
+
+    def place(self, pi):
+        r""" Return the place on this rationa function field with given
+        caninical uniformizer.
+
+
+        """
+        from mclf.valuations.discrete_valuations_on_function_fields import (
+            PlaceOnRationalFunctionField)
+        return PlaceOnRationalFunctionField(self, pi)
 
 
 class StandardNonrationalFunctionField(StandardFunctionField):
