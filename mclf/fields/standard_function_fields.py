@@ -848,14 +848,22 @@ class StandardRationalFunctionField(StandardFunctionField):
                 and a.denominator().degree() == 0)
 
     def place(self, pi):
-        r""" Return the place on this rationa function field with given
-        caninical uniformizer.
+        r""" Return the place on this rational function field with given
+        canonical uniformizer.
 
 
         """
         from mclf.valuations.discrete_valuations_on_function_fields import (
             PlaceOnRationalFunctionField)
         return PlaceOnRationalFunctionField(self, pi)
+
+    def place_at_infinity(self):
+        r""" Return the place at infinity on this rational function field.
+
+        """
+        from mclf.valuations.discrete_valuations_on_function_fields import (
+            PlaceOnRationalFunctionField)
+        return PlaceOnRationalFunctionField(self, 1/self.generator())
 
 
 class StandardNonrationalFunctionField(StandardFunctionField):
@@ -1145,6 +1153,85 @@ class StandardNonrationalFunctionField(StandardFunctionField):
         K0 = self.rational_base_field()
         f = self.minimal_polynomial(a)
         return all(K0.is_constant(f[i]) for i in range(f.degree()+1))
+
+    def place(self, equation):
+        r""" Return the place of this function field determined by the input.
+
+        INPUT:
+
+        - ``equation`` -- a list of nonzero elements of this function field.
+
+        OUTPUT:
+
+        the unique place `v` on this function field such that `v(f)>0` for all
+        functions `f` in ``equation``.
+
+        If `v` is not uniquely determined by this condition an error is raised.
+
+        For the definition of *place* see :ref:`places`.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: k = standard_finite_field(4)
+            sage: x, y = k.polynomial_generators(["x", "y"])
+            sage: F = standard_function_field(y^2 + y + x^3)
+            sage: x, y = F.generators()
+            sage: F.place([x, y + 1])
+            the place on Function field in y defined by y^2 + y + x^3
+            with v(x) = 1, v(y + x^3 + 1) = 6,
+
+            sage: F.place([x + 1])
+            Traceback (most recent call last)
+            ...
+            ValueError: The place is not uniquely determined by the input
+
+            sage: F.places([x + 1])
+            [the place on Function field in y defined by y^2 + y + x^3
+             with v(x + 1) = 1, v(y + z2 + 1) = 1, ,
+             the place on Function field in y defined by y^2 + y + x^3
+             with v(x + 1) = 1, v(y + z2) = 1, ]
+
+        """
+        V = self.places(equation)
+        if len(V) == 0:
+            raise ValueError("There is no place determined by the input")
+        elif len(V) > 1:
+            raise ValueError("The place is not uniquely determined by the input")
+        else:
+            return V[0]
+
+    def places(self, equation):
+        r""" Return the list of all places of this function field determined
+        by the input.
+
+        INPUT:
+
+        - ``equation`` -- a list of nonzero elements of this function field.
+
+        OUTPUT:
+
+        a list containing all place `v` such that `v(f)>0` for all functions
+        `f` in ``equation``.
+
+        For the definition of *place* see :ref:`places`.
+
+        """
+        from mclf.valuations.discrete_valuations_on_function_fields import (
+            places_as_common_zeroes)
+        return places_as_common_zeroes(self, equation)
+
+    def places_at_infinity(self):
+        r""" Return the list of all places at infinity.
+
+        The *places at infinity* are the extensions of the unique *place at
+        infinity* on the rational base field of this function field.
+
+        For the definition of *place* see :ref:`places`.
+
+        """
+        x = self.generators()[0]
+        return self.places(1/x)
 
 
 # ---------------------------------------------------------------------------

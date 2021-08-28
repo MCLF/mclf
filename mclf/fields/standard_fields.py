@@ -1017,8 +1017,10 @@ class StandardField(SageObject):
         returns ``True``.
 
         """
-        assert isinstance(L, StandardField), "L must be a standard field"
-        return self.standard_model() == L.standard_model()
+        if isinstance(L, StandardField):
+            return self.standard_model() == L.standard_model()
+        elif is_standard_field(L):
+            return self.standard_model() == L
 
     def is_element(self, a):
         r""" Return whether `a` is an element of this standard field.

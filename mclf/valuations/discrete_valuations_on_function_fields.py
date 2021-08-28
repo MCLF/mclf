@@ -4,9 +4,10 @@ Discrete valuations on function fields
 ======================================
 
 
-In this module we implement the class :class:`DiscreteValuationOnFunctionField`,
-and various subclasses. Its objects represent *nontrivial* discrete valuations
-on a standard function field.
+In this module we implement the class :class:`DiscreteValuationOnFunctionField`.
+Its objects represent *nontrivial* discrete valuations on a standard function
+field. A special case of a discrete valuation on a function field is a
+*place*. These are realized by the subclass :class:`PlaceOnFunctionField`.
 
 Recall that a standard function field `F` has a canonical representation
 as a finite extension of a subfield `F_0\subset F`, where `F_0=k(x)` is a
@@ -33,8 +34,18 @@ Since `F/F_0` is finite, the valuation `v_0` will be nontrivial as well. It
 plays a crucial role for the explicit description of `v`.
 
 The field of constant valuation `v_k` may be trivial; in this case we call `v`
-a *place*. If it is nontrivial, then `k` must be a number
-field and `v_k` a `p`-adic valuation. Then `v` is `p`-adic as well.
+a **place**. Places are realized by the class :class:`PlaceOnFunctionField`,
+see below.
+
+If `v_k` is nontrivial, then `k` must be a number
+field and `v_k` a `p`-adic valuation. In this case we call `v` a
+**p-adic valuation**. These are realized by the
+:class:`pAdicValuationOnFunctionField <mclf.valuations.\
+padic_valuations_on_function_fields.pAdicValuationOnFunctionField>`,
+see the module :doc:`padic_valuations_on_function_fields`.
+
+
+.. _places:
 
 Places
 ------
@@ -62,21 +73,46 @@ Our treatment of smooth projective curves in
 :mod:`smooth_projective_curves <mclf.curves.smooth_projective_curves>`
 is completely based on function fields and places.
 
-Places can be explicitly described as follows. Suppose first
-that `F=k(x)` is a rational function field. Then any place
-`v` on `F` has a *canonical uniformizer* `\pi_v`, which is either
+When working with places, the following concept turns out to be useful.
+
+    **Definition:**
+    Let `F/k` be a function field. An **equation** for `F` is a list of pairs
+    `(f_i, m_i)`, `i=1,\ldots,r`, with `f_i\in F^\times` and `m_i\in\mathbb{N}`.
+    A **solution** to such an equation is a place `v` on `F` such that
+
+    .. MATH::
+
+        v(f_i) = e\cdot m_i,
+
+    for some `e\in\mathbb{N}`.
+
+    If the equation `(f_i, m_i)_i` has a unique solution `v` then we say that
+    `(f_i, m_i)_i` is a **presentation** for `v`.
+
+Our approach for working with places is based on the following two facts:
+
+1. Given a place `v` on `F`, e.g. via the existing implementation in Sage, we
+   can easily find a presentation for `v`, and
+2. given an equation `(f_i, m_i)_i` on `F`, we can determine its (finite!) set
+   of solutions.
+
+To see this, we first assume that `F=k(x)` is a rational function field.
+Then any place `v` on `F` has a *canonical uniformizer* `\pi_v`, which is
+either
 
 - a monic irreducible polynomial in the generators `x`, or
 - the element `1/x`.
 
 In both cases, there exists a unique place which has this
-element as a uniformizer.
+element as a uniformizer. Indeed, if we identify the smooth projective model of
+`F` with the projective line (this identification corresponds to the choice of
+`x` as a canonical generator of `F/k`), then the points corresponding to
+irreducible polynomials in `x` are the point on the affine line
+`\mathbb{A}_k^1={\rm Spec}\, k[x]`, whereas the valuation with uniformizer
+`1/x` is the unique *point at infinity*.
 
-If we identify the smooth projective model of `F` with the projective line
-(this identification corresponds to the choice of `x` as a canonical generator
-of `F/k`), then the points corresponding to irreducible polynomials in `x` are
-the point on the affine line `\mathbb{A}_k^1={\rm Spec}\, k[x]`, whereas the
-valuation with uniformizer `1/x` is the unique *point at infinity*.
+In the terminology introduced above, this means that `(\pi_v, 1)` is a
+presentation for `v`.
 
 In general, a function field `F/k` has a presentation as a finite simple
 extension of a rational function field, as follows:
@@ -105,24 +141,51 @@ map
 
 This restriction, which we still call `v`, is a discrete *pseudovaluation*
 which takes the value `\infty` precisely on the prime ideal `(f)\lhd R`. Using
-MacLane's theory of inductive valuations we have a good way to this
-pseudovaluation explicitly.
+MacLane's theory of inductive valuations we have a good way to describe this
+pseudovaluation explicitly. Using this description, it is then easy to find
+a pair `(f, m)`, with `f\in F^\times` and `m\in \mathbb{Z}` such that `v`
+is the unique extension of `v_0` such that `v(f)=m`.
+
+This means that we can find an equation for `v` by adding the pair `(f,m)` to
+an equation for `v_0`.
 
 The second case, `v(y)<0`, is similar; we simply have to replace the polynomial
 ring `F_0[y]` by `F_0[1/y]`.
 
 
 
-`p`-adic valuations on function fields
---------------------------------------
-
-todo
-
-
 .. TODO::
 
     - extension of places to a finite extension
     - everything about `p`-adic valuations
+
+EXAMPLES::
+
+    sage: from mclf import *
+    sage: k = standard_finite_field(4)
+    sage: alpha = k.generator()
+    sage: x, y = k.polynomial_generators(["x", "y"])
+    sage: F = standard_function_field(y^2 + y + x^3)
+    sage: F1 = standard_function_field(y^2 + y + x^3 + 1)
+    sage: x, y = F.generators()
+    sage: x1, y1 = F1.generators()
+    sage: a = (x^3 + x +1)/(x^2 + 1)
+    sage: b = (x^3*y + x^2*y + x*y + x + y)/(x^3 + x^2 + x + 1)
+    sage: phi = F1.hom(F, [a, b])
+
+The embedding of function fields `\phi:F_1\to F` corresponds to an isogeny
+of supersingular elliptic curves of degree `3`. We first compute the inverse
+image of the point `P: (x, y)=(1,0)`. ::
+
+    sage: v_P = F1.place([x1 + 1, y1]); v_P
+    the place on Function field in y defined by y^2 + y + x^3 + 1
+    with v(x + 1) = 1, v(y + x + 1) = 3,
+
+The inverse image of `P` corresponds to the extensions of `v_P` along `\phi`::
+
+    sage: v_P.extensions(phi)
+
+
 
 
 AUTHORS:
@@ -371,6 +434,95 @@ class PlaceOnFunctionField(DiscreteValuationOnFunctionField):
 
     """
 
+    def presentation(self):
+        r""" Return a presentation for this place.
+
+        OUTPUT:
+
+        a list of pairs `(f_i, m_i)`, where `f_i` is a nonzero element of
+        this function field and `m_i\in\mathbb{Z}`, such that the following
+        holds:
+
+            This place `v` is the unique place such that
+
+            .. MATH::
+
+                v(f_i) = e\cdot m_i, \quad \forall i,
+
+            for some `e\in\mathbb{N}`.
+
+        This method has to be implemented by the two subclasses.
+
+        """
+        raise NotImplementedError()
+
+    def extensions(self, L):
+        r""" Return the set of all extensions this place to a finite field
+        extension.
+
+        INPUT:
+
+        - ``L`` -- a finite field extension of the domain `K` of this place;
+
+        The extension field `L` may be either given as an embedding
+        `\phi:K\to L` of function fields, or as an instance of
+        :class:`FiniteExtensionOfFunctionFields <mclf.fields.\
+        finite_field_extensions.FiniteExtensionOfFunctionFields>`.
+
+        OUTPUT:
+
+        a list containing all extensions of this place from `K` to `L`.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: k = standard_finite_field(3)
+            sage: F = standard_rational_function_field(k, "x")
+            sage: x = F.generator()
+            sage: phi = F.hom(F, x^2)
+            sage: v = F.place(x)
+            sage: v.extensions(phi)
+            [the place on Rational function field in x over Finite Field
+             of size 3 with uniformizer x]
+
+             sage: v = F.place(1/x)
+             sage: v.extensions(phi)
+             [the place on Rational function field in x over Finite Field of
+              size 3 with uniformizer 1/x]
+
+             sage: v = F.place(x - 1)
+             sage: v.extensions(phi)
+             [the place on Rational function field in x over Finite Field
+              of size 3 with uniformizer x + 1,
+              the place on Rational function field in x over Finite Field
+              of size 3 with uniformizer x + 2]
+
+        """
+        from mclf.fields.standard_function_fields import (
+            StandardNonrationalFunctionField)
+        from mclf.fields.finite_field_extensions import (
+            FiniteExtensionOfFunctionFields, finite_field_extension)
+        from mclf.fields.embeddings_of_standard_fields import (
+            EmbeddingOfFunctionField)
+
+        v = self
+        if isinstance(L, EmbeddingOfFunctionField):
+            L = finite_field_extension(L)
+        elif isinstance(L, FiniteExtensionOfFunctionFields):
+            pass
+        elif isinstance(L, StandardNonrationalFunctionField):
+            L = finite_field_extension(L.embedding_of_rational_base_field())
+        else:
+            raise TypeError("Wrong type of input")
+
+        K = L.relative_base_field()
+        assert K.is_equal(v.Domain()), "this place is not defined \
+            on the base field of L"
+        n = L.relative_degree()
+        phi = L.embedding_of_base_field()
+        equation_for_w = [(phi(f), m) for f, m in v.presentation()]
+        return places_as_solutions_to_equation(L, equation_for_w)
+
 
 class PlaceOnRationalFunctionField(
         PlaceOnFunctionField, DiscreteValuationOnRationalFunctionField):
@@ -465,6 +617,30 @@ class PlaceOnRationalFunctionField(
             self._uniformizer = pi
         return self._uniformizer
 
+    def presentation(self):
+        r""" Return a presentation for this place.
+
+        OUTPUT:
+
+        a list of pairs `(f_i, m_i)`, where `f_i` is a nonzero element of
+        this function field and `m_i\in\mathbb{Z}`, such that the following
+        holds:
+
+            This place `v` is the unique place such that
+
+            .. MATH::
+
+                v(f_i) = e\cdot m_i, \quad \forall i,
+
+            for some `e\in\mathbb{N}`.
+
+        Since the domain of this place is a rational function field, the pair
+        `(\pi_v, 1)`, where `\pi_v` is the canonical uniformizer, is an
+        equation.
+
+        """
+        return [(self.uniformizer(), 1)]
+
     def is_equivalent_to(self, w):
         r""" Return whether this place is equivalent to `w`.
 
@@ -493,38 +669,6 @@ class PlaceOnRationalFunctionField(
             same domain"
         return v.uniformizer() == w.uniformizer()
 
-    def extensions(self, L):
-        r""" Return the list of all extensions of this place to a  finite
-        extension.
-
-        INPUT:
-
-        - ``L`` -- a finite field extension of the domain `K` of this place `v_0`
-
-        OUTPUT:
-
-        the list of all extensions of `v_0` to `L`.
-
-        """
-        raise NotImplementedError()
-        from mclf.fields.standard_function_fields import (
-            StandardNonrationalFunctionField)
-        from mclf.fields.finite_field_extensions import (
-            FiniteExtensionOfFunctionFields)
-
-        v0 = self
-        if isinstance(L, FiniteExtensionOfFunctionFields):
-            return self.extensions_to_finite_field_extension(L)
-        elif isinstance(L, StandardNonrationalFunctionField):
-            K = L.rational_base_field()
-            assert v0.Domain().is_equal(K), "the base field of L must be \
-                the domain of this place"
-            # this may not always work!
-            V = v0.sage_valuation().extensions(L.standard_model())
-            return [PlaceOnNonrationalFunctionField(L, v) for v in V]
-        else:
-            raise TypeError("L is not of the right type")
-
 
 class PlaceOnNonrationalFunctionField(
         PlaceOnFunctionField, DiscreteValuationOnNonrationalFunctionField):
@@ -544,16 +688,20 @@ class PlaceOnNonrationalFunctionField(
         `v` is the unique place on `F` extending `v_0` such that
         `v(f) = m`.
 
-    We call `(f, m)` a **test value** for `v`, and the triple `(v_0, f, m)`
-    a **presentation** of `v`.
+    We call `f` a **test element** for `v`, and the triple `(v_0, f, m)`
+    a **relative presentation** of `v`.
 
     INPUT:
 
     - ``F`` -- a nonrational function field
     - ``v`` -- a place on `F`.
 
-    Here `v` can be given either as a disrete valuation on the standard model
-    of `F`, or as a presentation `(v_0, f, m)`, as described above.
+    There are three different ways we can specify the place `v`:
+
+    1. as a Sage disrete valuation on the standard model
+       of `F`,
+    2. as a relative presentation `(v_0, f, m)`, or
+    3. as an absolute presentation `(f_i, m_i)_i`.
 
     OUTPUT:
 
@@ -573,9 +721,9 @@ class PlaceOnNonrationalFunctionField(
     def __init__(self, F, v):
         from mclf.fields.standard_function_fields import (
             StandardNonrationalFunctionField)
-        from sage.rings.valuation.valuation import DiscreteValuation
+        from sage.rings.valuation.valuation import DiscretePseudoValuation
         assert isinstance(F, StandardNonrationalFunctionField)
-        if isinstance(v, DiscreteValuation):
+        if isinstance(v, DiscretePseudoValuation):
             assert F.is_equal(v.domain())
         elif type(v) is tuple:
             assert len(v) == 3, "wrong number of parameters"
@@ -585,6 +733,7 @@ class PlaceOnNonrationalFunctionField(
             F0 = F.rational_base_field()
             assert F0.is_equal(v0.Domain()), "the domain of v0 must be the \
                 rational base field"
+            self._base = v0
             f = v[1]
             assert f in F.standard_model(), "f must be an element of F"
             m = v[2]
@@ -594,293 +743,348 @@ class PlaceOnNonrationalFunctionField(
             assert len(V) == 1, "the place is not uniquely determined"
             v = V[0]
         else:
-            raise TypeError("wrong type of argument")
+            raise TypeError("wrong type of argument: v = {} has parent {}".format(
+                v, v.parent()))
+        e = v(v.uniformizer())
         self._domain = F
-        self._sage_valuation = v
+        self._sage_valuation = v/e
 
     def __repr__(self):
         v = self
         F = v.domain()
-        x, y = F.generators()
-        x_name, y_name = F.variable_names()
-        return "the place on {} with v({}) = {} and v({}) = {}".format(
-            F, x_name, v(x), y_name, v(y))
+        presentation = ""
+        for f, m in v.presentation():
+            presentation += "v({}) = {}, ".format(f, m)
+        return "the place on {} with ".format(F) + presentation
 
-    def place(self, a, b):
-        r""" Return the place on this function field determined by `a`, `b`.
-
-        INPUT:
-
-        - ``a`` -- a nonzero element of the rational base field of `F`
-        - ``b`` -- a nonzero element of `F`
-
-        OUTPUT:
-
-        the unique place `v` on `F` such that `v(a)>0` and `v(b)>0`.
-
-        If `v` is not uniquely determined by these conditions, an error
-        is raised.
+    def base(self):
+        r""" Return the restriction of this place to the rational base field.
 
         """
-        V = self.places(a, b)
-        assert len(V) > 0, "there is no such place"
-        assert len(V) == 1, "the place is not uniquely determined"
-        return V[0]
+        if not hasattr(self, "_base"):
+            F = self.Domain()
+            F0 = F.rational_base_field()
+            v0 = self.sage_valuation().restriction(F0.standard_model())
+            self._base = PlaceOnRationalFunctionField(F0, v0)
+        return self._base
 
-    def places(self, a, *b):
-        r""" Return the list of places determined by `a`, `b`.
-
-        INPUT:
-
-        - ``a`` -- a nonzero element of the rational base field of `F`
-        - ``b`` -- a nonzero element of `F` (optional)
+    def presentation(self):
+        r""" Return a presentation for this place.
 
         OUTPUT:
 
-        the list of places `v` on `F` such that `v(a)>0` and `v(b)>0`.
+        a list of pairs `(f_i, m_i)`, where `f_i` is a nonzero element of
+        this function field and `m_i\in\mathbb{Z}`, such that the following
+        holds:
 
-        If `b` is not given, then the second condition is ignored.
+            This place `v` is the unique place such that
 
-        EXAMPLES::
+            .. MATH::
 
-            sage: from mclf import *
-            sage: k = standard_finite_field(2)
-            sage: x, y = k.polynomial_generators("x", "y")
-            sage: F = standard_function_field(y^2 + x^3 + 1)
-            sage: x, y = F.generators()
-            sage: F.places(x, y + 1)
+                v(f_i) = e\cdot m_i, \quad \forall i,
 
-            sage: F.places((x + 1)/x)
-
-        """
-        F = self
-        F0 = F.rational_base_field()
-        assert not a.is_zero(), "a must not be zero"
-        a = F0(a)
-        if len(b) > 0:
-            b = F(b[0])
-        else:
-            b = None
-        V0 = []
-        for pi, m in a.factor():
-            if m > 0:
-                v0 = F0.place(pi)
-                if v0(a) > 0:
-                    V0.append(v0)
-            elif m < 0 and pi == F0.generator():
-                v0 = F0.place_at_infinity()
-                if v0(a) > 0:
-                    V0.append(v0)
-        V = []
-        for v0 in V0:
-            if b is None:
-                V += v0.extensions(F)
-            else:
-                V += [v for v in v0.extensions(F) if v(b) > 0]
-        return V
-
-# --------------------------------------------------------------------------
-
-#          p-adic valuations on function fields
-
-
-class pAdicValuationOnFunctionField(DiscreteValuationOnFunctionField):
-    r""" A class for `p`-adic valuations on function fields.
-
-    Let `F` be a standard function field, with constant base field `k`.
-    A **p-adic valuation** on `F` is a discrete valuation `v` whose
-    restriction to `k` is `p`-adic. The latter means that `k` is a number
-    field and that there exists a unique prime number `p` with `v(p)>0`.
-
-    """
-
-    def is_equivalent_to(self, w):
-        r""" Return whether this valuation is equivalent to `w`.
-
-        INPUT:
-
-        - ``w`` -- another discrete valuation on the domain of this
-          valuation `v`
-
-        OUTPUT:
-
-        whether `v` and `w` are equivalent.
-
-        Since we assume that all `p`-adic valuations are `p`-adically
-        normalized, `v` and `w` are equivalent if and only if they are equal.
-        And this is the case if and only if their discoid representations
-        are equal.
-
-        .. TODO::
-
-            Explain how to check this, somewhere, in more detail.
+            for some `e\in\mathbb{N}`.
 
         """
         v = self
-        if not isinstance(w, DiscreteValuationOnStandardField):
-            w = discrete_valuation_on_standard_field(w)
-        assert v.Domain().is_equal(w.Domain()), "v and w do not have the \
-            same domain"
-        phi, r = v.discoid_representation()
-        psi, s = w.discoid_representation()
-        return v(psi) == s and w(phi) == r
+        F = v.Domain()
+        v0 = v.base()
+        test_elements = [F(g) for g, _ in v0.presentation()]
+        test_elements.append(v.test_element())
+        return [(g, v(g)) for g in test_elements]
 
-    def discoid_representation(self):
-        r""" Return the representation of this p-adic valuation in terms of
-        its discoid.
+    def pseudovaluation(self):
+        r""" Return the pseudovaluation from which this place is derived.
 
         OUTPUT:
 
-        a pair `(f, t)`, where `f \in K=k(x)` is either a `p`-adically
-        irreducible, monic polynomial in `x`, or is equal to `1/x`, and where
-        `t\geq 0` is a nonnegative ratinal number.
-
-        The pair `(f, t)` is a concrete description of the *discoid* on the
-        Berkovich projective line corresponding to this valuation `v`, via
+        the pseudovaluation `v_1` on `F_0[y]` which induces this place `v`
+        via the presentation
 
         .. MATH::
 
-            D_v = \{ \xi \mid v_\xi(f) \geq t \}.
+            F = F_0[y \mid G(y)=0]
+
+        of its domain used in the construction of `v`.
 
         """
-        raise NotImplementedError()
+        if not hasattr(self, "_pseudovaluation"):
+            # if this was not defined by the initialization, then
+            # this place was constructed from a sage valuation
+            # so we have to untangle it; there is a helper function
+            # doing this
+            v, y, G = valuation_via_pseudovaluation(self.sage_valuation())
+            self._pseudovaluation = v
+            self._parameter = y
+            self._equation = G
+        return self._pseudovaluation
+
+    def parameter(self):
+        r""" Return the parameter used in the definition of this place.
+
+        """
+        if not hasattr(self, "_parameter"):
+            # if this was not defined by the initialization, then
+            # this place was constructed from a sage valuation
+            # so we have to untangle it; there is a helper function
+            # doing this
+            v, y, G = valuation_via_pseudovaluation(self.sage_valuation())
+            self._pseudovaluation = v
+            self._parameter = y
+            self._equation = G
+        return self._parameter
+
+    def test_element(self):
+        r""" Return a test element for this place.
+
+        OUTPUT:
+
+        a nonzero element `f` of the the domain `F` of this place `v` with
+        the following property:
+
+            Let `m:=v(f)` and let `v_0` be the restriction of `v` to the
+            rational bae field `F_0`. Then `v` is the unique extension of `v_0`,
+            from `F_0` to `F`, such that `v(f)=m`.
+
+        """
+        from sage.all import Infinity
+        if not hasattr(self, "_test_element"):
+            v1 = self.pseudovaluation()
+            if hasattr(v1, "_approximation"):
+                G = v1._G
+                v2 = v1._approximation
+                while not v2.effective_degree(G) == 1:
+                    v1._improve_approximation()
+                    v2 = v1._approximation
+                if v2(G) == Infinity:
+                    v2 = v2._base_valuation
+                self._test_element = v2.phi()(self.parameter())
+            else:
+                v2 = v1._base_valuation
+                self._test_element = v2.phi()(self.parameter())
+        return self._test_element
+
+# --------------------------------------------------------------------------
 
 
-class pAdicValuationOnRationalFunctionField(
-        DiscreteValuationOnRationalFunctionField,
-        pAdicValuationOnFunctionField):
-    r""" A class for p-adic valuations on rational function fields.
-
-    INPUT:
-
-    - `F` - - a standard rational function field over a number field `k`
-    - `v` - - a `p`- adic valuation on the standard model of `F`
-
-    OUTPUT:
-
-    the object representing `v`.
-
-    Let `F = k(x)` be a rational function field over a number field `k`, and
-    let `v` be a `p`-adic valuation on `F`. We call `v` **integral** if
-    `v(x) \geq 0`; otherwise we call `v` **nonintegral**.
-
-    Let `v` be integral and let `v_k: = v | _k` denote the restriction of `v` to
-    the constant base field. The valuation `v` is uniquely determined by its
-    restriction to the subring `R: = k[x]\subset F`, which we call the *standard
-    order* of `F`. By MacLane's theory, the restriction of `v` to `R` has a
-    description as an *inductive valuation*, like so:
-
-    .. MATH::
-
-        v = [v_0, v_1(\phi_1) = t_1, \ldots, v_n(\phi_n) = t_n],
-
-    where
-
-    - `v_0` is the Gauss valuation with respect to `v_k` and the parameter `x`,
-    - `\phi_i\in R` are certain monic, integral and irreducible polynomials,
-      the * key polynomials*,
-    - `t_i\geq 0` are rational numbers, contained in the value group of `v`.
-
-    If `v` is given to us as a Sage valuation, this description is directly
-    available, via the method :meth:`augmentation_chain`.
-
-    A crucial fact is that the `p`-adic valuation `v` is already uniquely
-    determined by the data `(v_k, \phi_n, t_n)`. A bit more precisely, `v` is
-    the "minimal" `p`-adic integral valuation on `R` such that
-
-    .. MATH::
-
-        v|_k = v_k \quad\text{ and }\quad v(\phi_n) = t_n.
-
-    If `v` is not integral, then we replace the order `R = k[x]` by the
-    **inverse order** `R': = R[1/x]`, and we have essentially the same
-    description of the restriction of `v` to `R'` as above.
-
-    """
-
-    def __init__(self, F, v):
-        raise NotImplementedError()
-
-
-class pAdicValuationOnNonrationalFunctionField(
-        DiscreteValuationOnNonrationalFunctionField,
-        pAdicValuationOnFunctionField):
-    r""" A class for p-adic valuations on nonrational function fields.
-
-    """
-
-# ----------------------------------------------------------------------------
-
-#                    helper functions
-
-
-def padic_valuations_on_rational_function_field(F, v_k, f, t, on_unit_disk):
-    r""" Return the list of discrete valuations on a rational function field
-    satisfying certain conditions.
+def places_as_solutions_to_equation(F, equation):
+    r""" Return all the places on a function field satisfying an equation.
 
     INPUT:
 
-    - ``F`` - - a rational function field over a number field
-    - ``v_k`` - - a discrete valuation on the constant base field `k` of `F`
-    - ``f`` - - a nonconstant element of `F`
-    - ``t`` - - a rational number
-    - ``on_unit_disk`` - - a boolean
+    - ``F`` -- a standard function field
+    - ``equation`` -- a nonempty list of pairs `(f_i, m_i)`,
+      with `f_i\in F^\times` and `m_i\in\mathbb{Z}`, `m_i>0`
 
     OUTPUT:
 
-    the(finite) list of all discrete valuations `v` on `F` such that:
+    the list of all places `v` on `F` such that
 
-    1. `v | _k = v_k`,
-    2. `v(x) \geq 0` if and only if ``on_unit_disk`` is ``True``,
-    3. `v(f) = t`,
-    4. `f` is not a `v`- unit wrt. the parameter `x` (replace `x` by `1/x`
-        if `v(x) < 0`).
+    .. MATH::
 
-    ALGORITHM:
+        v(f_i) = s\cdot m_i,\quad \forall i,
 
-        Let us first assume that ``on_unit_disk`` is ``True``. Then a valuation
-        `v` with the desired properties is induced from a discrete valuation
-        on the polynomial ring `R = k[x]`, the subring of `F` generated over `k`
-        by the canonical generator `x` of `F/k`. By MacLane's theory, `v` can
-        be represented as an inductive valuation of the form
-
-        .. MATH::
-
-            v = [v_0, v_1(\phi_1)=\lambda_1, \ldots, v_n(\phi_n) =\lambda_n],
-
-        where `v_0` is the Gauss valuation with respect to `v_k`.
-
-        There are now finitely many valuations `v` satisfying the additional
-        conditions 3. and 4.; they can be determined with a variant of MacLane's
-        algorithm, as follows:
-
-        todo
+    where `s` is a positive rational number, independent of `i`.
 
     EXAMPLES::
 
         sage: from mclf import *
-        sage: K. < x > = FunctionField(QQ)
-        sage: v_3 = QQ.valuation(3)
-        sage: valuations_on_rational_function_field(v_3, x, 1, True)
-        [Valuation on rational function field induced by[Gauss valuation
-         induced by 3-adic valuation, v(x)= 1]]
-        sage: valuations_on_rational_function_field(v_3, x, 1, False)
-        []
-        sage: valuations_on_rational_function_field(v_3, (3*x-1)*x, 2, False)
-        [Valuation on rational function field induced by[Gauss valuation
-         induced by 3-adic valuation, v(x - 3) = 4 ] (in Rational function field
-         in x over Rational Field after x | - -> 1/x)]
+        sage: k = standard_finite_field(2)
+        sage: x, y = k.polynomial_generators(["x", "y"])
+        sage: F = standard_function_field(y^2 + x^3 + 1)
+        sage: x, y = F.generators()
+        sage: places_as_solutions_to_equation(F, [(x, 2), (y + 1, 3)])
+        [the place on Function field in y defined by y^2 + x^3 + 1
+         with v(x) = 2, v(y + 1) = 3, ]
+
+        sage: places_as_solutions_to_equation(F, [(x + 1, 1)])
+        [the place on Function field in y defined by y^2 + x^3 + 1
+         with v(x + 1) = 2, v(y) = 1, ]
 
     """
-    raise NotImplementedError()
+    from mclf.fields.standard_function_fields import StandardFunctionField
+    assert isinstance(F, StandardFunctionField)
 
-    # this is the old code:
+    if F.is_rational_function_field():
+        V = []
+        f, m = equation[0]
+        for pi, _ in f.factor():
+            v = F.place(pi)
+            s = v(f)/m
+            if s > 0 and all(v(g) == s*n for g, n in equation):
+                V.append(v)
+        v = F.place_at_infinity()
+        s = v(f)/m
+        if s > 0 and all(v(g) == s*n for g, n in equation):
+            V.append(v)
+        return V
 
-    # from mclf.berkovich.berkovich_line import BerkovichLine
-    # K = f.parent()
+    else:
+        # F is a nonrational function field
+        F0 = F.rational_base_field()
+        n = F.degree()
+        base_equation = [(F.norm(f), m*n) for f, m in equation]
+        V0 = places_as_solutions_to_equation(F0, base_equation)
+        V = []
+        for v0 in V0:
+            # invoking the method "extensions" leads to an infinite loop,
+            # because this function is used in there!
+            for v in extensions_from_rational_base_field(F, v0):
+                f, m = equation[0]
+                s = v(f)/m
+                if s > 0 and all(v(g) == s*i for g, i in equation):
+                    V.append(v)
+        return V
 
-    # the following doesn't work when v_k is not the unique p-adic extension
-    # on k; there is also a problem when f is not a polynomial in x or 1/x:
-    # X = BerkovichLine(K, v_k)
-    # points = X.points_from_inequality(f, t)
-    # return [xi.valuation() for xi in points if on_unit_disk == xi.is_in_unit_disk()]
+
+def places_as_common_zeroes(F, functions):
+    r""" Return the places on a function field determined by a list of functions.
+
+    INPUT:
+
+    - ``F`` -- a standard function field
+    - ``functions`` -- a nonempty list of nonzero elements of `F`
+
+    OUTPUT:
+
+    a list containing all places `v` on `F` such that `v(f)>0` for all `f`
+    in ``functions``.
+
+    """
+    from mclf.fields.standard_function_fields import StandardFunctionField
+    assert isinstance(F, StandardFunctionField)
+    assert type(functions) is list, "functions must be a list"
+    assert len(functions) > 0, "functions must be nonempty"
+    assert all(not f.is_zero() for f in functions), "the given functions must \
+        be nonzero"
+
+    if F.is_rational_function_field():
+        f = functions[0]
+        V = []
+        for g, _ in f.factor():
+            v = F.place(g)
+            if all(v(h) > 0 for h in functions):
+                V.append(v)
+        v = F.place_at_infinity()
+        if all(v(h) > 0 for h in functions):
+            V.append(v)
+        return V
+
+    else:
+        # F is a nonrational function field
+        F0 = F.rational_base_field()
+        base_functions = [F.norm(f) for f in functions]
+        V0 = places_as_common_zeroes(F0, base_functions)
+        V = []
+        for v0 in V0:
+            for v in v0.extensions(F):
+                if all(v(f) > 0 for f in functions):
+                    V.append(v)
+        return V
+
+
+def extensions_from_rational_base_field(F, v0):
+    r""" Return the extensions of a place from the rational base field.
+
+    INPUT:
+
+    - ``F`` -- a nonrational function field
+    - ``v0`` -- a place on the rational base field of `F`
+
+    OUTPUT:
+
+    a list contaning all extensions of `v_0` to `F`.
+
+    EXAMPLES::
+
+        sage: from mclf import *
+        sage: k = standard_finite_field(2)
+        sage: x, y = k.polynomial_generators(["x", "y"])
+        sage: F = standard_function_field(y^2 + x^3 + 1)
+        sage: F0 = F.rational_base_field()
+        sage: x = F0.generator()
+        sage: v0 = F0.place(x)
+        sage: extensions_from_rational_base_field(F, v0)
+        [the place on Function field in y defined by y^2 + x^3 + 1
+         with v(x) = 2, v(y + 1) = 3, ]
+
+    """
+    from mclf.fields.standard_function_fields import (
+        StandardNonrationalFunctionField)
+    assert isinstance(F, StandardNonrationalFunctionField)
+    F0 = F.rational_base_field()
+    assert F0.is_equal(v0.Domain())
+    V = v0.sage_valuation().extensions(F.standard_model())
+    return [PlaceOnNonrationalFunctionField(F, v) for v in V]
+
+
+def valuation_via_pseudovaluation(v):
+    r""" Return a presentation of a Sage valuation on a nonrational function
+    field by a pseudovaluation.
+
+    INPUT:
+
+    - ``v`` -- a discrete valuation on a nonrational function field `F`
+
+    OUTPUT:
+
+    a triple `(v_1, y_1, G)`, where
+
+    - `v_1` is an infinite pseudovaluation on a polynomial ring over the
+      rational base field `F_0` of `F`,
+    - `y_1` is a generator of `F/F_0`,
+    - `G` is the minimal polynomial of `y_1` over `F_0`,
+
+    such that the following holds:
+
+    - the valuation `v` is the pushforward of the pseudovaluation `v_1` via
+      the surjective ring homomorphism
+
+      .. MATH::
+
+        F_0[T] \to F, \quad T\mapsto y_1,
+
+      and
+
+    - `v(y_1)\geq 0`.
+
+    EXAMPLES::
+
+        sage: from mclf import *
+        sage: F0.<x> = FunctionField(QQ)
+        sage: R.<y> = F0[]
+        sage: F.<y> = F0.extension(y^2 + x*y + 1); F
+        Function field in y defined by y^2 + x*y + 1
+
+        sage: v0 = F0.valuation(x)
+        sage: v = v0.extension(F)
+        sage: valuation_via_pseudovaluation(v)
+        ([ Gauss valuation induced by (x)-adic valuation,
+           v(y^2 + x*y + 1) = +Infinity ], y, y^2 + x*y + 1)
+
+        sage: w0 = F0.valuation(1/x)
+        sage: W = w0.extensions(F)
+        sage: valuation_via_pseudovaluation(W[0])
+        ([ Gauss valuation induced by Valuation at the infinite place,
+           v(y + 1) = 2 , … ], 1/x*y, y^2 + y + 1/x^2)
+
+        sage: valuation_via_pseudovaluation(W[1])
+        ([ Gauss valuation induced by Valuation at the infinite place,
+           v(y) = 2 , … ], 1/x*y, y^2 + y + 1/x^2)
+
+    """
+    from sage.rings.valuation.mapped_valuation import MappedValuation_base
+    F = v.domain()
+    F0 = F.base()
+    v1 = v._base_valuation
+    if not v1.is_discrete_valuation():
+        v1 = v._base_valuation
+        y1 = F.gen()
+        G = v1._G
+    else:
+        v1 = v1._base_valuation
+        G = v1._G
+        y1 = v._from_base(v._base_valuation.domain().gen())
+    assert G(y1).is_zero()
+    assert v(y1) >= 0
+    return v1, y1, G
