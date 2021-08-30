@@ -506,7 +506,7 @@ def _lift_embedding_to_rational_function_field(
     # f_K(x, beta) = 0; this leaves only finitely many possibilities
     # for beta
     _, T = f_K.parent().gens()
-    f_K = f_K(x, T).univariate_polynomial()
+    f_K = f_K(x, T).univariate_polynomial().change_variable_name("S")
     for g in K.prime_factors(f_K):
         g_L = K_to_L.change_coefficients(g)
         if g_L(t).is_zero():

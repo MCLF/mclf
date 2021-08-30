@@ -1567,7 +1567,7 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
         # f_K(x, beta) = 0; this leaves only finitely many possibilities
         # for beta
         _, T = f_K.parent().gens()
-        g = f_K(x, T).univariate_polynomial()
+        g = f_K(x, T).univariate_polynomial().change_variable_name("S")
         for beta in K.roots(g):
             if phi(beta) == t:
                 psi = L1.hom(K, beta, psi0)
@@ -1605,7 +1605,7 @@ class EmbeddingOfFunctionField(EmbeddingOfStandardFields):
         L = phi.Codomain()
         alpha = L(L1.generator())
         f = L1.polynomial()
-        f_K = psi0.change_coefficients(f)
+        f_K = psi0.change_coefficients(f).change_variable_name("S")
         for beta in K.roots(f_K):
             if phi(beta) == alpha:
                 psi1 = L1.hom(K, beta, psi0)
