@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
          Factoring univariate polynomials over functions fields
          ======================================================
@@ -8,10 +9,10 @@ experimental implementation in Sage by Julian Rüth, see
 `here <https://github.com/saraedum/sage/blob/experimental/src/sage/rings/\
 function_field/function_field.py#L1717>`_.
 
-In contrast to Julian's implementation, we do not assume that th polynomial
-to be factored is square-free. This makes the algorithm more complecated and
-probably a bit slower; the reason for making this adaption is that
-square-free decomposition of polynomials is also not implemented over
+In contrast to Julian's implementation, we do not assume that the polynomial
+to be factored is square-free. This makes the algorithm slightly more
+complicated and probably a bit slower; the reason for making this adaption is
+that square-free decomposition of polynomials is also not implemented over
 nonrational function fields.
 
 Unfortunately, the performance is very bad. The reason probably has nothing to
@@ -27,9 +28,6 @@ the algorithms described in
     M. van Hoeij, M. Monogan
 
 Or we could implement our own interface to Singular or Macaulay.
-
-But a very easy way for some dramatic improvement could be to replace functions
-fields by quotient fields of polynomial rings!
 
 """
 
@@ -80,6 +78,8 @@ def factor_polynomial_over_function_field(K, f):
         sage: S.<T> = F[]
         sage: f = F.polynomial()(T)
         sage: factor_polynomial_over_function_field(F, f)
+        (T + y) * (T + y + 1) * (T^3 + y*T^2 + (y^2 + 1)*T + y^3 + y + 1)
+        * (T^3 + (y + 1)*T^2 + y^2*T + y^3 + y^2 + 1)
 
     """
     from sage.structure.factorization import Factorization

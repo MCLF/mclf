@@ -25,6 +25,7 @@ from .fields.embeddings_of_standard_fields import *
 from .fields.standard_subfields import *
 from .fields.finite_field_extensions import *
 from .fields.factor_polynomial_over_function_field import *
+from .fields.gcds_of_polynomials_over_function_fields import *
 from .valuations.discrete_valuations import *
 from .valuations.extensions_of_discrete_valuations import *
 from .valuations.discrete_valuations_on_function_fields import *
