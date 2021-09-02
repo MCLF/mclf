@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-         Factoring univariate polynomials over functions fields
-         ======================================================
+Factoring univariate polynomials over functions fields
+======================================================
 
 We implement our own algorithm for factoring univariate polynomials over
 nonrational function fields. Actually, this is a slight adaption of an
@@ -15,19 +15,8 @@ complicated and probably a bit slower; the reason for making this adaption is
 that square-free decomposition of polynomials is also not implemented over
 nonrational function fields.
 
-Unfortunately, the performance is very bad. The reason probably has nothing to
-do with our implementation; it rather seems to be that
-computing gcd's for polynomials over function fields can be very costly, due to
-coefficient explosion.
-
-To improve this, we could implement our own method
-:meth:`_xgcd_univariate_polynomial` for standardfunction fields, using e.g.
-the algorithms described in
-
-    *Algorithms for Polynomial GCD Computation over Algebraic Function Fields*,
-    M. van Hoeij, M. Monogan
-
-Or we could implement our own interface to Singular or Macaulay.
+The performance is not great, but suffices for the moment. There is certainly
+a lot of room for improvements.
 
 """
 
@@ -65,6 +54,7 @@ def factor_polynomial_over_function_field(K, f):
 
         sage: f = T + x
         sage: factor_polynomial_over_function_field(F, f)
+        T + x
 
         sage: R.<y> = F0[]
         sage: F.<y> = F0.extension(y^2 + x^3 + 1)
@@ -85,9 +75,6 @@ def factor_polynomial_over_function_field(K, f):
     from sage.structure.factorization import Factorization
     from sage.all import prod
     f = f.change_ring(K)
-    print("factoring f = ", f)
-    print("over ", K)
-    print()
 
     if K is K.rational_function_field():
         # this case is well implemented
@@ -114,13 +101,8 @@ def factor_polynomial_over_function_field(K, f):
         else:
             counter += 1
         t = next(element_of_K0)
-        print("t = ", t)
         g = r(T + t*alpha)
-        print("g = ", g)
         g, factors = some_factors(g)
-        print("factor = ", factors)
-        print("new g = ", g)
-        print()
         factorization += [(h(T - t*alpha), e) for h, e in factors]
         r = g(T - t*alpha)
     ret = Factorization(factorization, r[0])
@@ -149,31 +131,21 @@ def some_factors(f):
         (T^3 + T + x^3, [])
 
     """
+    from mclf.fields.gcds_of_polynomials_over_function_fields import (
+        gcd_of_univariate_polynomials)
     K = f.base_ring()
     K0 = K.base()
     g = norm_of_polynomial(f)
-    print("norm of f = ", g)
-    print()
     h = g.change_ring(K) // f
-    print("h = ", h)
-    print()
-    if h.gcd(f).is_one():
+    if gcd_of_univariate_polynomials(K, h, f).is_one():
         G = g.factor()
-        print("g factors as ", G)
-        print()
         factors_of_f = []
         for r, e in G:
-            print("(r, e) = ", r, e)
-            s = f.gcd(r)
-            print("s = ", s)
-            if h.gcd(s).is_one():
+            s = gcd_of_univariate_polynomials(K, f, r)
+            if gcd_of_univariate_polynomials(K, h, s).is_one():
                 # s is a prime factor of f
-                print("is an irreducible factor!")
                 factors_of_f.append((s, e))
                 f = f // s**e
-            else:
-                print("is not irreducible")
-            print()
     else:
         factors_of_f = []
     return f, factors_of_f
@@ -231,155 +203,3 @@ def roots_of_polynomial_over_function_field(K, f):
             roots.append(-g[0])
     assert all(f(a).is_zero() for a in roots), "something went wrong"
     return roots
-
-
-# -------------------------------------------------------------------------
-
-#                       the old code
-
-def factor_polynomial_over_function_field_old(K, f):
-    r"""
-    Factor the polynomial f over the function field K.
-
-    INPUT:
-
-    - ``K`` -- a global function field
-    - ``f`` -- a nonzero univariate polynomial over ``K``
-
-    OUTPUT: the complete factorization of ``f``
-
-    """
-    f = f.change_ring(K)
-    if K is K.rational_function_field():
-        return f.factor()
-
-    K0 = K.rational_function_field()
-    k = K0.constant_base_field()
-    old_name = f.variable_name()
-    if (K.variable_name() == old_name
-            or K0.variable_name() == old_name
-            or hasattr(k, "variable_name") and k.variable_name() == old_name):
-        # replace x with x1 to make the variable names distinct
-        f = f.change_variable_name(old_name + "1")
-    F, d = to_trivariate_polynomial(K, f)
-    R = F.parent()
-    G = R(defining_polynomial(K))
-    factorization = []
-    g = f
-    J = R.ideal(F, G)
-    for Q, P in J.primary_decomposition_complete():
-        prime_factor = prime_factor_from_prime_ideal(K, P)
-        if prime_factor.degree() > 0:
-            e = 0
-            while True:
-                q, r = g.quo_rem(prime_factor)
-                if r == 0:
-                    g = q
-                    e += 1
-                else:
-                    break
-            factorization.append((prime_factor, e))
-    assert g.degree() == 0, "f did not factor properly"
-    from sage.structure.factorization import Factorization
-    ret = Factorization(factorization, g[0])
-    return ret
-
-
-def defining_polynomial(K):
-    r"""
-    Return the defining polynomial of K, as a bivariate polynomial.
-
-    INPUT:
-
-    - ``K`` -- a function field, given as an extension of a rational function field
-
-    OUTPUT: a bivariate polynomial `g` over the constant base field `k` of K
-    such that `K` is the fraction field of `k[y, x]/(g)`. Here `x` is the
-    generator of the rational function field `K_0` from which `K` was created,
-    and `y` is the generator of `K`.
-
-    """
-    return K.base_field()._to_bivariate_polynomial(K.polynomial())[0]
-
-
-def to_bivariate_polynomial(K, a):
-    r"""
-    Convert ``a`` from an element of ``K`` to a bivariate polynomial and a denominator.
-
-    INPUT:
-
-    - ``K`` -- a function field, given as a finite extension of a rational function field.
-    - ``a`` -- an element of ``K``
-
-    OUTPUT:
-
-    - a bivariate polynomial F
-    - a univariate polynomial d
-
-    such that `a = F(y, x)/d(x)`.
-
-    """
-    v = a.list()
-    denom = lcm([c.denominator() for c in v])
-    S = denom.parent()
-    y, x = S.base_ring()['%s,%s' % (K.variable_name(),
-                                    K.base_field().variable_name())].gens()
-    phi = S.hom([x])
-    F, d = sum([phi((denom * v[i]).numerator())
-               * y**i for i in range(len(v))]), denom
-    return F, d
-
-
-def to_trivariate_polynomial(K, f):
-    r"""
-    Convert ``f`` from a univariate polynomial over K into a trivariate
-    polynomial and a denominator.
-
-    INPUT:
-
-    - ``K`` -- a function field
-    - ``f`` -- univariate polynomial over K
-
-    OUTPUT:
-
-    - trivariate polynomial F, denominator d
-
-    Here `F` is a polynomial in `k[x, y, z]` and d a polynomial in `k[x]`.
-
-    """
-    v = [to_bivariate_polynomial(K, c) for c in f.list()]
-    denom = lcm([b for a, b in v])
-    S = denom.parent()
-    k = S.base_ring()
-    z, y, x = k['%s,%s,%s' % (f.parent().variable_name(), K.variable_name(),
-                K.base_field().variable_name())].gens()
-    F = z.parent().zero()
-    for i in range(len(v)):
-        a, b = v[i]
-        F += (denom(x) * a(y, x) / b(x)).numerator() * z**i
-    d = denom(x)
-    return F, d
-
-
-def prime_factor_from_prime_ideal(K, P):
-    r"""
-    Return the univariate polynomial over K corresponding to the prime ideal P.
-
-    INPUT:
-
-    - ``K`` -- a function field
-    - ``P`` -- a prime ideal of a multivariate polynomial ring
-
-    OUTPUT: a monic irreducible polynomial `f` over `K`.
-    We assume that `P` is a prime ideal of `k[z, y, x]` and that
-    `K = k(y, x | g(y,x) = 0)`. Then `f` is a generator of the ideal generated
-    by `P` in `K[z]`.
-
-    """
-    R = P.ring()
-    S = K['%s' % R.variable_names()[0]]
-    z = S.gen()
-    y = K.gen()
-    x = K.base_field().gen()
-    generators = [f(z, y, x) for f in P.gens()]
-    return S(gcd(generators)).monic()
