@@ -1448,11 +1448,14 @@ def _restriction_to_path(gamma, L, a0):
     is not, an error is raised.
 
     """
+    
+    from sage.rings.rational_field import QQ
+    
     s = gamma.initial_parameter()
     eta = gamma.tangent_vector(s)
-    e = eta.derivative(gamma._phi)
+    e = QQ(eta.derivative(gamma._phi))
     assert e != 0, "error: gamma = {}, L = {}, s = {}, eta = {}".format(gamma, L, s, eta)
-    a = _compute_derivative(L, a0, eta)/e
+    a = QQ(_compute_derivative(L, a0, eta))/e
     c = _compute_value(L, a0, gamma.initial_point())
     b = c - a*s
     h = AffineFunction(gamma, a, b)
