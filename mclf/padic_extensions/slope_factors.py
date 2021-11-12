@@ -85,11 +85,11 @@ def slope_factors(f, vK, precision, reduce_function, slope_bound=0):
     EXAMPLES::
 
         sage: from mclf.padic_extensions.slope_factors import slope_factors
-        sage: from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
+        sage: from mclf.padic_extensions.padic_number_fields import pAdicNumberField
         sage: from sage.all import GaussValuation
         sage: R.<x> = QQ[]
         sage: v2 = QQ.valuation(2)
-        sage: Q2 = FakepAdicCompletion(QQ, v2)
+        sage: Q2 = pAdicNumberField(QQ, v2)
         sage: f = (x - 2)*(x + 4) + 2^8
         sage: reduce_function = lambda g: Q2.reduce_polynomial(g, 5)
         sage: F = slope_factors(f, v2, 3, reduce_function)
