@@ -538,6 +538,8 @@ class InertialComponent(SageObject):
             the closed unit disk.
 
         """
+        from sage.all import PolynomialRing
+      
         if not hasattr(self, "_splitting_field"):
             vK = self.reduction_tree().base_valuation()
             K = vK.domain()
