@@ -549,11 +549,13 @@ class InertialComponent(SageObject):
                 fiber = self.reduction_tree().curve().fiber(self.basepoint().function_field_valuation())
                 # `fiber` should be a list of points on Y
                 F = []
+                R.<x> = K[]
                 for xi in fiber:
                     L = xi.residue_field()
                     # L should be a (relative) number field (which may include QQ)
                     if not L == QQ:
                         f = L.absolute_polynomial().change_ring(K)
+                        f = R(f)
                         F += [g for g, m in f.factor()]
                 # F = self.curve().fiber_equations(self.basepoint().function_field_valuation())
             else:
@@ -561,7 +563,9 @@ class InertialComponent(SageObject):
                 if L == QQ:
                     F = []
                 else:
-                    F = [L.absolute_polynomial().change_ring(K)]
+                    f = L.absolute_polynomial().change_ring(K)
+                    f = R(f)
+                    F = [f]
             e = self.type_II_point().pseudovaluation_on_polynomial_ring().E()
             # print("F = ", F)
             # print("e = ", e)
