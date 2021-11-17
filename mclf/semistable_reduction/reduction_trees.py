@@ -549,7 +549,7 @@ class InertialComponent(SageObject):
                 fiber = self.reduction_tree().curve().fiber(self.basepoint().function_field_valuation())
                 # `fiber` should be a list of points on Y
                 F = []
-                R.<x> = K[]
+                R = PolynomialRing(K, 'x')
                 for xi in fiber:
                     L = xi.residue_field()
                     # L should be a (relative) number field (which may include QQ)
