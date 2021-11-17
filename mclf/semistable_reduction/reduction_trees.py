@@ -547,11 +547,12 @@ class InertialComponent(SageObject):
             # Actually, it must be QQ!
             assert K == QQ, "K must be QQ"
             Kh = FakepAdicCompletion(K, vK)
+            
+            R = PolynomialRing(K, 'x')
             if self.is_separable():
                 fiber = self.reduction_tree().curve().fiber(self.basepoint().function_field_valuation())
                 # `fiber` should be a list of points on Y
                 F = []
-                R = PolynomialRing(K, 'x')
                 for xi in fiber:
                     L = xi.residue_field()
                     # L should be a (relative) number field (which may include QQ)
