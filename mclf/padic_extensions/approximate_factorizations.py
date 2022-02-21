@@ -280,7 +280,8 @@ class ApproximatePrimeFactor(SageObject):
             raise ValueError("f is not of the right type")
 
     def __repr__(self):
-        return "an approximate irreducible polynomial over {} of degree {}".format(self.base_field(), self.degree())
+        return "an approximate irreducible polynomial of degree {}, over {}".format(
+             self.degree(), self.base_field())
 
     def base_field(self):
         return self._base_field
@@ -574,7 +575,7 @@ class EnhancedInductiveValuation(SageObject):
         return self.root().valuation().F()
 
     def base_change(self, phi):
-        r""" Return the list of extension of this enhanced valuation to a finite
+        r""" Return the list of extensions of this enhanced valuation to a finite
              extension of the base field.
 
         INPUT:
@@ -591,7 +592,9 @@ class EnhancedInductiveValuation(SageObject):
         v = self.valuation()
         f = self.key()
         t = v(f)
-        f_L = phi.approximate_polynomial(f, t)
+        # here we have to think harder about the precision!
+        f_L = f.map_coefficients(lambda c: phi.evaluation(c, t+1), L.number_field())
+        # f_L = phi.approximate_polynomial(f, t+1)
         assert v.domain().base_ring() == K.number_field()
         if v.is_gauss_valuation() or self.degree() == 1:
             w0 = GaussValuation(f_L.parent(), L.valuation())

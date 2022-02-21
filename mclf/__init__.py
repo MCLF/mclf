@@ -11,6 +11,7 @@ from .berkovich.piecewise_affine_functions import *
 from .berkovich.affinoid_domain import *
 from .padic_extensions.weak_padic_galois_extensions import *
 from .padic_extensions.padic_number_fields import *
+from .padic_extensions.elements_of_padic_number_fields import *
 from .padic_extensions.padic_extensions import *
 from .padic_extensions.padic_embeddings import *
 from .padic_extensions.approximate_factorizations import *

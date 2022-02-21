@@ -9,7 +9,55 @@ where `K_0` is an (absolute) number field (i.e.\ a finite field extension of
 `\mathbb{Q}`) and `v_K` is a nontrivial discrete valuation on `K_0` (and
 therefore an extension to `K_0` of the `p`-adic valuation on `\mathbb{Q}`,
 for some prime number `p`). Then `K` is identified with the completion of
-`K_0` with with respect to `v_K`.
+`K_0` with respect to `v_K`.
+
+The focus of this implementation is on computing extensions of p-adic number
+fields, possibly of high degree, and on determining subfields. For instance,
+given a polynomial `f\in\mathbb{Q}` and a prime number `p`, we may want to
+compute the splitting field `L/\mathbb{Q}_p` of `f`, considered as a polynomial
+over the field of `p`-adic numbers `\mathbb{Q}_p`. What we really compute is
+a number field `L_0`, equipped with a discrete valuation `v_L` whose completion
+is the splitting field `L/\mathbb{Q}_p` of `f`. For later applications in
+{\sf MCLF} it is then sufficient to work with the pair `(L_0,v_L)`, e.g.
+to compute the semistable reduction of a curve defined over `\mathbb{Q}`. We
+remark that the number field `L_0` will typically be not at all the splitting
+field of `f` over `\mathbb{Q}`. For instance, `L_0` may not contain any root of
+`f`.
+
+Elements of p-adic number fields
+--------------------------------
+
+For these reasons, we do not have plans to develop p-adic number fields as
+*rings*, i.e. with element classes, arithmetic operations etc. Elements of
+a p-adic number field `K` are usually just elements of the underlying number
+field `K_0`. However, for certain taks it will be usuful to have the following
+notion of elements of `K` available:
+
+- An *approximate element* of `K` is defined as a closed ball inside `K`, i.e.
+  a subset `B:=\{ a\in K \mid v_K(a-a_0) \geq s \}`, where `a_0\in K_0` and
+  `s` is a positive rational number. Any element of `B\cap K_0`is called an
+  *approximation* with *precison* `s`.
+- An *algebraic element* of `K` is an element of `K` which is algebraic over
+  `\mathbb{Q}`. Such an element `a\in K` can be represented by its minimal
+  polynomial over `\mathbb{Q}` and a sufficietly good approximation `a_0\in K_0`.
+
+The classes representing such elements are implemented in
+:module:`elements_of_padic_number_fields<mclf.padic_extensions.\
+elements_of_padic_number_fields`.
+
+Embeddings of p-adic number fields
+----------------------------------
+
+Extensions of p-adic number fields
+----------------------------------
+
+Subfields of p-adic number fields
+---------------------------------
+
+Galois extensions
+-----------------
+
+
 
 
 AUTHORS:
@@ -18,6 +66,41 @@ AUTHORS:
 
 
 EXAMPLES:
+
+We define the field of `2`-adic numbers::
+
+    sage: from mclf import *
+    sage: Q2 = pAdicNumberField(QQ, 2); Q2
+
+Generally, p-adic number fields are represented by an *underlying number field*
+equipped with a discrete (p-adic) valuation::
+
+    sage: Q2.number_field()
+    sage: Q2.valuation()
+
+
+    sage: R.<x> = QQ[]
+    sage: a = K.roots(x^2 + 7)[0]; a
+    sage: a.minpoly()
+
+
+    sage: f = x^4 + 2*x + 2
+    sage: K, a = Q2.extension(f, "a"); K
+
+    sage: K.number_field()
+    sage: K.parent()
+
+    sage: K.ramification_degree()
+
+    sage: K.inertia_degree()
+
+    sage: a = K.generator()
+    sage: a.parent()
+
+    sage: F = K.factor(f); F
+
+    sage: g = F[0]
+    sage: L =
 
 
 
@@ -37,7 +120,7 @@ EXAMPLES:
 
 
 from sage.all import SageObject, ZZ, QQ, NumberField, PolynomialRing,\
-    IntegerModRing, mod, prod, vector, matrix, Infinity, GaussValuation
+    IntegerModRing, prod, vector, matrix, Infinity, GaussValuation
 
 
 class pAdicNumberField(SageObject):
@@ -53,6 +136,9 @@ class pAdicNumberField(SageObject):
     instead of `p` a discrete valuation `v_K` on `K_0` is given, it is assumed
     that `v_K` is the unique extension to `K_0` of the `p`-adic valuation of a
     prime number `p`.
+
+    It is also assumed that powers of the canonical generator of `K_0` is an
+    integral basis for `v_K`. For the moment, this is not checked!
 
     OUTPUT: the object representing the completion `K` of `K_0` with respect to `v_K`.
 
@@ -102,7 +188,11 @@ class pAdicNumberField(SageObject):
         self._absolute_polynomial = P
 
     def __repr__(self):
-        return "{}-adic completion of {}".format(self.p(), self.number_field())
+        if self.is_Qp():
+            return "field of {}-adic numbers".format(self.p())
+        else:
+            return "{}-adic number field of degree {} in {}".format(
+                self.p(), self.degree(), self.generator())
 
     def base_field(self):
         r""" Return the 'base field', i.e. this p-adic number field itself.
@@ -119,10 +209,18 @@ class pAdicNumberField(SageObject):
         return self
 
     def number_field(self):
-        r"""
-        Return the number field representing this p-adic extension.
+        r"""Return the number field representing this p-adic extension.
+
         """
         return self._number_field
+
+    def is_equal(self, K):
+        r""" Return whether this p-adic number field is equal to another one.
+
+        We need this mainly because we want to consider consider an extension
+        of p-adic fields to be equal to its extension field.
+        """
+        return self.extension_field() == K.extension_field()
 
     def base_valuation(self):
         r"""
@@ -269,13 +367,14 @@ class pAdicNumberField(SageObject):
         from mclf.padic_extensions.padic_extensions import ExactpAdicExtension
         return ExactpAdicExtension(self.identity())
 
-    def simple_extension(self, f, exact_extension=False):
+    def simple_extension(self, f, name=None, exact_extension=False):
         r""" Return the extension of this p-adic number field defined by an irreducible polynomial.
 
         INPUT:
 
-        - `f` -- a monic, integral and irreducible polynomial over this p-adic
+        - ``f`` -- a monic, integral and irreducible polynomial over this p-adic
                  number field `K`, or a Krasner equivalence class of such a polynomial
+        - ``name`` -- an alphanumeric string, or ``None`` (default: ``None``)
         - ``exact_extension`` -- a boolean (default: ``False``)
 
         OUTPUT: the stem field `L=K[x]/(f)`, as an extension of `p`-adic number fields.
@@ -283,8 +382,10 @@ class pAdicNumberField(SageObject):
         By default, the output is an object of :class:`ApproximateExtension`.
         If ``exact_extension`` is ``True``, it is a object of :class:`ExactpAdicExtension`.
 
+        If ``name`` is given, this will be the name of the canonical generator.
+
         """
-        L = SimpleExtensionOfpAdicNumberField(self, f)
+        L = SimpleExtensionOfpAdicNumberField(self, f, name)
         if exact_extension:
             return L.exact_extension()
         else:
@@ -304,7 +405,29 @@ class pAdicNumberField(SageObject):
         r""" Return the unramified extension of this p-adic number field of given degree.
 
         """
-        pass
+        raise NotImplementedError()
+
+    def splitting_field(self, f, roots=False):
+        r""" Return the splitting field of a polynomial.
+
+        INPUT:
+
+        - ``f`` -- a univariate polynomial over the underlying number field `K_0`
+        - ``roots`` -- a boolean (default: ``False``)
+
+        OUTPUT:
+
+        the splitting field `L/K` of `f` over this `p`-adic number field `K`.
+
+        If ``root`` is ``True`` we return a list of the roots of `f`.
+
+        .. NOTE::
+
+            We have to make sure, that the result if a p-adic number field, as
+            an *extension* of this field `K`.
+
+        """
+        raise NotImplementedError()
 
     def weak_splitting_field(self, f):
         r""" Return the weak splitting field of a polynomial.
@@ -321,47 +444,246 @@ class pAdicNumberField(SageObject):
             an *extension* of this field `K`.
 
         """
-        from mclf.padic_extensions.approximate_factorizations import weak_splitting_field
+        from mclf.padic_extensions.approximate_factorizations import (
+            weak_splitting_field)
         return weak_splitting_field(self, f)
 
-    def approximation(self, a, N, int_basis=True):
-        r"""
-        Return an approximation of ``a`` which is correct modulo `p^N`.
+    # ------------------------------------------------------------------------
+
+    #              functions on and for elements
+
+    def element(self, a, s=Infinity):
+        r""" Return the element of this p-adic number field corresponding to
+        an element `a` of the underlying number field, up to precision `s`.
 
         INPUT:
 
-        - ``a`` -- an element of the underlying number field `K`
-        - ``N`` -- a positive Integer
+        - ``a`` - an element of the underlying number field `K_0`
+        - ``s`` - a positive rational number, or ``Infinity``
+                  (default: ``Infinity)
 
-        OUTPUT: an element `\tilde{a}` of `K` which is congruent to `a` modulo `p^N`,
-        and whose representation in terms of the canonical integral basis of
-        `K` has coefficents of the form `c/p^m`, with `0\leq  c < p^N`
-        and `m\geq 0`.
+        OUTPUT:
+
+        the element of this p.adic number field corresponding to `a`, up to
+        precision `s`.
+
+        If `s=\infty` then we return an instance of
+        ::class::`ElementOfpAdicNumberField_exact<mclf.padic_extensions.\\
+        elements_of_padic_number_fields.ElementOfpAdicNumberField_exact>`.
+        Otherwise, an instance of
+        ::class::`ElementOfpAdicNumberField_exact<mclf.padic_extensions.\\
+        elements_of_padic_number_fields.ElementOfpAdicNumberField_approximate>`.
 
         """
-        if N == 0:
-            N = ZZ(1)
+        from mclf.padic_extensions.elements_of_padic_number_fields import (
+            element_of_padic_number_field)
         a = self.number_field()(a)
+        return element_of_padic_number_field(self, a, s)
+        raise NotImplementedError()
+
+    def algebraic_element(self, a_0, f=None):
+        r""" Return an algebraic element of this p-adic number field.
+
+        INPUT:
+
+        - ``a_0`` -- an element of the underlying number field
+        - ``f`` -- a monic irreducible polynomial over the rationals, or ``None``
+                   (default: ``None``)
+
+        OUTPUT:
+
+        If `f` is given, `a_0` must be good approximation of a zero `a` of `f`.
+        Then we return the zero `a` of `f` approximated by `a_0`, as an
+        algebraic element.
+
+        If `f` is not given, we return the element `a_0`, considered as an
+        algebraic element.
+        """
+        from mclf.padic_extensions.elements_of_padic_number_fields import (
+            ElementOfpAdicNumberField_algebraic)
+        if f is None:
+            return ElementOfpAdicNumberField_algebraic(self, a_0, a_0.minpoly())
+        else:
+            return ElementOfpAdicNumberField_algebraic(self, a_0, f)
+
+    def coefficients(self, a):
+        r""" Return the coefficient list of this element.
+
+        INPUT:
+
+        - ``a`` -- an element of the underlying number field
+
+        OUTPUT:
+
+        the list of coefficients of the representation of `a` as a linear
+        combination of the canonical integral basis.
+
+        Since we assume that the canonical integral basis is the canonical
+        power basis of the underlying number field, we can use the method
+        ::meth::`list` on `a`.
+
+        """
+        a = self.number_field()(a)
+        return list(a)
+
+    def is_integral(self, a):
+        r""" Return whether the element `a` is integral.
+
+        INPUT:
+
+        - ``a`` - an element of the underlying nuber field
+
+        OUTPUT:
+
+        whether `a` is an integral element of this `p`-adic number field.
+
+        This is true if and only if the coefficients of `a` (with respect to
+        the canonical integral basis) are integers.
+
+        """
         v_p = self.base_valuation()
+        return all(v_p(c) >= 0 for c in self.coefficients(a))
+
+    def finite_representation_ring(self, N=None):
+        r""" Return a ring in which the finite representations of integral
+        elements live.
+
+        INPUT:
+
+        - ``N`` - a positive integer, or ``None`` (default: ``None``)
+
+        OUTPUT: the polynomial quotion ring
+
+        .. MATH::
+
+            S = (\mathbb{Z}/p^N\mathbbb{Z})[T]/(F_N),
+
+        where `F_N` is the reduction mod `p^N` of the defining polynomial.
+
+        Because of our assumption that the powers of the generator yield an
+        integral basis, this ring is isomorphic to
+
+        .. MATH::
+
+            \mathcal{O}_K/p^N.
+
+        If `N` is not given, we take least integer strictly greater than `s`,
+        where `s` is the value specified by ::meth::`required_precision`.
+
+        """
+        if N is None and hasattr(self, "_finite_representation_ring"):
+            return self._finite_representation_ring
+        if N is None:
+            N = self.required_precision().floor() + 1
         p = self.p()
+        R = IntegerModRing(p**N)
+        F_N = self.polynomial().change_ring(R)
+        from sage.rings.polynomial.polynomial_quotient_ring import (
+            PolynomialQuotientRing)
+        return PolynomialQuotientRing(F_N.parent(), F_N)
 
-        if self.is_Qp():
-            # a should be a rational number
-            m = max(-v_p(a), 0)
-            b = a*p**m
-            q = p**(N+m)
-            return QQ(mod(b, q).lift()*p**(-m))
+    def finite_representation(self, a, N=None):
+        r""" Return the finite representation of ``a`` modulo `p^N`.
 
-        v = self.vector(a, int_basis)
-        vt = []
-        for i in range(len(v)):
-            a = v[i]
-            m = max(-v_p(a), 0)
-            b = a*p**m
-            q = p**(N+m)
-            at = mod(b, q).lift()*p**(-m)
-            vt.append(at)
-        return self.element_from_vector(vector(vt), int_basis)
+        INPUT:
+
+        - ``a`` -- an integral element of the underlying number field
+        - ``N`` -- a positive integer, or ``None`` (default: ``None``)
+
+        OUTPUT: an element of the approximation ring mod `p^N`
+
+        """
+        S = self.finite_representation_ring(N)
+        a = self.number_field()(a)
+        assert self.is_integral(a), "a must be integral"
+        return S(list(a))
+
+    def element_from_finite_representation(self, ab):
+        r""" Return a lift of an element of a finite representation ring.
+
+        INPUT:
+
+        - ``ab`` -- an element of a finite representation ring
+
+        OUTPUT: a
+
+        n integral element of the underlying number field,
+        lifting the element `\bar{a}`.
+
+        """
+        return self.number_field()([ZZ(c) for c in list(ab)])
+
+    def approximation(self, a, s=None):
+        r""" Return an approximation of an element of the underlying number
+        field.
+
+        INPUT:
+
+        - ``a`` - an integral element of the underlying number field
+        - ``s`` -- a positive rational, or ``None`` (default: ``None``)
+
+        OUTPUT:
+
+        an integral element `a_0` of the underlying number field such that
+
+        .. MATH::
+
+            v_K(a - a_0) > s.
+
+        The coefficients of `a_0` with respect to the canonical integral basis
+        are the standard representatives of the coefficients of `a` mod `p^N`.
+
+        """
+        from sage.all import ceil
+        assert self.is_integral(a), "the element a is not integral"
+        if s is None:
+            s = self.required_precision()
+        N = ceil(s)
+        K_0 = self.number_field()
+        m = self.p()**N
+        Zm = IntegerModRing(m)
+        return K_0([ZZ(Zm(c)) for c in list(a)])
+
+    def valuation_of_polynomial(self, f, a, precision=None):
+        r""" Return the valuation of an element of this number field which is
+        the evaluation of a polynomial.
+
+        INPUT:
+
+        - ``f`` -- a polynomial over a subfield of the underlying number field
+        - ``a`` -- an element of the underlying number field
+        - ``precision`` -- a positive rational, or ``None`` (default: ``None``)
+
+        OUTPUT: the valuation `v_K(f(a))`.
+
+        If ``precision`` is given, we return the minimum of `v_K(f(a))` and
+        ``precision``. In large examples, this is much faster as we only have
+        to evaluate `f(a)` up to this (finite) precision.
+
+        For the moment, this is function evaluates `v_K(f(a))` in the obvious
+        way. In the future, we can try to do something smarter which should
+        be faster for large examples.
+
+        """
+        if precision is None:
+            return self.valuation()(f(a))
+        else:
+            precision = max(0, precision)
+            t = self.valuation()(self.approximate_evaluation(f, a, precision + 1))
+            return min(t, precision)
+
+    def root(self, f, a_0):
+        r""" Return the root of a polynomial determined by an approximation.
+
+        """
+        raise NotImplementedError()
+
+    def roots(self, f):
+        r""" Return a list of all roots of a polynomial contained in this
+        p-adic number field.
+
+        """
+        raise NotImplementedError()
 
     def integral_basis(self):
         r""" Return the fixed integral basis of this p-adic number field.
@@ -370,74 +692,14 @@ class pAdicNumberField(SageObject):
         `p`-adic number field `K` which form an integral basis of the valuation
         ring of `v_K`.
 
-        ALGORITHM: we use MacLane's theory of inductive valuations. Let `v`
-        be the infinite pseudovaluation on `\mathbb{Q}[x]` corresponding to the
-        valuation `v_K` on `K`. It is characterized by the fact that it restricts
-        to the `p`-adic valuation on `\mathbb{Q}` and satisfies `v(f)=\infty`,
-        where `f` is the minimal polynomial of the standard generator `\alpha`
-        of `K` over `\mathbb{Q}_p`. Let
-
-        .. MATH::
-
-            v = [v_0, v_1(\phi_1)=t_1,\ldots,v_n(\phi_n)=\infty]
-
-        be the representation of `v` as an inductive valuation. (Note that
-        `\phi_n=f`). We may assume that
-
-        .. MATH::
-
-            \deg(\phi_1) < \ldots < \deg(\phi_n).
-
-        Then an integral basis of `K` is given by the images of the polynomials
-
-        .. MATH::
-
-            \frac{\phi_1^{m_1}\cdots\phi_{n-1}^{m_{n-1}}{p^{a_m}}
-
-        under the quotient map `\mathbb{Q}_p[x]\to K`, `x\mapsto \alpha`.
-        Here `m=(m_1,\ldots,m_{n-1})` runs over tupels of nonnegative integers
-        such that
-
-        .. MATH::
-
-            m_1\deg(\phi_1) + \ldots + m_i\deg(\phi_i) < \deg(\phi_{i+1})
-
-        for `i=1, \ldots , n-1` and
-
-        .. MATH::
-
-            a_m = \lfloor m_1t_1 + \ldots + m_{n-1}t_{n-1} \rfloor.
+        By our assumption, the powers of the canonical generator yield an
+        integral basis.
 
         """
 
         if not hasattr(self, "_integral_basis"):
-            if self.is_Qp():
-                integral_basis = [self.number_field().one()]
-            else:
-                K = self
-                p = K.p()
-                alpha = K.generator()
-                assert K.valuation()(p) == 1
-                v_f = K.valuation()._base_valuation
-                if not hasattr(v_f, "augmentation_chain"):
-                    v_f = v_f._approximation
-                aug_chain = v_f.augmentation_chain()
-                phi = [aug_chain[i].phi() for i in range(len(aug_chain)-2, -1, -1)]
-                if len(phi) == 0:
-                    phi = [v_f.domain().gen()]
-                elif phi[0].degree() > 1:
-                    phi = [v_f.domain().gen()] + phi
-                d = [phi[i].degree() for i in range(len(phi))]
-                t = [v_f(phi[i]) for i in range(len(phi))]
-                assert all(d[i] < d[i+1] for i in range(len(d)-1)), "the augmented valuation v_f = {} is not in reduced form!".format(v_f)
-                integral_basis = []
-                # we have to loop over all m=(m_1,..,m_r) such that m_1d_1+..+m_rd_r <= n
-                for m in exponents_of_phi(d):
-                    s = (sum(t[i]*m[i] for i in range(len(m)))).floor()
-                    beta = self.approximation(
-                        prod(phi[i]**m[i] for i in range(len(m)))(alpha), s+1, int_basis=False)
-                    integral_basis.append(beta*p**(-s))
-            self._integral_basis = integral_basis
+            alpha = self.generator()
+            self._integral_basis = [alpha**i for i in range(self.degree())]
         return self._integral_basis
 
     def matrix(self, a):
@@ -458,9 +720,8 @@ class pAdicNumberField(SageObject):
         if self.is_Qp():
             return matrix([QQ(a)])
         else:
-            S, S_i = self.base_change_matrices()
             a = self.number_field()(a)
-            return S_i*a.matrix().transpose()*S
+            return a.matrix().transpose()
 
     def approximate_matrix(self, a, N):
         r""" Return an approximation of the matrix corresponding to an integral element.
@@ -478,7 +739,7 @@ class pAdicNumberField(SageObject):
         R = IntegerModRing(self.p()**N)
         return self.matrix(a).change_ring(R)
 
-    def vector(self, a, int_basis=True):
+    def vector(self, a):
         r"""
         Return the vector corresponding to an element of the underlying number field.
 
@@ -494,15 +755,11 @@ class pAdicNumberField(SageObject):
         """
         if self.is_Qp():
             return vector([QQ(a)])
-        elif int_basis:
-            a = self.number_field()(a)
-            S_i = self.inverse_base_change_matrix()
-            return S_i*a.vector()
         else:
             a = self.number_field()(a)
             return a.vector()
 
-    def element_from_vector(self, v, int_basis=True):
+    def element_from_vector(self, v):
         r"""
         Return the element corresponding to a given vector.
 
@@ -516,11 +773,7 @@ class pAdicNumberField(SageObject):
         corresponding to `v`.
 
         """
-        if int_basis:
-            S = self.base_change_matrix()
-            return self.number_field()(list(S*v))
-        else:
-            return self.number_field()(list(v))
+        return self.number_field()(list(v))
 
     def element_from_approximate_matrix(self, A):
         r""" Return the element corresponding to an approximate matrix.
@@ -536,45 +789,6 @@ class pAdicNumberField(SageObject):
 
         """
         return self.element_from_vector(A.column(0).change_ring(QQ))
-
-    def base_change_matrix(self):
-        r"""
-        Return the base change matrix to an integral basis.
-
-        OUTPUT: a square matrix `S` over `\mathbb{Q}`.
-
-        Here `S` is an invertible `(n,n)`-matrix over `\mathbb{Q}` with the following
-        property: for an element `a` of `K_0`, the vector ``S*a.vector()``
-        gives the representation of `a` as a linear combination of the
-        canonical integral basis of `K`.
-
-        """
-        if not hasattr(self, "_base_change_matrix"):
-            columns = [a.vector() for a in self.integral_basis()]
-            self._base_change_matrix = matrix(QQ, columns).transpose()
-        return self._base_change_matrix
-
-    def inverse_base_change_matrix(self):
-        r""" Return the inverse of the base change matrix.
-
-        """
-        if not hasattr(self, "_inverse_base_change_matrix"):
-            self._inverse_base_change_matrix = self.base_change_matrix().inverse()
-        return self._inverse_base_change_matrix
-
-    def base_change_matrices(self):
-        r"""
-        Return the base change matrix to an integral basis, and its inverse.
-
-        OUTPUT: a pair `(S, S^{-1})` of mutually inverse matrices.
-
-        Here `S` is an invertible `(n,n)`-matrix over `\mathbb{Q}` with the following
-        property: for an element `a` of `K_0`, the vector ``S*a.vector()``
-        gives the representation of `a` as a linear combination of the
-        canonical integral basis of `K`.
-
-        """
-        return self.base_change_matrix(), self.inverse_base_change_matrix()
 
     def difference_polynomial(self):
         r""" Return the difference polynomial of the polynomial defining this field.
@@ -651,17 +865,64 @@ class pAdicNumberField(SageObject):
 
         - ``f`` -- a polynomial with integeral coefficients
         - ``a`` -- an element of the number field underlying this `p`-adic field
-        - ``s`` -- a positive rational number
+        - ``s`` -- a positive rational number, or ``Infinity``
 
         OUTPUT: the value `f(a)`, up to precision `s`.
 
         """
+        assert s > 0, "s must be positive"
+        if s == Infinity:
+            return f(a)
         N = QQ(s+1).floor()
         if self.is_Qp():
             return self.approximation(f(a), N)
         else:
-            A = self.approximate_matrix(a, N)
-            return self.element_from_approximate_matrix(f(A))
+            f = f.change_ring(ZZ)
+            ab = self.finite_representation(a, N)
+            return self.element_from_finite_representation(f(ab))
+
+    def is_approximate_root(self, a0, f):
+        r""" Return whether a p-adic element is an approximate root of a
+        polynomial.
+
+        """
+        return self.precision_of_approximate_root(self, a0, f) > 0
+
+    def precision_of_approximate_root(self, a0, f):
+        r""" Return the precision of an approximate root.
+
+        INPUT:
+
+        - ``a0`` -- an element of the underlying number field
+        - ``f`` -- a polynomial over a subfield of the underlying number field
+
+        OUTPUT:
+
+        If `a_0` is a good approximation to a root `a` of `f`, then we return
+        `v_K(a-a_0)` (which is then positive).
+
+        Otherwise we return `0`. So this method can be used to test whether
+        `a_0` is an approximate root.
+
+        """
+        # we compute the Newton polygon of f(a_0+x)
+        F = [f]
+        n = f.degree()
+        for i in range(1, n + 1):
+            F.append(F[i-1].derivative()/i)
+        v0 = self.valuation_of_polynomial(F[0], a0)
+        if v0 == Infinity:
+            return Infinity
+        v1 = self.valuation_of_polynomial(F[1], a0)
+        s = v0 - v1
+        if s <= 0:
+            return QQ.zero()
+        else:
+            for i in range(2, min(n, (v0*s**(-1)).ceil()) + 1):
+                t_i = v0 - i*s
+                if self.valuation_of_polynomial(F[i], a0, precision=t_i) <= t_i:
+                    return QQ.zero()
+            return s
 
     def approximate_root(self, f, a0, s):
         r""" Return an approximate root of a polynomial.
@@ -676,7 +937,7 @@ class pAdicNumberField(SageObject):
         some root `a` of `f`. Here *sufficient* means that `a_0` is strictly
         closer to `a` than to any other root.
 
-        OUTPUT: an element `a_1` such that `v_K(a - a_1) > s`.
+        OUTPUT: an element `a_1` such that `v_K(a - a_1) \geq s`.
 
         """
         v_K = self.valuation()
@@ -687,7 +948,7 @@ class pAdicNumberField(SageObject):
         t0 = v_K(fa0)
         t1 = v_K(fxa0)
         N = QQ(s+1).floor()
-        while t0 < Infinity and t0 <= s + t1:
+        while t0 < Infinity and t0 < s + t1:
             # we have v_K(a-a_1) = t0 - t1, so this is the condition to stop
             if t0 > 2*t1:
                 # under this condition, we can use Newton approximation
@@ -711,7 +972,7 @@ class pAdicNumberField(SageObject):
             fxa0 = self.approximate_evaluation(fx, a0, s)
             t0 = v_K(fa0)
             t1 = v_K(fxa0)
-        return a0
+        return self.approximation(a0, s)
 
 # ---------------------------------------------------------------------------
 
@@ -724,6 +985,7 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
     - ``K`` -- a p-adic number field
     - ``f`` -- a monic, integral and irreducible polynomial over `K`, or a
                Krasner class of such polynomials
+    - ``name`` -- an alphanumeric string, or ``None`` (default: ``None``)
 
     OUTPUT: a constructor for the finite extension `L:=K[x]/(f)`.
 
@@ -739,7 +1001,7 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
 
     """
 
-    def __init__(self, K, f):
+    def __init__(self, K, f, name=None):
         from mclf.padic_extensions.approximate_factorizations import ApproximatePrimeFactor
         K_0 = K.number_field()
         if isinstance(f, ApproximatePrimeFactor):
@@ -750,6 +1012,10 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         # this is a preliminary and ad hoc  choice; in an improved version, the precision
         # should be chosen automatically to be 'just enough'
         self._precision = 5
+        if name is None:
+            self.name = "alpha{}".format(self.absolute_degree())
+        else:
+            self.name = name
 
     def __repr__(self):
         return "constructor for a finite extension of {} with equation {}".format(self.base_field(), self.polynomial())
@@ -770,8 +1036,8 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         from mclf.padic_extensions.padic_extensions import ExactpAdicExtension
         K = self.base_field()
         K0 = K.number_field()
-        L0_rel = K0.extension(self.polynomial(), "alpha"+str(self.degree()))
-        L0 = L0_rel.absolute_field("beta"+str(self.absolute_degree()))
+        L0_rel = K0.extension(self.polynomial(), self.name)
+        L0 = L0_rel.absolute_field(self.name + "_a")
         _, psi = L0.structure()  # psi is the isomorphism from L0_rel to L0
         L = pAdicNumberField(L0, K.base_valuation())
         phi = K0.hom(L0_rel).post_compose(psi)
@@ -809,9 +1075,9 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         """
         if not hasattr(self, "_extension_field"):
             p = self.base_field().p()
-            g = self.uniformizing_generator()
+            g = self.integral_generator()
             f, A = self.approximate_equation_for_generator(g)
-            L_0 = NumberField(f, "pi{}".format(f.degree()))
+            L_0 = NumberField(f, self.name)
             v_L = QQ.valuation(p).extension(L_0)
             self._extension_field = pAdicNumberField(L_0, v_L)
             self._approximate_matrix_for_generator = A
@@ -843,7 +1109,9 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         which we may restrict to the subfield `K`.
 
         """
-        from mclf.padic_extensions.padic_embeddings import ApproximatepAdicEmbedding
+        from mclf.padic_extensions.padic_embeddings import pAdicEmbedding
+        from mclf.padic_extensions.elements_of_padic_number_fields import (
+            ElementOfpAdicNumberField_algebraic)
         if hasattr(self, "_approximate_embedding"):
             return self._approximate_embedding
         K = self.base_field()
@@ -854,26 +1122,23 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         int_basis_L = L.integral_basis()
         B = self._approximate_matrix_for_generator
         R = B.base_ring()
-        S, S_i = L.base_change_matrices()
         u = vector(R, n)
         u[0] = R.one()
         columns = [u]
         for i in range(n-1):
             u = B*u
             columns.append(u.change_ring(QQ))
-        A = matrix(QQ, columns).transpose()*S
+        A = matrix(QQ, columns).transpose()
         A_i = self.approximate_inverse_of_matrix(A)
         alpha = L.number_field().zero()
         for j in range(m):
             alpha += v[j]*sum(A_i[i, j]*int_basis_L[i] for i in range(n))
-        # alternatively, one could only compute alpha as a vector, or matrix
-        # modulo p^N at this stage and then use a root finding procedure native
-        # to L
-        # it is also not at all transparent to which precision the matrix A_i
+        # it is not at all transparent to which precision the matrix A_i
         # has been computed; the required precision depends, it seems, only on
         # the polynomial defining K, and could be computed in advance
 
-        phi = ApproximatepAdicEmbedding(K, L, alpha)
+        alpha = ElementOfpAdicNumberField_algebraic(L, alpha, K.polynomial())
+        phi = pAdicEmbedding(K, L, alpha)
         self._approximate_embedding = phi
         # this computation can get ridiculously large; it would be better to do
         # over ZZ/p^N and only lift to QQ at the very end
@@ -1032,11 +1297,17 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
             self._inverse_base_change_matrix = self.base_change_matrix().inverse()
         return self._inverse_base_change_matrix
 
-    def uniformizing_generator(self):
-        r""" Return an equation for a generator which is also a uniformizer.
+    def integral_generator(self):
+        r""" Return an equation for a integral generator.
 
-        OUTPUT: a polynomials `g\in K_0[x]` such that `\beta_L:=g(\alpha)` is an
-        absolute generator for this simple extension `L=K[\alpha]`.
+        OUTPUT: a pair `(g,h)`, where
+
+        - `g\in K_0[x]` is a polynomial such that `\beta:=g(\alpha)` is an
+          absolute integral generator for this simple extension `L=K[\alpha]`
+          (here integral means that its powers yield an integral basis)
+        - `h\in \mathbb{Z}[x]` is a monic, integral polynomial (of degree `f`,
+           the inertia degree of `L`) such that `\pi:=h(\beta)` is a uniformizer
+           of `L`.
 
         ALGORITHM:
 
@@ -1056,8 +1327,8 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
                 from mclf.curves.smooth_projective_curves import make_finite_field
                 _, phi, _ = make_finite_field(k)
                 thetab = phi(thetab)
-            f = thetab.minpoly().change_ring(QQ)
-            if v(f(theta)) == v(pi):
+            h = thetab.minpoly().change_ring(QQ)
+            if v(h(theta)) == v(pi):
                 return theta
             else:
                 return theta + pi

@@ -40,7 +40,7 @@ TO DO:
 
 from sage.all import ZZ
 from mclf.padic_extensions.padic_number_fields import pAdicNumberField
-from mclf.padic_extensions.padic_embeddings import ExactpAdicEmbedding, ApproximatepAdicEmbedding
+from mclf.padic_extensions.padic_embeddings import pAdicEmbedding, ExactpAdicEmbedding, ApproximatepAdicEmbedding
 
 
 class pAdicExtension(pAdicNumberField):
@@ -257,7 +257,7 @@ class ApproximatepAdicExtension(pAdicExtension):
     """
 
     def __init__(self, phi):
-        assert isinstance(phi, ApproximatepAdicEmbedding), "phi has to be an approximate embedding"
+        assert isinstance(phi, pAdicEmbedding), "phi has to be a p-adic embedding"
         super().__init__(phi)
 
     def relative_minpoly(self, a):
