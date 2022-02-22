@@ -157,7 +157,7 @@ def roots_of_rational_polynomial(K, f, approximations=None):
     """
     from mclf.padic_extensions.approximate_factorizations import (
         approximate_factorization)
-    roots = []
+    # roots = []
     G = [g for g, _ in f.factor()]
     if approximations is None:
 
