@@ -575,7 +575,7 @@ class pAdicNumberField(SageObject):
         v_p = self.base_valuation()
         return all(v_p(c) >= 0 for c in self.coefficients(a))
 
-    def finite_representation_ring(self, N=None):
+    def finite_quotient_ring(self, N=None):
         r""" Return a ring in which the finite representations of integral
         elements live.
 
@@ -602,8 +602,8 @@ class pAdicNumberField(SageObject):
         where `s` is the value specified by ::meth::`required_precision`.
 
         """
-        if N is None and hasattr(self, "_finite_representation_ring"):
-            return self._finite_representation_ring
+        if N is None and hasattr(self, "_finite_quotient_ring"):
+            return self._finite_quotient_ring
         if N is None:
             N = self.required_precision().floor() + 1
         p = self.p()
@@ -624,7 +624,7 @@ class pAdicNumberField(SageObject):
         OUTPUT: an element of the approximation ring mod `p^N`
 
         """
-        S = self.finite_representation_ring(N)
+        S = self.finite_quotient_ring(N)
         a = self.number_field()(a)
         assert self.is_integral(a), "a must be integral"
         return S(list(a))
@@ -879,11 +879,11 @@ class pAdicNumberField(SageObject):
         """
         if not hasattr(self, "_required_precision"):
             if self.is_Qp():
-                s = 0
+                s = QQ.zero()
             else:
                 slopes = self.difference_newton_polygon().slopes()
                 if len(slopes) == 0:
-                    s = 0
+                    s = QQ.zero()
                 else:
                     s = -slopes[0]
             self._required_precision = s
