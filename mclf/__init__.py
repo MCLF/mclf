@@ -14,6 +14,7 @@ from .padic_extensions.padic_number_fields import *
 from .padic_extensions.elements_of_padic_number_fields import *
 from .padic_extensions.padic_extensions import *
 from .padic_extensions.padic_embeddings import *
+from .padic_extensions.simple_extensions_of_padic_number_fields import *
 from .padic_extensions.approximate_factorizations import *
 from .semistable_reduction.reduction_trees import *
 from .semistable_reduction.admissible_reduction import *
