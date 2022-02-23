@@ -7,16 +7,29 @@ Let `K` and `L` be `p`-adic number fields. In this module we define a class
 ``pAdicEmbedding`` whose objects represent embeddings `\varphi:K\to L` over
 `\mathbb{Q}_p`.
 
-There are two kinds of embeddings. The first ist called *exact*, meaning that
-`\varphi` is induced from an embedding of the underlying number fields. If this
-is not the case then the embedding is called *approximate*.
-
 Recall that a p-adic number field `K` is represented by a pair `(K_0,v_K)`,
 where `K_0` is a number field and `v_K` is a p-adic valuation on `K_0`, such
 that `K` is the completion of `K_0` w.r.t. `v_K`. If `L` is another p-adic
 number field, represented by `(L_0,v_L)` and `\varphi:K\to L` is an embedding,
-then there is no reason a priori to expect that `\varphi(K_0)=L_0` (which means
-that `\varph` is exact).
+then there is no reason a priori to expect that `\varphi(K_0)=L_0`. If this is
+the case then we say that `\varphi` is an *exact embedding*.
+
+Exact embeddings are preferable, but it is not always possible (and mostly too
+expensive) to choose the underlying number fields in such a way that the
+embedding we are interested in is exact. So our default is that an embedding
+`\varphi:K\to L` is not exact (we then say it is an *approximate embedding*).
+
+Recall that the number field `K_0` underlying `K` has an absolute generator
+`\alpha` and is therefore completely determined by the absolute minimal
+polynomial `f\in \mathbb{Q}` of `\alpha`.  In order to define an embedding
+`\varphi:K\to L`, it suffices to give the image `\beta:=\varphi(\alpha)`,
+where `\beta\in L` is a root of `f`. Note that `\beta` will typically not lie
+in the number field `L_0` underlying `L` (otherwise, `\varphi` would be an
+exact emebdding). It is therefore necessary to represent `\beta` as an
+*algebraic element* of `L`, determined by its minimal polynomial
+`f\in\mathbb{Q}[x]` and a sufficiently good approximation `\beta_0\in L_0`.
+See :module:`Elements of p-adic number fields<mclf.padic_extensions.\
+elements_of_padic_number_fields>`.
 
 
 
@@ -46,7 +59,7 @@ TO DO:
 #                  https://www.gnu.org/licenses/
 # *****************************************************************************
 
-from sage.all import SageObject, Infinity, QQ, ZZ
+from sage.all import SageObject, Infinity, ZZ
 from mclf.padic_extensions.padic_number_fields import pAdicNumberField
 from mclf.padic_extensions.elements_of_padic_number_fields import (
     ElementOfpAdicNumberField)
@@ -59,21 +72,13 @@ class pAdicEmbedding(SageObject):
 
     - ``K``, ``L`` -- two `p`-adic number fields
     - ``alpha`` - an algebraic element of `L` which is a root of the
-                  polynomial defining `K`
+                  polynomial defining `K`, or a sufficiently good approximation
+                  of such a root
 
     OUTPUT:
 
     the (unique) embedding of `K` into `L` which sends the canonical generator
     of `K` to  `\alpha`.
-
-    Here `\alpha` may be given as an element of the number field underlying `L`.
-    In this case, the resulting embedding `\varphi:K\to L` is called *exact*,
-    as it is induced from an embedding of the underlying number fields of `K`
-    and `L`.
-
-    Otherwise, `\alpha` must be an instance of the class
-    :class:`ElementOfpAdicNumberField_algebraic<mclf.padic_extensions.\
-    elements_of_padic_number_fields.ElementOfpAdicNumberField_algebraic>`.
 
     """
 
@@ -86,6 +91,7 @@ class pAdicEmbedding(SageObject):
         if isinstance(alpha, ElementOfpAdicNumberField_algebraic):
             assert alpha.minimal_polynomial() == f, "alpha is not a root of f"
         else:
+            # we assume that alpha is a sufficient approximation of a root of f
             alpha = L.algebraic_element(alpha, f)
         self._domain = K
         self._codomain = L
@@ -179,9 +185,7 @@ class pAdicEmbedding(SageObject):
             element_of_padic_number_field)
         K = self.domain()
         if isinstance(a, ElementOfpAdicNumberField):
-            # it is still problematic to use == to test equality of p-adic
-            # number fields, because they may or may not be "extensions"
-            # assert a.parent() == K, "a must lie in K"
+            assert K.is_equal(a.parent()), "a must lie in K"
             return a.evaluate_embedding(self)
         else:
             a = element_of_padic_number_field(K, a)
@@ -222,7 +226,6 @@ class pAdicEmbedding(SageObject):
 
 # --------------------------------------------------------------------------
 
-#   we should not need this anymore:
 
 class ExactpAdicEmbedding(pAdicEmbedding):
     r"""
@@ -338,12 +341,12 @@ class ExactpAdicEmbedding(pAdicEmbedding):
 
         """
         phi = self
-        if isinstance(psi, ApproximatepAdicEmbedding):
-            alpha = phi(psi.approximate_generator())
-            return ApproximatepAdicEmbedding(psi.domain(), phi.codomain(), alpha)
-        elif isinstance(psi, ExactpAdicEmbedding):
+        if isinstance(psi, ExactpAdicEmbedding):
             composition = self.exact_embedding().precompose(psi.exact_embedding())
             return ExactpAdicEmbedding(psi.domain(), phi.codomain(), composition)
+        elif isinstance(psi, pAdicEmbedding):
+            alpha = phi(psi.approximate_generator())
+            return pAdicEmbedding(psi.domain(), phi.codomain(), alpha)
         else:
             raise ValueError("psi has to be an exact or an approximate embedding")
 
@@ -379,217 +382,3 @@ class ExactpAdicEmbedding(pAdicEmbedding):
 
         """
         return self.codomain().approximation(self(alpha), s.ceil())
-
-
-class ApproximatepAdicEmbedding(pAdicEmbedding):
-    r"""
-    Return an(approximate) embedding of two `p`- adic number fields.
-
-    INPUT:
-
-    - ``K``, ``L`` - - two `p`- adic number fields
-    - ``alpha_0`` - an approximation of the image of the generator of the domain.
-
-    OUTPUT: the embedding of `K` into `L` which is determined by `\alpha_0`.
-
-    The element `\alpha_0\in L_0` of the number field underlying `L` is assumed
-    to be an * approximate root * of the minimal polynomial `f\in \mathbb{Q}[x]` of
-    the standard generator of `K /\mathbb{Q}_p`. Here 'approximate root' means
-    that the pair `(f, \alpha_0)` satisfies the condition of Hensel's Lemma,
-    which guarantees that there exists a unique root `\alpha\in L` of `f`
-    strictly closer to `\alpha_0` than any other root. The associated embedding
-    is then the map
-
-    .. MATH::
-
-        \phi: K\cong \mathbb{Q}[x]/(f) \to L, \quad x \mapsto \alpha.
-
-    Note that the embedding `\phi` does in general not restrict to a map between
-    the underlying number fields, `K_0\to L_0`. Therefore, we cannot compute
-    `\phi` exactly, but only approximately. Hensel's Lemma guarantees that
-    the root `\alpha` approximated by `\alpha_0` is unique, and that the
-    approximation `\alpha_0` can be improved to arbitrary precision via the
-    `p`- adic Newton method. This allows us to approximate the map `\phi` up to
-    arbitrary precison.
-
-    """
-
-    def __init__(self, K, L, alpha_0):
-        L_0 = L.number_field()
-        v_L = L.valuation()
-        alpha_0 = L_0(alpha_0)
-        assert v_L(alpha_0) >= 0
-        f = K.polynomial()
-        alpha_0 = L.approximate_root(f, alpha_0, K.required_precision())
-        self._domain = K.extension_field()
-        self._codomain = L.extension_field()
-        self._approximate_generator = alpha_0
-        self._equation = f
-        # I don't understand this choice anymore; it seems to work though
-        self._precision = K.required_precision()
-
-    def precompose(self, psi):
-        r""" Return the precompositon of this embedding with the embedding `\psi`.
-
-        INPUT:
-
-        - ``psi`` - - an embedding of `p`a-dic number fields `\psi: M\to K`,
-                     where `K` is the domain of this embedding `\phi`.
-
-        OUTPUT: the composition `\phi\circ\psi`.
-
-        """
-        phi = self
-        if isinstance(psi, ApproximatepAdicEmbedding):
-            # I have to think harder how to set the precision; this is just
-            # a first try:
-            s = min(phi.precision(), psi.precision())
-            if s == Infinity:
-                s = QQ(10)
-            while True:
-                try:
-                    alpha = phi.approximate_evaluation(psi.approximate_generator(s), s)
-                    return ApproximatepAdicEmbedding(psi.domain(), phi.codomain(), alpha)
-                except AssertionError:
-                    s += 2
-        elif isinstance(psi, ExactpAdicEmbedding):
-            alpha = psi(psi.domain().generator())
-            alpha = phi.approximate_evaluation(alpha)
-            return ApproximatepAdicEmbedding(psi.domain(), phi.codomain(), alpha)
-        else:
-            raise ValueError("psi has to be an exact or an approximate embedding")
-
-    def postcompose(self, psi):
-        r""" Return the postcompositon of this embedding with the embedding `\psi`.
-
-        INPUT:
-
-        - ``psi`` - - an embedding of `p`a-dic number fields `\psi: L\to M`,
-                     where `L` is the codomain of this embedding `\phi`.
-
-        OUTPUT: the composition `\psi\circ\phi`.
-
-        """
-        return psi.precompose(self)
-
-    def precision(self):
-        return self._precision
-
-    def is_equal(self, psi):
-        r""" Return wether this embedding is equal to another one.
-
-        INPUT:
-
-        - ``psi`` - - an embedding of `K\to L`
-
-        Here `\phi: K\to L` is this emebdding.
-
-        OUTPUT: whether `\phi` and `\psi` are equal.
-
-        """
-        from sage.geometry.newton_polygon import NewtonPolygon
-        if isinstance(psi, ExactpAdicEmbedding):
-            return psi.is_equal(self)
-        phi = self
-        # now phi and psi are both approximate
-        if not (phi.domain() == psi.domain() and phi.codomain() == psi.codomain()):
-            return False
-        if phi.domain().is_Qp():
-            # there is only one embedding of QQ_p into a p-adic number field
-            return True
-        v_L = phi.codomain().valuation()
-        alpha_1 = phi.approximate_generator()
-        alpha_2 = psi.approximate_generator()
-        f = phi.domain().polynomial()
-        # we know that both alpha_1 and alpha_2 are closer to some root of f
-        # then any other root. We have to check whether alpha_1 and alpha_2
-        # belong to the same root
-        F = f(f.parent().gen() + alpha_1)
-        np = NewtonPolygon((i, v_L(F[i])) for i in range(1, f.degree()+1))
-        # the slopes of np are - the valuation of alpha_1-other roots of f
-        return v_L(alpha_1-alpha_2) > -np.slopes()[0]
-
-    def approximate_generator(self, t=None):
-        r""" Return an approximation of the image of the generator of the domain.
-
-        INPUT:
-
-        - ``t`` - - a positive rational number, or ``None`` (default: ``None``)
-
-        OUTPUT: an approximation `\pi_0` of `\phi(\pi_K)`, up to precision `t`.
-
-        Here `\phi: K\to L` is this embedding, `\alpha\in K_0` is the generator of
-        the number field underlying the domain `K` and `\alpha_0\in L_0` is an
-        element of the number field `L_0` underlying the codomain `L`, such that
-
-        .. MATH::
-
-            v_L(\alpha_0 -\phi(\alpha)) > t.
-
-        If `t` is not given, then the approximation of used for the
-        previous call of this method is returned. It is guaranteed to determine
-        the embedding uniquely.
-
-        """
-        if t is None or t <= self.precision():
-            return self._approximate_generator
-        L = self.codomain()
-        alpha = self._approximate_generator
-        f = self._equation
-        alpha = L.approximate_root(f, alpha, t)
-        self._approximate_generator = alpha
-        self._precision = t
-        return alpha
-
-    def approximate_integral_basis(self, s):
-        r""" Return an approximation of the standard integral basis of the domain.
-
-        """
-        if hasattr(self, "_approximate_integral_basis") and self.precision() >= s:
-            return self._approximate_integral_basis
-        K = self.domain()
-        int_basis_K = K.integral_basis()
-        approx_int_basis = [self.approximate_evaluation(a, s, polynomial=True)
-                            for a in int_basis_K]
-        self._approximate_integral_basis = approx_int_basis
-        return approx_int_basis
-
-    def approximate_evaluation(self, alpha, s=None):
-        r""" Return an approximation of this embedding on an element.
-
-        INPUT:
-
-        - ``alpha`` - - an element of the number field `K_0`approximating the domain `K`
-        - ``s`` - - a positive rational number
-
-        OUTPUT:
-
-        an approximation `\alpha_0` of the image of `\alpha under this embedding
-        `\phi: K\to L`, with the guaranteed precision `s`. This means that
-
-        .. MATH::
-
-            v_L(\alpha_0 - \phi(\alpha)) > s.
-
-        """
-        K = self.domain()
-        L = self.codomain()
-        if s is None:
-            s = self.precision()
-        # Attention! this is preliminary:
-        if s == Infinity:
-            s = QQ(10)
-        N = QQ(s).ceil()
-        assert alpha in K.number_field(), "alpha must be an element of the underlying number field of the domain"
-        if alpha.is_rational():
-            return L.number_field()(alpha)
-        alpha = K.number_field()(alpha)
-        assert K.valuation()(alpha) >= 0, "alpha must be integral"
-        f = alpha.polynomial()
-        pi0 = self.approximate_generator(s)
-        return L.approximation(f(pi0), N)
-
-
-# ---------------------------------------------------------------------------
-
-#                     helper functions

@@ -40,7 +40,7 @@ TO DO:
 
 from sage.all import ZZ
 from mclf.padic_extensions.padic_number_fields import pAdicNumberField
-from mclf.padic_extensions.padic_embeddings import pAdicEmbedding, ExactpAdicEmbedding, ApproximatepAdicEmbedding
+from mclf.padic_extensions.padic_embeddings import pAdicEmbedding, ExactpAdicEmbedding
 
 
 class pAdicExtension(pAdicNumberField):
@@ -303,7 +303,7 @@ class ApproximatepAdicExtension(pAdicExtension):
 
             # WARNING: this may be wrong if f is not "Krasner separable"
 
-            sigma = ApproximatepAdicEmbedding(M, L, L.generator())
+            sigma = pAdicEmbedding(M, L, L.generator())
             # this should be an isomorphism of p-adic number field. So M
             # is the extension we want if sigma is K-linear.
             phi = M.embedding().postcompose(sigma)

@@ -183,6 +183,9 @@ class SimpleExtensionOfpAdicNumberField(SageObject):
         """
         return self.degree()*self.base_field().absolute_degree()
 
+    def precision(self):
+        return self._precision
+
     def pseudovaluation(self):
         r""" Return the pseudovaluation corresponding to the equation defining this extension.
 
