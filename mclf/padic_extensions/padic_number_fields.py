@@ -503,7 +503,8 @@ class pAdicNumberField(SageObject):
             an *extension* of this field `K`.
 
         """
-        raise NotImplementedError()
+        from mclf.padic_extensions.approximate_factorizations import splitting_field
+        return splitting_field(self, f, roots)
 
     def weak_splitting_field(self, f):
         r""" Return the weak splitting field of a polynomial.
@@ -516,7 +517,7 @@ class pAdicNumberField(SageObject):
 
         .. NOTE::
 
-            We have to make sure, that the result if a p-adic number field, as
+            We have to make sure, that the result is a p-adic number field, as
             an *extension* of this field `K`.
 
         """

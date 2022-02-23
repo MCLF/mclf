@@ -140,6 +140,27 @@ def approximate_factorization(K, f, v0=None):
     return ret
 
 
+def splitting_field(K, f, roots=False):
+    r""" Return the splitting field of a polynomial over a p-adic number field.
+
+    INPUT:
+
+    - ``K`` -- a p-adic number field
+    - ``f`` -- a polynomial over `K`
+    - ``roots`` -- a boolean (default: ``False``)
+
+    OUTPUT:
+
+    the splitting field `L/K` of `f`, as an extension of p-adic number fields.
+
+    If ``roots`` is ``True`` we return the pair
+    `(L/K, \alpha_1,\ldots,\alpha_n])`, where `\alpha_1,\ldots,\alpha_n` are
+    the roots of `f` in `L` (we ignore multiplicities).
+
+    """
+    raise NotImplementedError()
+
+
 def weak_splitting_field(K, f, minimal_ramification=1):
     r""" Return the weak splitting field of a polynomial
     over a `p`-adic number field.
