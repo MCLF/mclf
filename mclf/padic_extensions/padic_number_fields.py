@@ -20,43 +20,88 @@ a number field `L_0`, equipped with a discrete valuation `v_L` whose completion
 is the splitting field `L/\mathbb{Q}_p` of `f`. For later applications in
 {\sf MCLF} it is then sufficient to work with the pair `(L_0,v_L)`, e.g.
 to compute the semistable reduction of a curve defined over `\mathbb{Q}`. We
-remark that the number field `L_0` will typically be not at all the splitting
+remark that the number field `L_0` will typically not at all be the splitting
 field of `f` over `\mathbb{Q}`. For instance, `L_0` may not contain any root of
 `f`.
+
+The underlying number field `K_0` of `K` can be chosen in a very flexible way,
+but there are two important conditions which have to be satisfied:
+
+1. There exist a *unique* p-adic valuation `v_K` on `K_0`, i.e. a unique prime
+   ideal over the prime `p`.
+2. In the standard presentation of `K_0` as an absolute number field, the
+   canonical absolute generator `\theta` of `K_0=\mathbb{Q}(\theta)` must be
+   an **integral generator**, meaning that it is integral and a generator of
+   the ring of integers, `\mathbb{O}_K=\mathbb{Z}_p[\theta]`.
+
+The existence of an integral generator is guaranteed by Lemma II.10.4 in
+Neukirch's book.
+
+We always normalize the p-adic valuation `v_K` on `K_0` such that
+
+.. MATH::
+
+    v_K(p) = 1.
+
+Therefore, by the first condition, `K` is already determined by the number
+field `K_0` and the prime `p`.
+
+
 
 Elements of p-adic number fields
 --------------------------------
 
-For these reasons, we do not have plans to develop p-adic number fields as
+For the moment, we do not intend to develop p-adic number fields as
 *rings*, i.e. with element classes, arithmetic operations etc. Elements of
 a p-adic number field `K` are usually just elements of the underlying number
-field `K_0`. However, for certain taks it will be usuful to have the following
+field `K_0`. However, for certain tasks it will be useful to have the following
 notion of elements of `K` available:
 
 - An *approximate element* of `K` is defined as a closed ball inside `K`, i.e.
   a subset `B:=\{ a\in K \mid v_K(a-a_0) \geq s \}`, where `a_0\in K_0` and
   `s` is a positive rational number. Any element of `B\cap K_0`is called an
-  *approximation* with *precison* `s`.
+  *approximation* of this approximate element with *precison* `s`.
 - An *algebraic element* of `K` is an element of `K` which is algebraic over
   `\mathbb{Q}`. Such an element `a\in K` can be represented by its minimal
   polynomial over `\mathbb{Q}` and a sufficietly good approximation `a_0\in K_0`.
 
 The classes representing such elements are implemented in
-:module:`elements_of_padic_number_fields<mclf.padic_extensions.\
-elements_of_padic_number_fields`.
+:module:`Elements of p-adic number fields<mclf.padic_extensions.\
+elements_of_padic_number_fields>`.
+
 
 Embeddings of p-adic number fields
 ----------------------------------
 
+An *embedding* of p-adic number fields is just a field homomorphism
+`\varphi:K\to L`. We call such an embedding *exact* if it is induced by an
+embedding `K_0\to L_0` of the underlying number fields. Otherwise, we call the
+embedding `\varphi` approximate. These two possibilities correspond to two
+subclasses of the class :class:`EmbeddingOfpAdicNumberFields<mclf.\
+padic_extensions.embeddings_of_padic_number_fields.EmbeddingOfpAdicNumberFields>`,
+see :module:`Embeddings of p-adic_number fields<mclf.padic_extensions.\
+embeddings_of_padic_number_fields>`.
+
+
 Extensions of p-adic number fields
 ----------------------------------
+
+To Do
+
+See :module:`Extensions of p-adic number fields<mclf.padic_extensions.\
+extensions_of_padic_number_fields>`
+
 
 Subfields of p-adic number fields
 ---------------------------------
 
+To Do
+
+
 Galois extensions
 -----------------
 
+To Do
 
 
 

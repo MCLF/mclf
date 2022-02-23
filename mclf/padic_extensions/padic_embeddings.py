@@ -1,11 +1,22 @@
 # -*- coding: utf-8 -*-
 r"""
-`p`-adic embeddings
-===================
+Embeddings of `p`-adic number fields
+====================================
 
 Let `K` and `L` be `p`-adic number fields. In this module we define a class
-``pAdicEmbedding`` whose objects represent embeddings `\phi:K\to L` over
+``pAdicEmbedding`` whose objects represent embeddings `\varphi:K\to L` over
 `\mathbb{Q}_p`.
+
+There are two kinds of embeddings. The first ist called *exact*, meaning that
+`\varphi` is induced from an embedding of the underlying number fields. If this
+is not the case then the embedding is called *approximate*.
+
+Recall that a p-adic number field `K` is represented by a pair `(K_0,v_K)`,
+where `K_0` is a number field and `v_K` is a p-adic valuation on `K_0`, such
+that `K` is the completion of `K_0` w.r.t. `v_K`. If `L` is another p-adic
+number field, represented by `(L_0,v_L)` and `\varphi:K\to L` is an embedding,
+then there is no reason a priori to expect that `\varphi(K_0)=L_0` (which means
+that `\varph` is exact).
 
 
 

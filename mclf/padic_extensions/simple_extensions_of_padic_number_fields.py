@@ -6,7 +6,7 @@ Simple extensions of p-adic number fields
 In this module we implement a constructor class for finite simple extensions
 of p-adic number fields.
 
-Let `K` be a p-adic number field and `f\in K[x]` a monic, irreducible and
+Let `K` be a p-adic number field and `f\in K[x]` be a monic, irreducible and
 integral polynomial. We wish to construct the stem field
 
 .. MATH::
@@ -14,6 +14,89 @@ integral polynomial. We wish to construct the stem field
     L:= K(\alpha) \cong K[x]/(f)
 
 of `f`, as a p-adic number field, and as an extension of `K`.
+
+Recall that a p-adic number field `K` is represented as a pair `(K_0,v_K)`,
+where `K_0` is a number field and `v_K` a p-adic valuation on `K_0`, such that
+`K` is the completion of `K_0` with respect to `v_K`. As `K_0` is dense in `K`,
+we may assume that `f\in K_0[x]` (actually, the polynomial `f` represents a
+*Krasner class*, see :module:`approximate_factorizations<mclf.padic_extensions.\
+approximate_factorizations>`). This suggests defining `L` as the pair
+`(L_0, v_L)`, where
+
+.. MATH::
+
+    L_0 := K_0[x]/(f)
+
+is the stem field of `f` and `v_L` is the unique extension of `v_K` to `L_0`
+(the uniqueness is guaranteed since `f` is irreducible over `K` by assumption).
+
+However, there are serious drawbacks of this naive approach. For one thing,
+working with relative number fields of high degree in Sage is prohibitively
+slow. Also, the construction of `L_0` as a stem field of `f` over `K_0` will
+typically violate the condition (imposed in :module:`padic_number_fields\
+<mclf.padic_extensions.padic_number_fields>`) that the canonical generator
+of `L_0` is also an integral generator with respect to `v_L`.
+
+We offer two different solutions to these problems. The first one, the result
+of which we call the **exact extension** is as follows. We start by finding
+a polynomial in `K_0[x]` (of small degree) whose image `\beta'` in
+`L_0':=K_0[x]/(f)` is an (absolute) integral `p`-adic generator. The existence
+of such an element is guaranteed by Lemma II.10.4 in Neukirch's book, and the
+proofs gives a simple recipe for finding it. Then we compute the absolute
+minimal polynomial `g\in\mathbb{Q}[x]` of `\beta'` and set
+
+.. MATH::
+
+    L_0 := \mathbb{Q}(\beta) = K_0[x]/(g).
+
+By construction, `L_0` has a unique `p`-adic valuation `v_L` and the canonical
+generator `\beta` is an integral generator w.r.t. `v_L`. Therefore, we can
+define the completion `L` of `L_0` at `v_L` as a p-adic number field. Moreover,
+the isomorphism `L_0'=K_0[x]/(f)\cong L_0`, sending `\beta'` to `\beta`,
+defines an embedding of number fields `K_0\hookrightarrow L_0` which in turn
+induces an embedding of p-adic number fields `K\hookrightarrow L`.
+
+It turns out that this approach is still feasible for moderate degrees but is
+too slow for large degrees. The problem is that the coefficients of the polynomial
+`g` defining `L_0`, and the coefficients defining the embedding of `K_0` into
+`L_0` become too large. The actual bottleneck is .... (find out!).
+
+The second solution, which is the prefered one, is called the **approximate
+extension**. We roughly proceed as above, but we compute the minimal polynomial
+`g` of `\beta'` only *approximately*. If this approximation is sufficiently
+sharp, the resulting p-adic number field `L` still has an embedding
+`\varphi:K\hookrightarrow L` such that the resulting extension `L/K` is a stem
+field for `f`. However, this embedding will typically not be induced by an
+embedding of the underlying number fields.
+
+In this second approach, the two most expensive computations, which are
+
+- computing the characteristic polynomial of the matrix representing the
+  element `\beta'` (in order to find the polynomial `g`), and
+- solving a linear equation `A\cdot x = v` (in order to find the embedding of
+  `K_0` into `L_0`)
+
+are done over a quotient ring `\mathbb{Z}/p^s\mathbb{Z}`, where `s` is a
+(small) positive integer (called the *precision*). So the speed-up compared
+to the first approach is entirely due to the prevention of coefficient growth.
+
+.. NOTE::
+
+    Currently, we work with a fixed precision `s:=5`, and this seems to work in
+    all examples considered so far. What is still missing is the automatism of
+    increasing the precision if the computation fails or, better, an a priori
+    estimate of a sufficient precision. So our current implementation may fail
+    to compute the extensions, but if it doesn't the result is provably correct.
+
+
+.. TODO::
+
+    - make sure that we work with sufficient precision
+    - also compute a root `\alpha\in L` of `f` along the way
+
+
+EXAMPLES:
+
 
 
 AUTHORS:
