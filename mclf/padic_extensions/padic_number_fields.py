@@ -721,6 +721,26 @@ class pAdicNumberField(SageObject):
         Zm = IntegerModRing(m)
         return K_0([ZZ(Zm(c)) for c in list(a)])
 
+    def valuation_of_element(self, a):
+        r""" Return the valuation of an element of this p-adic number field.
+
+        INPUT:
+
+        - ``a`` -- an element of this p-adic number field `K`
+
+        OUTPUT: the valuation `v_K(a)`.
+
+        The element `a` may be given either as an element of the underlying
+        number field, or as an instance of :class:`ElementOfpAdicNumberField\
+        <mclf.padic_extensions.elements_of_padic_number_fields.\
+        ElementOfpAdicNumberField>`.
+
+        We try to optimize this method of elements of p-adic number fields of
+        high degree.
+
+        """
+        return self.valuation()(a)
+
     def valuation_of_polynomial(self, f, a, precision=None):
         r""" Return the valuation of an element of this number field which is
         the evaluation of a polynomial.
@@ -742,12 +762,25 @@ class pAdicNumberField(SageObject):
         be faster for large examples.
 
         """
-        if precision is None:
-            return self.valuation()(f(a))
-        else:
-            precision = max(0, precision)
-            t = self.valuation()(self.approximate_evaluation(f, a, precision + 1))
-            return min(t, precision)
+        # lets ignore the precision for the moment
+        if f.is_zero():
+            return Infinity
+        if a.is_zero():
+            return self.valuation_of_element(f[0])
+        # this is an arbitrary choice and could be adjusted at some point
+        s = 5
+        while s < 10:   # this is of course also arbitrary; probably too high
+            fbar = f.change_ring(self.finite_quotient_ring(s))
+            abar = self.finite_representation(a, s)
+            bbar = fbar(abar)
+            if not bbar.is_zero():
+                b = self.element_from_finite_representation(bbar)
+                v = self.valuation_of_element(b)
+                return v
+            else:
+                s = s + 2
+        # if we get here, it is probable that f(a)=0
+        return self.valuation_of_element(f(a))
 
     def root(self, f, a_0):
         r""" Return the root of a polynomial determined by an approximation.
