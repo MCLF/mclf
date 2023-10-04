@@ -538,6 +538,8 @@ class InertialComponent(SageObject):
             the closed unit disk.
 
         """
+        from sage.all import PolynomialRing
+      
         if not hasattr(self, "_splitting_field"):
             vK = self.reduction_tree().base_valuation()
             K = vK.domain()
@@ -545,6 +547,8 @@ class InertialComponent(SageObject):
             # Actually, it must be QQ!
             assert K == QQ, "K must be QQ"
             Kh = FakepAdicCompletion(K, vK)
+            
+            R = PolynomialRing(K, 'x')
             if self.is_separable():
                 fiber = self.reduction_tree().curve().fiber(self.basepoint().function_field_valuation())
                 # `fiber` should be a list of points on Y
@@ -554,6 +558,7 @@ class InertialComponent(SageObject):
                     # L should be a (relative) number field (which may include QQ)
                     if not L == QQ:
                         f = L.absolute_polynomial().change_ring(K)
+                        f = R(f)
                         F += [g for g, m in f.factor()]
                 # F = self.curve().fiber_equations(self.basepoint().function_field_valuation())
             else:
@@ -561,7 +566,9 @@ class InertialComponent(SageObject):
                 if L == QQ:
                     F = []
                 else:
-                    F = [L.absolute_polynomial().change_ring(K)]
+                    f = L.absolute_polynomial().change_ring(K)
+                    f = R(f)
+                    F = [f]
             e = self.type_II_point().pseudovaluation_on_polynomial_ring().E()
             # print("F = ", F)
             # print("e = ", e)
