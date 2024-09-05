@@ -124,6 +124,15 @@ jobs:
             git config --global user.email 'benchmark@circleci.invalid'
             git config --global push.default simple
 
+            mkdir -p ~/.ssh
+            ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+            if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
+              set +x
+              echo $MCLF_ASV_SECRET_KEY | base64 -d > ~/.ssh/id_rsa
+              chmod 400 ~/.ssh/id_rsa
+              set -x
+            fi
+
             # Clone mclf-asv with performance data of previous runs
             git clone https://github.com/MCLF/mclf-asv.git .asv/results
             # Install sage-asv plugin
@@ -139,6 +148,7 @@ jobs:
             git add .
             git commit -m 'Added benchmark run'
             if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
+              unset SSH_AUTH_SOCK
               git push git@github.com:MCLF/mclf-asv.git master
             fi
             popd
