@@ -7,7 +7,7 @@ import sys
 class Sage(asv.environment.Environment):
     tool_name = "sage"
 
-    def __init__(self, conf, executable, requirements):
+    def __init__(self, conf, executable, requirements, tagged_env_vars):
         self._executable = sys.executable
         executable = os.path.abspath(asv.util.which(self._executable))
         self._requirements = {}
@@ -17,7 +17,7 @@ class Sage(asv.environment.Environment):
              'import sys; '
              'print(str(sys.version_info[0]) + "." + str(sys.version_info[1]))'
              ]).strip()
-        super(Sage, self).__init__(conf, executable, requirements)
+        super(Sage, self).__init__(conf, executable, requirements, tagged_env_vars)
 
     @classmethod
     def matches(cls, python):
