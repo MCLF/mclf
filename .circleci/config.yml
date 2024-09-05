@@ -130,6 +130,7 @@ jobs:
               set +x
               echo $MCLF_ASV_SECRET_KEY | base64 -d > ~/.ssh/id_ed25519
               chmod 400 ~/.ssh/id_ed25519
+              export GIT_SSH_COMMAND="ssh -i ~/.ssh/id_ed25519 -F/dev/null -o IdentitiesOnly=yes"
               set -x
             fi
 
