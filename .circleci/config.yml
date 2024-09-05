@@ -147,8 +147,10 @@ jobs:
             pushd .asv/results
             git add .
             git commit -m 'Added benchmark run'
-            unset SSH_AUTH_SOCK
-            git push origin
+            if [[ -n "$MCLF_ASV_SECRET_KEY" ]]; then
+              unset SSH_AUTH_SOCK
+              git push origin
+            fi
             popd
             # Publish benchmark results to github pages
             sage -sh -c 'asv gh-pages --no-push'
