@@ -149,7 +149,7 @@ jobs:
             git commit -m 'Added benchmark run'
             if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
               unset SSH_AUTH_SOCK
-              git push origin
+              git push git@github.com:MCLF/mclf-asv.git master
             fi
             popd
             # Publish benchmark results to github pages
