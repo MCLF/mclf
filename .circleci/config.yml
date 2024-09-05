@@ -128,7 +128,7 @@ jobs:
             ssh-keyscan -H github.com >> ~/.ssh/known_hosts
             if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
               set +x
-              echo $MCLF_ASV_SECRET_KEY | base64 -d > ~/.ssh/id_rsa
+              echo $MCLF_ASV_SECRET_KEY | base64 -d > ~/.ssh/id_ed25519
               chmod 400 ~/.ssh/id_ed25519
               set -x
             fi
