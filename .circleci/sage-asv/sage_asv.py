@@ -35,7 +35,7 @@ class Sage(asv.environment.Environment):
     def name(self):
         return asv.environment.get_env_name(self.tool_name,
                             self._executable.replace(os.path.sep, '_'),
-                            {})
+                            {}, {})
 
     def check_presence(self):
         return True
