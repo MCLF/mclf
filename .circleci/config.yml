@@ -126,7 +126,7 @@ jobs:
 
             mkdir -p ~/.ssh
             ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-            if [[ -n "$MCLF_ASV_SECRET_KEY" ]]; then
+            if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
               set +x
               echo $MCLF_ASV_SECRET_KEY | base64 -d > ~/.ssh/id_rsa
               chmod 400 ~/.ssh/id_rsa
@@ -147,14 +147,14 @@ jobs:
             pushd .asv/results
             git add .
             git commit -m 'Added benchmark run'
-            if [[ -n "$MCLF_ASV_SECRET_KEY" ]]; then
+            if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
               unset SSH_AUTH_SOCK
               git push origin
             fi
             popd
             # Publish benchmark results to github pages
             sage -sh -c 'asv gh-pages --no-push'
-            if [[ -n "$MCLF_ASV_SECRET_KEY" ]]; then
+            if [[ "${CIRCLE_BRANCH}" == "master" ]]; then
               git push git@github.com:MCLF/mclf-asv.git gh-pages:gh-pages -f
             fi
 
