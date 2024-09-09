@@ -61,7 +61,7 @@ completion of `K` with respect to `v_K`). Thus,
   are considered *marked points* on `X`
 * an edge of `T` connecting two points of type II correspond to the point
   of intersection of the two corresponding inertial components
-* an edge of `T` connecting a point of type II and a point of type II corresponds
+* an edge of `T` connecting a point of type II and a point of type I corresponds
   to the specialization of a marked point to an inertial component
 
 In particular, the inertial model `\mathcal{X}_0` is a *marked* model. As a
@@ -109,7 +109,8 @@ EXAMPLES::
     sage: Y = SmoothProjectiveCurve(FY)
     sage: RT = ReductionTree(Y, v_2, T)
     sage: RT
-    A reduction tree for  the smooth projective curve with Function field in y defined by y^2 - x^3 - 1, relative to 2-adic valuation
+    A reduction tree for  the smooth projective curve with Function field in y
+    defined by y^2 - x^3 - 1, relative to 2-adic valuation
     sage: RT.inertial_components()
     [inertial component of reduction tree with interior Elementary affinoid defined by
      v(x) >= 0
@@ -390,7 +391,7 @@ class InertialComponent(SageObject):
         self._is_separable = is_separable
 
     def __repr__(self):
-        return "inertial component of reduction tree with interior {}".format(self.interior())
+        return f"inertial component of reduction tree with interior {self.interior()}"
 
     def reduction_tree(self):
         r"""
@@ -462,6 +463,10 @@ class InertialComponent(SageObject):
         return self._xi
 
     def valuation(self):
+        r"""
+        Return the valuation on the function field corresponding to this component.
+
+        """
         return self._valuation
 
     def basepoint(self):
@@ -1130,7 +1135,7 @@ class UpperComponent(ReductionComponent):
         self._lower_component = Z
         self._base_valuation = Z.base_valuation()
         self._valuation = v
-        F, to_F, from_F = make_function_field(v.residue_field())
+        F, to_F, _ = make_function_field(v.residue_field())
         self._component = SmoothProjectiveCurve(F, Z.constant_base_field())
         # we have to construct the embedding of the function field of Z into
         # the function field of W (this component), which gives rise to the
@@ -1160,7 +1165,7 @@ class UpperComponent(ReductionComponent):
             self._component, Z.component(), phi)
 
     def __repr__(self):
-        return "upper component of reduction tree corresponding to  {}".format(self.valuation())
+        return f"upper component of reduction tree corresponding to  {self.valuation()}"
 
     def genus(self):
         r"""
