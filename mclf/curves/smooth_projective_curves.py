@@ -1389,13 +1389,13 @@ def field_of_constant_degree_of_polynomial(G, return_field=False):
     This is a helper function for ``SmoothProjectiveCurve.field_of_constants_degree``.
 
     """
-    from sage.rings.function_field.function_field import RationalFunctionField
+    # from sage.rings.function_field.function_field import RationalFunctionField
     from sage.rings.function_field.constructor import FunctionField
     from sage.rings.number_field.number_field import NumberFields
     from sage.arith.misc import primes
     from mclf.semistable_reduction.reduction_trees import make_function_field
     F = G.base_ring()
-    assert isinstance(F, RationalFunctionField)
+    # assert isinstance(F, RationalFunctionField)
     K = F.constant_base_field()
     R = F._ring   # the polynomial ring underlying F
     n = G.degree()
