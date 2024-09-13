@@ -3,7 +3,7 @@ r"""
 Semistable models of superelliptic curves of degree `p`
 =======================================================
 
-Let `K` be a field of characteritic zero and `v_K` a discrete valuation on `K`
+Let `K` be a field of characteristic zero and `v_K` a discrete valuation on `K`
 whose residue field is finite of characteristic `p>0`.
 
 Let `f\in K[x]` be a polynomial over `K` which is not a `p`-th power and whose
@@ -26,7 +26,7 @@ taken from
 - [We17] S. Wewers, *Semistable reduction of superelliptic curves of degree p*, \
   preprint, 2017.
 
-The key notion is the **etale locus**.
+The key notion is the **étale locus**.
 
 The superelliptic curve `Y` is, by definition, a cyclic cover
 

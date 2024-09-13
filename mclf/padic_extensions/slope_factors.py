@@ -17,7 +17,7 @@ unique factorization of `f` into monic and integral polynomials
 
 such that each `f_i` has a Newton polygon with exactly one slope `s_i`, and
 `s_1 < s_2 < \ldots <s_r`. The `s_i` are exactly the slopes of the Newton polygon
-of `f`, and the degree of `f_i` is equal to the lenght of the segment with
+of `f`, and the degree of `f_i` is equal to the length of the segment with
 slope `s_i`.
 
 We call the factorization just described the **slope factorization** of `f`,
@@ -215,7 +215,7 @@ def factor_with_slope_zero(f, vK, N, reduce_function):
 
 def pol_linear_combination(f, g, h):
     r"""
-    Write ``f`` as ``f = a*g + b*h`` with ``deg(a) < deg(h).
+    Write ``f`` as ``f = a*g + b*h`` with ``deg(a) < deg(h)``.
 
     INPUT:
 

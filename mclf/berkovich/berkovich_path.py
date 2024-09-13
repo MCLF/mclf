@@ -15,13 +15,13 @@ closed unit interval. We call `[\xi_1,\xi_2]` the *interval* with endpoints
 Let `H\subset X^{an}` be the complement of the set of points of type I (the
 *hyperbolic Berkovich space*). On `H` there is a canonical metric
 
-..MATH::    `\rho:H\times H \to \RR`
+..MATH::  \rho:H\times H \to \RR
 
 called the *path metric*. Restricting `\rho` to an interval `[\xi1,\xi2]`
 (with `\xi_1,\xi_2\in H`) gives the latter a canonical metric and affine
 structure. In particular, we obtain a natural parametrization
 
-..MATH::   `\gamma:[0,r]\to [\xi_1,\xi_2]
+..MATH::  \gamma:[0,r]\to [\xi_1,\xi_2]
 
 which is an isomometry. We call `\gamma` the *path* from `\xi_1` to `\xi_2` and
 the real number `r` the *length* of the path.
@@ -30,16 +30,16 @@ We can extend this construction to the case where `\xi_2` is a point of type I.
 In this case `r=\infty`.
 
 Let `h` be a valuative function on 'X^{an}' (see ??). Then the composition
-of `h` with the natural parametrization `gamma` of the path is a continous and
+of `h` with the natural parametrization `gamma` of the path is a continuous and
 locally affine function
 
-..MATH::   `h\circ\gamma:[0,r]\to\RR\cup\{\pm\infty\}.`
+..MATH::  h\circ\gamma:[0,r]\to\RR\cup\{\pm\infty\}.
 
 Moreover, kinks of this function can only occur in points of type II.
 
 """
 
-#*****************************************************************************
+# ****************************************************************************
 #       Copyright (C) 2017 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -47,7 +47,7 @@ Moreover, kinks of this function can only occur in points of type II.
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# ****************************************************************************
 
 from sage.all import SageObject, Infinity
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
@@ -62,19 +62,20 @@ class AscendingBerkovichPath(SageObject):
         ``xi0``<=``xi1``.
 
         We realize `\gamma` as an *induction chain*, which is a list
-        `[(v_i, \phi_i, t_i)]`, where `i=0,..,r-1`
+        `[(v_i, \phi_i, t_i)]`, where `i=0,..,r-1`:
+
         - `v_i` are inductive valuations on `K[x]`
         - `\phi_i` is a key polynomial for `v_i`
         - `t_i` are positive rational numbers or `\infty`
-        such that
+
+        such that:
+
         - `v_{i+1}=[v_i, v_{i+1}(\phi_i)=t_]` for `i=0,..,r-1`
            (for `i=r-1` this defines `v_r`)
         - `v_0` corresponds to the initial point
         - `v_r` corresponds to the terminal point
 
-
         """
-
         assert xi0.type() == "II"
         assert xi0.is_leq(xi1)
         self._X = xi0._X

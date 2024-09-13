@@ -563,7 +563,7 @@ class TypeVPointOnBerkovichLine(SageObject):
         w = v.augmentation(self._phi_pol, v(self._phi_pol), check=False)
         v_list = w.valuations(f)
         val, pos = min((val, pos) for (pos, val) in enumerate(v_list))
-        # now pos is the index of the first item in v_list where the minimum ist attained
+        # now pos is the index of the first item in v_list where the minimum is attained
         return pos
 
     @cached_method

@@ -998,7 +998,7 @@ class PiecewiseAffineFunction(SageObject):
         `h_2` is ``None``.
 
         Together with the initial value, these restrictions define `h`, because
-        `h` is constant on the complement of the domains of definitios of these
+        `h` is constant on the complement of the domains of definitions of these
         restrictions.
 
         """
@@ -1155,7 +1155,7 @@ class PiecewiseAffineFunction(SageObject):
         OUTPUT:
 
         the affinoid subdomain of the domain of this function `h`,
-        defind by the inequality
+        defined by the inequality
 
         .. MATH::
 
@@ -1366,7 +1366,7 @@ def _simplify_L(D, L, a_0):
     INPUT:
 
     - ``D`` -- a domain on the Berkovich line
-    - ``L`` -- a list of tripels `(g, m, [\xi])`
+    - ``L`` -- a list of triples `(g, m, [\xi])`
     - ``a_0`` -- a rational number
 
     Here `L`, `a_0` represent a valuative function on a domain containing `D`.
@@ -1498,7 +1498,7 @@ def _complete_factorization(X, L, a_0):
         a_0 = a_0 + a*v_K(F.unit())
         for g, m in F:
             if g in irreducible_factors:
-                # the factor g occured before
+                # the factor g occurred before
                 i = irreducible_factors.index(g)
                 h, b = L1[i]
                 assert h == g, "something is wrong!"

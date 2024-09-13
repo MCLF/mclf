@@ -19,7 +19,7 @@ the corresponding valuations on `F_X`, and no smooth projective model of `X` is
 actually computed. However, we do compute a list of 'coordinate functions'
 `x_1,..,x_n` which separate all points, meaning that the closure of the rational
 map from `X` to projective space of dimension `n` is injective. Then a (closed)
-point `x` on `X` can also be represented by the tupel `(f_1(x),..,f_n(x))`. This
+point `x` on `X` can also be represented by the tuple `(f_1(x),..,f_n(x))`. This
 is useful to test for equality of points.
 
 A function field in Sage is always realized as a simple separable extension of a
@@ -582,7 +582,7 @@ class SmoothProjectiveCurve(SageObject):
         This function only has to be called only once. It then decides whether
         or not the function field of the curve is given as a separable extension
         of the base field or not. If it is not separable then we compute a
-        separable model, which is a tripel `(Y_1,\phi, q)` where
+        separable model, which is a triple `(Y_1,\phi, q)` where
 
         - `Y_1` is a smooth projective curve over the same constant base field
           `k` as the curve `Y` itself, and which is given by a separable extension,
@@ -893,7 +893,7 @@ class SmoothProjectiveCurve(SageObject):
 
         INPUT:
 
-        - ``d`` -- an interger `\geq 1`
+        - ``d`` -- an integer `\geq 1`
 
         OUTPUT:
 
@@ -953,7 +953,7 @@ class SmoothProjectiveCurve(SageObject):
         r""" Return the Zeta function of the curve.
 
         For any scheme `X` of finite type over `\mathbb{Z}`, the **arithmetic
-        zeta funtion** of `X` is defined as the product
+        zeta function** of `X` is defined as the product
 
         .. MATH::
 
@@ -1008,7 +1008,7 @@ class SmoothProjectiveCurve(SageObject):
 
         INPUT:
 
-        - ``a`` -- a tupel of coordinates, of lenght `n`, at most the
+        - ``a`` -- a tuple of coordinates, of length `n`, at most the
           number of coordinate functions of the curve
 
         OUTPUT:
@@ -1140,7 +1140,7 @@ class PointOnSmoothProjectiveCurve(SageObject):
         return self._valuation(f)
 
     def coordinates(self):
-        r""" Return the coordinate tupel of the point.
+        r""" Return the coordinate tuple of the point.
 
         NOTE:
 
@@ -1360,7 +1360,7 @@ def sum_of_divisors(D1, D2):
     `D_1` is replaced by the sum `D_1+D_2` (note that this changes `D_1`!).
 
     Here a divisor `D` is given by a dictionary with entries ``(a:(P,m))``,
-    where ``a`` is a coordinate tupel, ``P`` is a point on `X` with coordinates
+    where ``a`` is a coordinate tuple, ``P`` is a point on `X` with coordinates
     ``a`` and ``m`` is the multiplicity of ``P`` in `D`.
     """
 

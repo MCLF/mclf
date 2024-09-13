@@ -15,13 +15,13 @@ closed unit interval. We call `[\xi_1,\xi_2]` the *interval* with endpoints
 Let `H\subset X^{an}` be the complement of the set of points of type I (the
 *hyperbolic Berkovich space*). On `H` there is a canonical metric
 
-..MATH::    `\rho:H\times H \to \RR`
+..MATH::    \rho:H\times H \to \RR
 
 called the *path metric*. Restricting `\rho` to an interval `[\xi1,\xi2]`
 (with `\xi_1,\xi_2\in H`) gives the latter a canonical metric and affine
 structure. In particular, we obtain a natural parametrization
 
-..MATH::   `\gamma:[0,r]\to [\xi_1,\xi_2]
+..MATH::   \gamma:[0,r]\to [\xi_1,\xi_2]
 
 which is an isomometry. We call `\gamma` the *path* from `\xi_1` to `\xi_2` and
 the real number `r` the *length* of the path.
@@ -30,10 +30,10 @@ We can extend this construction to the case where `\xi_2` is a point of type I.
 In this case `r=\infty`.
 
 Let `h` be a valuative function on 'X^{an}' (see ??). Then the composition
-of `h` with the natural parametrization `gamma` of the path is a continous and
+of `h` with the natural parametrization `gamma` of the path is a continuous and
 locally affine function
 
-..MATH::   `h\circ\gamma:[0,r]\to\RR\cup\{\pm\infty\}.`
+..MATH::   h\circ\gamma:[0,r]\to\RR\cup\{\pm\infty\}.
 
 Moreover, kinks of this function can only occur in points of type II.
 
@@ -179,12 +179,13 @@ class SimpleBerkovichPath(SageObject):
         OUTPUT:
 
         A list of quadruples `[(s_i, v_i, \phi_i, t_i)]` such that
+
         - `\gamma(s_0)` is the initial point of `\gamma`
         - `\gamma(s_i)` corresponds to the inductive valuation `v_i`
         - `\phi_i` is a key polynomial for `v_i`, and
-                `v_{i+1} = [v_i, v_{i+1}(\phi_i)=t_i]`.
+          `v_{i+1} = [v_i, v_{i+1}(\phi_i)=t_i]`.
         - the augmentation given by the last entry in the list corresponds
-           to the terminal point of `\gamma`
+          to the terminal point of `\gamma`
         """
         pass
 

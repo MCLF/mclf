@@ -19,7 +19,7 @@ property that for any two elements in `T` the infimum is also contained in
 `T`. In particular, a `T` has a least element, called the *root* of the tree.
 
 Given any finite subset `S` of `X^{an}`, there is now a unique minimal
-subtree `T` contaning `S`. We call `T` the tree *spanned* by `S`.
+subtree `T` containing `S`. We call `T` the tree *spanned* by `S`.
 
 This module realizes finite subtrees of `X^{an}` as combinatorial objects,
 more precisely as *finite rooted combinatorial trees*. So a tree consists
@@ -143,7 +143,7 @@ class BerkovichTree(SageObject):
         - the root of ``new_child`` has to be incomparable to the roots of the
           already existing children of ``self``
 
-        These conditions are checked only if ``check`` ist ``True``.
+        These conditions are checked only if ``check`` is ``True``.
 
         Note:
 
@@ -513,7 +513,7 @@ class BerkovichTree(SageObject):
         return ret
 
     def print_tree(self, depth=0):
-        """ Print the vertices of the tree, with identation corresponding to depth.
+        """ Print the vertices of the tree, with indentation corresponding to depth.
 
             It would be nicer to plot the graph and then list the points corresponding
             to the vertices.
