@@ -331,7 +331,7 @@ class ReductionTree(SageObject):
 
     def is_semistable(self):
         r"""
-        Check wether the reduction specified by this object is semistable.
+        Check whether the reduction specified by this object is semistable.
 
         """
         return self.reduction_genus() == self.curve().genus()
@@ -645,7 +645,7 @@ class InertialComponent(SageObject):
         # the representation of xi as a discoid on X, which is defined
         # by an inequality v(f) >= s:
         f, s = self.type_II_point().discoid()
-        # the lower components correspon to the connected components of
+        # the lower components correspond to the connected components of
         # the base change to L of the discoid defining the inertial component:
         f = FXL(f)
         lower_valuations = [xi.valuation() for xi in XL.points_from_inequality(f, s)]
@@ -760,7 +760,7 @@ class InertialComponent(SageObject):
         Return the sum of the degrees of the upper components above this inertial
         component.
 
-        Here the *degree* of an upper component ist the degree of its field of
+        Here the *degree* of an upper component is the degree of its field of
         constants, as extension of the constant base field.
 
         """
@@ -961,7 +961,7 @@ class LowerComponent(ReductionComponent):
     # _component
     # _to_function_field
 
-    # own private attibutes:
+    # own private attributes:
     #
     # _inertial_component
     # _map_to_inertial_component
@@ -1220,7 +1220,7 @@ def make_function_field(K):
 
     .. NOTE::
 
-        this command seems to be partly superflous by now, because the residue
+        this command seems to be partly superfluous by now, because the residue
         of a valuation is already of type "function field" whenever this makes sense.
         However, even if `K` is a function field over a finite field, it is not
         guaranteed that the constant base field is a 'true' finite field, and then

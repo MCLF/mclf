@@ -12,7 +12,7 @@ field of the projective line `\mathbb{P}_K^1` over `K`. Let `X` denote the
 Note that we do not assume `K` to be complete with respect to `v_K`. This allows
 us to work with 'exact' fields, e.g. number fields. As the 'official' definition
 of `K`-analytic spaces requires `K` to be complete, `X` is really defined over
-the completion `\hat{K}` with respect to `v_K`. We do have a continous map
+the completion `\hat{K}` with respect to `v_K`. We do have a continuous map
 
 .. MATH::
 
@@ -385,7 +385,7 @@ class BerkovichLine(SageObject):
 
         - ``v`` -- a discrete valuation on the function field of this Berkovich line
 
-        OUPUT:
+        OUTPUT:
 
         The point corresponding to v.
 
@@ -2122,7 +2122,7 @@ def _next_valuation_from_inequality(v0, f, s, phi, e):
     OUTPUT:
 
     The augmentation of `v_0` of the form `v=[v_0,v(\phi)=t]`, which is maximal
-    with the property that `v(f) \leq s` and such that the effectice degree of
+    with the property that `v(f) \leq s` and such that the effective degree of
     `f` with respect to `v` is equal to `e`.
 
     If `s=\infty` and `f` is a key polynomial for `v_0` then the result is the
@@ -2149,7 +2149,7 @@ def _next_valuation_from_inequality(v0, f, s, phi, e):
     # next we see how far we can augment v0 such that the effective degree is e:
     slopes = NewtonPolygon([(i, v0(c)) for i, c in enumerate(coeffs)]).slopes()
     if coeffs[0].is_zero():
-        # we add artifically the slope -infty; otherwise the list from which
+        # we add artificially the slope -infty; otherwise the list from which
         # we choose t2 below may be empty
         slopes = [-Infinity] + slopes
     t2 = [-t for t in slopes if -t > v0(phi)][-1]

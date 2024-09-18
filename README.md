@@ -100,7 +100,7 @@ For the mathematical background see
 
 #### Known bugs and issues
 
-See our [issues list](https://github.com/MCLF/mclf/issues), and tell us of any bugs or ommissions that are not covered there.
+See our [issues list](https://github.com/MCLF/mclf/issues), and tell us of any bugs or omissions that are not covered there.
 
 #### Experimental Changes
 

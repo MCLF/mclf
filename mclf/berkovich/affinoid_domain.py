@@ -488,7 +488,7 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         return self._X
 
     def is_empty(self):
-        """ Return wether this affinoid is the empty set.
+        """ Return whether this affinoid is the empty set.
         """
         return self.number_of_components() == 0
 
@@ -534,7 +534,7 @@ class AffinoidDomainOnBerkovichLine(SageObject):
         return self._components
 
     def number_of_components(self):
-        """ Return the number of connected components of ths affinoid.
+        """ Return the number of connected components of this affinoid.
         """
         return len(self.components())
 
@@ -562,7 +562,7 @@ class AffinoidDomainOnBerkovichLine(SageObject):
 
         This only changes the internal representation by an "affinoid tree".
         Very likely, this is unnecessary because the simplification has already
-        occured when the affinoid was first constructed.
+        occurred when the affinoid was first constructed.
 
         """
         self._T = self.tree().simplify()
