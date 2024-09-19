@@ -287,7 +287,7 @@ def next_kink(v, phi, f, start_at=None):
     """
     assert v.is_key(phi)
     t0 = v(phi)
-    if start_at != None:
+    if start_at is not None:
         assert t0 <= start_at
         t0 = start_at
     w = v.augmentation(phi, t0, check=False)
@@ -296,4 +296,4 @@ def next_kink(v, phi, f, start_at=None):
     if len(slopes) < 1:
         return Infinity    # there is no kink
     else:
-        return  t0 - slopes[-1]
+        return t0 - slopes[-1]

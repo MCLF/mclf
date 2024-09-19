@@ -12,6 +12,7 @@
 
 from .util import AbstractMonkey
 
+
 class Monkey(AbstractMonkey):
     _trac = "https://trac.sagemath.org/ticket/25294"
 
@@ -24,7 +25,7 @@ class Monkey(AbstractMonkey):
         L = K.extension(y**3 - 1/x**3*y + 2/x**4, 'y')
         v = K.valuation(x)
         v.extensions(L)
-    
+
     def _patch(self):
         import patchy
         import sage.rings.function_field.function_field_valuation
@@ -51,5 +52,6 @@ class Monkey(AbstractMonkey):
                  # recursively call this method for the tower of fields
                  from operator import add
         """)
+
 
 Monkey().patch()

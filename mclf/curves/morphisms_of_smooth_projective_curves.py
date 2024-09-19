@@ -156,24 +156,22 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
         FY = Y.function_field()
         self._codomain = X
         self._domain = Y
-        if phi==None:
+        if phi is None:
             assert FX == Y.rational_function_field(), "Y be a cover of the projective line X."
             self._phi = FY.coerce_map_from(FX)
             self._is_structure_map = True
         else:
-            assert phi.domain() is FX, "the domain of phi must be %s"%FX
-            assert phi.codomain() is FY, "the codomain of phi must be %s"%FY
+            assert phi.domain() is FX, "the domain of phi must be %s" % FX
+            assert phi.codomain() is FY, "the codomain of phi must be %s" % FY
             self._phi = phi
             self._is_structure_map = ( phi(FX.gen()) == FY.base_field().gen())
             assert self._is_structure_map or FY == FY.rational_function_field()
 
-
     def __repr__(self):
-        if self._phi == None:
-            return "morphism from %s \nto %s,\ndetermined by inclusion of function fields"%(self.domain(), self.codomain())
+        if self._phi is None:
+            return "morphism from %s \nto %s,\ndetermined by inclusion of function fields" % (self.domain(), self.codomain())
         else:
-            return "morphism from %s \nto %s,\ndetermined by %s"%(self.domain(), self.codomain(), self._phi)
-
+            return "morphism from %s \nto %s,\ndetermined by %s" % (self.domain(), self.codomain(), self._phi)
 
     def is_structure_map(self):
         r""" Return ``True`` if this map is the structure map of the curve `Y`.

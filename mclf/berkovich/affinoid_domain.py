@@ -985,7 +985,7 @@ class UnionOfDomains(AffinoidDomainOnBerkovichLine):
         for V in affinoid_list[1:]:
             for T1, T2, eta in T.holes(upward_hole=False):
                 # we have T1 < T2
-                if not(T == T1 or T1.has_parent()):
+                if not (T == T1 or T1.has_parent()):
                     # T1 isn't a subtree of T anymore, so we can omit this run
                     # of the loop; this is kind of dangerous, but so far it works
                     continue

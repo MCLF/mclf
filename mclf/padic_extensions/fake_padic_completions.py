@@ -767,7 +767,6 @@ class FakepAdicCompletion(SageObject):
         P = x**e - sum( sum(S[e,i+e*j]*zeta[j] for j in range(m))*x**i for i in range(e))
         return self.reduce_polynomial(P, N)
 
-
 #------------------------------------------------------------------------------
 
     def simplify_irreducible_polynomial(self, f):
@@ -855,11 +854,11 @@ class FakepAdicCompletion(SageObject):
                 return True
             np_f = NewtonPolygon([(i, vK(F[i])) for i in range(F.degree()+1)])
             # the slopes correspond to vK(alpha-beta), beta the roots of f
-            return ( len(np_f.vertices())>1 and np_f.vertices()[1][0]==1 and
-                    np_f.slopes()[0]<0 )
+            return (len(np_f.vertices())>1 and np_f.vertices()[1][0]==1 and
+                    np_f.slopes()[0]<0)
 
         # now deg(g)>1
-        if v == None:
+        if v is None:
             V = vK.mac_lane_approximants(g)
             if len(V) != 1:
                 return False   # g is not irreducible
@@ -972,7 +971,8 @@ class FakepAdicCompletion(SageObject):
         p = self.p()
         V = vK.mac_lane_approximants(f, assume_squarefree=True, require_maximal_degree=True)
         wild_and_totally_ramified = [v for v in V
-            if p.divides(v.E()) and v.E().is_prime_power() and v.F() == 1]
+                                     if p.divides(v.E())
+                                     and v.E().is_prime_power() and v.F() == 1]
         if wild_and_totally_ramified != []:
             # these are the best ones
             ram_indices = [v.E() for v in wild_and_totally_ramified]
@@ -980,7 +980,7 @@ class FakepAdicCompletion(SageObject):
             v = wild_and_totally_ramified[i]
         else:
             mixed_and_totally_ramified = [v for v in V
-                if p.divides(v.E()) and v.F() == 1]
+                                          if p.divides(v.E()) and v.F() == 1]
             if mixed_and_totally_ramified != []:
                 # these are the second best ones
                 ram_indices = [v.E() for v in mixed_and_totally_ramified]

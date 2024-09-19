@@ -12,6 +12,7 @@
 
 from .util import AbstractMonkey
 
+
 class Monkey(AbstractMonkey):
     _trac = "https://trac.sagemath.org/ticket/25360"
 
@@ -28,7 +29,7 @@ class Monkey(AbstractMonkey):
         f = y**3 + x**3 + (u + 1)*x
         with proof.WithProof('polynomial', False):
             f.factor()
-    
+
     def _patch(self):
         import patchy
         import sage.rings.polynomial.multi_polynomial_element
@@ -44,9 +45,10 @@ class Monkey(AbstractMonkey):
      if proof:
 -        raise NotImplementedError("proof = True factorization not implemented.  Call factor with proof=False.")
 +        raise NotImplementedError("Provably correct factorization not implemented. Disable this error by wrapping your code in a `with proof.WithProof('polynomial', False):` block.")
- 
+
      R._singular_().set_ring()
      S = self._singular_().factorize()
-        """) 
+        """)
+
 
 Monkey().patch()

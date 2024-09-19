@@ -1226,7 +1226,7 @@ class PiecewiseAffineFunction(SageObject):
                                and T1.children()[0]._is_in == xi0_in):
                             T1 = T1.children()[0]
                     # or even omit it completely
-                    if not(T1._is_in == xi0_in and T1.children() == []):
+                    if not (T1._is_in == xi0_in and T1.children() == []):
                         subtrees.append(T1)
             else:
                 # the terminal point is of type I
@@ -1448,9 +1448,8 @@ def _restriction_to_path(gamma, L, a0):
     is not, an error is raised.
 
     """
-    
     from sage.rings.rational_field import QQ
-    
+
     s = gamma.initial_parameter()
     eta = gamma.tangent_vector(s)
     e = QQ(eta.derivative(gamma._phi))
