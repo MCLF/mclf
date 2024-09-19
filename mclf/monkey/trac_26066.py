@@ -12,6 +12,7 @@
 
 from .util import AbstractMonkey
 
+
 class Monkey(AbstractMonkey):
     _trac = "https://trac.sagemath.org/ticket/26066"
 
@@ -23,7 +24,7 @@ class Monkey(AbstractMonkey):
         v = GaussValuation(R, v).augmentation(x+1, QQ(1)/2)
         f = x**4 - 30*x**2 - 75
         v.mac_lane_step(f)
-    
+
     def _patch(self):
         import patchy
         import sage.rings.valuation.inductive_valuation
@@ -31,7 +32,7 @@ class Monkey(AbstractMonkey):
 @@ -771,18 +780,6 @@ class NonFinalInductiveValuation(FiniteInductiveValuation, DiscreteValuation):
                  assert len(F) == 1
                  break
- 
+
 -            if phi == self.phi():
 -                # a factor phi in the equivalence decomposition means that we
 -                # found an actual factor of G, i.e., we can set
@@ -47,6 +48,7 @@ class Monkey(AbstractMonkey):
              verbose("Determining the augmentation of %s for %s"%(self, phi), level=11)
              old_mu = self(phi)
              w = self.augmentation(phi, old_mu, check=False)
-        """) 
+        """)
+
 
 Monkey().patch()

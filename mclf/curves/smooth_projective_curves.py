@@ -393,7 +393,7 @@ class SmoothProjectiveCurve(SageObject):
             return self._structure_map
         else:
             from mclf.curves.morphisms_of_smooth_projective_curves import\
-                                               MorphismOfSmoothProjectiveCurves
+                MorphismOfSmoothProjectiveCurves
             X = SmoothProjectiveCurve(self.rational_function_field())
             self._structure_map = MorphismOfSmoothProjectiveCurves(self, X)
             return self._structure_map

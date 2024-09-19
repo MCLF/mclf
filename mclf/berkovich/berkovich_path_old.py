@@ -215,7 +215,8 @@ class SimpleBerkovichPath(SageObject):
 
 def augmentation_list(xi0, xi1):
     assert xi0.is_leq(xi1)
-    phi1, s1, in_unit_disk = xi1.discoid_representation(xi0) 
+    phi1, s1, in_unit_disk = xi1.discoid_representation(xi0)
+
 
 def next_kink(v, phi, f, start_at=None):
     r""" Return the first kink.
@@ -236,7 +237,7 @@ def next_kink(v, phi, f, start_at=None):
     """
     assert v.is_key(phi)
     t0 = v(phi)
-    if start_at != None:
+    if start_at is not None:
         assert t0 <= start_at
         t0 = start_at
     w = v.augmentation(phi, t0, check=False)
@@ -245,4 +246,4 @@ def next_kink(v, phi, f, start_at=None):
     if len(slopes) < 1:
         return Infinity    # there is no kink
     else:
-        return  t0 - slopes[-1]
+        return t0 - slopes[-1]

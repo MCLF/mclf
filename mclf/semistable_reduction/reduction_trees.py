@@ -539,7 +539,7 @@ class InertialComponent(SageObject):
 
         """
         from sage.all import PolynomialRing
-      
+
         if not hasattr(self, "_splitting_field"):
             vK = self.reduction_tree().base_valuation()
             K = vK.domain()
@@ -547,7 +547,7 @@ class InertialComponent(SageObject):
             # Actually, it must be QQ!
             assert K == QQ, "K must be QQ"
             Kh = FakepAdicCompletion(K, vK)
-            
+
             R = PolynomialRing(K, 'x')
             if self.is_separable():
                 fiber = self.reduction_tree().curve().fiber(self.basepoint().function_field_valuation())

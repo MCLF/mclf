@@ -83,8 +83,8 @@ class PicardCurve(SuperellipticCurve):
         R = f.parent()
         assert R.variable_name() != name, "variable names must be distinct"
         k = R.base_ring()
-        assert k.characteristic() != 3,\
-             "the characteristic of the base field must not be 3"
+        assert k.characteristic() != 3, \
+            "the characteristic of the base field must not be 3"
         assert f.gcd(f.derivative()).is_one(), "f must be separable"
         self._n = 3
         self._f = f
@@ -102,8 +102,7 @@ class PicardCurve(SuperellipticCurve):
         self._field_of_constants_degree = ZZ(1)
         self._is_separable = True
 
-
-
     def __repr__(self):
-        return "Picard curve %s^3 = %s over %s"%(self.kummer_gen(),
-                            self.polynomial(), self.constant_base_field())
+        return "Picard curve %s^3 = %s over %s" % (self.kummer_gen(),
+                                                   self.polynomial(),
+                                                   self.constant_base_field())

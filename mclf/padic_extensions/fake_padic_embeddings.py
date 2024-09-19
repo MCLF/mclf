@@ -89,7 +89,7 @@ class FakepAdicEmbedding(SageObject):
             v = approximation
             assert v(K.polynomial()) == Infinity
         else:
-            if approximation == None:
+            if approximation is None:
                 R = PolynomialRing(L.number_field(), 'x')
                 v0 = GaussValuation(R, L.valuation())
             else:

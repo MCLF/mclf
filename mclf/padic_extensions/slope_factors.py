@@ -180,7 +180,6 @@ def factor_with_slope_zero(f, vK, N, reduce_function):
         sage: reduce_function = lambda g: g
         sage: factor_with_slope_zero(f, v2, 3, reduce_function)
         x + 1
-
     """
     R = f.parent()
     pi = vK.uniformizer()
@@ -192,7 +191,7 @@ def factor_with_slope_zero(f, vK, N, reduce_function):
     g = R([vK.lift(gb[i]) for i in range(gb.degree()+1)])
     q, r0 = f.quo_rem(g)
     if r0.is_zero():  # we are done
-         return g
+        return g
     qb = q.map_coefficients(lambda c:vK.reduce(c), Kb)
     assert qb != 0
     m = v0(r0)

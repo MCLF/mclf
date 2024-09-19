@@ -2,6 +2,7 @@
 from sage.all import QQ, PolynomialRing, FunctionField
 from mclf import SuperellipticCurve, SemistableModel, SmoothProjectiveCurve
 
+
 class PicardCurve:
     r"""
     Performance benchmarks for the curve from our
@@ -12,7 +13,6 @@ class PicardCurve:
         sage: import mclf.benchmarks.semistable
         sage: mclf.benchmarks.semistable.PicardCurve().time_is_semistable()
         True
-
     """
     def time_is_semistable(self):
         R = PolynomialRing(QQ, 'x')
@@ -21,6 +21,7 @@ class PicardCurve:
         v_2 = QQ.valuation(2)
         Y2 = SemistableModel(Y, v_2)
         return Y2.is_semistable()
+
 
 class JSMCurve:
     r"""

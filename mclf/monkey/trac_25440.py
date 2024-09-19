@@ -12,6 +12,7 @@
 
 from .util import AbstractMonkey
 
+
 class Monkey(AbstractMonkey):
     _trac = "https://trac.sagemath.org/ticket/25440"
 
@@ -33,7 +34,7 @@ class Monkey(AbstractMonkey):
         G = y**2 - x**3 - 3
         w1 = w0.mac_lane_step(G)[0]
         w1.mac_lane_step(G)
-    
+
     def _patch(self):
         # We are not actually fixing the underlying issue. This is just a
         # symptom fix.
@@ -47,11 +48,12 @@ class Monkey(AbstractMonkey):
      Return a root of :meth:`psi` in :meth:`residue_ring`.
 @@ -1340,7 +1340,7 @@ class NonFinalAugmentedValuation(AugmentedValuation_base, NonFinalInductiveValua
          ret = self.residue_ring().base().gen()
- 
+
      assert ret.parent() is self.residue_ring().base()
 -    assert self.psi()(ret).is_zero()
 +    assert (ret.is_one() and self.psi().degree() == 1 and self.psi()[0] == -ret) or self.psi()(ret).is_zero()
      return ret
         ''')
+
 
 Monkey().patch()

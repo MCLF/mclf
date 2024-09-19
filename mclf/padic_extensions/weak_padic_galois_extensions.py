@@ -104,6 +104,7 @@ from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
 from mclf.padic_extensions.fake_padic_extensions import FakepAdicExtension
 from mclf.padic_extensions.slope_factors import slope_factors
 
+
 class WeakPadicGaloisExtension(FakepAdicExtension):
     r"""
     Return the weak p-adic splitting field of a polynomial.
@@ -142,8 +143,8 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         L = K.weak_splitting_field(F)
         e = ZZ(L.absolute_ramification_degree()/K.absolute_ramification_degree())
         if not minimal_ramification.divides(e):
-                        # enlarge the absolute ramification index of vL
-                        # such that minimal_ramification divides e(vL/vK):
+            # enlarge the absolute ramification index of vL
+            # such that minimal_ramification divides e(vL/vK):
             m = ZZ(minimal_ramification/e.gcd(minimal_ramification))
             # assert not self.p().divides(m), "p = %s, m = %s, e = %s,\nminimal_ramification = %s"%(self.p(), m, e, minimal_ramification)
             L = L.ramified_extension(m)
@@ -365,7 +366,7 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         vL = self.valuation()
         reduce_function = lambda g: L.reduce_polynomial(g, precision + 2)
         F = slope_factors(G, vL, precision*self.ramification_degree(),
-            reduce_function, slope_bound=-1)
+                          reduce_function, slope_bound=-1)
         N = (vL(G[0]) + precision).ceil()
         F_reduced = {}
         for s in F.keys():
@@ -373,7 +374,6 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
             g = R([L.reduce(g[i], N) for i in range(g.degree()+1)])
             F_reduced[s] = g
         return F_reduced
-
 
     def ramification_subfields(self, precision=1):
         r"""
@@ -402,15 +402,16 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
                 s = -slopes[i]
                 m = vertices[i+1][0] + 1
                 k = vertices[i+1][0] - vertices[i][0]
-                if s == 1:        # this slope corresponds to the inertia subgroup G_0
-                                # the corresponding subfield is the max. unramified ext.
-                                #  we return Q_p because unramified extensions are ignored
+                if s == 1:
+                    # this slope corresponds to the inertia subgroup G_0
+                    # the corresponding subfield is the max. unramified ext.
+                    #  we return Q_p because unramified extensions are ignored
                     subfields[0] = FakepAdicCompletion(QQ, v_p)
                 else:
                     g = factors[-s]
                     beta = beta*(-1)**k*g(-pi)
                     K_i = L.subfield(beta, ZZ(e/m))
-                    if K_i != None:
+                    if K_i is not None:
                         subfields[s-1] = K_i
             precision = precision + 1
         self._ramification_subfields = subfields

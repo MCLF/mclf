@@ -12,6 +12,7 @@
 
 from .util import AbstractMonkey
 
+
 class Monkey(AbstractMonkey):
     _trac = "https://trac.sagemath.org/ticket/24533"
 
@@ -28,7 +29,7 @@ class Monkey(AbstractMonkey):
         t = R.gen()
         F = t*x
         F.factor(proof=False)
-    
+
     def _patch(self):
         import patchy
         import sage.rings.function_field.function_field_valuation
@@ -44,14 +45,14 @@ class Monkey(AbstractMonkey):
 +            w.append((a,e))
      from sage.structure.factorization import Factorization
      return Factorization(w, unit=unit)
-        """) 
+        """)
 
         import sage.rings.polynomial.multi_polynomial_element
         patchy.patch(sage.rings.polynomial.multi_polynomial_element.MPolynomial_polydict.factor, r"""
 @@ -1715,6 +1729,10 @@ class MPolynomial_polydict(Polynomial_singular_repr, MPolynomial_element):
              F = base_ring(self).factor()
              return Factorization([(R(f),m) for f,m in F], unit=F.unit())
- 
+
 +    base_ring = self.base_ring()
 +    if hasattr(base_ring, '_factor_multivariate_polynomial'):
 +        return base_ring._factor_multivariate_polynomial(self, proof=proof)
@@ -62,12 +63,13 @@ class Monkey(AbstractMonkey):
         """)
 
         import sage.rings.polynomial.polynomial_quotient_ring
+
         def PolynomialQuotientRing_generic__factor_multivariate_polynomial(self, f, proof=True):
             from sage.structure.factorization import Factorization
-    
+
             if f.is_zero():
                 raise ValueError("factorization of 0 not defined")
-    
+
             from_isomorphic_ring, to_isomorphic_ring, isomorphic_ring = self._isomorphic_ring()
             g = f.map_coefficients(to_isomorphic_ring)
             F = g.factor()
@@ -75,5 +77,6 @@ class Monkey(AbstractMonkey):
             return Factorization([(factor.map_coefficients(from_isomorphic_ring), e) for factor,e in F], unit=unit)
 
         sage.rings.polynomial.polynomial_quotient_ring.PolynomialQuotientRing_generic._factor_multivariate_polynomial = PolynomialQuotientRing_generic__factor_multivariate_polynomial
+
 
 Monkey().patch()
