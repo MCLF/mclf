@@ -34,13 +34,13 @@ EXAMPLES:
 
 
 
-TO DO:
+TODO:
 
 
 """
 
 
-#*****************************************************************************
+# ***************************************************************************
 #       Copyright (C) 2017 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -48,7 +48,7 @@ TO DO:
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# ***************************************************************************
 
 from sage.all import SageObject, PolynomialRing, Infinity, GaussValuation
 from sage.rings.valuation.limit_valuation import MacLaneLimitValuation, LimitValuation
@@ -120,30 +120,23 @@ class FakepAdicEmbedding(SageObject):
         self._target = L
         self._limit_valuation = v
 
-
     def __repr__(self):
-        return "an embedding of %s into %s"%(self._domain, self._target)
-
+        return "an embedding of %s into %s" % (self._domain, self._target)
 
     def domain(self):
         return self._domain
 
-
     def target(self):
         return self._target
-
 
     def limit_valuation(self):
         return self._limit_valuation
 
-
     def precompose_with(self, psi):
         pass
 
-
     def postcompose_with(self, psi):
         pass
-
 
     def eval(self, alpha, precision=2):
         r"""
@@ -173,7 +166,6 @@ class FakepAdicEmbedding(SageObject):
         """
 
         pass
-
 
     def improve_approximation(self, N=None):
         r"""

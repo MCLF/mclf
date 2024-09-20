@@ -41,7 +41,7 @@ class JSMCurve:
         x = K.gen()
         R = PolynomialRing(K, 'T')
         T = R.gen()
-        f = 64*x**3*T - 64*x**3 + 36*x**2*T**2 + 208*x**2*T + 192*x**2 + 9*x*T**3 + 72*x*T**2 + 240*x*T + 64*x +T**4 + 9*T**3 + 52*T**2 + 48*T
+        f = 64*x**3*T - 64*x**3 + 36*x**2*T**2 + 208*x**2*T + 192*x**2 + 9*x*T**3 + 72*x*T**2 + 240*x*T + 64*x + T**4 + 9*T**3 + 52*T**2 + 48*T
         L = K.extension(f, 'y')
         Y = SmoothProjectiveCurve(L)
         v = QQ.valuation(13)

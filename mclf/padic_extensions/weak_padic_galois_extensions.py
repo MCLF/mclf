@@ -81,13 +81,13 @@ This example is from the "Database of Local Fields":  ::
     [0, 1/2]
 
 
-TO DO:
+TODO:
 
 
 
 """
 
-#*****************************************************************************
+# ****************************************************************************
 #       Copyright (C) 2017 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -95,7 +95,7 @@ TO DO:
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# ****************************************************************************
 
 
 from sage.all import PolynomialRing, Polynomial, ZZ, QQ, prod
@@ -136,7 +136,7 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         # assert not K.p().divides(minimal_ramification), "minimal_ramification has to be prime to p"
         if not isinstance(F, Polynomial):
             if F == []:
-                F = PolynomialRing(K.number_field(),'x')(1)
+                F = PolynomialRing(K.number_field(), 'x')(1)
             else:
                 F = prod(F)
         self._base_field = K
@@ -157,10 +157,8 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         self._inertia_degree = ZZ(L.absolute_inertia_degree()/K.absolute_inertia_degree())
         assert self._degree == self._ramification_degree * self._inertia_degree
 
-
     def __repr__(self):
-        return "%s as weak Galois extension of %s"%(self._extension_field, self._base_field)
-
+        return "%s as weak Galois extension of %s" % (self._extension_field, self._base_field)
 
     def ramification_filtration(self, upper_numbering=False):
         r"""
@@ -218,7 +216,6 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
                 self._compute_lower_jumps()
                 return self._lower_jumps
 
-
     def lower_jumps(self):
         r"""
         Return the upper jumps of the ramification filtration of this extension.
@@ -226,14 +223,12 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         """
         return [u for u, m in self.ramification_filtration()]
 
-
     def upper_jumps(self):
         r"""
         Return the lower jumps of the ramification filtration of this extension.
 
         """
         return [u for u, m in self.ramification_filtration(upper_numbering=True)]
-
 
     def _compute_lower_jumps(self):
         """
@@ -260,7 +255,6 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
                 jumps = jumps[1:]     # u=0 is not a jump
             self._lower_jumps = jumps
 
-
     def _compute_upper_jumps(self):
         """
         This method computes the upper jumps and stores them
@@ -278,7 +272,6 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
             for i in range(1, len(jumps)):
                 u.append(u[i-1]+(m[i]-m[i-1])*g[i]/e)
             self._upper_jumps = [(u[i], g[i]) for i in range(len(jumps))]
-
 
     def ramification_polynomial(self, precision=20):
         r"""
@@ -309,7 +302,6 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
             x = P.parent().gen()
             self._ramification_polynomial = P(pi+x).shift(-1)
         return self._ramification_polynomial
-
 
     def ramification_polygon(self):
         r"""
@@ -348,7 +340,6 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
             self._ramification_polygon = NewtonPolygon([(i, vL(G[i])) for i in range(G.degree()+1)])
         return self._ramification_polygon
 
-
     def factors_of_ramification_polynomial(self, precision=10):
         r"""
         Return the factorization of the ramification polynomial into factors
@@ -364,7 +355,10 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         R = G.parent()
         L = self.extension_field()
         vL = self.valuation()
-        reduce_function = lambda g: L.reduce_polynomial(g, precision + 2)
+
+        def reduce_function(g):
+            return L.reduce_polynomial(g, precision + 2)
+
         F = slope_factors(G, vL, precision*self.ramification_degree(),
                           reduce_function, slope_bound=-1)
         N = (vL(G[0]) + precision).ceil()
@@ -417,7 +411,6 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         self._ramification_subfields = subfields
         return subfields
 
-
     def ramification_subfield(self, u):
         r"""
         Return the ramification subfield corresponding to a given lower jump.
@@ -439,6 +432,3 @@ class WeakPadicGaloisExtension(FakepAdicExtension):
         ramification_subfields = self.ramification_subfields()
         assert u in ramification_subfields.keys(), "u is not a lower jump"
         return ramification_subfields[u]
-
-
-#-----------------------------------------------------------------------------

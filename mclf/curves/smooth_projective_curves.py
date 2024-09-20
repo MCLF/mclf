@@ -603,9 +603,10 @@ class SmoothProjectiveCurve(SageObject):
             self._is_separable = True
             return
         G = F.polynomial()
-        q = ZZ(1)
+        q = ZZ.one()
         while q < G.degree():
-            if all([G[i].is_zero() for i in range(G.degree()+1) if not (p*q).divides(i)]):
+            if all(G[i].is_zero() for i in range(G.degree()+1)
+                   if not (p*q).divides(i)):
                 q = q*p
             else:
                 break
@@ -793,7 +794,8 @@ class SmoothProjectiveCurve(SageObject):
             x = FX.gen()
             dx = FX.derivation()
             if P.order(x) < 0:
-                der = lambda f: -x**2*dx(f)
+                def der(f):
+                    return -x**2 * dx(f)
             else:
                 der = dx
             Fx = F.map_coefficients(der)(t)
@@ -1030,11 +1032,8 @@ class SmoothProjectiveCurve(SageObject):
             return self.point(v0)
         V = v0.extensions(F)
         f = self.coordinate_functions()
-        ret = []
-        for v in V:
-            if all([compute_value(v, f[i]) == a[i] for i in range(n)]):
-                ret.append(self.point(v))
-        return ret
+        return [self.point(v) for v in V
+                if all(compute_value(v, f[i]) == a[i] for i in range(n))]
 
     def fiber(self, v0):
         r"""
@@ -1405,7 +1404,7 @@ def field_of_constant_degree_of_polynomial(G, return_field=False):
             while p.divides(n):
                 try:
                     K1 = K.extension(p)
-                except:
+                except Exception:
                     # if K is not a true finite field the above fails
                     # we use a helper function which construct an extension
                     # of the desired degree

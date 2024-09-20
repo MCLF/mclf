@@ -1047,7 +1047,7 @@ class LowerComponent(ReductionComponent):
             R1 = PolynomialRing(FXL, 'y1')  # integral equation G_1
             y1 = R1.gen()
             G1 = G(pi**(-k) * y1).monic()
-            assert all([v(c) >= 0 for c in G1.coefficients()]), "new G is not integral!"
+            assert all(v(c) >= 0 for c in G1.coefficients()), "new G is not integral!"
             FYL1 = FXL.extension(G1, 'y1')
             y1 = FYL1.gen()
             V = v.mac_lane_approximants(G1, require_incomparability=True)

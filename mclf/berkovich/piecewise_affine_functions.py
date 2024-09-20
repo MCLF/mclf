@@ -166,8 +166,8 @@ class Domain(SageObject):
         """
         xi_type = xi.type()
         if xi_type == "I" or xi_type == "II":
-            return (all([xi.v(f) >= a for f, a in self._inequalities])
-                    and all([xi.v(f) > a for f, a in self._strict_inequalities]))
+            return (all(xi.v(f) >= a for f, a in self._inequalities)
+                    and all(xi.v(f) > a for f, a in self._strict_inequalities))
         elif xi_type == "V":
             xi0 = xi.boundary_point()
             for f, a in self._inequalities:

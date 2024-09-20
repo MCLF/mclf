@@ -55,7 +55,7 @@ EXAMPLES::
 
 """
 
-#*****************************************************************************
+# ***************************************************************************
 #       Copyright (C) 2016-2018 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -63,7 +63,7 @@ EXAMPLES::
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# ***************************************************************************
 
 from sage.all import ZZ, gcd, FunctionField, PolynomialRing
 from mclf.curves.smooth_projective_curves import SmoothProjectiveCurve
@@ -105,7 +105,7 @@ class SuperellipticCurve(SmoothProjectiveCurve):
         k = R.base_ring()
         assert k.characteristic() == 0 or ZZ(n).gcd(k.characteristic()) == 1, "the characteristic of the base field must be prime to n"
         ff = f.factor()
-        assert gcd([m for g, m in ff]+[n]) == 1, "the equation y^n=f(x) must be absolutely irreducible"
+        assert gcd([m for g, m in ff] + [n]) == 1, "the equation y^n=f(x) must be absolutely irreducible"
         self._n = n
         self._f = f
         self._ff = ff
@@ -116,17 +116,14 @@ class SuperellipticCurve(SmoothProjectiveCurve):
         FY = FX.extension(T**n - FX(f), name)
         self._function_field = FY
         self._constant_base_field = k
-        self._extra_extension_degree = ZZ(1)
+        self._extra_extension_degree = ZZ.one()
         self._covering_degree = n
         self._coordinate_functions = self.coordinate_functions()
-        self._field_of_constants_degree = ZZ(1)
+        self._field_of_constants_degree = ZZ.one()
         self._is_separable = True
 
-
-
     def __repr__(self):
-        return "superelliptic curve %s^%s = %s over %s"%(self.kummer_gen(), self.covering_degree(), self.polynomial(), self.constant_base_field())
-
+        return "superelliptic curve %s^%s = %s over %s" % (self.kummer_gen(), self.covering_degree(), self.polynomial(), self.constant_base_field())
 
     def covering_degree(self):
         r""" Return the covering degree.
@@ -137,7 +134,6 @@ class SuperellipticCurve(SmoothProjectiveCurve):
         """
         return self._covering_degree
 
-
     def polynomial(self):
         r""" Return the polynomial defining this curve.
 
@@ -146,7 +142,6 @@ class SuperellipticCurve(SmoothProjectiveCurve):
 
         """
         return self._f
-
 
     def kummer_gen(self):
         r""" Return the Kummer generator of this superelliptic curve.

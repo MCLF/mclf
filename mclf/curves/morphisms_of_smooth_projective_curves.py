@@ -68,7 +68,7 @@ EXAMPLES::
 
 """
 
-#*****************************************************************************
+# ***************************************************************************
 #       Copyright (C) 2018 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -76,7 +76,7 @@ EXAMPLES::
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# ***************************************************************************
 
 from sage.all import SageObject
 from mclf.curves.smooth_projective_curves import PointOnSmoothProjectiveCurve
@@ -164,7 +164,7 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
             assert phi.domain() is FX, "the domain of phi must be %s" % FX
             assert phi.codomain() is FY, "the codomain of phi must be %s" % FY
             self._phi = phi
-            self._is_structure_map = ( phi(FX.gen()) == FY.base_field().gen())
+            self._is_structure_map = (phi(FX.gen()) == FY.base_field().gen())
             assert self._is_structure_map or FY == FY.rational_function_field()
 
     def __repr__(self):
@@ -193,18 +193,15 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
         """
         return self._is_structure_map
 
-
     def domain(self):
         r""" Return the domain of this morphism.
         """
         return self._domain
 
-
     def codomain(self):
         r""" Return the codomain of this morphism.
         """
         return self._codomain
-
 
     def pullback_map(self):
         r""" Return the induced inclusion of function fields.
@@ -212,13 +209,11 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
         """
         return self._phi
 
-
     def pullback(self, f):
         r""" Return the pullback of a function under this morphism.
 
         """
         return self.pullback_map(f)
-
 
     def fiber(self, P):
         r"""
@@ -233,7 +228,7 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
         """
         Y = self.domain()
         X = self.codomain()
-        assert P.curve()==X, "P must be a point on the codomain of phi"
+        assert P.curve() == X, "P must be a point on the codomain of phi"
         FX = X.function_field()
         FY = Y.function_field()
         phi = self.pullback_map()
@@ -253,7 +248,6 @@ class MorphismOfSmoothProjectiveCurves(SageObject):
                 if f.numerator().degree() > g.degree():
                     extensions.append(FY.valuation(~FY.gen()))
             return [PointOnSmoothProjectiveCurve(Y, w) for w in extensions]
-
 
     def fiber_degree(self, P):
         r"""

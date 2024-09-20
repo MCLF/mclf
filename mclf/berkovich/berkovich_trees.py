@@ -95,7 +95,7 @@ class BerkovichTree(SageObject):
 
         self._parent = parent
         self._X = X
-        assert all([self._X == T._X for T in self._children]),\
+        assert all(self._X == T._X for T in self._children), \
             "children must live on the same Berkovich line as root"
         # initialize an empty dictionary, to be used by applications
         # in this module we do not touch it
@@ -150,10 +150,10 @@ class BerkovichTree(SageObject):
         This changes both trees ``self`` and ``new_child``.
         """
         if check:
-            assert self.root().is_strictly_less(new_child.root()),\
+            assert self.root().is_strictly_less(new_child.root()), \
                 "new child has to be strictly greater than self"
             for child in self.children():
-                assert child.root().is_incomparable(new_child.root()),\
+                assert child.root().is_incomparable(new_child.root()), \
                     "new child has to be incomparable to other children"
         self._children.append(new_child)
         new_child.make_parent(self)
@@ -264,7 +264,7 @@ class BerkovichTree(SageObject):
 
         """
         from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
-        assert self.root().type() == "II",\
+        assert self.root().type() == "II", \
             "the root must be a point of type II: root = {}, parent = {}".format(self.root(), self.parent().root())
         if not hasattr(self, "_direction_to_parent"):
             eta = TypeVPointOnBerkovichLine(self.root(), self.parent().root())
@@ -747,6 +747,6 @@ def check_tree(T):
     if T.has_parent():
         assert T in T.parent().children(), "T is not child of parent!"
     for child in T.children():
-        assert T.root().is_strictly_less(child.root()),\
+        assert T.root().is_strictly_less(child.root()), \
             "child with root {} is not strictly greater then parent with root {}".format(child.root(), T.root())
         check_tree(child)

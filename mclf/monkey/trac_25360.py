@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-#*****************************************************************************
+# ***************************************************************************
 #       Copyright (C) 2018 Julian Rüth <julian.rueth@fsfe.org>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -8,7 +8,7 @@
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# ***************************************************************************
 
 from .util import AbstractMonkey
 
@@ -25,7 +25,7 @@ class Monkey(AbstractMonkey):
         l = R.quo(v**3 + v + 1)
         v = l.gen()
         R = PolynomialRing(l, 'x,y')
-        x,y = R.gens()
+        x, y = R.gens()
         f = y**3 + x**3 + (u + 1)*x
         with proof.WithProof('polynomial', False):
             f.factor()

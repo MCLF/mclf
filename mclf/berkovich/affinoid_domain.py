@@ -146,8 +146,8 @@ class AffinoidTree(BerkovichTree):
         r""" Return whether this tree represents the empty set.
 
         """
-        return not self.root_is_in() and all([child.is_empty_set()
-                                              for child in self.children()])
+        return not self.root_is_in() and all(child.is_empty_set()
+                                             for child in self.children())
 
     def root_is_in(self):
         r""" Return whether the root of ``self`` lies in the affinoid.
@@ -189,8 +189,9 @@ class AffinoidTree(BerkovichTree):
                 if (T1.has_parent() and eta.is_in_residue_class(T1.parent().root())
                         and not T1.parent().root_is_in()):
                     return False
-                return all([child.root_is_in()
-                            or not eta.is_in_residue_class(child.root()) for child in T1.children()])
+                return all(child.root_is_in()
+                           or not eta.is_in_residue_class(child.root())
+                           for child in T1.children())
         else:
             return T1._is_in and T2._is_in
 
@@ -1134,7 +1135,7 @@ class ElementaryAffinoidOnBerkovichLine(AffinoidDomainOnBerkovichLine):
             holes = T1.holes()
         for T2, _, eta in holes:
             xi = T2.root()
-            if all([not xi.is_equal(xi1) for xi1 in boundary]):
+            if all(not xi.is_equal(xi1) for xi1 in boundary):
                 boundary.append(xi)
             complement.append(eta)
         self._boundary = boundary

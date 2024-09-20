@@ -2,7 +2,7 @@
 r"""
 Shared monkey patching utilities
 """
-#*****************************************************************************
+# ***************************************************************************
 #       Copyright (C) 2018 Julian Rüth <julian.rueth@fsfe.org>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -10,7 +10,7 @@ Shared monkey patching utilities
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# ***************************************************************************
 
 
 class AbstractMonkey:
@@ -84,7 +84,7 @@ class AbstractMonkey:
         except Exception:
             if not self.is_fixed():
                 import warnings
-                warnings.warn("Your installation of Sage has a known issue: %s. Please install patchy with `sage -pip install patchy` to fix this problem."%(self._trac,))
+                warnings.warn("Your installation of Sage has a known issue: %s. Please install patchy with `sage -pip install patchy` to fix this problem." % (self._trac,))
                 return
 
         try:
@@ -97,7 +97,7 @@ class AbstractMonkey:
         else:
             try:
                 self._test()
-            except:
+            except Exception:
                 print("Your installation of Sage has a known issue: %s. We thought that we had installed a workaround but apparently failed to do so. Please report this issue at https://github.com/MCLF/mclf/issues including the traceback below." % (self._trac,))
                 import traceback
                 traceback.print_exc()

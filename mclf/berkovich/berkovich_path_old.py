@@ -39,7 +39,7 @@ Moreover, kinks of this function can only occur in points of type II.
 
 """
 
-#*****************************************************************************
+# ***************************************************************************
 #       Copyright (C) 2017 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -47,11 +47,10 @@ Moreover, kinks of this function can only occur in points of type II.
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# ***************************************************************************
 
 from sage.all import SageObject, Infinity
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
-
 
 
 class SimpleBerkovichPath(SageObject):
@@ -78,7 +77,6 @@ class SimpleBerkovichPath(SageObject):
         self._x1 = x1
         self._is_inductive = xi1.is_inductive()
 
-
     def X(self):
         r""" Return the underlying Berkovich line.
         """
@@ -100,7 +98,6 @@ class SimpleBerkovichPath(SageObject):
             return self._s1 - self._s0
         else:
             return Infinity
-
 
     def point(self, s):
         r""" Return the point on ``self`` at position ``s``.
@@ -138,7 +135,6 @@ class SimpleBerkovichPath(SageObject):
         assert self._s0 <= s and s < self._s1
         return TypeVPointOnBerkovichLine(self.X(), self._phi, s, self._is_in_unit_disk)
 
-
     def position(self, xi):
         r""" Return the position of ``xi`` on ``self``.
         """
@@ -162,7 +158,7 @@ class SimpleBerkovichPath(SageObject):
                 self._phi = phi
                 assert xi.is_leq(xi1a)
                 s = xi.v(phi(x1))
-                assert self._s0 <= s and s <= s1
+                assert self._s0 <= s <= s1
                 return s
 
     def derivative(self, f, s):
@@ -171,7 +167,7 @@ class SimpleBerkovichPath(SageObject):
         """
         assert self._s0 <= s and s < self._s1
         eta = self.direction(s)
-        return eta.derivative(f)/eta.derivative(self._phi)
+        return eta.derivative(f) / eta.derivative(self._phi)
 
     def augmentation_list(self):
         r""" Return a list describing ``self`` as an augmentation chain.
@@ -210,7 +206,7 @@ class SimpleBerkovichPath(SageObject):
         """
         pass
 
-#--------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 
 
 def augmentation_list(xi0, xi1):
