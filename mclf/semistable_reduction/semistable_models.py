@@ -137,7 +137,7 @@ three of genus `1`. ::
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# ***************************************************************************
 
 from sage.all import SageObject
 from mclf.curves.superelliptic_curves import SuperellipticCurve
@@ -206,21 +206,19 @@ class SemistableModel(SageObject):
 
         p = vK.residue_field().characteristic()
         q = vK.domain().characteristic()
-        if q==0 and isinstance(Y, SuperellipticCurve) and Y.covering_degree() == p:
+        if q == 0 and isinstance(Y, SuperellipticCurve) and Y.covering_degree() == p:
             # we create an instance of ``SuperpModel``
             self.__class__ = SuperpModel
             SuperpModel.__init__(self, Y, vK)
-        elif p==0 or p.gcd(Y.covering_degree()) == 1 or not check:
+        elif p == 0 or p.gcd(Y.covering_degree()) == 1 or not check:
             # we create an instance of ``AdmissibleModel``
             self.__class__ = AdmissibleModel
             AdmissibleModel.__init__(self, Y, vK)
         else:
             raise NotImplementedError
 
-
     def __repr__(self):
-        return "semistable model of %s, with respect to %s"%(self.curve(), self.base_valuation())
-
+        return "semistable model of %s, with respect to %s" % (self.curve(), self.base_valuation())
 
     def curve(self):
         """
@@ -229,14 +227,12 @@ class SemistableModel(SageObject):
         """
         return self._curve
 
-
     def constant_base_field(self):
         """
         Return the constant base field of this curve.
 
         """
         return self.curve().constant_base_field()
-
 
     def base_valuation(self):
         """
@@ -245,14 +241,12 @@ class SemistableModel(SageObject):
         """
         return self._base_valuation
 
-
     def reduction_tree(self):
         """
         Return the reduction tree underlying this semistable model.
 
         """
         return self._reduction_tree
-
 
     def compute_semistable_reduction(self, verbosity=1):
         """
@@ -281,14 +275,12 @@ class SemistableModel(SageObject):
         """
         raise NotImplementedError
 
-
     def is_semistable(self):
         """
         Check whether the model is really (potentially) semistable.
 
         """
         return self.reduction_tree().is_semistable()
-
 
     def semistable_reduction(self):
         r"""
@@ -298,7 +290,6 @@ class SemistableModel(SageObject):
 
         """
         raise NotImplementedError
-
 
     def stable_reduction(self):
         r"""
@@ -312,7 +303,6 @@ class SemistableModel(SageObject):
         """
         raise NotImplementedError
 
-
     def components(self):
         r"""
         Return the list of all components of the admissible reduction of the curve.
@@ -323,21 +313,18 @@ class SemistableModel(SageObject):
             components += [W.component() for W in Z.upper_components()]
         return components
 
-
     def components_of_positive_genus(self):
         r"""
         Return the list of all components of of the admissible reduction of the
         curve which have positive genus.
         """
-
         return [W for W in self.components() if W.genus() > 0]
-
 
     def conductor_exponent(self):
         r"""
         Return the conductor exponent at p of this curve.
 
-        EXAMPLES
+        EXAMPLES:
 
         In this example the conductor exponent was computed wrongly in a
         previous version::
@@ -349,6 +336,5 @@ class SemistableModel(SageObject):
             sage: Y3 = SemistableModel(Y, QQ.valuation(3))
             sage: Y3.conductor_exponent()
             11
-
         """
         return self.reduction_tree().reduction_conductor()

@@ -37,7 +37,7 @@ TO DO:
 
 """
 
-#*****************************************************************************
+# ****************************************************************************
 #       Copyright (C) 2017 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -45,7 +45,7 @@ TO DO:
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# ****************************************************************************
 
 from sage.all import SageObject, ZZ
 
@@ -72,10 +72,8 @@ class FakepAdicExtension(SageObject):
         self._inertia_degree = ZZ(L.absolute_inertia_degree()/K.absolute_inertia_degree())
         assert self._degree == self._ramification_degree * self._inertia_degree
 
-
     def __repr__(self):
-        return "%s as extension over %s"%(self._extension_field, self._base_field)
-
+        return "%s as extension over %s" % (self._extension_field, self._base_field)
 
     def p(self):
         """
@@ -83,13 +81,11 @@ class FakepAdicExtension(SageObject):
         """
         return self.base_field().p()
 
-
     def base_field(self):
         """
         Return the base field.
         """
         return self._base_field
-
 
     def extension_field(self):
         """
@@ -97,31 +93,25 @@ class FakepAdicExtension(SageObject):
         """
         return self._extension_field
 
-
     def valuation(self):
         """ Return the valuation of the extension."""
         return self._extension_field.valuation()
-
 
     def normalized_valuation(self):
         """ Return the normalized valuation."""
         return self._extension_field.normalized_valuation()
 
-
     def degree(self):
         """ Return the degree of the extension."""
         return self._degree
-
 
     def ramification_degree(self):
         """ Return the ramification degree of the extension."""
         return self._ramification_degree
 
-
     def inertia_degree(self):
         """ Return the inertia degree of the extension."""
         return self._inertia_degree
-
 
     def polynomial(self):
         r"""
@@ -169,7 +159,6 @@ class FakepAdicExtension(SageObject):
             assert len(P_list) > 0, "strange: no factor of the degree of L/K found"
             self._polynomial = P_list[0]
         return self._polynomial
-
 
     def subextension(self, alpha, d):
         r"""

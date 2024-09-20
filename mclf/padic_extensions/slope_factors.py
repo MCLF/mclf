@@ -40,7 +40,7 @@ polygon with slope `s` is moved to a segment of slope `0` with ordinate `0`.
 
 """
 
-#*****************************************************************************
+# ***************************************************************************
 #       Copyright (C) 2017 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -48,7 +48,7 @@ polygon with slope `s` is moved to a segment of slope `0` with ordinate `0`.
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# ***************************************************************************
 
 from sage.all import ZZ, GaussValuation
 from sage.geometry.newton_polygon import NewtonPolygon
@@ -98,15 +98,13 @@ def slope_factors(f, vK, precision, reduce_function, slope_bound=0):
         sage: v = GaussValuation(R, v2)
         sage: v(f - F[-2]*F[-1])
         5
-
-
     """
     vK = vK.scale(1/vK(vK.uniformizer()))
     assert not f.is_constant(), "f must be nonconstant"
     assert f.is_monic(), "f must be monic"
-    NP = NewtonPolygon([(i,vK(f[i])) for i in range(f.degree()+1)])
+    NP = NewtonPolygon([(i, vK(f[i])) for i in range(f.degree()+1)])
     slopes = NP.slopes(False)
-    assert all( s <= 0 for s in slopes), "f must be integral"
+    assert all(s <= 0 for s in slopes), "f must be integral"
     F = {}
     for i in range(len(slopes)):
         s = slopes[i]
@@ -170,7 +168,6 @@ def factor_with_slope_zero(f, vK, N, reduce_function):
 
             v_K( f - f_1\cdot f_2 ) > N.
 
-
     EXAMPLES::
 
         sage: from mclf.padic_extensions.slope_factors import factor_with_slope_zero
@@ -192,18 +189,18 @@ def factor_with_slope_zero(f, vK, N, reduce_function):
     q, r0 = f.quo_rem(g)
     if r0.is_zero():  # we are done
         return g
-    qb = q.map_coefficients(lambda c:vK.reduce(c), Kb)
+    qb = q.map_coefficients(lambda c: vK.reduce(c), Kb)
     assert qb != 0
     m = v0(r0)
     r = r0*pi**(-m)
 
     while m <= N:
         # we have f = q*g + pi^m*r
-        rb = r.map_coefficients(lambda c:vK.reduce(c), Kb)
+        rb = r.map_coefficients(lambda c: vK.reduce(c), Kb)
         ab, bb = pol_linear_combination(rb, qb, gb)
         # now  rb = ab*qb + bb*gb and deg(ab) < deg(gb)
-        a =  R([vK.lift(ab[i]) for i in range(ab.degree()+1)])
-        b =  R([vK.lift(bb[i]) for i in range(bb.degree()+1)])
+        a = R([vK.lift(ab[i]) for i in range(ab.degree()+1)])
+        b = R([vK.lift(bb[i]) for i in range(bb.degree()+1)])
         r0 = r - (a*q + b*g + pi**m*a*b)
         g = g + pi**m*a
         q = q + pi**m*b

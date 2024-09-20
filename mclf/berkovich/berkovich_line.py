@@ -526,7 +526,7 @@ class BerkovichLine(SageObject):
                     f1 = R(x)
                     s1 = -s1
                     y = 1/x
-            elif all([slope <= 0 for slope in np.slopes()]):
+            elif all(slope <= 0 for slope in np.slopes()):
                 # all slopes of f are nonpositive, so f = c*f1
                 # with f1 monic and integral
                 f1 = f.monic()
@@ -613,7 +613,7 @@ class BerkovichLine(SageObject):
                 + vK(f.denominator())
             V = valuations_from_inequality(vK, f0, s0)
             ret = [TypeIIPointOnBerkovichLine(self, (v1, x/c)) for v1 in V]
-            assert all([xi.v(f) == s for xi in ret])
+            assert all(xi.v(f) == s for xi in ret)
             return ret
         else:
             # f should now be a polynomial in 1/x
@@ -629,7 +629,7 @@ class BerkovichLine(SageObject):
                 + vK(f1.denominator())
             V = valuations_from_inequality(vK, f0, s0)
             ret = [TypeIIPointOnBerkovichLine(self, (v1, c/x)) for v1 in V]
-            assert all([xi.v(f) == s for xi in ret])
+            assert all(xi.v(f) == s for xi in ret)
             return ret
 
     def find_zero(self, xi1, xi2, f):
@@ -693,7 +693,7 @@ class BerkovichLine(SageObject):
             "xi1 must be strictly smaller than xi2"
         h1 = xi1.v(f)
         h2 = xi2.v(f)
-        assert (h1 <= 0 and h2 >= 0) or (h1 >= 0 and h2 <= 0),\
+        assert (h1 <= 0 <= h2) or (h1 >= 0 >= h2), \
             "the values of f at xi1 and xi2 must have different sign"
         if h1 == 0:
             return xi1

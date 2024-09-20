@@ -86,22 +86,22 @@ class AscendingBerkovichPath(SageObject):
         v0 = xi0.pseudovaluation_on_polynomial_ring()
         if not self._is_inductive:
             xi1 = xi1.approximation(xi0)
-        print("xi1 = %s"%(xi1,))
+        print("xi1 = %s" % (xi1,))
         vr = xi1.pseudovaluation_on_polynomial_ring()
-        print("vr = %s"%(vr,))
+        print("vr = %s" % (vr,))
         w = vr.augmentation_chain()[::-1]
-        print("w = %s"%(w,))
+        print("w = %s" % (w,))
         # this is 'reverse' augmentation chain of vr; the Gauss val. is the first entry
         r = len(w)
-        print("r = %s"%(r,))
+        print("r = %s" % (r,))
         # we want to find the index i such that w[i]<=v0<w[i+1]
         i = 0
         while w[i+1] <= v0:
             i += 1
-        print("i = %s"%(i,))
+        print("i = %s" % (i,))
         aug_list = [(v0, w[i+1].phi(), w[i+1](w[i+1].phi()))]
         for j in range(i+1, r-1):
-            print("j = %s"%(j,))
+            print("j = %s" % (j,))
             aug_list.append((w[j], w[j+1].phi(), w[j+1](w[j+1].phi())))
         self._aug_list = aug_list
         self._phi = aug_list[-1][1]
@@ -121,11 +121,9 @@ class AscendingBerkovichPath(SageObject):
         # _s0
         # _sr
 
-
     def X(self):
         r""" Return the underlying Berkovich line.
         """
-
         return self._X
 
     def initial_point(self):
@@ -138,12 +136,10 @@ class AscendingBerkovichPath(SageObject):
         r""" Return the length of ``self``, with respect to the
         discoid metric.
         """
-
         if self._is_inductive:
             return self._sr - self._s0
         else:
             return Infinity
-
 
     def _improve_approximation(self, s):
         r""" Improve the approximation of the endpoint.
@@ -201,7 +197,6 @@ class AscendingBerkovichPath(SageObject):
             self._improve_approximation(s)
         return TypeVPointOnBerkovichLine(self.X(), self._phi, s, self._is_in_unit_disk)
 
-
     def position(self, xi):
         r""" Return the position of ``xi`` on ``self``.
         """
@@ -234,8 +229,6 @@ class AscendingBerkovichPath(SageObject):
         eta = self.direction(s)
         return eta.derivative(f)/eta.derivative(self._phi)
 
-
-
     def first_kink(self, f):
         r""" Return the first kink on ``self`` of the valuative function
         corresponding to ``f``.
@@ -257,15 +250,13 @@ class AscendingBerkovichPath(SageObject):
         """
         pass
 
-#--------------------------------------------------------------------------
+# ------------------------------------------------------------------------
 
 
 def augmentation_list(xi0, xi1):
 
     assert xi0.is_leq(xi1)
     phi1, s1, in_unit_disk = xi1.discoid_representation(xi0)
-
-
 
 
 def next_kink(v, phi, f, start_at=None):

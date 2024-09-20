@@ -74,7 +74,7 @@ TO DO:
 
 """
 
-#*****************************************************************************
+# ****************************************************************************
 #       Copyright (C) 2017 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -82,7 +82,7 @@ TO DO:
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# ****************************************************************************
 
 
 from sage.all import SageObject, ZZ, QQ, NumberField, GaussValuation, PolynomialRing, Polynomial, Integer, matrix, IntegerModRing, mod, Infinity, prod, lcm, vector, GF
@@ -118,14 +118,14 @@ class FakepAdicCompletion(SageObject):
         if n > 1:
             piK = K0.gen()
             e = ZZ(1/vK(vK.uniformizer()))
-            F = vK.residue_field() # should be a finite field, therefore:
-            f = F.cardinality().log(F.characteristic()) # should be the absolute degree of F
+            F = vK.residue_field()  # should be a finite field, therefore:
+            f = F.cardinality().log(F.characteristic())  # should be the absolute degree of F
             assert vK(piK) == 1/e, "the generator of K must be a uniformizer for vK"
             P = K0.polynomial()
             G = P(x+piK).shift(-1)
             S = matrix(QQ, n)
             for i in range(n):
-                S[i,i] = p**(i/e).floor()
+                S[i, i] = p**(i/e).floor()
                 # the matrix S has the property that S^(-1)*a.matrix()*S is p-integral,
                 # for an element a in O_K; this follows from the fact that
                 # pi^i/p^(i/e).floor(), i=0,..,n-1, is a p-integral basis
@@ -155,8 +155,7 @@ class FakepAdicCompletion(SageObject):
         self._is_Qp = is_Qp
 
     def __repr__(self):
-        return "%s-adic completion of %s"%(self.p(), self.number_field())
-
+        return "%s-adic completion of %s" % (self.p(), self.number_field())
 
     def number_field(self):
         r"""
@@ -164,20 +163,17 @@ class FakepAdicCompletion(SageObject):
         """
         return self._number_field
 
-
     def base_valuation(self):
         r"""
         Return the `p`-adic valuation.
         """
         return self._v_p
 
-
     def valuation(self):
         r"""
         Return the valuation on the underlying number field of this p-adic extension.
         """
         return self._valuation
-
 
     def normalized_valuation(self):
         r"""
@@ -191,13 +187,11 @@ class FakepAdicCompletion(SageObject):
         assert v(v.uniformizer()) == 1
         return v
 
-
     def p(self):
         r"""
         Return the prime `p`.
         """
         return self._p
-
 
     def uniformizer(self):
         r"""
@@ -205,13 +199,11 @@ class FakepAdicCompletion(SageObject):
         """
         return self._uniformizer
 
-
     def generator(self):
         r"""
         Return the standard generator of this p-adic extension.
         """
         return self._generator
-
 
     def absolute_degree(self):
         r"""
@@ -219,13 +211,11 @@ class FakepAdicCompletion(SageObject):
         """
         return self._degree
 
-
     def degree(self):
         r"""
         Return the degree of this p-adic field as an extension of `\mathbb{Q}_p`.
         """
         return self._degree
-
 
     def ramification_degree(self):
         r"""
@@ -233,13 +223,11 @@ class FakepAdicCompletion(SageObject):
         """
         return self._ramification_degree
 
-
     def absolute_ramification_degree(self):
         r"""
         Return the absolute ramification degree of this p-adic extension.
         """
         return self._ramification_degree
-
 
     def absolute_inertia_degree(self):
         r"""
@@ -247,13 +235,11 @@ class FakepAdicCompletion(SageObject):
         """
         return self._inertia_degree
 
-
     def inertia_degree(self):
         r"""
         Return the absolute inertia degree of this p-adic extension.
         """
         return self._inertia_degree
-
 
     def polynomial(self):
         r"""
@@ -261,13 +247,11 @@ class FakepAdicCompletion(SageObject):
         """
         return self._polynomial
 
-
     def is_Qp(self):
         r"""
         Return ``True`` if this is the padic-completion of the field of rational numbers.
         """
         return self._is_Qp
-
 
     def extension(self, f, embedding=False):
         r"""
@@ -318,8 +302,8 @@ class FakepAdicCompletion(SageObject):
         v = LimitValuation(V[0], f)
         pix = v.uniformizer()
         r = v(pix)
-        for m in range(2,10):
-            pix1 = pix.map_coefficients(lambda c:self.reduce(c, m))
+        for m in range(2, 10):
+            pix1 = pix.map_coefficients(lambda c: self.reduce(c, m))
             if v(pix1) == r:
                 break
         assert m < 9, "m too small"
@@ -339,9 +323,9 @@ class FakepAdicCompletion(SageObject):
             # this is very heuristic; there should be a conclusive test whether
             # the result is correct, or the choice of the precision should be made correctly and
             # optimal from the start
-            P = Pmod.map_coefficients(lambda c:c.lift(), QQ)
+            P = Pmod.map_coefficients(lambda c: c.lift(), QQ)
             P = P.squarefree_decomposition()[0][0]
-            L0 = NumberField(P, 'pi%s'%P.degree())
+            L0 = NumberField(P, 'pi%s' % P.degree())
             V = QQ.valuation(self.p()).extensions(L0)
             vL = V[0]
             e = ZZ(1/vL(vL.uniformizer()))
@@ -355,7 +339,6 @@ class FakepAdicCompletion(SageObject):
                     return QQp.extension(g)
             N = N + 5
             # this is now very cumbersome and should we reworked at some point
-
 
     def ramified_extension(self, n, embedding=False):
         r"""
@@ -382,7 +365,6 @@ class FakepAdicCompletion(SageObject):
         L0 = NumberField(P, 'pi'+str(P.degree()), maximize_at_primes=[])
         vL = self.base_valuation().extension(L0)
         return FakepAdicCompletion(L0, vL)
-
 
     def weak_splitting_field(self, F):
         r"""
@@ -490,9 +472,8 @@ class FakepAdicCompletion(SageObject):
                     K = K.extension(g)
             first_step = False
 
-#-----------------------------------------------------------------------------
-
-#                   auxiliary functions
+    # --------------------------------------------------
+    #                   auxiliary functions
 
     def reduce(self, a, N):
         r"""
@@ -530,12 +511,9 @@ class FakepAdicCompletion(SageObject):
             vt.append(at)
         return self.element_from_vector(vector(vt))
 
-
     def reduce_polynomial(self, f, N):
-
         R = f.parent()
         return R([self.reduce(f[i], N) for i in range(f.degree()+1)])
-
 
     def reduce_rational_number(self, a, N):
         r"""
@@ -560,7 +538,6 @@ class FakepAdicCompletion(SageObject):
         q = p**(N+m)
         return QQ(mod(b, q).lift()*p**(-m))
 
-
     def matrix(self, a, integral_basis="standard"):
         r"""
         Return the matrix representing the element ``a``.
@@ -583,7 +560,6 @@ class FakepAdicCompletion(SageObject):
             S = self.base_change_matrix(integral_basis)
             a = self.number_field()(a)
             return S**(-1)*a.matrix()*S
-
 
     def vector(self, a, integral_basis="standard"):
         r"""
@@ -625,7 +601,6 @@ class FakepAdicCompletion(SageObject):
             S = self.base_change_matrix(integral_basis)
             return S*a.vector()
 
-
     def element_from_vector(self, v, integral_basis="standard"):
         r"""
         Return the element corresponding to a given vector.
@@ -643,7 +618,6 @@ class FakepAdicCompletion(SageObject):
         """
         S = self.base_change_matrix(integral_basis)
         return self.number_field()(list(S**(-1)*v))
-
 
     def base_change_matrix(self, integral_basis="standard", precision=20):
         r"""
@@ -684,10 +658,9 @@ class FakepAdicCompletion(SageObject):
         T_reduced = matrix(QQ, n)
         for i in range(n):
             for j in range(n):
-                T_reduced[i,j] = self.reduce_rational_number(T[i,j], precision)
-        assert T_reduced.is_invertible(), "T_reduced= %s\nmust be invertible; T = %s\nprecision = %s"%(T_reduced, T, precision)
+                T_reduced[i, j] = self.reduce_rational_number(T[i, j], precision)
+        assert T_reduced.is_invertible(), "T_reduced= %s\nmust be invertible; T = %s\nprecision = %s" % (T_reduced, T, precision)
         return T_reduced
-
 
     def integral_basis_of_unramified_subfield(self, precision=5):
         r"""
@@ -720,11 +693,10 @@ class FakepAdicCompletion(SageObject):
             zeta = vK.lift(zetab)
             while vK(f(zeta)) <= precision:
                 zeta = zeta - f(zeta)/fx(zeta)
-                zeta = self.reduce(zeta, precision +1)
+                zeta = self.reduce(zeta, precision + 1)
             # now zeta is an approximate generator of the maximal unramified subfield
-            self._integral_basis_of_unramified_subfield = [self.reduce(zeta**i, precision +1) for i in range(m)]
+            self._integral_basis_of_unramified_subfield = [self.reduce(zeta**i, precision + 1) for i in range(m)]
         return self._integral_basis_of_unramified_subfield
-
 
     def minpoly_over_unramified_subextension(self, N):
         r"""
@@ -764,10 +736,11 @@ class FakepAdicCompletion(SageObject):
 
         zeta = self.integral_basis_of_unramified_subfield(N)
         S = self.base_change_matrix(precision=N, integral_basis="mixed")
-        P = x**e - sum( sum(S[e,i+e*j]*zeta[j] for j in range(m))*x**i for i in range(e))
+        P = x**e - sum(sum(S[e, i+e*j] * zeta[j] for j in range(m)) * x**i
+                       for i in range(e))
         return self.reduce_polynomial(P, N)
 
-#------------------------------------------------------------------------------
+    # ------------------------------------------------------------
 
     def simplify_irreducible_polynomial(self, f):
         r"""
@@ -808,7 +781,6 @@ class FakepAdicCompletion(SageObject):
                 return g
             else:
                 N = N + 1
-
 
     def is_approximate_irreducible_factor(self, g, f, v=None):
         r"""
@@ -854,8 +826,8 @@ class FakepAdicCompletion(SageObject):
                 return True
             np_f = NewtonPolygon([(i, vK(F[i])) for i in range(F.degree()+1)])
             # the slopes correspond to vK(alpha-beta), beta the roots of f
-            return (len(np_f.vertices())>1 and np_f.vertices()[1][0]==1 and
-                    np_f.slopes()[0]<0)
+            return (len(np_f.vertices()) > 1 and np_f.vertices()[1][0] == 1 and
+                    np_f.slopes()[0] < 0)
 
         # now deg(g)>1
         if v is None:
@@ -887,7 +859,6 @@ class FakepAdicCompletion(SageObject):
         # this is true if there is a root beta of f
         # such that vK(alpha-beta)>vK(alpha-alpha_i) for all i
         return result
-
 
     def approximate_factorization(self, f, only_ramified_factors=False):
         r"""
@@ -935,7 +906,6 @@ class FakepAdicCompletion(SageObject):
             e = v._approximation.E()
             factor_list.append((g, e))
         return factor_list
-
 
     def approximate_irreducible_factor(self, f):
         r"""
@@ -1011,7 +981,6 @@ class FakepAdicCompletion(SageObject):
             if v.mu() == Infinity or self.is_approximate_irreducible_factor(g, f, v):
                 return g
 
-
     def characteristic_polynomial(self, f, g):
         r"""
         Return the characteristic polynomial of an element of a simple extension
@@ -1042,7 +1011,6 @@ class FakepAdicCompletion(SageObject):
         B = g(A)
         # now B represents beta
         return B.charpoly()
-
 
     def characteristic_polynomial_mod(self, f, N):
         r"""
@@ -1077,18 +1045,17 @@ class FakepAdicCompletion(SageObject):
         BB = matrix(R, n*m)
         for i in range(m):
             for j in range(m):
-                B_ij = self.matrix(B[i,j], "mixed")
+                B_ij = self.matrix(B[i, j], "mixed")
                 # this had been changed, and it is not sufficiently tested
                 for k in range(n):
                     for l in range(n):
-                        if vK(B_ij[k,l]) < 0:
-                            print("B[i,j] = ", B[i,j])
-                            print("vK(..) = ", vK(B[i,j]))
-                            print("B_ij[k,l] = ", B_ij[k,l])
+                        if vK(B_ij[k, l]) < 0:
+                            print("B[i,j] = ", B[i, j])
+                            print("vK(..) = ", vK(B[i, j]))
+                            print("B_ij[k,l] = ", B_ij[k, l])
                             raise ValueError
-                        BB[i*n+k, j*n+l] = R(B_ij[k,l])
+                        BB[i*n+k, j*n+l] = R(B_ij[k, l])
         return BB.charpoly()
-
 
     def subfield(self, alpha, e):
         r"""

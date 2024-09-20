@@ -37,7 +37,7 @@ EXAMPLES::
 
 """
 
-#*****************************************************************************
+# ***************************************************************************
 #       Copyright (C) 2016-2018 Stefan Wewers <stefan.wewers@uni-ulm.de>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -45,7 +45,7 @@ EXAMPLES::
 # the Free Software Foundation, either version 2 of the License, or
 # (at your option) any later version.
 #                  https://www.gnu.org/licenses/
-#*****************************************************************************
+# ***************************************************************************
 
 from sage.all import ZZ, FunctionField, PolynomialRing
 from mclf.curves.superelliptic_curves import SuperellipticCurve
