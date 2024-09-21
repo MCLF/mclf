@@ -16,31 +16,27 @@ jobs:
   "test-sage-8.4":
     <<: *test
     docker:
-      - image: sagemath/sagemath:8.4
-  "test-sage-8.5":
-    <<: *test
-    docker:
-      - image: sagemath/sagemath:8.5
-  "test-sage-8.6":
-    <<: *test
-    docker:
-      - image: sagemath/sagemath:8.6
-  "test-sage-8.7":
-    <<: *test
-    docker:
-      - image: sagemath/sagemath:8.7
-  "test-sage-8.8":
-    <<: *test
-    docker:
-      - image: sagemath/sagemath:8.8
-  "test-sage-9.0":
-    <<: *test
-    docker:
-      - image: sagemath/sagemath:9.0
+      - image: sagemath/sagemath:9.1
   "test-sage-9.1":
     <<: *test
     docker:
-      - image: sagemath/sagemath:9.1
+      - image: sagemath/sagemath:9.3
+  "test-sage-9.5":
+    <<: *test
+    docker:
+      - image: sagemath/sagemath:9.5
+  "test-sage-9.7":
+    <<: *test
+    docker:
+      - image: sagemath/sagemath:9.7
+  "test-sage-10.1":
+    <<: *test
+    docker:
+      - image: sagemath/sagemath:10.1
+  "test-sage-9.0":
+    <<: *test
+    docker:
+      - image: sagemath/sagemath:10.3
   coverage:
     working_directory: /home/sage/mclf
     docker:
@@ -163,13 +159,12 @@ workflows:
   test:
     jobs:
        # When adding a new stable release of Sage here, make sure to also upgrade the Dockerfile
-       - test-sage-8.4
-       - test-sage-8.5
-       - test-sage-8.6
-       - test-sage-8.7
-       - test-sage-8.8
-       - test-sage-9.0
        - test-sage-9.1
+       - test-sage-9.3
+       - test-sage-9.5
+       - test-sage-9.7
+       - test-sage-10.1
+       - test-sage-10.3
        - pyflakes
        - coverage
        - docbuild-sage
