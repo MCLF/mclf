@@ -391,7 +391,7 @@ class InertialComponent(SageObject):
         self._is_separable = is_separable
 
     def __repr__(self):
-        return "inertial component of reduction tree with interior {}".format(self.interior())
+        return f"inertial component of reduction tree with interior {self.interior()}"
 
     def reduction_tree(self):
         r"""
@@ -1165,7 +1165,7 @@ class UpperComponent(ReductionComponent):
             self._component, Z.component(), phi)
 
     def __repr__(self):
-        return "upper component of reduction tree corresponding to  {}".format(self.valuation())
+        return f"upper component of reduction tree corresponding to  {self.valuation()}"
 
     def genus(self):
         r"""
