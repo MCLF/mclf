@@ -50,7 +50,8 @@ polygon with slope `s` is moved to a segment of slope `0` with ordinate `0`.
 #                  https://www.gnu.org/licenses/
 # ***************************************************************************
 
-from sage.all import ZZ, GaussValuation
+from sage.rings.integer_ring import Z as ZZ
+from sage.rings.valuation.gauss_valuation import GaussValuation
 from sage.geometry.newton_polygon import NewtonPolygon
 
 
@@ -86,7 +87,7 @@ def slope_factors(f, vK, precision, reduce_function, slope_bound=0):
 
         sage: from mclf.padic_extensions.slope_factors import slope_factors
         sage: from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
-        sage: from sage.all import GaussValuation
+        sage: from sage.rings.valuation.gauss_valuation import GaussValuation
         sage: R.<x> = QQ[]
         sage: v2 = QQ.valuation(2)
         sage: Q2 = FakepAdicCompletion(QQ, v2)

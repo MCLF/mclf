@@ -98,7 +98,11 @@ TODO:
 # ****************************************************************************
 
 
-from sage.all import PolynomialRing, Polynomial, ZZ, QQ, prod
+from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
+from sage.rings.polynomial.polynomial_element import Polynomial
+from sage.rings.integer_ring import Z as ZZ
+from sage.rings.rational_field import Q as QQ
+from sage.misc.misc_c import prod
 from sage.geometry.newton_polygon import NewtonPolygon
 from mclf.padic_extensions.fake_padic_completions import FakepAdicCompletion
 from mclf.padic_extensions.fake_padic_extensions import FakepAdicExtension
