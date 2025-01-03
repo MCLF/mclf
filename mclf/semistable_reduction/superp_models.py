@@ -135,7 +135,10 @@ TO DO:
 #                  https://www.gnu.org/licenses/
 # *****************************************************************************
 
-from sage.all import PolynomialRing, FunctionField, floor, GaussValuation
+from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
+from sage.rings.function_field.constructor import FunctionField
+from sage.functions.other import floor
+from sage.rings.valuation.gauss_valuation import GaussValuation
 from mclf.berkovich.berkovich_line import BerkovichLine
 from mclf.berkovich.berkovich_trees import BerkovichTree
 # from mclf.berkovich.affinoid_domain import ClosedUnitDisk

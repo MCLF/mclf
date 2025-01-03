@@ -17,7 +17,9 @@ class Monkey(AbstractMonkey):
     _trac = "https://trac.sagemath.org/ticket/25360"
 
     def _test(self):
-        from sage.all import GF, PolynomialRing, proof
+        from sage.rings.finite_rings.finite_field_constructor import FiniteField as GF
+        from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
+        import sage.structure.proof.all as proof
         k = GF(4, 'u')
         u = k.gen()
         R = PolynomialRing(k, 'v')

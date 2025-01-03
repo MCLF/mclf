@@ -27,7 +27,7 @@ TO DO:
 #                  https://www.gnu.org/licenses/
 # ***************************************************************************
 
-from sage.all import SageObject
+from sage.structure.sage_object import SageObject
 
 
 class ElementOfFakepAdicCompletion(SageObject):
