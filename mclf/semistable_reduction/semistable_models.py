@@ -139,7 +139,7 @@ three of genus `1`. ::
 #                  https://www.gnu.org/licenses/
 # ***************************************************************************
 
-from sage.all import SageObject
+from sage.structure.sage_object import SageObject
 from mclf.curves.superelliptic_curves import SuperellipticCurve
 
 

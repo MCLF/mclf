@@ -49,7 +49,8 @@ Moreover, kinks of this function can only occur in points of type II.
 #                  https://www.gnu.org/licenses/
 # ****************************************************************************
 
-from sage.all import SageObject, Infinity
+from sage.structure.sage_object import SageObject
+from sage.rings.infinity import Infinity
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
 
 

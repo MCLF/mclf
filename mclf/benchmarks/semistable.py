@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-from sage.all import QQ, PolynomialRing, FunctionField
+from sage.rings.rational_field import Q as QQ
+from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
+from sage.rings.function_field.constructor import FunctionField
 from mclf import SuperellipticCurve, SemistableModel, SmoothProjectiveCurve
 
 

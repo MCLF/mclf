@@ -134,7 +134,11 @@ TODO:
 #                  https://www.gnu.org/licenses/
 # *****************************************************************************
 
-from sage.all import ZZ, QQ, FunctionField, SageObject, Infinity
+from sage.rings.integer_ring import Z as ZZ
+from sage.rings.rational_field import Q as QQ
+from sage.rings.function_field.constructor import FunctionField
+from sage.structure.sage_object import SageObject
+from sage.rings.infinity import Infinity
 from mclf.berkovich.berkovich_line import BerkovichLine
 from mclf.berkovich.type_V_points import TypeVPointOnBerkovichLine
 from mclf.berkovich.affinoid_domain import ElementaryAffinoidOnBerkovichLine
@@ -543,7 +547,7 @@ class InertialComponent(SageObject):
             the closed unit disk.
 
         """
-        from sage.all import PolynomialRing
+        from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 
         if not hasattr(self, "_splitting_field"):
             vK = self.reduction_tree().base_valuation()
