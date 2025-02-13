@@ -26,7 +26,11 @@ At the moment we can do this only in certain special cases, which should
 nevertheless be useful.
 
 If you have at least [Sage 8.4](https://www.sagemath.org/) you can install the
-latest version of this package with `sage -pip install git+https://github.com/MCLF/mclf`.
+latest version of this package with
+
+```
+sage -pip install git+https://github.com/MCLF/mclf
+```
 
 If you can not install Sage on your local machine, you can also click
 [![Launch on mybinder.org](https://camo.githubusercontent.com/d57df63fab21897847014ebaec3e7f5f48951ad2/68747470733a2f2f626574612e6d7962696e6465722e6f72672f62616467652e737667)](https://mybinder.org/v2/gh/mclf/MCLF/master?filepath=example.ipynb)
