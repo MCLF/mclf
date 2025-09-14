@@ -47,7 +47,9 @@ EXAMPLES::
 #                  https://www.gnu.org/licenses/
 # ***************************************************************************
 
-from sage.all import ZZ, FunctionField, PolynomialRing
+from sage.rings.integer_ring import Z as ZZ
+from sage.rings.function_field.constructor import FunctionField
+from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
 from mclf.curves.superelliptic_curves import SuperellipticCurve
 
 

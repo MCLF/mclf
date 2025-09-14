@@ -133,7 +133,13 @@ reduction is a smooth projective curve of the same genus: ::
 #                  https://www.gnu.org/licenses/
 # *****************************************************************************
 
-from sage.all import lcm, SageObject, Infinity, ZZ, PolynomialRing, randint, PowerSeriesRing
+from sage.arith.functions import lcm
+from sage.misc.prandom import randint
+from sage.rings.infinity import Infinity
+from sage.rings.integer_ring import ZZ
+from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
+from sage.rings.power_series_ring import PowerSeriesRing
+from sage.structure.sage_object import SageObject
 
 
 class SmoothProjectiveCurve(SageObject):
@@ -1425,7 +1431,7 @@ def field_of_constant_degree_of_polynomial(G, return_field=False):
             return d
     elif K in NumberFields():
         from sage.rings.integer_ring import ZZ
-        from sage.rings.all import GaussValuation
+        from sage.rings.valuation.gauss_valuation import GaussValuation
         if return_field:
             raise NotImplementedError('Computation of field of constants for number fields is not yet implemented.')
         d = n

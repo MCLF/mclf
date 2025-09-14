@@ -47,7 +47,8 @@ TO DO:
 #                  https://www.gnu.org/licenses/
 # ****************************************************************************
 
-from sage.all import SageObject, ZZ
+from sage.structure.sage_object import SageObject
+from sage.rings.integer_ring import Z as ZZ
 
 
 class FakepAdicExtension(SageObject):

@@ -78,7 +78,7 @@ EXAMPLES::
 #                  https://www.gnu.org/licenses/
 # ***************************************************************************
 
-from sage.all import SageObject
+from sage.structure.sage_object import SageObject
 from mclf.curves.smooth_projective_curves import PointOnSmoothProjectiveCurve
 
 

@@ -46,7 +46,8 @@ EXAMPLES::
 #                  https://www.gnu.org/licenses/
 # *****************************************************************************
 
-from sage.all import SageObject, Graph
+from sage.structure.sage_object import SageObject
+from sage.graphs.graph import Graph
 
 
 class BerkovichTree(SageObject):

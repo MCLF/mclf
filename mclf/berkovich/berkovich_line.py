@@ -213,7 +213,12 @@ TO DO:
 #                  https://www.gnu.org/licenses/
 # *****************************************************************************
 
-from sage.all import SageObject, Infinity, sgn, GaussValuation, ZZ, cached_method
+from sage.structure.sage_object import SageObject
+from sage.rings.infinity import Infinity
+from sage.functions.generalized import sgn
+from sage.rings.valuation.gauss_valuation import GaussValuation
+from sage.rings.integer_ring import Z as ZZ
+from sage.misc.cachefunc import cached_method
 from sage.rings.valuation.limit_valuation import LimitValuation
 from sage.geometry.newton_polygon import NewtonPolygon
 # from sage.misc.cachefunc import cached_method
@@ -323,7 +328,7 @@ class BerkovichLine(SageObject):
         EXAMPLES::
 
             sage: from mclf import *
-            sage: from sage.all import GaussValuation
+            sage: from sage.rings.valuation.gauss_valuation import GaussValuation
             sage: F.<x> = FunctionField(QQ)
             sage: v2 = QQ.valuation(2)
             sage: X = BerkovichLine(F, v2)
@@ -409,7 +414,7 @@ class BerkovichLine(SageObject):
             True
 
         """
-        from sage.all import Infinity
+        from sage.rings.infinity import Infinity
         F = self.function_field()
         assert v.domain() == F, "the domain of v must be the function field of the Berkovich line"
         v_K = self.base_valuation()
@@ -504,7 +509,7 @@ class BerkovichLine(SageObject):
             # y for F such that v(f) >= s iff v(f1(y)) >= s1
             # then v0 can be defined as the inductive valuation on K[y]
             # characterized by v0(f1(y)) = s1
-            from sage.all import ceil
+            from sage.functions.other import ceil
             from sage.geometry.newton_polygon import NewtonPolygon
             f = R(f)
             np = NewtonPolygon([(i, vK(f[i])) for i in range(f.degree()+1)])
@@ -953,7 +958,7 @@ class PointOnBerkovichLine(SageObject):
         EXAMPLES::
 
             sage: from mclf import *
-            sage: from sage.all import GaussValuation
+            sage: from sage.rings.valuation.gauss_valuation import GaussValuation
             sage: F.<x> = FunctionField(QQ)
             sage: v_2 = QQ.valuation(2)
             sage: X = BerkovichLine(F, v_2)

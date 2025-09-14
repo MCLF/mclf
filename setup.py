@@ -24,5 +24,16 @@ setup(
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
         "Topic :: Scientific/Engineering :: Mathematics",
-        "Operating System :: OS Independent")
+        "Operating System :: OS Independent"),
+    extras_require={
+        'passagemath': [
+            'passagemath-flint',
+            'passagemath-graphs',
+            'passagemath-modules',
+            'passagemath-pari',
+            'passagemath-polyhedra',
+            'passagemath-repl',
+            'passagemath-singular',
+        ],
+    },
 )

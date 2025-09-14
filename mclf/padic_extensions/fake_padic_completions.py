@@ -85,9 +85,24 @@ TO DO:
 # ****************************************************************************
 
 
-from sage.all import SageObject, ZZ, QQ, NumberField, GaussValuation, PolynomialRing, Polynomial, Integer, matrix, IntegerModRing, mod, Infinity, prod, lcm, vector, GF
+from sage.structure.sage_object import SageObject
+from sage.rings.integer_ring import Z as ZZ
+from sage.rings.rational_field import Q as QQ
+from sage.rings.number_field.number_field import NumberField
+from sage.rings.valuation.gauss_valuation import GaussValuation
+from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
+from sage.rings.polynomial.polynomial_element import Polynomial
+from sage.rings.integer import Integer
+from sage.matrix.constructor import Matrix as matrix
+from sage.rings.finite_rings.integer_mod_ring import IntegerModRing
+from sage.rings.infinity import Infinity
+from sage.misc.misc_c import prod
+from sage.arith.functions import lcm
+from sage.modules.free_module_element import free_module_element as vector
+from sage.rings.finite_rings.finite_field_constructor import FiniteField as GF
 from sage.geometry.newton_polygon import NewtonPolygon
 from sage.rings.valuation.limit_valuation import LimitValuation
+from sage.rings.finite_rings.integer_mod import mod
 
 
 class FakepAdicCompletion(SageObject):

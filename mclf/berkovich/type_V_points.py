@@ -69,7 +69,9 @@ from `\xi_1` towards `\xi_2`.
 #                  https://www.gnu.org/licenses/
 # *****************************************************************************
 
-from sage.all import SageObject, Infinity, cached_method
+from sage.structure.sage_object import SageObject
+from sage.rings.infinity import Infinity
+from sage.misc.cachefunc import cached_method
 # from sage.misc.cachefunc import cached_method
 
 
