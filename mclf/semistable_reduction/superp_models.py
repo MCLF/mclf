@@ -117,11 +117,21 @@ We check that issues #39 and #40 have been fixed: ::
     sage: Y2.is_semistable()
     True
 
+By default, an error is raised if the polynomial `f` defining the curve has
+degree divisible by `p`. You can override this as follows:
 
-TO DO:
+    sage: Y = SuperellipticCurve(x^4 + x + 1, 2)
+    sage: Y2 = SuperpModel(Y, v_2, check=False)
+    sage: Y2
+    semistable model of superelliptic curve Y: y^2 = x^4 + x + 1 over Rational Field,            with respect to 2-adic valuation
 
-- more doctests
+But note that the computation of the etale locus and hence also of the
+semistable reduction may now give an incorrect result.
 
+    sage: Y2.etale_locus()
+    The empty set
+    sage: Y2.is_semistable()
+    False
 
 """
 
@@ -153,9 +163,13 @@ class SuperpModel(SemistableModel):
 
     - ``Y`` -- a superelliptic curve over a field `K`
     - ``vK`` -- a discrete valuation on `K`
+    - ``check`` -- a boolean (default: ``True``)
 
     The field `K` must be of characteristic `0` and the residue characteristic
     of ``vK`` must be a prime `p` which is equal to the covering degree of `Y`.
+
+    If ``check`` is ``True`` (the default) then violation of the latter condition
+    raises an error.
 
     OUTPUT: the object representing a semistable model of `Y`.
 
@@ -178,7 +192,7 @@ class SuperpModel(SemistableModel):
 
     """
 
-    def __init__(self, Y, vK):
+    def __init__(self, Y, vK, check=True):
 
         p = vK.residue_field().characteristic()
         assert p == Y.covering_degree()
@@ -187,7 +201,7 @@ class SuperpModel(SemistableModel):
         R = f.parent()
         assert R.base_ring() is vK.domain(), "the domain of vK must be the base field of f"
         assert p == vK.residue_field().characteristic(), "the exponent p must be the residue characteristic of vK"
-        assert not p.divides(f.degree()), "the degree of f must be prime to p"
+        assert not check or not p.divides(f.degree()), "the degree of f must be prime to p"
         self._p = p
         self._base_valuation = vK
         v0 = GaussValuation(R, vK)
@@ -271,7 +285,7 @@ class SuperpModel(SemistableModel):
         result is that the etale locus is contained in the closed unit disk.
 
         """
-        from mclf.berkovich.piecewise_affine_functions import Discoid, valuative_function
+        from mclf.berkovich.piecewise_affine_functions import Domain, Discoid, open_discoid, valuative_function
         from mclf.berkovich.affinoid_domain import UnionOfDomains
 
         if hasattr(self, "_etale_locus"):
@@ -306,7 +320,25 @@ class SuperpModel(SemistableModel):
             valuative_function(
                 D, ([(c[pl], k*(p - 1)), (c[k], -pl*(p - 1))], -p*(k - pl)*v_K(pi)))
             for k in range(m + 1, n + 1) if k != pl]
+        self._delta = delta
         U_list = [delta[i].affinoid_domain() for i in range(len(delta))]
+        if p.divides(n):
+            f1 = f.reverse()
+            x = X.function_field().gen()
+            H1, G1 = p_approximation_generic(f1, p)
+            c1 = [G1[k](1/x) for k in range(n+1)]
+            # print(f"c1 = {c1}")
+            xi = X.point_from_discoid(1/x, 1/10)
+            D1 = Discoid(xi, xi1=X.infty())  # this is a hack!
+            delta1 = [valuative_function(D1, ([(c1[pl], p - 1)], -p*v_K(pi)))]
+            # delta1 = []
+            delta1 += [
+                valuative_function(
+                    D1, ([(c1[pl], k*(p - 1)), (c1[k], -pl*(p - 1))], -p*(k - pl)*v_K(pi)))
+                for k in range(m + 1, n + 1) if k != pl]
+            self._delta1 = delta1
+            U_list += [delta1[i].affinoid_domain() for i in range(len(delta1))]
+
         X_et = UnionOfDomains(U_list)
         self._etale_locus = X_et
         return X_et
