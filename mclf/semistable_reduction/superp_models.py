@@ -284,6 +284,12 @@ class SuperpModel(SemistableModel):
         and of degree prime to `p`. The motivation for this restriction, and its
         result is that the etale locus is contained in the closed unit disk.
 
+        UPDATE: in the current version we test the possibility to remove the
+        requirement that the degree of `f` be prime to `p`. We do this with a
+        'hack', see below. For a clean solution we would need a version of
+        ``valuative_function`` where the domain is allowed to be an *open*
+        discoid.
+
         """
         from mclf.berkovich.piecewise_affine_functions import Domain, Discoid, open_discoid, valuative_function
         from mclf.berkovich.affinoid_domain import UnionOfDomains
