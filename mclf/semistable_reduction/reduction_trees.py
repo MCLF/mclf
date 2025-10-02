@@ -1235,9 +1235,8 @@ def make_function_field(K):
     from mclf.curves.smooth_projective_curves import make_finite_field
     from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
     from sage.categories.function_fields import FunctionFields
-    from sage.rings.function_field.function_field import is_FunctionField
 
-    if is_FunctionField(K):
+    if K in FunctionFields():
         k = K.constant_base_field()
         if k.is_finite() and hasattr(k, "base_field"):
             # k seems to be finite, but not a true finite field
