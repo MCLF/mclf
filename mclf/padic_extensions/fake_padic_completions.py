@@ -283,6 +283,22 @@ class FakepAdicCompletion(SageObject):
         equal to `K_0[x]/(f)`, and there may not exist any embedding of `K_0`
         into `L_0`.
 
+        EXAMPLES:
+
+        The following example led to an error in a previous version::
+            sage: from mclf import *
+            sage: v_2 = QQ.valuation(2)
+            sage: Q2 = FakepAdicCompletion(QQ, v_2)
+            sage: R.<x> = QQ[]
+            sage: f = x^6 + 38*x^4 + 332*x^2 + 8
+            sage: L = Q2.extension(f)
+            sage: L
+            2-adic completion of Number Field in pi6 with defining polynomial x^6 + 38*x^4 + 332*x^2 + 8
+            sage: L.ramification_degree()
+            2
+            sage: L.inertia_degree()
+            3
+
         """
         # print("entering extension with ")
         # print("K = ", self)
@@ -317,7 +333,8 @@ class FakepAdicCompletion(SageObject):
         # of g
 
         done = False
-        N = m+5
+        # we start with a precision N which is hopefully sufficient
+        N = m+7
         while not done:
             Pmod = self.characteristic_polynomial_mod(g, N)
             # this is very heuristic; there should be a conclusive test whether
