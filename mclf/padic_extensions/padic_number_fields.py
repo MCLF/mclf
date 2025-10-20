@@ -1073,7 +1073,7 @@ class pAdicNumberField(SageObject):
                 v = v0.augmentation(phi, t)
                 while t <= s:
                     # this only works if f is monic
-                    V = v.mac_lane_step(f)
+                    V = v.mac_lane_step(f.monic())
                     assert len(V) == 1
                     v = V[0]
                     t = v(v.phi())

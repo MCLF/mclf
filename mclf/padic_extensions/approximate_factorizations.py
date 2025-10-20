@@ -368,7 +368,7 @@ class ApproximatePrimeFactor(SageObject):
         K = self.base_field()
         return K.simple_extension(self.approximate_polynomial())
 
-    def base_change(self, L):
+    def base_change(self, L, ignore_linear_factors=True):
         r""" Return the factorization of the base change of this irreducible factor
         with respect to a finite extension of the base field.
 
@@ -379,11 +379,33 @@ class ApproximatePrimeFactor(SageObject):
         OUTPUT: an approximate factorization of this irreducible factor `f`,
         considered as an (approximate) polynomial in `L[x]`.
 
-        Note that the linear factors of `f` over `L` are ignored.
+        Note that the linear factors of `f` over `L` are ignored, unless
+        ``ignore_linear_factors`` is ``False``.
+
+        EXAMPLES::
+
+            sage: from mclf import *
+            sage: Q2 = pAdicNumberField(QQ, 2)
+            sage: R.<x> = QQ[]
+            sage: f = x^4 + x^2 +2
+            sage: F = approximate_factorization(Q2, f)
+            sage: F
+            [an approximate irreducible polynomial of degree 2, over field of 2-adic numbers,
+             an approximate irreducible polynomial of degree 2, over field of 2-adic numbers]
+
+            sage : L = Q2.simple_extension(F[1]); L
+            2-adic number field of degree 2 in alpha2, as extension of field of 2-adic numbers
+
+            sage: G = F[1].base_change(L, ignore_linear_factors=False); G
+            [an approximate irreducible polynomial of degree 1, over 2-adic number field of degree 2 in alpha2,
+             an approximate irreducible polynomial of degree 1, over 2-adic number field of degree 2 in alpha2]
 
         """
         V = self.root().base_change(L.embedding())
-        return [ApproximatePrimeFactor(L.extension_field(), v) for v in V if v.degree() > 1]
+        if ignore_linear_factors:
+            return [ApproximatePrimeFactor(L.extension_field(), v) for v in V if v.degree() > 1]
+        else:
+            return [ApproximatePrimeFactor(L.extension_field(), v) for v in V]
 
 
 # ----------------------------------------------------------------------------
