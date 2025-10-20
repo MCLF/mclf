@@ -148,7 +148,8 @@ equipped with a discrete (p-adic) valuation::
     sage: L =
 
 
-
+TODO:    - remove the restriction that the defining polynomial has integer coefficients
+            in :meth:`valuation_of_polynomial`, :meth:`root`, and :meth:`approximate_root`.
 
 """
 
@@ -979,6 +980,9 @@ class pAdicNumberField(SageObject):
 
         OUTPUT: the value `f(a)`, up to precision `s`.
 
+        NOTE: for the moment this method assumes that `f` has coefficients in `\mathbb{Z}`.
+        This is a serious restriction which should be removed at some point.
+
         """
         assert s > 0, "s must be positive"
         if s == Infinity:
@@ -1048,6 +1052,9 @@ class pAdicNumberField(SageObject):
         closer to `a` than to any other root.
 
         OUTPUT: an element `a_1` such that `v_K(a - a_1) \geq s`.
+
+        NOTE: for the moment this method assumes that `f` has coefficients in `\mathbb{Z}`.
+        This is a serious restriction which should be removed at some point.
 
         """
         v_K = self.valuation()
