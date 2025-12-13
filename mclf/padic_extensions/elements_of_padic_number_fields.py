@@ -33,7 +33,7 @@ Moreover, we assume that the powers of the standard generator of
 
 where `\alpha` is the standard generator of `K_0/\mathbb{Q}`.
 
-By an *element* of `K` we mean on of the following three types of objects:
+By an *element* of `K` we mean one of the following three types of objects:
 
 - An *exact element*: this is just an element of the underlying number
   field `K_0`.
@@ -78,6 +78,11 @@ EXAMPLES::
     alpha as algebraic element
     sage: alpha.minimal_polynomial()
     x^2 + 2
+
+Todo:
+
+- finish implementation of `roots_of_rational_polynomial`
+- example which documents the method `evaluate_embedding`
 
 """
 
@@ -162,7 +167,7 @@ def roots_of_rational_polynomial(K, f, approximations=None):
     if approximations is None:
 
         for g in G:
-            G = [g for g in approximate_factorization(K, f) if g.degree() == 1]
+            G = [h for h in approximate_factorization(K, g) if h.degree() == 1]
 
     raise NotImplementedError()
 

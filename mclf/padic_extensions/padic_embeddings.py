@@ -43,7 +43,9 @@ EXAMPLES:
 
 
 
-TO DO:
+Todo:
+
+- write doctests
 
 
 """
@@ -150,7 +152,7 @@ class pAdicEmbedding(SageObject):
 
         INPUT:
 
-        - ``a`` -- an element of the codomain `K` of this embedding
+        - ``a`` -- an element of the domain `K` of this embedding
         - ``precision`` -- a positive rational, or ``None`` (default: ``None``)
 
         Here `a` may be given as an element of the number field underlying `K`,
@@ -171,8 +173,16 @@ class pAdicEmbedding(SageObject):
         so will be `\varphi(a)` (but note that this is because `\varphi(a)` is
         algebraic in this case, and the infinite precision may only be potential).
 
-        To compute `\varphi(a)`, we write `a=g(\alpha)` as a polynomial in the
-        canonical generator `\alpha` of `K`. Then
+        To compute `\varphi(a)`, we distinguish two cases:
+
+        1. If `a` is an instance of :class:`ElementOfpAdicNumberField\
+        <mclf.padic_extensions.elements_of_padic_number_fields.ElementOfpAdicNumberField>`,
+        then we invoke the method :meth:`evaluate_embedding` of that class,
+        with this embedding as input parameter.
+        
+        2. If `a` is an element of the number field underlying `K`, then we write 
+        `a=g(\alpha)` as a polynomial in the canonical generator `\alpha` of `K`. 
+        Then
 
         .. MATH::
 
