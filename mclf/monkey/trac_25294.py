@@ -17,7 +17,9 @@ class Monkey(AbstractMonkey):
     _trac = "https://trac.sagemath.org/ticket/25294"
 
     def _test(self):
-        from sage.all import FunctionField, QQ, PolynomialRing
+        from sage.rings.function_field.constructor import FunctionField
+        from sage.rings.rational_field import Q as QQ
+        from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
         K = FunctionField(QQ, 'x')
         x = K.gen()
         R = PolynomialRing(K, 'y')

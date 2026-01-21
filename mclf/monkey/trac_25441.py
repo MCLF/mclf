@@ -17,7 +17,10 @@ class Monkey(AbstractMonkey):
     _trac = "https://trac.sagemath.org/ticket/25441"
 
     def _test(self):
-        from sage.all import QQ, PolynomialRing, GaussValuation, FunctionField
+        from sage.rings.rational_field import Q as QQ
+        from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
+        from sage.rings.valuation.gauss_valuation import GaussValuation
+        from sage.rings.function_field.constructor import FunctionField
         R = PolynomialRing(QQ, 'x')
         x = R.gen()
         v = GaussValuation(R, QQ.valuation(2))

@@ -50,7 +50,10 @@ TODO:
 #                  https://www.gnu.org/licenses/
 # ***************************************************************************
 
-from sage.all import SageObject, PolynomialRing, Infinity, GaussValuation
+from sage.structure.sage_object import SageObject
+from sage.rings.polynomial.polynomial_ring_constructor import PolynomialRing
+from sage.rings.infinity import Infinity
+from sage.rings.valuation.gauss_valuation import GaussValuation
 from sage.rings.valuation.limit_valuation import MacLaneLimitValuation, LimitValuation
 
 
