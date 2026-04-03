@@ -1,0 +1,26 @@
+name: Test
+on:
+  push: { branches: [ "master" ] }
+  pull_request: { branches: [ "master" ] }
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: "${{ matrix.on }}"
+    strategy:
+      matrix:
+        include:
+        - { on: "ubuntu-24.04" }
+        - { on: "macos-15-intel" }
+        - { on: "macos-15" }
+    steps:
+    - uses: actions/checkout@v6
+    - uses: prefix-dev/setup-pixi@v0.9.3
+      with:
+        pixi-version: v0.63.2
+    - name: Run doctests
+      run: |
+        pixi run doctest-long

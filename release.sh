@@ -31,8 +31,8 @@ git tag "$1"
 git push --tags $REPOSITORY "$1"
 
 echo "Building for PyPI..."
-python2 setup.py bdist_wheel
-python3 setup.py bdist_wheel
+rm -rf dist build
+python3 -m build
 
 echo "Pushing to PyPI..."
 twine upload dist/*
