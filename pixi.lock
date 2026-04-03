@@ -19,6 +19,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cddlib-1!0.94m-h9202a9a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cliquer-1.22-hd590300_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cypari2-2.2.4-py312h8892d45_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cysignals-1.12.6-py312h1289d80_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cython-3.2.4-py312h68e6be4_0.conda
@@ -195,6 +196,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cddlib-1!0.94m-h0f52abe_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cliquer-1.22-h10d778d_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cypari2-2.2.4-py312h50fee2b_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cysignals-1.12.6-py312h11f4fa3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cython-3.2.4-py312h84c01df_0.conda
@@ -372,6 +374,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cddlib-1!0.94m-h6d7a090_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cliquer-1.22-h93a5062_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cypari2-2.2.4-py312h6dd9710_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cysignals-1.12.6-py312h6d95f44_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cython-3.2.4-py312hedd66cf_0.conda
@@ -558,6 +561,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cddlib-1!0.94m-h9202a9a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cliquer-1.22-hd590300_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cypari2-2.1.5-py310h9e94287_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cysignals-1.12.5-py310hea6c23e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cython-0.29.37-py310hc6cd4ac_0.conda
@@ -735,6 +739,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cddlib-1!0.94m-h0f52abe_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cliquer-1.22-h10d778d_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cypari2-2.1.5-py310h8e9d8da_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cysignals-1.12.4-py310h79c4529_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cython-0.29.37-py310h5daac23_0.conda
@@ -913,6 +918,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cddlib-1!0.94m-h6d7a090_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cliquer-1.22-h93a5062_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cypari2-2.1.5-py310h59e97d9_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cysignals-1.12.5-py310hc7786af_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cython-0.29.37-py310h692a8b6_0.conda
@@ -1099,6 +1105,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cddlib-1!0.94m-h9202a9a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cliquer-1.22-hd590300_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cypari2-2.1.5-py310h9e94287_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cysignals-1.12.5-py310hea6c23e_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cython-0.29.37-py310hc6cd4ac_0.conda
@@ -1276,6 +1283,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cddlib-1!0.94m-h0f52abe_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cliquer-1.22-h10d778d_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cypari2-2.1.5-py310h8e9d8da_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cysignals-1.12.4-py310h79c4529_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cython-0.29.37-py310h5daac23_0.conda
@@ -1454,6 +1462,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cddlib-1!0.94m-h6d7a090_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cliquer-1.22-h93a5062_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cypari2-2.1.5-py310h59e97d9_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cysignals-1.12.5-py310hc7786af_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cython-0.29.37-py310h692a8b6_0.conda
@@ -1640,6 +1649,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cddlib-1!0.94m-h9202a9a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cliquer-1.22-hd590300_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cypari2-2.1.5-py311hb3b18a3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cysignals-1.12.5-py311h1ddb823_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cython-3.2.4-py311h0daaf2c_0.conda
@@ -1817,6 +1827,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cddlib-1!0.94m-h0f52abe_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cliquer-1.22-h10d778d_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cypari2-2.1.5-py311h45ae062_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cysignals-1.12.5-py311h11ccb26_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cython-3.2.4-py311hac81038_0.conda
@@ -1995,6 +2006,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cddlib-1!0.94m-h6d7a090_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cliquer-1.22-h93a5062_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cypari2-2.1.5-py311hb5623fa_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cysignals-1.12.5-py311h251fd82_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cython-3.2.4-py311h8ccca7f_0.conda
@@ -2180,6 +2192,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cddlib-1!0.94m-h9202a9a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cliquer-1.22-hd590300_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cypari2-2.1.5-py311hb3b18a3_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cysignals-1.12.5-py311h1ddb823_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cython-3.2.4-py311h0daaf2c_0.conda
@@ -2356,6 +2369,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cddlib-1!0.94m-h0f52abe_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cliquer-1.22-h10d778d_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cypari2-2.1.5-py311h45ae062_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cysignals-1.12.5-py311h11ccb26_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cython-3.2.4-py311hac81038_0.conda
@@ -2533,6 +2547,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cddlib-1!0.94m-h6d7a090_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cliquer-1.22-h93a5062_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cypari2-2.1.5-py311hb5623fa_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cysignals-1.12.5-py311h251fd82_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cython-3.2.4-py311h8ccca7f_0.conda
@@ -2718,6 +2733,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cddlib-1!0.94m-h9202a9a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cliquer-1.22-hd590300_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cypari2-2.1.5-py312h6c88202_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cysignals-1.12.6-py312h1289d80_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cython-3.2.4-py312h68e6be4_0.conda
@@ -2894,6 +2910,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cddlib-1!0.94m-h0f52abe_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cliquer-1.22-h10d778d_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cypari2-2.1.5-py312h3d7ec77_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cysignals-1.12.6-py312h11f4fa3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cython-3.2.4-py312h84c01df_0.conda
@@ -3071,6 +3088,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cddlib-1!0.94m-h6d7a090_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cliquer-1.22-h93a5062_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cypari2-2.1.5-py312hda1ce69_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cysignals-1.12.6-py312h6d95f44_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cython-3.2.4-py312hedd66cf_0.conda
@@ -3256,6 +3274,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cddlib-1!0.94m-h9202a9a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cliquer-1.22-hd590300_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cypari2-2.1.5-py312h6c88202_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cysignals-1.12.6-py312h1289d80_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cython-3.2.4-py312h68e6be4_0.conda
@@ -3432,6 +3451,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cddlib-1!0.94m-h0f52abe_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cliquer-1.22-h10d778d_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cypari2-2.1.5-py312h3d7ec77_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cysignals-1.12.6-py312h11f4fa3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cython-3.2.4-py312h84c01df_0.conda
@@ -3609,6 +3629,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cddlib-1!0.94m-h6d7a090_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cliquer-1.22-h93a5062_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cypari2-2.1.5-py312hda1ce69_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cysignals-1.12.6-py312h6d95f44_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cython-3.2.4-py312hedd66cf_0.conda
@@ -3794,6 +3815,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cddlib-1!0.94m-h9202a9a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cliquer-1.22-hd590300_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cypari2-2.2.4-py312h8892d45_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cysignals-1.12.6-py312h1289d80_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cython-3.2.4-py312h68e6be4_0.conda
@@ -3970,6 +3992,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cddlib-1!0.94m-h0f52abe_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cliquer-1.22-h10d778d_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cypari2-2.2.4-py312h50fee2b_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cysignals-1.12.6-py312h11f4fa3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cython-3.2.4-py312h84c01df_0.conda
@@ -4147,6 +4170,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cddlib-1!0.94m-h6d7a090_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cliquer-1.22-h93a5062_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cypari2-2.2.4-py312h6dd9710_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cysignals-1.12.6-py312h6d95f44_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cython-3.2.4-py312hedd66cf_0.conda
@@ -4332,6 +4356,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cddlib-1!0.94m-h9202a9a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cliquer-1.22-hd590300_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cypari2-2.2.4-py312h8892d45_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cysignals-1.12.6-py312h1289d80_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/cython-3.2.4-py312h68e6be4_0.conda
@@ -4508,6 +4533,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cddlib-1!0.94m-h0f52abe_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cliquer-1.22-h10d778d_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cypari2-2.2.4-py312h50fee2b_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cysignals-1.12.6-py312h11f4fa3_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/cython-3.2.4-py312h84c01df_0.conda
@@ -4685,6 +4711,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cddlib-1!0.94m-h6d7a090_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cliquer-1.22-h93a5062_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/comm-0.2.3-pyhe01879c_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cypari2-2.2.4-py312h6dd9710_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cysignals-1.12.6-py312h6d95f44_2.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/cython-3.2.4-py312hedd66cf_0.conda
@@ -5219,6 +5246,17 @@ packages:
   - future>=0.14.0 ; python_full_version < '3'
   - flake8==3.7.8 ; extra == 'test'
   - hypothesis==3.55.3 ; extra == 'test'
+- conda: https://conda.anaconda.org/conda-forge/noarch/conway-polynomials-0.10-pyhd8ed1ab_1.conda
+  sha256: e90bf7c604a9da51c992c321c13c6b002d29fd27d39c00263de3763f9a07c392
+  md5: 7a399b5fa695b66816efffead00b2edc
+  depends:
+  - python >=3.9
+  license: GPL-3.0-or-later
+  license_family: GPL
+  purls:
+  - pkg:pypi/conway-polynomials?source=hash-mapping
+  size: 217731
+  timestamp: 1745509013860
 - conda: https://conda.anaconda.org/conda-forge/linux-64/cypari2-2.1.5-py310h9e94287_1.conda
   sha256: 7623cfd688b5e69c601d63a1c5647f5ddd665a8d436735fa09349539bb68ebc9
   md5: d30a122dd47fd6852c66c81faa2d3297
@@ -10439,8 +10477,8 @@ packages:
   timestamp: 1761214578417
 - pypi: ./
   name: mclf
-  version: 1.0.7.dev75+g2cbcda407
-  sha256: 5ae9cc09dc39abfc0e279676e91e894b2c8c3e995dd3b36b4d24c94c5e69ab4d
+  version: 1.0.7.dev76+ga03d78a89.d20260403
+  sha256: d8151e12d1d18f879571ce3c53bf6bd950e565aa06db144cd519f6341072677f
 - conda: https://conda.anaconda.org/conda-forge/linux-64/memory-allocator-0.1.3-py310h7c4b9e2_2.conda
   sha256: d7c4036819de2432246e669e09a8380f7174e60c6901177685ffcd36312e27fd
   md5: 1ab7e3d960d767a29884688b84594230

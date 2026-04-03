@@ -44,6 +44,7 @@ readthedocs-build = "*"
 [tool.pixi.dependencies]
 sagelib = "*"
 ipywidgets = "*"
+conway-polynomials = ">=0.10,<0.11"
 
 [tool.pixi.tasks]
 doctest = "sage -tp --initial mclf docs"
