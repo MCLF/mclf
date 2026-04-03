@@ -30,6 +30,7 @@ The package can be loaded with
 ```
 sage: from mclf import *
 ```
+
 We create a Picard curve over the rational number field.      
 ```
 sage: R.<x> = QQ[]
@@ -37,6 +38,7 @@ sage: Y = SuperellipticCurve(x^4-1, 3)
 sage: Y
 superelliptic curve y^3 = x^4 - 1 over Rational Field
 ```
+
 In general, the class `SuperellipticCurve` allows you to create a superelliptic curve of the form y<sup>n</sup> = f(x),
 for a polynomial f over an arbitrary field K. But you can also define any smooth projective curve Y with given
 function field.
@@ -50,6 +52,7 @@ sage: Y2 = SemistableModel(Y, v_2)
 sage: Y2.is_semistable() # this may take a while
 True
 ```
+
 The stable reduction of Y at p=2 has four components, one of genus 0 and
 three of genus 1.
 ```
@@ -60,12 +63,14 @@ sage: Y2.components_of_positive_genus()
  the smooth projective curve with Function field in y defined by y^3 + x^2 + x,
  the smooth projective curve with Function field in y defined by y^3 + x^2 + x + 1]
 ```
+
 We can also extract some arithmetic information on the curve Y from the stable reduction.
 For instance, we can compute the *conductor exponent* of Y at p=2:
 ```
 sage: Y2.conductor_exponent()
 6
 ```
+
 Now let us compute the semistable reduction of Y at p=3:
 ```
 sage: v_3 = QQ.valuation(3)
@@ -75,6 +80,7 @@ True
 sage: Y3.components_of_positive_genus()
 [the smooth projective curve with Function field in y defined by y^3 + y + 2*x^4]
 ```
+
 We see that Y has potentially good reduction at p=3. The conductor exponent is:
 ```
 sage: Y3.conductor_exponent()
@@ -98,6 +104,18 @@ See our [issues list](https://github.com/MCLF/mclf/issues), and tell us of any b
 
 #### Development workflow
 
+We recommend that you install [pixi](https://pixi.sh) to provide all the
+dependencies for developing `mclf`. Once pixi is installed, clone this
+repository and use commands such as
+
+```sh
+pixi run sage                    # run SageMath with mclf installed
+pixi run doctest-long            # run doctests against the latest SageMath
+pixi run -e sagemath-100 doctest-long  # run doctests against SageMath 10.0
+pixi run readthedocs             # validate the Read the Docs build
+```
+
 Most development happens on feature branches against the `master` branch. The
-`master` branch is considered stable and usually we create a new release which
-uploads automatically to PyPI whenever there is something merged into `master`.
+test workflow runs against SageMath 10.0 through 10.7 on Ubuntu, and also
+tests SageMath 10.7 on Intel macOS and Apple Silicon macOS. Publishing to PyPI
+is triggered from a GitHub release.
