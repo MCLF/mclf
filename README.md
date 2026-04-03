@@ -99,7 +99,5 @@ See our [issues list](https://github.com/MCLF/mclf/issues), and tell us of any b
 #### Development workflow
 
 Most development happens on feature branches against the `master` branch. The
-`master` branch is considered stable and usually we create a new release and
-upload it to PyPI whenever there is something merged into `master`. We
-sometimes collect a number of experimental changes on the `experimental`
-branch.
+`master` branch is considered stable and usually we create a new release which
+uploads automatically to PyPI whenever there is something merged into `master`.
