@@ -60,6 +60,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+_readthedocs_build/
 
 # PyBuilder
 target/
@@ -95,3 +96,4 @@ mac_lane/
 notes/
 old_stuff/
 test/
+_readthedocs_build/

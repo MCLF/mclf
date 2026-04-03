@@ -29,6 +29,7 @@ platforms = ["linux-64", "osx-64", "osx-arm64"]
 
 [tool.pixi.pypi-dependencies]
 mclf = { path = ".", editable = true }
+readthedocs-build = "*"
 
 [tool.pixi.dependencies]
 sagelib = "*"
@@ -37,3 +38,11 @@ ipywidgets = "*"
 [tool.pixi.tasks]
 doctest = "sage -tp --initial mclf docs"
 doctest-long = "sage -tp --long --initial mclf docs"
+readthedocs = """
+bash -lc '
+mkdir -p docs/_static
+rtd-build 2>&1 | tee /tmp/rtd.log
+! grep WARNING /tmp/rtd.log
+test "$(du -s _readthedocs_build/mclf/html | cut -f1)" -gt 1000
+'
+"""
