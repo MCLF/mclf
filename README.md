@@ -1,11 +1,5 @@
 # MCLF
 
-[![Documentation Status](https://readthedocs.org/projects/mclf/badge/)](https://mclf.readthedocs.io/?badge=latest)
-[![CircleCI](https://circleci.com/gh/MCLF/mclf/tree/master.svg?style=svg)](https://circleci.com/gh/MCLF/mclf/tree/master)
-[![Coverage Status](https://coveralls.io/repos/github/MCLF/mclf/badge.svg?branch=master)](https://coveralls.io/github/MCLF/mclf?branch=master)
-[![asv](https://img.shields.io/badge/benchmarked%20by-asv-green.svg?style=flat)](https://mclf.github.io/mclf-asv)
-[![PyPI](https://img.shields.io/pypi/v/mclf.svg)](https://pypi.org/project/mclf/)
-
 ### A Sage toolbox for computing with **M**odels of **C**urves over **L**ocal **F**ields
 
 This is still a rather immature version of our toolbox. Nevertheless, you can
@@ -25,21 +19,18 @@ This means that we want to know
 At the moment we can do this only in certain special cases, which should
 nevertheless be useful.
 
-If you have at least [Sage 8.4](https://www.sagemath.org/) you can install the
+If you have at least [Sage 10](https://www.sagemath.org/) you can install the
 latest version of this package with
 
 ```
 sage -pip install git+https://github.com/MCLF/mclf
 ```
 
-If you can not install Sage on your local machine, you can also click
-[![Launch on mybinder.org](https://camo.githubusercontent.com/d57df63fab21897847014ebaec3e7f5f48951ad2/68747470733a2f2f626574612e6d7962696e6465722e6f72672f62616467652e737667)](https://mybinder.org/v2/gh/mclf/MCLF/master?filepath=example.ipynb)
-to run an interactive Jupyter notebook with mclf preinstalled.
-
 The package can be loaded with
 ```
 sage: from mclf import *
 ```
+
 We create a Picard curve over the rational number field.      
 ```
 sage: R.<x> = QQ[]
@@ -47,6 +38,7 @@ sage: Y = SuperellipticCurve(x^4-1, 3)
 sage: Y
 superelliptic curve y^3 = x^4 - 1 over Rational Field
 ```
+
 In general, the class `SuperellipticCurve` allows you to create a superelliptic curve of the form y<sup>n</sup> = f(x),
 for a polynomial f over an arbitrary field K. But you can also define any smooth projective curve Y with given
 function field.
@@ -60,6 +52,7 @@ sage: Y2 = SemistableModel(Y, v_2)
 sage: Y2.is_semistable() # this may take a while
 True
 ```
+
 The stable reduction of Y at p=2 has four components, one of genus 0 and
 three of genus 1.
 ```
@@ -70,12 +63,14 @@ sage: Y2.components_of_positive_genus()
  the smooth projective curve with Function field in y defined by y^3 + x^2 + x,
  the smooth projective curve with Function field in y defined by y^3 + x^2 + x + 1]
 ```
+
 We can also extract some arithmetic information on the curve Y from the stable reduction.
 For instance, we can compute the *conductor exponent* of Y at p=2:
 ```
 sage: Y2.conductor_exponent()
 6
 ```
+
 Now let us compute the semistable reduction of Y at p=3:
 ```
 sage: v_3 = QQ.valuation(3)
@@ -85,6 +80,7 @@ True
 sage: Y3.components_of_positive_genus()
 [the smooth projective curve with Function field in y defined by y^3 + y + 2*x^4]
 ```
+
 We see that Y has potentially good reduction at p=3. The conductor exponent is:
 ```
 sage: Y3.conductor_exponent()
@@ -106,14 +102,20 @@ For the mathematical background see
 
 See our [issues list](https://github.com/MCLF/mclf/issues), and tell us of any bugs or omissions that are not covered there.
 
-#### Experimental Changes
-
-We also have an unstable [experimental](https://github.com/MCLF/mclf/tree/experimental) version with the latest experimental features and bugs that you can try out by clicking on [![Launch on mybinder.org](https://camo.githubusercontent.com/d57df63fab21897847014ebaec3e7f5f48951ad2/68747470733a2f2f626574612e6d7962696e6465722e6f72672f62616467652e737667)](https://mybinder.org/v2/gh/mclf/MCLF/experimental?filepath=example.ipynb), note that this version currently [![CircleCI](https://circleci.com/gh/MCLF/mclf/tree/experimental.svg?style=svg)](https://circleci.com/gh/MCLF/mclf/tree/experimental) our own test suite.
-
 #### Development workflow
 
+We recommend that you install [pixi](https://pixi.sh) to provide all the
+dependencies for developing `mclf`. Once pixi is installed, clone this
+repository and use commands such as
+
+```sh
+pixi run sage                    # run SageMath with mclf installed
+pixi run doctest-long            # run doctests against the latest SageMath
+pixi run -e sagemath-100 doctest-long  # run doctests against SageMath 10.0
+pixi run readthedocs             # validate the Read the Docs build
+```
+
 Most development happens on feature branches against the `master` branch. The
-`master` branch is considered stable and usually we create a new release and
-upload it to PyPI whenever there is something merged into `master`. We
-sometimes collect a number of experimental changes on the `experimental`
-branch.
+test workflow runs against SageMath 10.0 through 10.7 on Ubuntu, and also
+tests SageMath 10.7 on Intel macOS and Apple Silicon macOS. Publishing to PyPI
+is triggered from a GitHub release.
