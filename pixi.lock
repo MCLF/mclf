@@ -3809,8 +3809,8 @@ packages:
   timestamp: 1761214578417
 - pypi: ./
   name: mclf
-  version: 1.0.6
-  sha256: 53b3256f940dfe5f1a185f18805f93edf07128effb5e856558eba92ed5e1bd50
+  version: 1.0.7.dev70+ga2cbbd190.d20260403
+  sha256: fbb9ee1cc32ca62fd15f741bde4ad89ce7dc8c75355c6d2e5f243607822454c3
 - conda: https://conda.anaconda.org/conda-forge/linux-64/memory-allocator-0.2.0-py312h4c3975b_1.conda
   sha256: fa665c154b3e627d3cb422e3b25e244a070ae57a1637fc3f59ca418a180214a5
   md5: f57145e307752416d6542b48cce8cd53

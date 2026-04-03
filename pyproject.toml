@@ -1,6 +1,6 @@
 [project]
 name = "mclf"
-version = "1.0.3"
+dynamic = ["version"]
 authors = [
   {name = "Stefan Wewers"},
   {name = "Julian Rüth"},
@@ -14,11 +14,13 @@ Repository = "https://github.com/MCLF/mclf"
 Documentation = "https://mclf.readthedocs.io/"
 
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=61", "setuptools_scm[toml]>=8"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["mclf*"]
+
+[tool.setuptools_scm]
 
 [tool.pixi.workspace]
 name = "mclf"
