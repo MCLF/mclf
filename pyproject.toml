@@ -1,6 +1,6 @@
 [project]
 name = "mclf"
-dynamic = ["version"]
+version = "1.0.3"
 authors = [
   {name = "Stefan Wewers"},
   {name = "Julian Rüth"},
@@ -16,9 +16,6 @@ Documentation = "https://mclf.readthedocs.io/"
 [build-system]
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
-
-[tool.setuptools.dynamic]
-version = {file = ["version"]}
 
 [tool.setuptools.packages.find]
 include = ["mclf*"]
